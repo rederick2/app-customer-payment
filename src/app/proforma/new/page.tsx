@@ -51,8 +51,8 @@ export default function NewProforma() {
 
       if (data) {
         const unique = new Map<string, number>();
-        // Iterate keeping the first seen (or later if we prefer)
-        data.forEach(item => {
+        // Reverse so we process the most recently inserted items first, prioritizing their prices
+        [...data].reverse().forEach(item => {
           if (!unique.has(item.description)) {
             unique.set(item.description, item.unit_price);
           }

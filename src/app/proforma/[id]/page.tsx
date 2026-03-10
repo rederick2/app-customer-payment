@@ -33,8 +33,7 @@ export default async function ProformaView({ params }: Props) {
   const { data: items, error: itemsError } = await supabase
     .from('proforma_items')
     .select('*')
-    .eq('proforma_id', id)
-    .order('created_at', { ascending: true }); // Need created_at on items or just id order
+    .eq('proforma_id', id);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl animate-in fade-in duration-500">
