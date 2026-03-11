@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { PlusCircle, FileText, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export const revalidate = 0; // Disable page caching to always show latest data
 
 export default async function Dashboard() {
+  const supabase = await createClient();
   // Fetch mock stats for now (or actual counts if we want to run queries)
   const { count: proformasCount } = await supabase
     .from('proformas')

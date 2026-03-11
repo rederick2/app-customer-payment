@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { ArrowLeft, Printer, FileDown } from 'lucide-react';
 import PrintButton from '@/components/PrintButton';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ type Props = {
 
 export default async function ProformaView({ params }: Props) {
   const { id } = await params;
+  const supabase = await createClient();
 
   // Fetch proforma and its client
   const { data: proforma, error: proformaError } = await supabase

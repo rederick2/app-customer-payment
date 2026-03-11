@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { logout } from '@/app/login/actions';
+import { Button } from '@/components/ui/button';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -18,11 +21,13 @@ export const metadata: Metadata = {
   description: 'Generador de cotizaciones premium para proyectos de diseño interior.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   return (
     <html lang="es">
       <body
@@ -33,9 +38,21 @@ export default function RootLayout({
             <Link href="/" className="mr-6 flex items-center space-x-2">
               <span className="font-serif font-bold text-xl tracking-tight text-primary">Estudio<span className="text-foreground">Pro</span></span>
             </Link>
-            <nav className="flex flex-1 items-center space-x-6 text-sm font-medium">
+            <nav className="flex flex-1 items-center justify-end space-x-6 text-sm font-medium">
               <Link href="/" className="transition-colors hover:text-primary text-foreground/80">Dashboard</Link>
-              <Link href="/proforma/new" className="transition-colors hover:text-primary text-foreground/80">Nueva Proforma</Link>
+              {user && (
+                <>
+                  <Link href="/clients" className="transition-colors hover:text-primary text-foreground/80">Clientes</Link>
+                  <Link href="/proforma/new" className="transition-colors hover:text-primary text-foreground/80">Nueva Proforma</Link>
+                </>
+              )}
+              {user && (
+                <form action={logout}>
+                  <Button variant="ghost" size="sm" type="submit" className="text-foreground/80 hover:text-primary">
+                    Cerrar Sesión
+                  </Button>
+                </form>
+              )}
             </nav>
           </div>
         </header>
