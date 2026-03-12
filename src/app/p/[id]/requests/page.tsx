@@ -42,7 +42,7 @@ type Props = {
 
 export default async function ClientRequestsView({ params }: Props) {
   const { id } = await params;
-  
+
   const supabase = createAdminClient();
 
   // Validate proforma exists
@@ -77,13 +77,13 @@ export default async function ClientRequestsView({ params }: Props) {
           requests.map((request) => (
             <Card key={request.id} className="border-border/50 shadow-sm overflow-hidden">
               <CardHeader className="bg-muted/30 border-b border-border/50 pb-4 flex flex-row items-center justify-between">
-                 <div className="space-y-1">
-                   <CardTitle className="text-lg font-medium">Solicitud #{request.id.split('-')[0]}</CardTitle>
-                   <p className="text-xs text-muted-foreground">
-                     Creada el {new Date(request.created_at).toLocaleDateString('es-ES')}
-                   </p>
-                 </div>
-                 <StatusBadge status={request.status} />
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-medium">Solicitud #{request.id.split('-')[0]}</CardTitle>
+                  <p className="text-xs text-muted-foreground">
+                    Creada el {new Date(request.created_at).toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+                <StatusBadge status={request.status} />
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="grid md:grid-cols-3 gap-6">
@@ -100,34 +100,34 @@ export default async function ClientRequestsView({ params }: Props) {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Info sidebar */}
                   <div className="space-y-4 bg-muted/20 p-4 rounded-lg">
                     {request.schedule_date && (
                       <div className="flex items-start gap-3">
-                         <CalendarIcon className="h-4 w-4 text-muted-foreground mt-0.5" />
-                         <div>
-                           <p className="text-xs font-semibold uppercase text-muted-foreground">Fecha Solicitada</p>
-                           <p className="text-sm font-medium">{new Date(request.schedule_date).toLocaleDateString('es-ES')}</p>
-                         </div>
+                        <CalendarIcon className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-muted-foreground">Fecha Solicitada</p>
+                          <p className="text-sm font-medium">{new Date(request.schedule_date).toLocaleDateString('es-ES')}</p>
+                        </div>
                       </div>
                     )}
                     {request.time_preference && (
                       <div className="flex items-start gap-3">
-                         <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
-                         <div>
-                           <p className="text-xs font-semibold uppercase text-muted-foreground">Preferencia Horario</p>
-                           <p className="text-sm font-medium"><TimePreferenceText preference={request.time_preference} /></p>
-                         </div>
+                        <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-muted-foreground">Preferencia Horario</p>
+                          <p className="text-sm font-medium"><TimePreferenceText preference={request.time_preference} /></p>
+                        </div>
                       </div>
                     )}
                     {request.images && request.images.length > 0 && (
                       <div className="flex items-start gap-3">
-                         <ImageIcon className="h-4 w-4 text-muted-foreground mt-0.5" />
-                         <div>
-                           <p className="text-xs font-semibold uppercase text-muted-foreground">Imágenes</p>
-                           <p className="text-sm font-medium">{request.images.length} adjuntas</p>
-                         </div>
+                        <ImageIcon className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div>
+                          <p className="text-xs font-semibold uppercase text-muted-foreground">Imágenes</p>
+                          <p className="text-sm font-medium">{request.images.length} adjuntas</p>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -156,7 +156,6 @@ export default async function ClientRequestsView({ params }: Props) {
           ))
         ) : (
           <div className="text-center py-12 bg-white border border-border/50 rounded-lg">
-            <ListTodo className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
             <h3 className="text-lg font-medium text-foreground">No tienes solicitudes</h3>
             <p className="text-muted-foreground mt-1">Aún no has creado ninguna solicitud para este proyecto.</p>
           </div>
