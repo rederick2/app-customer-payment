@@ -17,6 +17,7 @@ export default function NewClientPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form State
+  const [companyName, setCompanyName] = useState('');
   const [title, setTitle] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -63,6 +64,7 @@ export default function NewClientPage() {
       const { error } = await supabase
         .from('clients')
         .insert([{
+          company_name: companyName,
           title,
           first_name: firstName,
           last_name: lastName,
@@ -106,11 +108,15 @@ export default function NewClientPage() {
             <CardTitle className="text-lg font-serif">Detalles de Contacto</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Razón Social o Compañía (Opcional)</Label>
+              <Input id="companyName" placeholder="Ej. Empresa SA" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Título</Label>
-                <Input id="title" placeholder="Sr., Sra., Ing." value={title} onChange={e => setTitle(e.target.value)} />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title">Título</Label>
+                  <Input id="title" placeholder="Sr., Sra., Ing." value={title} onChange={e => setTitle(e.target.value)} />
+                </div>
               <div className="space-y-2">
                 <Label htmlFor="firstName">Nombre *</Label>
                 <Input id="firstName" required placeholder="Ej. Juan" value={firstName} onChange={e => setFirstName(e.target.value)} />

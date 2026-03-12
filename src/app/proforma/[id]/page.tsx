@@ -73,9 +73,56 @@ export default async function ProformaView({ params }: Props) {
         <div className="grid sm:grid-cols-2 gap-8 mb-12">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Preparado Para:</h3>
-            <p className="font-medium text-lg text-foreground">{(proforma.clients as any).name}</p>
-            {(proforma.clients as any).email && <p className="text-sm">{(proforma.clients as any).email}</p>}
-            {(proforma.clients as any).phone && <p className="text-sm">{(proforma.clients as any).phone}</p>}
+            <p className="font-medium text-lg text-foreground">
+              {(() => {
+                const c = proforma.clients as any;
+                const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
+                return c.company_name || nameDisplay;
+              })()}
+            </p>
+            {(() => {
+              const c = proforma.clients as any;
+              const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
+              if (c.company_name && nameDisplay) {
+                return (
+                  <p className="text-sm font-medium text-muted-foreground mt-0.5 mb-1">
+                    Atte: {nameDisplay}
+                  </p>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Address block */}
+            <div className="text-sm mt-1 space-y-0.5">
+              {(() => {
+                const c = proforma.clients as any;
+                const hasDetailedAddress = c.street_1 || c.city || c.country;
+                
+                if (hasDetailedAddress) {
+                  return (
+                    <>
+                      {(c.street_1 || c.street_2) && (
+                        <p>{[c.street_1, c.street_2].filter(Boolean).join(', ')}</p>
+                      )}
+                      {(c.city || c.province || c.postal_code) && (
+                        <p>{[c.city, c.province, c.postal_code].filter(Boolean).join(', ')}</p>
+                      )}
+                      {c.country && <p>{c.country}</p>}
+                    </>
+                  );
+                } else if (c.address) {
+                  // Fallback to legacy address column just in case
+                  return <p>{c.address}</p>;
+                }
+                return null;
+              })()}
+            </div>
+
+            <div className="mt-1.5 space-y-0.5">
+              {(proforma.clients as any).email && <p className="text-sm text-muted-foreground">{(proforma.clients as any).email}</p>}
+              {(proforma.clients as any).phone && <p className="text-sm text-muted-foreground">{(proforma.clients as any).phone}</p>}
+            </div>
           </div>
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Detalles del Proyecto:</h3>
@@ -96,8 +143,19 @@ export default async function ProformaView({ params }: Props) {
             </thead>
             <tbody className="divide-y divide-border/30">
               {items && items.map((item, index) => (
-                <tr key={item.id} className="print:break-inside-avoid">
-                  <td className="px-4 py-4 font-medium text-foreground">{item.description}</td>
+                <tr key={item.id} className="print:break-inside-avoid align-top">
+                  <td className="px-4 py-4">
+                    <div className="font-medium text-foreground">{item.description}</div>
+                    {item.details && (
+                      <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{item.details}</div>
+                    )}
+                    {item.photo_url && (
+                      <div className="mt-3 relative w-32 h-32 md:w-48 md:h-48 rounded-md overflow-hidden border border-border/50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={item.photo_url} alt={item.description} className="object-cover w-full h-full" />
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-4 text-right">{item.quantity}</td>
                   <td className="px-4 py-4 text-right">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-4 text-right font-medium text-foreground">${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
