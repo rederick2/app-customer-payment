@@ -15,18 +15,19 @@ import { Loader2 } from 'lucide-react';
 export default function AdminRequestActions({ requestId, currentStatus }: { requestId: string, currentStatus: string }) {
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleStatusChange = async (newStatus: string) => {
+  const handleStatusChange = async (newStatus: string | null) => {
+    if (!newStatus) return;
     setIsUpdating(true);
-    
+
     // Optimistic UI could be added here, but for simplicity we just block UI with loading
     const result = await updateRequestStatus(requestId, newStatus);
-    
+
     setIsUpdating(false);
 
     if (result.error) {
-       toast.error('Error', { description: result.error });
+      toast.error('Error', { description: result.error });
     } else {
-       toast.success('Estado actualizado', { description: 'La solicitud ha sido actualizada.' });
+      toast.success('Estado actualizado', { description: 'La solicitud ha sido actualizada.' });
     }
   };
 
