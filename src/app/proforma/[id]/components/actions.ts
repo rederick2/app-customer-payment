@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { Resend } from 'resend';
-import { renderToBuffer } from '@react-pdf/renderer';
+import { renderToBuffer, DocumentProps } from '@react-pdf/renderer';
 import ProformaPDF from '@/lib/pdf/ProformaPDF';
 import React from 'react';
 
@@ -49,7 +49,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
         proforma, 
         items: items || [], 
         client: proforma.clients 
-      })
+      }) as React.ReactElement<DocumentProps>
     );
 
     // 3. Send via Resend (or mock if no key is provided yet)

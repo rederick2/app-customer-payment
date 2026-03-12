@@ -175,7 +175,7 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
           <div className="space-y-2">
             <label className="text-sm font-medium">Fecha Propuesta</label>
             <Popover>
-              <PopoverTrigger asChild>
+              <PopoverTrigger>
                 <Button
                   variant={"outline"}
                   className={cn(

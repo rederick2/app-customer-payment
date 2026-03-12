@@ -79,11 +79,9 @@ export default function EmailQuoteModal({ proformaId, clientName, clientEmail, p
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="default" className="bg-[#306C3E] hover:bg-[#306C3E]/90 text-white">
-          <Mail className="mr-2 h-4 w-4" />
-          Send Email
-        </Button>
+      <DialogTrigger render={<Button variant="default" className="bg-[#306C3E] hover:bg-[#306C3E]/90 text-white" />}>
+        <Mail className="mr-2 h-4 w-4" />
+        Send Email
       </DialogTrigger>
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
         <DialogHeader className="p-6 pb-2 border-b bg-white border-border/50">

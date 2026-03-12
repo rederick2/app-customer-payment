@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, FileText, Check, X, Eye, Loader2, Link as LinkIcon, Printer } from 'lucide-react';
@@ -42,14 +42,14 @@ export default function ProformaDropdownActions({ proformaId, currentStatus }: {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger>
         <Button variant="outline" className="flex items-center gap-2 border-border/50 bg-white shadow-sm" disabled={isUpdating}>
           {isUpdating ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <MoreHorizontal className="h-4 w-4 text-primary" />}
           More
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        
+
         {/* Status Actions */}
         <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">Mark as...</div>
         {currentStatus !== 'approved' && (
@@ -66,14 +66,14 @@ export default function ProformaDropdownActions({ proformaId, currentStatus }: {
         )}
 
         <DropdownMenuSeparator />
-        
+
         {/* General Actions */}
         <DropdownMenuItem onClick={copyClientLink} className="cursor-pointer">
           <LinkIcon className="mr-2 h-4 w-4" />
           Copy Client Link
         </DropdownMenuItem>
-        
-        <DropdownMenuItem asChild>
+
+        <DropdownMenuItem>
           <a href={`/p/${proformaId}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer w-full flex items-center">
             <Eye className="mr-2 h-4 w-4" />
             Preview as Client
