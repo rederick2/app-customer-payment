@@ -34,9 +34,10 @@ export async function updateSession(request: NextRequest) {
 
   // Proteger rutas privadas
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
+  const isPublicSharedPage = request.nextUrl.pathname.startsWith('/p/')
   
-  // Si no está logueado y no está en la página de login, redirigir a login
-  if (!user && !isAuthPage) {
+  // Si no está logueado y no está en la página de login o vista pública, redirigir a login
+  if (!user && !isAuthPage && !isPublicSharedPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
