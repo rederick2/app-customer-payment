@@ -278,20 +278,25 @@ export default function NewProforma() {
         let photo_url = null;
 
         if (item.photo) {
-          const fileExt = item.photo.name.split('.').pop();
-          const fileName = `${proformaData.id}/${item.id}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-          
-          const { error: uploadError, data: uploadData } = await supabase.storage
-            .from('proforma-items')
-            .upload(fileName, item.photo);
+          try {
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', item.photo);
+            uploadFormData.append('folder', `proforma-items/${proformaData.id}`);
 
-          if (!uploadError && uploadData) {
-            const { data: publicUrlData } = supabase.storage
-              .from('proforma-items')
-              .getPublicUrl(fileName);
-            photo_url = publicUrlData.publicUrl;
-          } else {
-             console.error("Error uploading photo:", uploadError);
+            const response = await fetch('/api/upload', {
+              method: 'POST',
+              body: uploadFormData,
+            });
+
+            if (response.ok) {
+              const { url } = await response.json();
+              photo_url = url;
+            } else {
+              const { error } = await response.json();
+              console.error('Error uploading photo via FTP:', error);
+            }
+          } catch (uploadErr) {
+            console.error('Error uploading photo:', uploadErr);
           }
         }
 

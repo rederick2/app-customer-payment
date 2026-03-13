@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { uploadToFtp } from '@/lib/ftp';
 
 export async function submitServiceRequest(proformaId: string, formData: FormData) {
   try {
@@ -21,28 +22,22 @@ export async function submitServiceRequest(proformaId: string, formData: FormDat
       return { success: false, error: 'Por favor, proporciona los detalles del servicio.' };
     }
 
-    // Subir imágenes al bucket
+    // Subir imágenes al FTP
     for (const file of imageFiles) {
       if (file.size === 0) continue;
       
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${proformaId}/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('request-images')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError);
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const publicUrl = await uploadToFtp(buffer, fileName);
+        imageUrls.push(publicUrl);
+      } catch (uploadErr) {
+        console.error('Error uploading image via FTP:', uploadErr);
         continue; // Try with the next one
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('request-images')
-        .getPublicUrl(filePath);
-
-      imageUrls.push(publicUrl);
     }
 
     // Inserción en la base de datos

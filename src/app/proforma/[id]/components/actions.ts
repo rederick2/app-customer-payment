@@ -2,13 +2,10 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { Resend } from 'resend';
 import { renderToBuffer, DocumentProps } from '@react-pdf/renderer';
 import ProformaPDF from '@/lib/pdf/ProformaPDF';
+import { sendEmail } from '@/lib/mail';
 import React from 'react';
-
-// Initialize resend only if the API key exists
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function sendProformaEmail(proformaId: string, formData: FormData) {
   const supabase = await createClient();
@@ -52,32 +49,22 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
       }) as React.ReactElement<DocumentProps>
     );
 
-    // 3. Send via Resend (or mock if no key is provided yet)
-    if (resend) {
-      const { error: emailError } = await resend.emails.send({
-        // For testing free Resend accounts, you must send FROM a verified domain 
-        // or onboarding@resend.dev, and TO a verified email
-        from: 'EstudioPro <onboarding@resend.dev>',
-        to: [to],
-        subject: subject,
-        text: message,
-        html: buildEmailHtml(message, proformaId),
-        attachments: [
-          {
-            filename: `cotizacion_${proformaNumber(proformaId)}.pdf`,
-            content: pdfBuffer,
-          },
-        ],
-      });
+    // 3. Send via SMTP
+    const { success } = await sendEmail({
+      to: [to],
+      subject: subject,
+      text: message,
+      html: buildEmailHtml(message, proformaId),
+      attachments: [
+        {
+          filename: `cotizacion_${proformaNumber(proformaId)}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    });
 
-      if (emailError) {
-         console.error('Error sending email:', emailError);
-         return { error: 'Ocurrió un error al intentar enviar el correo. Verifica tu cuota o dominio en Resend.' };
-      }
-    } else {
-      console.warn("No RESEND_API_KEY found. Simulating email send and PDF generation.");
-      // Simulated delay just for demo purposes if no key
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    if (!success) {
+      return { error: 'Ocurrió un error al intentar enviar el correo vía SMTP.' };
     }
 
     // Actualizar el estado de la proforma a 'sent' si actualmente es 'draft'
@@ -93,9 +80,9 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
 
     return { success: true };
 
-  } catch (err) {
-    console.error('PDF Generation or Email Error:', err);
-    return { error: 'Error al generar el PDF o enviar el correo.' };
+  } catch (err: any) {
+    console.error('PDF Generation or SMTP Email Error:', err);
+    return { error: `Error al enviar el correo: ${err.message}` };
   }
 }
 
