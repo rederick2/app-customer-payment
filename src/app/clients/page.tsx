@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/server';
-import { PlusCircle, Users, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Users, Edit, Trash2, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 
@@ -72,6 +72,11 @@ export default async function ClientsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       {/* Enlace para editar en el futuro */}
+                      <Link href={`/clients/${client.id}`}>
+                        <Button variant="ghost" size="sm" className="hover:text-primary">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Link href={`/clients/${client.id}/edit`}>
                         <Button variant="ghost" size="sm" className="hover:text-primary">
                           <Edit className="h-4 w-4" />

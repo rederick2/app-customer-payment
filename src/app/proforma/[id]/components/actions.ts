@@ -173,3 +173,31 @@ export async function updateProformaStatus(proformaId: string, newStatus: string
   revalidatePath('/page'); 
   return { success: true };
 }
+
+export async function scheduleJob(proformaId: string, startAt: string, endAt: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const { error } = await supabase
+    .from('proformas')
+    .update({ 
+      status: 'job',
+      job_start_at: startAt,
+      job_end_at: endAt
+    })
+    .eq('id', proformaId);
+
+  if (error) {
+    console.error('Error scheduling job:', error);
+    return { error: 'Error al programar el job.' };
+  }
+
+  revalidatePath(`/proforma/${proformaId}`);
+  revalidatePath('/page');
+  revalidatePath('/calendar');
+  return { success: true };
+}

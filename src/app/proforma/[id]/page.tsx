@@ -23,6 +23,8 @@ function StatusBadge({ status }: { status: string }) {
       return <Badge variant="destructive" className="bg-red-500/10 text-red-700 hover:bg-red-500/20 border-red-500/20 text-sm py-1 px-3">Rejected</Badge>;
     case 'sent':
       return <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 border-blue-500/20 text-sm py-1 px-3">Sent</Badge>;
+    case 'job':
+      return <Badge className="bg-purple-500/10 text-purple-700 hover:bg-purple-500/20 border-purple-500/20 text-sm py-1 px-3">Job</Badge>;
     default:
       return <Badge variant="outline" className="text-sm py-1 px-3">Draft</Badge>;
   }
@@ -76,7 +78,7 @@ export default async function ProformaView({ params }: Props) {
             <MessageSquare className="h-4 w-4 text-primary" />
             View Messages
           </Link>
-          <ProformaDropdownActions proformaId={id} currentStatus={proforma.status || 'draft'} />
+          <ProformaDropdownActions proformaId={id} currentStatus={proforma.status || 'draft'} projectName={proforma.project_name} />
           <EmailQuoteModal
             proformaId={id}
             clientName={(() => {

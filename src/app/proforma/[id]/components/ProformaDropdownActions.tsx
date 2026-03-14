@@ -9,12 +9,14 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, FileText, Check, X, Eye, Loader2, Link as LinkIcon, Printer } from 'lucide-react';
-import { updateProformaStatus } from './actions';
+import { MoreHorizontal, FileText, Check, X, Eye, Loader2, Link as LinkIcon, Printer, Calendar as CalendarIcon } from 'lucide-react';
+import { updateProformaStatus, scheduleJob } from './actions';
 import { toast } from 'sonner';
+import ScheduleJobModal from './ScheduleJobModal';
 
-export default function ProformaDropdownActions({ proformaId, currentStatus }: { proformaId: string, currentStatus: string }) {
+export default function ProformaDropdownActions({ proformaId, currentStatus, projectName }: { proformaId: string, currentStatus: string, projectName: string }) {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   const handleStatusUpdate = async (newStatus: string) => {
     setIsUpdating(true);
@@ -65,6 +67,13 @@ export default function ProformaDropdownActions({ proformaId, currentStatus }: {
           </DropdownMenuItem>
         )}
 
+        {currentStatus === 'approved' && (
+          <DropdownMenuItem onClick={() => setIsScheduleModalOpen(true)} className="cursor-pointer text-blue-700 focus:text-blue-800">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            Convert to Job
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuSeparator />
 
         {/* General Actions */}
@@ -86,6 +95,13 @@ export default function ProformaDropdownActions({ proformaId, currentStatus }: {
         </DropdownMenuItem>
 
       </DropdownMenuContent>
+      
+      <ScheduleJobModal 
+        proformaId={proformaId}
+        projectName={projectName}
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+      />
     </DropdownMenu>
   );
 }

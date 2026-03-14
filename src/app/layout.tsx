@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { logout } from '@/app/login/actions';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 
 const inter = Inter({
@@ -76,6 +76,10 @@ export default async function RootLayout({
                 <Link href="/requests" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
                   <ListTodo className="mr-3 h-4 w-4" />
                   Requests
+                </Link>
+                <Link href="/calendar" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
+                  <Calendar className="mr-3 h-4 w-4" />
+                  Calendar
                 </Link>
                 <Link href="/messages" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
                   <MessageSquare className="mr-3 h-4 w-4" />

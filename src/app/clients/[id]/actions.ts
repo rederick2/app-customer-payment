@@ -1,0 +1,84 @@
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+
+export async function recordPayment(clientId: string, proformaId: string | null, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const amount = parseFloat(formData.get('amount') as string);
+  const type = formData.get('type') as string; // 'payment' or 'deposit'
+  const paymentMethod = formData.get('payment_method') as string;
+  const paymentDate = formData.get('payment_date') as string || new Date().toISOString();
+  const notes = formData.get('notes') as string;
+
+  if (isNaN(amount) || amount <= 0) {
+    return { error: 'El monto debe ser un numero positivo.' };
+  }
+
+  const { error } = await supabase
+    .from('payments')
+    .insert([{
+      client_id: clientId,
+      proforma_id: proformaId,
+      amount,
+      type,
+      payment_method: paymentMethod,
+      payment_date: paymentDate,
+      notes,
+      status: 'completed'
+    }]);
+
+  if (error) {
+    console.error('Error recording payment:', error);
+    return { error: 'Error al registrar el pago.' };
+  }
+
+  revalidatePath(`/clients/${clientId}`);
+  return { success: true };
+}
+
+export async function createInvoice(clientId: string, proformaId: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const invoiceNumber = formData.get('invoice_number') as string;
+  const totalAmount = parseFloat(formData.get('total_amount') as string);
+  const issueDate = formData.get('issue_date') as string || new Date().toISOString().split('T')[0];
+  const dueDate = formData.get('due_date') as string;
+  const notes = formData.get('notes') as string;
+
+  if (!invoiceNumber) {
+    return { error: 'Se requiere un numero de factura.' };
+  }
+
+  const { error } = await supabase
+    .from('invoices')
+    .insert([{
+      client_id: clientId,
+      proforma_id: proformaId,
+      invoice_number: invoiceNumber,
+      total_amount: totalAmount,
+      issue_date: issueDate,
+      due_date: dueDate,
+      notes,
+      status: 'sent'
+    }]);
+
+  if (error) {
+    console.error('Error creating invoice:', error);
+    return { error: 'Error al crear la factura. Es posible que el numero de factura ya exista.' };
+  }
+
+  revalidatePath(`/clients/${clientId}`);
+  return { success: true };
+}
