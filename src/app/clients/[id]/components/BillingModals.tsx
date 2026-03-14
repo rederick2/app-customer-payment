@@ -45,7 +45,13 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
   }, [openType]);
 
   // Auto-fill amount when proforma is selected
-  const handleProformaChange = (id: string) => {
+  const handleProformaChange = (id: string | null) => {
+    if (!id) {
+      setSelectedProformaId(null);
+      setAmount('');
+      return;
+    }
+
     setSelectedProformaId(id);
     const p = proformas.find(item => item.id === id);
     if (p) {
