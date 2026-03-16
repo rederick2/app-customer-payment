@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Loader2, 
-  Camera, 
-  Upload, 
-  X, 
-  Check, 
+import {
+  Loader2,
+  Camera,
+  Upload,
+  X,
+  Check,
   Sparkles,
   AlertCircle
 } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState<any>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
@@ -56,7 +56,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
   const processReceipt = async () => {
     if (!file) return;
-    
+
     setIsUploading(true);
     try {
       // 1. Upload to FTP
@@ -71,7 +71,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
       const { url, error: uploadError } = await uploadRes.json();
       if (uploadError) throw new Error(uploadError);
-      
+
       setImageUrl(url);
       setIsUploading(false);
       setIsProcessing(true);
@@ -98,7 +98,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
   const confirmSave = async () => {
     if (!extractedData) return;
-    
+
     setIsUploading(true);
     const { error } = await supabase
       .from('job_expenses')
@@ -127,8 +127,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
       <Card className="w-full max-w-lg shadow-2xl border-none max-h-[90vh] overflow-y-auto">
         <CardHeader className="bg-[#0D3B47] text-white rounded-t-xl flex flex-row items-center justify-between sticky top-0 z-10">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-yellow-400" />
-            Scanner AI de Recibos
+            Scanner of receipts
           </CardTitle>
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -137,7 +136,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
         <CardContent className="p-6 space-y-6">
           {!preview ? (
             <div className="grid grid-cols-1 gap-4">
-              <div 
+              <div
                 className="border-2 border-dashed border-border/60 rounded-xl p-8 text-center hover:border-[#306C3E]/40 hover:bg-[#306C3E]/5 transition-all cursor-pointer group"
                 onClick={() => cameraInputRef.current?.click()}
               >
@@ -146,17 +145,17 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                 </div>
                 <p className="font-semibold text-foreground">Tomar Foto</p>
                 <p className="text-xs text-muted-foreground mt-1">Usa la cámara de tu celular</p>
-                <input 
-                  type="file" 
-                  ref={cameraInputRef} 
-                  onChange={handleFileChange} 
-                  className="hidden" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  ref={cameraInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
                   capture="environment"
                 />
               </div>
 
-              <div 
+              <div
                 className="border-2 border-dashed border-border/60 rounded-xl p-8 text-center hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -165,12 +164,12 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                 </div>
                 <p className="font-semibold text-foreground">Subir de Galería</p>
                 <p className="text-xs text-muted-foreground mt-1">JPG, PNG o archivos guardados</p>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  className="hidden" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
                 />
               </div>
             </div>
@@ -206,12 +205,12 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                   <Check className="h-4 w-4" />
                   Verifica y edita la información
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5 md:col-span-2">
                     <Label className="text-[10px] uppercase text-emerald-600 font-bold">Lugar de Compra</Label>
-                    <Input 
-                      value={extractedData.place || ''} 
+                    <Input
+                      value={extractedData.place || ''}
                       onChange={(e) => handleUpdateField('place', e.target.value)}
                       className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
                     />
@@ -219,10 +218,10 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
                   <div className="space-y-1.5">
                     <Label className="text-[10px] uppercase text-emerald-600 font-bold">Monto Total ($)</Label>
-                    <Input 
+                    <Input
                       type="number"
                       step="0.01"
-                      value={extractedData.amount || ''} 
+                      value={extractedData.amount || ''}
                       onChange={(e) => handleUpdateField('amount', e.target.value)}
                       className="bg-white border-emerald-100 focus-visible:ring-emerald-500 font-bold text-[#306C3E]"
                     />
@@ -230,9 +229,9 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
                   <div className="space-y-1.5">
                     <Label className="text-[10px] uppercase text-emerald-600 font-bold">Fecha</Label>
-                    <Input 
+                    <Input
                       type="date"
-                      value={extractedData.date || ''} 
+                      value={extractedData.date || ''}
                       onChange={(e) => handleUpdateField('date', e.target.value)}
                       className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
                     />
@@ -240,8 +239,8 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
                   <div className="space-y-1.5">
                     <Label className="text-[10px] uppercase text-emerald-600 font-bold">Categoría</Label>
-                    <Input 
-                      value={extractedData.category || ''} 
+                    <Input
+                      value={extractedData.category || ''}
                       onChange={(e) => handleUpdateField('category', e.target.value)}
                       className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
                     />
@@ -249,15 +248,15 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
                   <div className="space-y-1.5 md:col-span-2">
                     <Label className="text-[10px] uppercase text-emerald-600 font-bold">Descripción</Label>
-                    <Input 
-                      value={extractedData.description || ''} 
+                    <Input
+                      value={extractedData.description || ''}
                       onChange={(e) => handleUpdateField('description', e.target.value)}
                       className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
                     />
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={() => setExtractedData(null)}>
                   Escanear otro

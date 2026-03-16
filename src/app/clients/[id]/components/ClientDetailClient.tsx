@@ -14,7 +14,10 @@ import {
   Receipt,
   Clock,
   Briefcase,
-  Quote
+  Quote,
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,18 +31,31 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 import { BillingModals } from './BillingModals';
+import { JobDetailModal } from './JobDetailModal';
+
+const ITEMS_PER_PAGE = 10;
 
 interface ClientDetailClientProps {
   client: any;
   proformas: any[];
   payments: any[];
   invoices: any[];
+  expenses: any[];
 }
 
-export function ClientDetailClient({ client, proformas, payments, invoices }: ClientDetailClientProps) {
+export function ClientDetailClient({ client, proformas, payments, invoices, expenses }: ClientDetailClientProps) {
   const [activeTab, setActiveTab] = React.useState('active-work');
   const [openModal, setOpenModal] = React.useState<'payment' | 'deposit' | 'invoice' | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [selectedJobDetail, setSelectedJobDetail] = React.useState<any | null>(null);
+
+  // Reset pagination when tab or search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
 
   const clientName = client.company_name || [client.title, client.first_name, client.last_name].filter(Boolean).join(' ') || client.name;
 
@@ -141,7 +157,19 @@ export function ClientDetailClient({ client, proformas, payments, invoices }: Cl
             </div>
 
             <Card className="border-border/50 shadow-sm">
-              <CardContent className="p-0">
+              <CardContent className="p-0">                {/* Tab Header with Search */}
+                <div className="p-4 border-b border-border/40 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-muted/5">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder={`Buscar ${activeTab === 'invoices-tab' ? 'facturas' : 'proyectos'}...`}
+                      className="pl-9 h-9 bg-white border-border/50"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
+
                 {/* Specific content based on activeTab */}
                 {activeTab === 'invoices-tab' ? (
                   <div className="overflow-x-auto">
@@ -155,29 +183,74 @@ export function ClientDetailClient({ client, proformas, payments, invoices }: Cl
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/40">
-                        {invoices && invoices.length > 0 ? (
-                          invoices.map(inv => (
-                            <tr key={inv.id} className="hover:bg-muted/5">
-                              <td className="px-6 py-4 font-bold">#{inv.invoice_number}</td>
-                              <td className="px-6 py-4 text-muted-foreground">{format(new Date(inv.issue_date), 'MMM d, yyyy')}</td>
-                              <td className="px-6 py-4">
-                                <Badge variant="outline" className={cn(
-                                  "bg-blue-50 text-blue-700 border-blue-200",
-                                  inv.status === 'paid' && "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                )}>
-                                  {inv.status.toUpperCase()}
-                                </Badge>
-                              </td>
-                              <td className="px-6 py-4 text-right font-bold">
-                                ${inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="py-12 text-center text-muted-foreground">No hay facturas registradas.</td>
-                          </tr>
-                        )}
+                        {(() => {
+                          const filteredInvoices = (invoices || []).filter(inv =>
+                            inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase())
+                          );
+                          const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
+                          const paginatedInvoices = filteredInvoices.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+                          if (paginatedInvoices.length > 0) {
+                            return (
+                              <>
+                                {paginatedInvoices.map(inv => (
+                                  <tr key={inv.id} className="hover:bg-muted/5">
+                                    <td className="px-6 py-4 font-bold">#{inv.invoice_number}</td>
+                                    <td className="px-6 py-4 text-muted-foreground">{format(new Date(inv.issue_date), 'MMM d, yyyy')}</td>
+                                    <td className="px-6 py-4">
+                                      <Badge variant="outline" className={cn(
+                                        "bg-blue-50 text-blue-700 border-blue-200",
+                                        inv.status === 'paid' && "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                      )}>
+                                        {inv.status.toUpperCase()}
+                                      </Badge>
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-bold">
+                                      ${inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                    </td>
+                                  </tr>
+                                ))}
+                                {totalPages > 1 && (
+                                  <tr>
+                                    <td colSpan={4} className="px-6 py-4 border-t border-border/40">
+                                      <div className="flex items-center justify-between">
+                                        <div className="text-xs text-muted-foreground">
+                                          Página {currentPage} de {totalPages}
+                                        </div>
+                                        <div className="flex gap-1">
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            disabled={currentPage === 1}
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                          >
+                                            <ChevronLeft className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                          >
+                                            <ChevronRight className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </>
+                            );
+                          } else {
+                            return (
+                              <tr>
+                                <td colSpan={4} className="py-12 text-center text-muted-foreground">No hay facturas registradas.</td>
+                              </tr>
+                            );
+                          }
+                        })()}
                       </tbody>
                     </table>
                   </div>
@@ -185,64 +258,113 @@ export function ClientDetailClient({ client, proformas, payments, invoices }: Cl
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                       <tbody className="divide-y divide-border/40">
-                        {proformas && proformas.length > 0 ? (
-                          proformas.filter(p => {
-                            if (activeTab === 'jobs') return p.status === 'job';
-                            if (activeTab === 'quotes') return p.status !== 'job';
-                            return true; // Simple filtering for demo
-                          }).map((item) => (
-                            <tr key={item.id} className="hover:bg-muted/10 transition-colors group">
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className={cn(
-                                    "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
-                                    item.status === 'job' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
-                                  )}>
-                                    {item.status === 'job' ? <Briefcase className="h-5 w-5" /> : <Quote className="h-5 w-5" />}
+                        {(() => {
+                          const filteredProformas = (proformas || []).filter(p => {
+                            const matchesTab = activeTab === 'jobs' ? p.status === 'job' : (activeTab === 'quotes' ? p.status !== 'job' : true);
+                            const matchesSearch = p.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              p.id.toLowerCase().includes(searchQuery.toLowerCase());
+                            return matchesTab && matchesSearch;
+                          });
+                          const totalPages = Math.ceil(filteredProformas.length / ITEMS_PER_PAGE);
+                          const paginatedProformas = filteredProformas.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+                          if (paginatedProformas.length > 0) {
+                            return (
+                              <>
+                                {paginatedProformas.map((item) => (
+                                  <tr key={item.id} className="hover:bg-muted/10 transition-colors group">
+                                    <td className="px-6 py-4">
+                                      <Link href={`/proforma/${item.id}`}>
+                                        <div className="flex items-center gap-3">
+                                          <div className={cn(
+                                            "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
+                                            item.status === 'job' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                                          )}>
+                                            {item.status === 'job' ? <Briefcase className="h-5 w-5" /> : <Quote className="h-5 w-5" />}
+                                          </div>
+                                          <div>
+                                            <div className="font-bold text-foreground group-hover:text-primary transition-colors">
+                                              {item.status === 'job' ? 'Job #' : 'Quote #'}{item.id.split('-')[0].toUpperCase()} - {item.project_name}
+                                            </div>
+                                            <Badge variant="outline" className={cn(
+                                              "mt-1 text-[10px] font-extrabold py-0 h-5 px-1.5",
+                                              item.status === 'job' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
+                                            )}>
+                                              {item.status === 'job' ? 'EN PROGRESO' : 'ESPERANDO RESPUESTA'}
+                                            </Badge>
+                                          </div>
+                                        </div></Link>
+                                    </td>
+                                    <td className="px-6 py-4 text-muted-foreground">
+                                      <div className="text-[10px] font-bold uppercase tracking-tight opacity-60">PROGRAMADO PARA</div>
+                                      <div className="text-sm font-medium">{item.valid_until ? format(new Date(item.valid_until), 'MMM d, yyyy') : '-'}</div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                      <div className="font-bold text-lg">${item.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                                    </td>
+                                    <td className="px-4 py-4 text-right">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8 rounded-full"
+                                        onClick={() => setSelectedJobDetail(item)}
+                                      >
+                                        <MoreVertical className="h-4 w-4" />
+                                      </Button>
+                                    </td>
+                                  </tr>
+                                ))}
+                                {totalPages > 1 && (
+                                  <tr>
+                                    <td colSpan={4} className="px-6 py-4 border-t border-border/40">
+                                      <div className="flex items-center justify-between">
+                                        <div className="text-xs text-muted-foreground">
+                                          Página {currentPage} de {totalPages}
+                                        </div>
+                                        <div className="flex gap-1">
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            disabled={currentPage === 1}
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                          >
+                                            <ChevronLeft className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            disabled={currentPage === totalPages}
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                          >
+                                            <ChevronRight className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </>
+                            );
+                          } else {
+                            return (
+                              <tr>
+                                <td colSpan={5} className="py-20 text-center text-muted-foreground">
+                                  <div className="flex flex-col items-center gap-2">
+                                    <Briefcase className="h-10 w-10 opacity-20" />
+                                    <p>No hay proyectos en esta categoría.</p>
                                   </div>
-                                  <div>
-                                    <div className="font-bold text-foreground group-hover:text-primary transition-colors">
-                                      {item.status === 'job' ? 'Job #' : 'Quote #'}{item.id.split('-')[0].toUpperCase()} - {item.project_name}
-                                    </div>
-                                    <Badge variant="outline" className={cn(
-                                      "mt-1 text-[10px] font-extrabold py-0 h-5 px-1.5",
-                                      item.status === 'job' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
-                                    )}>
-                                      {item.status === 'job' ? 'EN PROGRESO' : 'ESPERANDO RESPUESTA'}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-muted-foreground">
-                                <div className="text-[10px] font-bold uppercase tracking-tight opacity-60">PROGRAMADO PARA</div>
-                                <div className="text-sm font-medium">{item.valid_until ? format(new Date(item.valid_until), 'MMM d, yyyy') : '-'}</div>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <div className="font-bold text-lg">${item.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-                              </td>
-                              <td className="px-4 py-4 text-right">
-                                <Link href={`/proforma/${item.id}`}>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </Link>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={5} className="py-20 text-center text-muted-foreground">
-                              <div className="flex flex-col items-center gap-2">
-                                <Briefcase className="h-10 w-10 opacity-20" />
-                                <p>No hay proyectos en esta categoría.</p>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
+                                </td>
+                              </tr>
+                            );
+                          }
+                        })()}
                       </tbody>
                     </table>
                   </div>
-                )}
+                )
+                }
               </CardContent>
             </Card>
           </div>
@@ -363,6 +485,14 @@ export function ClientDetailClient({ client, proformas, payments, invoices }: Cl
         invoices={invoices}
         openType={openModal}
         onClose={() => setOpenModal(null)}
+      />
+
+      <JobDetailModal
+        isOpen={selectedJobDetail !== null}
+        onClose={() => setSelectedJobDetail(null)}
+        proforma={selectedJobDetail}
+        payments={payments}
+        expenses={expenses}
       />
     </div>
   );

@@ -124,7 +124,7 @@ export default function EditClientPage() {
         .from('clients')
         .delete()
         .eq('id', params.id);
-      
+
       if (error) {
         alert('Error al eliminar cliente');
         setIsSubmitting(false);
@@ -143,9 +143,9 @@ export default function EditClientPage() {
     <div className="container mx-auto px-4 py-8 max-w-2xl animate-in fade-in duration-500">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <Link href="/clients" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
+          <Link href={`../${params.id}`} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver a Clientes
+            Volver
           </Link>
           <h1 className="font-serif text-3xl font-bold tracking-tight">Editar Cliente</h1>
         </div>
@@ -177,7 +177,7 @@ export default function EditClientPage() {
                 <Input id="lastName" required placeholder="Ej. Pérez" value={lastName} onChange={e => setLastName(e.target.value)} />
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Teléfono</Label>
@@ -216,7 +216,7 @@ export default function EditClientPage() {
               <Label htmlFor="street2">Línea de Calle 2</Label>
               <Input id="street2" placeholder="Departamento, Suite, Piso..." value={street2} onChange={e => setStreet2(e.target.value)} />
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="city">Ciudad</Label>

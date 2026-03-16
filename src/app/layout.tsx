@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
+import DashboardMobileNav from '@/components/DashboardMobileNav';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -57,9 +58,9 @@ export default async function RootLayout({
           <>
             <aside className="hidden md:flex flex-col w-64 border-r border-border/40 bg-muted/20 h-screen sticky top-0 px-4 py-8 print:hidden">
               <Link href="/" className="mb-8 px-2 flex items-center space-x-2">
-                <span className="font-serif font-bold text-xl tracking-tight text-primary">Estudio<span className="text-foreground">Pro</span></span>
+                <img src="/logo.png" alt="Logo" />
               </Link>
-              
+
               <nav className="flex-1 space-y-2">
                 <Link href="/" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
                   <LayoutDashboard className="mr-3 h-4 w-4" />
@@ -101,7 +102,8 @@ export default async function RootLayout({
                 </form>
               </div>
             </aside>
-            <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+            <DashboardMobileNav unreadCount={unreadCount} />
+            <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden pt-16 md:pt-0">
               {children}
             </main>
             {/* Invisible realtime listener — keeps the badge count live */}

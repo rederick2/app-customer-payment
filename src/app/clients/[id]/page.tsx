@@ -44,12 +44,19 @@ export default async function ClientDetailPage({ params }: Props) {
     .eq('client_id', id)
     .order('created_at', { ascending: false });
 
+  // Fetch expenses for these proformas
+  const { data: expenses } = await supabase
+    .from('job_expenses')
+    .select('*')
+    .in('proforma_id', proformas?.map(p => p.id) || []);
+
   return (
     <ClientDetailClient 
       client={client}
       proformas={proformas || []}
       payments={payments || []}
       invoices={invoices || []}
+      expenses={expenses || []}
     />
   );
 }
