@@ -4,14 +4,14 @@ import * as React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Calendar as CalendarIcon, 
-  Clock, 
-  User, 
-  Search, 
-  Plus, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+  Clock,
+  User,
+  Search,
+  Plus,
   Filter,
   MoreVertical,
   Maximize2,
@@ -20,22 +20,22 @@ import {
   ExternalLink,
   Edit2
 } from 'lucide-react'
-import { 
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { 
-  format, 
-  addDays, 
+import {
+  format,
+  addDays,
   subDays,
-  startOfWeek, 
-  addWeeks, 
-  subWeeks, 
+  startOfWeek,
+  addWeeks,
+  subWeeks,
   addMonths,
   subMonths,
-  isSameDay, 
-  parseISO, 
+  isSameDay,
+  parseISO,
   startOfDay,
   eachDayOfInterval,
   endOfWeek,
@@ -92,7 +92,7 @@ export default function JobCalendarView({ jobs }: CalendarViewProps) {
   const getEventStyle = (start: string, end: string) => {
     const startDate = parseISO(start)
     const endDate = parseISO(end)
-    
+
     // Minutes from start of day (midnight)
     const startMinutes = getHours(startDate) * 60 + getMinutes(startDate)
     const endMinutes = getHours(endDate) * 60 + getMinutes(endDate)
@@ -111,7 +111,7 @@ export default function JobCalendarView({ jobs }: CalendarViewProps) {
 
   return (
     <div className="flex flex-col h-full bg-background border border-border/50 rounded-xl overflow-hidden shadow-xl animate-in fade-in duration-500">
-      
+
       {/* Premium Header */}
       <header className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-card border-b border-border/40 gap-4">
         <div className="flex items-center gap-4">
@@ -131,10 +131,10 @@ export default function JobCalendarView({ jobs }: CalendarViewProps) {
               Hoy
             </Button>
           </div>
-          
+
           <Button className="bg-[#306C3E] hover:bg-[#265832] text-white h-9 font-semibold gap-2 hidden lg:flex">
-             <Plus className="h-4 w-4" />
-             Encontrar Hora
+            <Plus className="h-4 w-4" />
+            Encontrar Hora
           </Button>
         </div>
 
@@ -146,9 +146,9 @@ export default function JobCalendarView({ jobs }: CalendarViewProps) {
               { label: 'Semana', value: 'week' },
               { label: 'Día', value: 'day' }
             ].map((v) => (
-              <Button 
+              <Button
                 key={v.value}
-                variant={view === v.value ? 'secondary' : 'ghost'} 
+                variant={view === v.value ? 'secondary' : 'ghost'}
                 size="sm"
                 className={cn(
                   "h-8 px-4 text-xs font-semibold rounded-md transition-all",
@@ -162,12 +162,12 @@ export default function JobCalendarView({ jobs }: CalendarViewProps) {
           </div>
 
           <div className="flex items-center gap-1 border-l border-border/50 pl-3">
-             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-               <Search className="h-4 w-4" />
-             </Button>
-             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
-               <Filter className="h-4 w-4" />
-             </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+              <Search className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary">
+              <Filter className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
@@ -258,15 +258,15 @@ function WeekView({ jobs, currentDate, days, getEventStyle }: { jobs: Job[], cur
                 </div>
               )
             })}
-            
+
             {/* Current Time Indicator Line */}
             {days.some(day => isToday(day)) && (
-               <div 
+              <div
                 className="absolute left-0 right-0 border-t-2 border-primary z-10 pointer-events-none after:content-[''] after:absolute after:-left-1.5 after:-top-1.5 after:h-3 after:w-3 after:rounded-full after:bg-primary"
-                style={{ 
+                style={{
                   top: `${(getHours(new Date()) * 60 + getMinutes(new Date())) / 60 * 64}px`,
                 }}
-               />
+              />
             )}
           </div>
         </div>
@@ -277,7 +277,7 @@ function WeekView({ jobs, currentDate, days, getEventStyle }: { jobs: Job[], cur
 
 function DayView({ jobs, currentDate, getEventStyle }: { jobs: Job[], currentDate: Date, getEventStyle: any }) {
   const dayJobs = jobs.filter(j => isSameDay(parseISO(j.job_start_at), currentDate))
-  
+
   return (
     <div className="flex-1 flex flex-col bg-[#F9F9F7]">
       <div className="flex border-b border-border/40 bg-[#F9F9F7]/95 backdrop-blur-md z-20">
@@ -310,12 +310,12 @@ function DayView({ jobs, currentDate, getEventStyle }: { jobs: Job[], currentDat
               <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at)} />
             ))}
             {isToday(currentDate) && (
-               <div 
+              <div
                 className="absolute left-0 right-0 border-t-2 border-primary z-10 pointer-events-none after:content-[''] after:absolute after:-left-1.5 after:-top-1.5 after:h-3 after:w-3 after:rounded-full after:bg-primary"
-                style={{ 
+                style={{
                   top: `${(getHours(new Date()) * 60 + getMinutes(new Date())) / 60 * 64}px`,
                 }}
-               />
+              />
             )}
           </div>
         </div>
@@ -370,7 +370,7 @@ function MonthView({ jobs, currentDate }: { jobs: Job[], currentDate: Date }) {
 function JobCardCompact({ job }: { job: Job }) {
   return (
     <Popover>
-      <PopoverTrigger asChild>
+      <PopoverTrigger>
         <div className="px-2 py-1 rounded bg-[#0D3B47] text-white text-[10px] font-bold truncate cursor-pointer hover:bg-[#144D5D] transition-all shadow-sm">
           {format(parseISO(job.job_start_at), 'HH:mm')} {job.project_name}
         </div>
@@ -385,8 +385,8 @@ function JobCardCompact({ job }: { job: Job }) {
 function JobCard({ job, style }: { job: Job, style: React.CSSProperties }) {
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <div 
+      <PopoverTrigger>
+        <div
           className="absolute left-1 right-1 rounded-lg bg-[#0D3B47] text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-[#144D5D] transition-all hover:scale-[1.02] hover:z-30 border border-white/10"
           style={style}
           onClick={(e) => e.stopPropagation()} // Prevent accidental column clicks
@@ -416,13 +416,13 @@ function JobDetailContent({ job }: { job: Job }) {
     <div className="bg-white">
       {/* Popover Header */}
       <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
-         <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-[#0D3B47]" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Detalle del Job</span>
-         </div>
-         <Button variant="ghost" size="icon" className="h-6 w-6">
-            <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
-         </Button>
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-[#0D3B47]" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Detalle del Job</span>
+        </div>
+        <Button variant="ghost" size="icon" className="h-6 w-6">
+          <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+        </Button>
       </div>
 
       <div className="p-5 space-y-5">
@@ -437,7 +437,7 @@ function JobDetailContent({ job }: { job: Job }) {
         <div className="space-y-4">
           <div className="flex gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-               <User className="h-4 w-4 text-primary" />
+              <User className="h-4 w-4 text-primary" />
             </div>
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Cliente</p>
@@ -447,7 +447,7 @@ function JobDetailContent({ job }: { job: Job }) {
 
           <div className="flex gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-               <Clock className="h-4 w-4 text-primary" />
+              <Clock className="h-4 w-4 text-primary" />
             </div>
             <div className="grid grid-cols-2 gap-x-8">
               <div>
@@ -463,20 +463,20 @@ function JobDetailContent({ job }: { job: Job }) {
         </div>
 
         <div className="grid grid-cols-2 gap-2 pt-2">
-           <a 
-             href={`/proforma/${job.id}`}
-             className={cn(buttonVariants({ variant: 'outline' }), "h-10 text-xs font-bold gap-2 hover:bg-muted/50 border-border/60")}
-           >
-              <Edit2 className="h-3.5 w-3.5" />
-              Editar
-           </a>
-           <a 
-             href={`/proforma/${job.id}`}
-             className={cn(buttonVariants({ variant: 'default' }), "h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
-           >
-              Ver Detalles
-              <ExternalLink className="h-3.5 w-3.5" />
-           </a>
+          <a
+            href={`/proforma/${job.id}`}
+            className={cn(buttonVariants({ variant: 'outline' }), "h-10 text-xs font-bold gap-2 hover:bg-muted/50 border-border/60")}
+          >
+            <Edit2 className="h-3.5 w-3.5" />
+            Editar
+          </a>
+          <a
+            href={`/proforma/${job.id}`}
+            className={cn(buttonVariants({ variant: 'default' }), "h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
+          >
+            Ver Detalles
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         </div>
       </div>
     </div>
