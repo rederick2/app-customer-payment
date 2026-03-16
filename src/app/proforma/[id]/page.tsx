@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import ProformaDropdownActions from './components/ProformaDropdownActions';
 import EmailQuoteModal from './components/EmailQuoteModal';
+import ExpenseManager from '@/components/ExpenseManager';
 
 export const revalidate = 0;
 
@@ -235,19 +236,23 @@ export default async function ProformaView({ params }: Props) {
 
       </div>
 
-      {/* Messages Link */}
-      <div className="mt-4 print:hidden">
-        <Link
-          href={`/proforma/${id}/messages`}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/50 bg-card text-sm font-medium text-foreground hover:border-primary/40 hover:shadow-sm transition-all group"
-        >
-          <MessageSquare className="h-4 w-4 text-primary" />
-          View Messages
-          <span className="ml-auto text-xs text-emerald-600 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live
-          </span>
-        </Link>
+      {/* Communication & Expenses */}
+      <div className="grid grid-cols-1 gap-8 print:hidden">
+        <ExpenseManager proformaId={id} />
+        
+        <div className="mt-4">
+          <Link
+            href={`/proforma/${id}/messages`}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/50 bg-card text-sm font-medium text-foreground hover:border-primary/40 hover:shadow-sm transition-all group"
+          >
+            <MessageSquare className="h-4 w-4 text-primary" />
+            View Messages
+            <span className="ml-auto text-xs text-emerald-600 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live
+            </span>
+          </Link>
+        </div>
       </div>
 
     </div>
