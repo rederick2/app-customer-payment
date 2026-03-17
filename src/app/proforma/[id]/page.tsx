@@ -64,6 +64,20 @@ export default async function ProformaView({ params }: Props) {
     .eq('proforma_id', id)
     .order('payment_date', { ascending: false });
 
+  const { data: tasks } = await supabase
+    .from('job_tasks')
+    .select(`
+      *,
+      team_members (*)
+    `)
+    .eq('proforma_id', id)
+    .order('due_date', { ascending: true });
+
+  const { data: teamMembers } = await supabase
+    .from('team_members')
+    .select('*')
+    .order('name', { ascending: true });
+
   if (proforma.status === 'job') {
     return (
       <JobView 
@@ -75,6 +89,8 @@ export default async function ProformaView({ params }: Props) {
         timeEntries={timeEntries || []}
         invoices={invoices || []}
         payments={payments || []}
+        tasks={tasks || []}
+        teamMembers={teamMembers || []}
       />
     );
   }

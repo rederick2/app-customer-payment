@@ -6,7 +6,7 @@ export const revalidate = 0;
 
 export default async function CalendarPage() {
   const supabase = await createClient();
-  
+
   // Fetch all proformas with status 'job', including client info
   const { data: jobs, error } = await supabase
     .from('proformas')
@@ -17,7 +17,8 @@ export default async function CalendarPage() {
       job_end_at,
       clients (
         name,
-        company_name
+        company_name,
+        street_1
       )
     `)
     .eq('status', 'job')
@@ -25,6 +26,22 @@ export default async function CalendarPage() {
 
   if (error) {
     console.error('Error fetching jobs for calendar:', error);
+  }
+
+  // Fetch job tasks
+  const { data: tasks, error: tasksError } = await supabase
+    .from('job_tasks')
+    .select(`
+      *,
+      team_members (name),
+      proformas (clients (street_1))
+    `)
+    .order('due_date', { ascending: true });
+
+  console.log(tasks)
+
+  if (tasksError) {
+    console.error('Error fetching tasks for calendar:', tasksError);
   }
 
   return (
@@ -36,7 +53,7 @@ export default async function CalendarPage() {
         </div>
       </div>
 
-      <JobCalendarView jobs={(jobs as any) || []} />
+      <JobCalendarView jobs={(jobs as any) || []} tasks={(tasks as any) || []} />
     </div>
   );
 }

@@ -50,6 +50,27 @@ import {
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
+const getGoogleCalendarUrl = (title: string, description: string, start: string, end: string, address: string) => {
+  const formatGoogleDate = (d: string) => format(parseISO(d), "yyyyMMdd'T'HHmmss");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatGoogleDate(start)}/${formatGoogleDate(end)}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(address)}`;
+};
+
+const getAppleCalendarData = (title: string, description: string, start: string, end: string) => {
+  const formatICSDate = (d: string) => format(parseISO(d), "yyyyMMdd'T'HHmmss");
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VEVENT',
+    `DTSTART:${formatICSDate(start)}`,
+    `DTEND:${formatICSDate(end)}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${description}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\n');
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
+};
+
 interface Job {
   id: string
   project_name: string
@@ -57,17 +78,38 @@ interface Job {
   job_end_at: string
   clients: {
     name: string
-    company_name?: string
+    company_name?: string,
+    street_1?: string
+  }
+}
+
+interface Task {
+  id: string
+  proforma_id: string
+  title: string
+  description: string
+  due_date: string
+  end_date?: string
+  status: 'pending' | 'completed'
+  job_id: string
+  team_members?: {
+    name: string
+  },
+  proformas?: {
+    clients?: {
+      street_1?: string
+    }
   }
 }
 
 interface CalendarViewProps {
   jobs: Job[]
+  tasks: Task[]
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
-export default function JobCalendarView({ jobs }: CalendarViewProps) {
+export default function JobCalendarView({ jobs, tasks }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = React.useState(new Date())
   const [view, setView] = React.useState<'month' | 'week' | 'day'>('week')
 
@@ -175,11 +217,11 @@ export default function JobCalendarView({ jobs }: CalendarViewProps) {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {view === 'month' ? (
-          <MonthView jobs={jobs} currentDate={currentDate} />
+          <MonthView jobs={jobs} tasks={tasks} currentDate={currentDate} />
         ) : view === 'week' ? (
-          <WeekView jobs={jobs} currentDate={currentDate} days={days} getEventStyle={getEventStyle} />
+          <WeekView jobs={jobs} tasks={tasks} currentDate={currentDate} days={days} getEventStyle={getEventStyle} />
         ) : (
-          <DayView jobs={jobs} currentDate={currentDate} getEventStyle={getEventStyle} />
+          <DayView jobs={jobs} tasks={tasks} currentDate={currentDate} getEventStyle={getEventStyle} />
         )}
 
         {/* Right Panel - Unscheduled / Upcoming */}
@@ -205,7 +247,7 @@ export default function JobCalendarView({ jobs }: CalendarViewProps) {
   )
 }
 
-function WeekView({ jobs, currentDate, days, getEventStyle }: { jobs: Job[], currentDate: Date, days: Date[], getEventStyle: any }) {
+function WeekView({ jobs, tasks, currentDate, days, getEventStyle }: { jobs: Job[], tasks: Task[], currentDate: Date, days: Date[], getEventStyle: any }) {
   return (
     <div className="flex-1 flex flex-col bg-[#F9F9F7]">
       {/* Days Header */}
@@ -247,6 +289,7 @@ function WeekView({ jobs, currentDate, days, getEventStyle }: { jobs: Job[], cur
           <div className="flex-1 grid grid-cols-7 relative">
             {days.map((day) => {
               const dayJobs = jobs.filter(j => isSameDay(parseISO(j.job_start_at), day))
+              const dayTasks = tasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), day))
               return (
                 <div key={day.toString()} className="relative border-r border-border/20 last:border-r-0">
                   {HOURS.map((hour) => (
@@ -254,6 +297,14 @@ function WeekView({ jobs, currentDate, days, getEventStyle }: { jobs: Job[], cur
                   ))}
                   {dayJobs.map((job) => (
                     <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at)} />
+                  ))}
+                  {dayTasks.map((task, idx) => (
+                    <TaskCard key={task.id} task={task} style={{
+                      ...getEventStyle(task.due_date, task.end_date || task.due_date),
+                      left: `${50 + (idx * 5)}%`,
+                      width: '45%',
+                      zIndex: 40
+                    }} />
                   ))}
                 </div>
               )
@@ -275,8 +326,9 @@ function WeekView({ jobs, currentDate, days, getEventStyle }: { jobs: Job[], cur
   )
 }
 
-function DayView({ jobs, currentDate, getEventStyle }: { jobs: Job[], currentDate: Date, getEventStyle: any }) {
+function DayView({ jobs, tasks, currentDate, getEventStyle }: { jobs: Job[], tasks: Task[], currentDate: Date, getEventStyle: any }) {
   const dayJobs = jobs.filter(j => isSameDay(parseISO(j.job_start_at), currentDate))
+  const dayTasks = tasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), currentDate))
 
   return (
     <div className="flex-1 flex flex-col bg-[#F9F9F7]">
@@ -309,6 +361,14 @@ function DayView({ jobs, currentDate, getEventStyle }: { jobs: Job[], currentDat
             {dayJobs.map((job) => (
               <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at)} />
             ))}
+            {dayTasks.map((task, idx) => (
+              <TaskCard key={task.id} task={task} style={{
+                ...getEventStyle(task.due_date, task.end_date || task.due_date),
+                left: `${50 + (idx * 5)}%`,
+                width: '45%',
+                zIndex: 40
+              }} />
+            ))}
             {isToday(currentDate) && (
               <div
                 className="absolute left-0 right-0 border-t-2 border-primary z-10 pointer-events-none after:content-[''] after:absolute after:-left-1.5 after:-top-1.5 after:h-3 after:w-3 after:rounded-full after:bg-primary"
@@ -324,7 +384,7 @@ function DayView({ jobs, currentDate, getEventStyle }: { jobs: Job[], currentDat
   )
 }
 
-function MonthView({ jobs, currentDate }: { jobs: Job[], currentDate: Date }) {
+function MonthView({ jobs, tasks, currentDate }: { jobs: Job[], tasks: Task[], currentDate: Date }) {
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 })
@@ -358,6 +418,9 @@ function MonthView({ jobs, currentDate }: { jobs: Job[], currentDate: Date }) {
                 {dayJobs.map(job => (
                   <JobCardCompact key={job.id} job={job} />
                 ))}
+                {tasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), day)).map(task => (
+                  <TaskCardCompact key={task.id} task={task} />
+                ))}
               </div>
             </div>
           )
@@ -370,13 +433,35 @@ function MonthView({ jobs, currentDate }: { jobs: Job[], currentDate: Date }) {
 function JobCardCompact({ job }: { job: Job }) {
   return (
     <Popover>
-      <PopoverTrigger>
-        <div className="px-2 py-1 rounded bg-[#0D3B47] text-white text-[10px] font-bold truncate cursor-pointer hover:bg-[#144D5D] transition-all shadow-sm">
-          {format(parseISO(job.job_start_at), 'HH:mm')} {job.project_name}
-        </div>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <div className="px-2 py-1 rounded bg-[#0D3B47] text-white text-[10px] font-bold truncate cursor-pointer hover:bg-[#144D5D] transition-all shadow-sm">
+            {format(parseISO(job.job_start_at), 'HH:mm')} {job.project_name}
+          </div>
+        }
+      />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
         <JobDetailContent job={job} />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function TaskCardCompact({ task }: { task: Task }) {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <div className={cn(
+            "px-2 py-1 rounded text-white text-[10px] font-bold truncate cursor-pointer transition-all shadow-sm",
+            task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
+          )}>
+            {format(parseISO(task.due_date), 'HH:mm')} {task.title}
+          </div>
+        }
+      />
+      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
+        <TaskDetailContent task={task} />
       </PopoverContent>
     </Popover>
   )
@@ -385,27 +470,61 @@ function JobCardCompact({ job }: { job: Job }) {
 function JobCard({ job, style }: { job: Job, style: React.CSSProperties }) {
   return (
     <Popover>
-      <PopoverTrigger>
-        <div
-          className="absolute left-1 right-1 rounded-lg bg-[#0D3B47] text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-[#144D5D] transition-all hover:scale-[1.02] hover:z-30 border border-white/10"
-          style={style}
-          onClick={(e) => e.stopPropagation()} // Prevent accidental column clicks
-        >
-          <div className="font-bold truncate leading-tight">
-            {job.project_name}
+      <PopoverTrigger
+        render={
+          <div
+            className="absolute left-1 right-1 rounded-lg bg-[#0D3B47] text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-[#144D5D] transition-all hover:scale-[1.02] hover:z-30 border border-white/10"
+            style={style}
+          >
+            <div className="font-bold truncate leading-tight">
+              {job.project_name}
+            </div>
+            <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
+              <Clock className="h-3 w-3 mr-1 shrink-0" />
+              {format(parseISO(job.job_start_at), 'HH:mm')}
+            </div>
+            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Maximize2 className="h-3 w-3 text-white/60" />
+            </div>
           </div>
-          <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
-            <Clock className="h-3 w-3 mr-1 shrink-0" />
-            {format(parseISO(job.job_start_at), 'HH:mm')}
-          </div>
-          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Maximize2 className="h-3 w-3 text-white/60" />
-          </div>
-        </div>
-      </PopoverTrigger>
+        }
+      />
       {/* Portalled popover content with controlled side/align */}
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="right" align="start" sideOffset={12}>
+      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
         <JobDetailContent job={job} />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function TaskCard({ task, style }: { task: Task, style: React.CSSProperties }) {
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <div
+            className={cn(
+              "absolute rounded-lg text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer transition-all hover:scale-[1.02] hover:z-50 border border-white/10",
+              task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
+            )}
+            style={style}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <CheckCircle2 className={cn("h-3 w-3", task.status === 'completed' ? "text-emerald-200" : "text-orange-200")} />
+              <span className="font-bold truncate leading-tight uppercase text-[9px] tracking-tight">Tarea</span>
+            </div>
+            <div className="font-bold truncate leading-tight">
+              {task.title}
+            </div>
+            <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
+              <Clock className="h-3 w-3 mr-1 shrink-0" />
+              {format(parseISO(task.due_date), 'HH:mm')}
+            </div>
+          </div>
+        }
+      />
+      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
+        <TaskDetailContent task={task} />
       </PopoverContent>
     </Popover>
   )
@@ -462,6 +581,29 @@ function JobDetailContent({ job }: { job: Job }) {
           </div>
         </div>
 
+        <div className="pt-4 border-t border-border/10">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Recordatorios</p>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={getGoogleCalendarUrl(job.project_name, `Trabajo: ${job.project_name}`, job.job_start_at, job.job_end_at, job.clients?.street_1 || '')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-blue-100 hover:bg-blue-50 hover:text-blue-700 text-blue-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Google Calendar
+            </a>
+            <a
+              href={getAppleCalendarData(job.project_name, `Trabajo: ${job.project_name}`, job.job_start_at, job.job_end_at)}
+              download={`${job.project_name.replace(/\s+/g, '_')}.ics`}
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-slate-100 hover:bg-slate-50 hover:text-slate-700 text-slate-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Apple Calendar
+            </a>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-2 pt-2">
           <a
             href={`/proforma/${job.id}`}
@@ -475,6 +617,104 @@ function JobDetailContent({ job }: { job: Job }) {
             className={cn(buttonVariants({ variant: 'default' }), "h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
           >
             Ver Detalles
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TaskDetailContent({ task }: { task: Task }) {
+  return (
+    <div className="bg-white">
+      <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={cn("h-2 w-2 rounded-full", task.status === 'completed' ? "bg-emerald-500" : "bg-orange-500")} />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Detalle de la Tarea</span>
+        </div>
+        <Badge variant={task.status === 'completed' ? 'secondary' : 'outline'} className={cn(
+          "text-[9px] font-black uppercase tracking-widest px-2 py-0 h-4.5",
+          task.status === 'completed' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-orange-50 text-orange-700 border-orange-100"
+        )}>
+          {task.status}
+        </Badge>
+      </div>
+
+      <div className="p-5 space-y-4">
+        <div>
+          <h4 className="text-lg font-bold text-foreground leading-tight">{task.title}</h4>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{task.description}</p>
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <div className="flex gap-3">
+            <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+              <Clock className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Programación</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-foreground">{format(parseISO(task.due_date), 'MMM d, p')}</p>
+                {task.end_date && (
+                  <>
+                    <span className="text-muted-foreground">→</span>
+                    <p className="text-sm font-semibold text-foreground">{format(parseISO(task.end_date), 'p')}</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+              <User className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Asignado a</p>
+              <p className="text-sm font-semibold text-foreground">{task.team_members?.name || 'Unassigned'}</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+              <MapPin className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Dirección</p>
+              <p className="text-sm font-semibold text-foreground">{task.proformas?.clients?.street_1 || 'Unassigned'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-border/10">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Recordatorios</p>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={getGoogleCalendarUrl(task.title, task.description, task.due_date, task.end_date || task.due_date, task.proformas?.clients?.street_1 || '')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-blue-100 hover:bg-blue-50 hover:text-blue-700 text-blue-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Google Calendar
+            </a>
+            <a
+              href={getAppleCalendarData(task.title, task.description, task.due_date, task.end_date || task.due_date)}
+              download={`${task.title.replace(/\s+/g, '_')}.ics`}
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-slate-100 hover:bg-slate-50 hover:text-slate-700 text-slate-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Apple Calendar
+            </a>
+          </div>
+        </div>
+
+        <div className="pt-3">
+          <a
+            href={`/proforma/${task.proforma_id}`}
+            className={cn(buttonVariants({ variant: 'default' }), "w-full h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
+          >
+            View job associated
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
