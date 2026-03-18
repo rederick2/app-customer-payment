@@ -111,22 +111,55 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
               <CardTitle className="text-lg font-serif">Contactos</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-lg border border-border/40">
                 <table className="w-full text-sm">
                   <thead className="text-xs uppercase bg-muted/20 text-muted-foreground border-b border-border/40">
                     <tr>
-                      <th className="px-6 py-3 font-bold text-left tracking-wider">Nombre</th>
-                      <th className="px-6 py-3 font-bold text-left tracking-wider">Rol</th>
-                      <th className="px-6 py-3 font-bold text-left tracking-wider">Teléfono</th>
+                      {/* Asignamos anchos específicos para mejor jerarquía visual */}
+                      <th className="px-6 py-3 font-bold text-left tracking-wider w-1/4">Name</th>
+                      <th className="px-6 py-3 font-bold text-left tracking-wider w-1/3">Address</th>
+                      <th className="px-6 py-3 font-bold text-left tracking-wider">Phone</th>
                       <th className="px-6 py-3 font-bold text-left tracking-wider">Email</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     <tr className="hover:bg-muted/10 transition-colors">
-                      <td className="px-6 py-4 font-semibold">{[client.first_name, client.last_name].filter(Boolean).join(' ') || client.name}</td>
-                      <td className="px-6 py-4 text-muted-foreground">Principal</td>
-                      <td className="px-6 py-4 text-muted-foreground">{client.phone || '-'}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{client.email || '-'}</td>
+                      {/* Nombre */}
+                      <td className="px-6 py-4 font-semibold text-foreground">
+                        {[client.first_name, client.last_name].filter(Boolean).join(' ') || client.name}
+                      </td>
+
+                      {/* Dirección con Link a Google Maps */}
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {client.street_1 ? (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${client.street_1}, ${client.city}, ${client.province} ${client.postal_code}`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary hover:underline transition-all"
+                          >
+                            {`${client.street_1}, ${client.city}, ${client.province} ${client.postal_code}`}
+                          </a>
+                        ) : '-'}
+                      </td>
+
+                      {/* Teléfono con Link de marcado */}
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {client.phone ? (
+                          <a href={`tel:${client.phone}`} className="hover:text-primary hover:underline transition-all">
+                            {client.phone}
+                          </a>
+                        ) : '-'}
+                      </td>
+
+                      {/* Email con Link mailto */}
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {client.email ? (
+                          <a href={`mailto:${client.email}`} className="hover:text-primary hover:underline transition-all">
+                            {client.email}
+                          </a>
+                        ) : '-'}
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -303,9 +336,9 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                                       <div className="font-bold text-lg">${item.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                                     </td>
                                     <td className="px-4 py-4 text-right">
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
                                         className="h-8 w-8 rounded-full"
                                         onClick={() => setSelectedJobDetail(item)}
                                       >
