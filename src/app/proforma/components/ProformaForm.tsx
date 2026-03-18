@@ -100,15 +100,15 @@ interface SortableItemProps {
   showRemoveButton: boolean;
 }
 
-function SortableItem({ 
-  item, 
+function SortableItem({
+  item,
   catalog,
-  updateItem, 
-  updateItemFields, 
-  handlePhotoUpload, 
-  removePhoto, 
+  updateItem,
+  updateItemFields,
+  handlePhotoUpload,
+  removePhoto,
   removeItem,
-  showRemoveButton 
+  showRemoveButton
 }: SortableItemProps) {
   const {
     attributes,
@@ -127,9 +127,9 @@ function SortableItem({
   };
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
+    <div
+      ref={setNodeRef}
+      style={style}
       className={cn(
         "group relative bg-white border border-border/40 rounded-xl mb-4 overflow-hidden transition-all duration-300",
         isDragging ? "shadow-2xl ring-2 ring-primary/20 z-50 scale-[1.02]" : "hover:border-primary/20 hover:shadow-md",
@@ -139,10 +139,10 @@ function SortableItem({
       <div className="flex items-start gap-4 p-6">
         {/* Drag Handle & Optional Checkbox Area */}
         <div className="flex flex-col items-center gap-4 pt-4">
-          <div 
-            {...attributes} 
-            {...listeners} 
-            className="p-1.5 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors"
+          <div
+            {...attributes}
+            {...listeners}
+            className="p-1.5 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground group-hover:text-muted-foreground/40 transition-colors"
           >
             <GripVertical className="h-6 w-6" />
           </div>
@@ -152,8 +152,8 @@ function SortableItem({
           {/* Main Context Row */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
             <div className="md:col-span-5 space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Nombre</Label>
-              <Input 
+              <Label>Nombre del Item *</Label>
+              <Input
                 placeholder="Nombre del producto o servicio..."
                 value={item.description}
                 required
@@ -166,43 +166,40 @@ function SortableItem({
                     updateItem(item.id, 'description', val);
                   }
                 }}
-                className="h-12 font-bold text-lg bg-transparent border-none focus-visible:ring-0 px-0 shadow-none placeholder:opacity-30"
               />
             </div>
 
             <div className="md:col-span-2 space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 text-center block">Cantidad</Label>
-              <div className="h-12 border border-primary/20 rounded-xl bg-background focus-within:border-primary/40 transition-all shadow-sm flex items-center justify-center">
-                <input
-                  type="number"
-                  min="1"
-                  value={item.quantity || ''}
-                  required
-                  onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                  className="w-full h-full text-center bg-transparent border-none focus:ring-0 font-black text-xl"
-                />
-              </div>
+              <Label className="text-center block">Cantidad *</Label>
+              <Input
+                type="number"
+                min="1"
+                value={item.quantity || ''}
+                required
+                onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                className="text-center font-bold"
+              />
             </div>
 
             <div className="md:col-span-2 space-y-2 text-right">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 px-2">Precio Unitario</Label>
-              <div className="h-12 flex items-center justify-end px-3 bg-background border border-border/60 rounded-xl focus-within:border-primary/40 transition-all shadow-sm">
-                <input
+              <Label className="px-2">Precio Unitario *</Label>
+              <div className="relative">
+                <Input
                   type="number"
                   min="0"
                   step="0.01"
                   value={item.unit_price || ''}
                   required
                   onChange={(e) => updateItem(item.id, 'unit_price', parseFloat(e.target.value) || 0)}
-                  className="w-full bg-transparent border-none focus:ring-0 text-right font-black text-lg pr-1"
+                  className="text-right font-bold pr-10"
                 />
-                <span className="text-[10px] font-black text-muted-foreground/30 ml-1">USD</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">USD</span>
               </div>
             </div>
 
             <div className="md:col-span-2 space-y-2 text-right">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 px-2">Total</Label>
-              <div className="h-12 flex items-center justify-end font-black text-primary text-xl tracking-tight pr-2">
+              <Label className="px-2 text-muted-foreground/60">Total</Label>
+              <div className="h-10 flex items-center justify-end font-bold text-primary text-lg tracking-tight pr-2">
                 ${(item.quantity * item.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
             </div>
@@ -225,8 +222,8 @@ function SortableItem({
           {/* Description & Photo Row */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-3 space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Descripción</Label>
-              <Textarea 
+              <Label>Descripción</Label>
+              <Textarea
                 placeholder="Descripción detallada del producto o materiales..."
                 value={item.details}
                 onChange={(e) => updateItem(item.id, 'details', e.target.value)}
@@ -235,67 +232,67 @@ function SortableItem({
             </div>
 
             <div className="lg:col-span-1 space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">Foto del Item</Label>
-               <div className="relative h-32 w-full rounded-2xl overflow-hidden border-2 border-border/40 bg-muted/10 group/img flex items-center justify-center hover:border-primary/20 transition-all shadow-sm">
-                 {item.photoPreviewUrl ? (
-                   <>
-                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                     <img src={item.photoPreviewUrl} alt="Preview" className="object-cover w-full h-full transition-transform duration-500 group-hover/img:scale-110" />
-                     <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover/img:opacity-100 transition-all translate-x-2 group-hover/img:translate-x-0">
-                        <label className="h-8 w-8 rounded-lg bg-white/90 backdrop-blur-md shadow-xl border border-border/20 flex items-center justify-center cursor-pointer text-primary hover:bg-white transition-all">
-                          <Pencil className="h-4 w-4" />
-                          <input 
-                             type="file" 
-                             accept="image/*" 
-                             className="hidden" 
-                             onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                   handlePhotoUpload(item.id, e.target.files[0]);
-                                }
-                             }}
-                          />
-                        </label>
-                        <Button 
-                          type="button" 
-                          variant="destructive" 
-                          size="icon" 
-                          onClick={() => removePhoto(item.id)}
-                          className="h-8 w-8 rounded-lg shadow-xl bg-destructive/90 backdrop-blur-md border border-white/10 hover:bg-destructive transition-all"
-                        >
-                          <Trash2 className="h-4 w-4 text-white" />
-                        </Button>
-                     </div>
-                   </>
-                 ) : (
-                   <label className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground/20 cursor-pointer hover:bg-muted/20 transition-colors">
-                     <Upload className="h-8 w-8 stroke-[1.5px]" />
-                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">Agregar Foto</span>
-                     <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={(e) => {
-                           if (e.target.files && e.target.files[0]) {
+              <Label>Foto del Item</Label>
+              <div className="relative h-32 w-full rounded-2xl overflow-hidden border-2 border-border/40 bg-muted/10 group/img flex items-center justify-center hover:border-primary/20 transition-all shadow-sm">
+                {item.photoPreviewUrl ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.photoPreviewUrl} alt="Preview" className="object-cover w-full h-full transition-transform duration-500 group-hover/img:scale-110" />
+                    <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover/img:opacity-100 transition-all translate-x-2 group-hover/img:translate-x-0">
+                      <label className="h-8 w-8 rounded-lg bg-white/90 backdrop-blur-md shadow-xl border border-border/20 flex items-center justify-center cursor-pointer text-primary hover:bg-white transition-all">
+                        <Pencil className="h-4 w-4" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
                               handlePhotoUpload(item.id, e.target.files[0]);
-                           }
-                        }}
-                     />
-                   </label>
-                 )}
-               </div>
+                            }
+                          }}
+                        />
+                      </label>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => removePhoto(item.id)}
+                        className="h-8 w-8 rounded-lg shadow-xl bg-destructive/90 backdrop-blur-md border border-white/10 hover:bg-destructive transition-all"
+                      >
+                        <Trash2 className="h-4 w-4 text-white" />
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <label className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground/20 cursor-pointer hover:bg-muted/20 transition-colors">
+                    <Upload className="h-8 w-8 stroke-[1.5px]" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Agregar Foto</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handlePhotoUpload(item.id, e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Optional Toggle Row */}
           <div className="pt-4 flex items-center">
             <div className="flex items-center gap-3 bg-muted/10 px-4 py-2 rounded-xl border border-border/40 hover:bg-muted/20 transition-all cursor-pointer group/opt">
-              <Checkbox 
+              <Checkbox
                 id={`opt-${item.id}`}
                 checked={item.is_optional}
                 onCheckedChange={(checked) => updateItem(item.id, 'is_optional', !!checked)}
                 className="h-5 w-5 rounded-md border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all group-hover/opt:scale-110"
               />
-              <Label htmlFor={`opt-${item.id}`} className="text-[11px] font-black uppercase tracking-[0.1em] text-muted-foreground/80 cursor-pointer select-none">Marcar como opcional</Label>
+              <Label htmlFor={`opt-${item.id}`} className="text-xs font-medium text-muted-foreground cursor-pointer select-none">Marcar como opcional</Label>
             </div>
           </div>
         </div>
@@ -834,7 +831,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
           </Card>
         </div>
 
-        <Card className="shadow-2xl border-none bg-muted/20 overflow-visible rounded-3xl">
+        <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
           <CardHeader className="pb-8 px-10 pt-10 flex flex-row items-center justify-between">
             <CardTitle className="text-2xl font-serif font-bold tracking-tight">Conceptos de Cotización</CardTitle>
           </CardHeader>
@@ -842,7 +839,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             <datalist id="catalog-descriptions">
               {catalog.map(c => <option key={c.description} value={c.description} />)}
             </datalist>
-            
+
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -874,20 +871,13 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
             {/* List Footer Actions (Matching reference image) */}
             <div className="mt-8 flex gap-4">
-              <Button 
-                type="button" 
-                onClick={addItem} 
-                className="bg-[#2e7d32] hover:bg-[#1b5e20] text-white font-bold px-10 h-14 rounded-2xl shadow-xl shadow-green-900/20 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]"
+              <Button
+                type="button"
+                onClick={addItem}
+                className="bg-primary text-white font-bold px-10 h-14 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]"
               >
                 <PlusCircle className="h-4 w-4" />
                 Agregar Ítem
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline"
-                className="border-primary/20 text-primary hover:bg-primary/5 font-bold px-10 h-14 rounded-2xl transition-all uppercase text-[10px] tracking-[0.2em]"
-              >
-                Agregar Texto
               </Button>
             </div>
           </CardContent>
