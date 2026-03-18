@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -380,6 +380,11 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   const [depositAmount, setDepositAmount] = useState<number>(initialData?.proforma?.deposit_amount || 0);
   const [paymentTerms, setPaymentTerms] = useState<string>(initialData?.proforma?.payment_terms || "");
   const [isSavingTax, setIsSavingTax] = useState(false);
+  
+  // AI Generation States
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [aiProjectDescription, setAIProjectDescription] = useState("");
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -538,6 +543,55 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
       }
       return item;
     }));
+  };
+
+  const handleAIGenerate = async () => {
+    if (!projectName) {
+      toast.error("Por favor ingresa un nombre para el proyecto.");
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const response = await fetch('/api/proforma/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectName,
+          projectDescription: aiProjectDescription
+        })
+      });
+
+      if (!response.ok) throw new Error("Error generating proforma");
+
+      const data = await response.json();
+      
+      const newItems = data.items.map((item: any) => ({
+        id: crypto.randomUUID(),
+        description: item.description,
+        details: item.details,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        is_optional: false,
+        sort_order: 0,
+        photo: null
+      }));
+
+      // Si el primer item está vacío (que es el default), lo reemplazamos
+      if (items.length === 1 && !items[0].description && items[0].unit_price === 0) {
+        setItems(newItems);
+      } else {
+        setItems([...items, ...newItems]);
+      }
+
+      toast.success("Items generados con éxito");
+      setIsAIModalOpen(false);
+    } catch (error) {
+      console.error("AI Generation Error:", error);
+      toast.error("Error al generar la proforma con IA");
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   const calculateSubtotal = () => {
@@ -716,6 +770,17 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             {mode === 'edit' ? 'Editar Proforma' : 'Nueva Proforma'}
           </h1>
         </div>
+
+        {mode === 'create' && (
+          <Button 
+            type="button"
+            onClick={() => setIsAIModalOpen(true)}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center gap-2 h-12 px-6 rounded-2xl"
+          >
+            <Sparkles className="h-5 w-5 fill-white/20" />
+            <span className="font-bold tracking-tight">Generar con IA</span>
+          </Button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -1195,6 +1260,80 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                 Save Terms
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* AI Generation Modal */}
+        <Dialog open={isAIModalOpen} onOpenChange={setIsAIModalOpen}>
+          <DialogContent className="sm:max-w-lg border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-10 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-8 -translate-y-8">
+                <Sparkles className="h-32 w-32" />
+              </div>
+              <DialogHeader className="relative z-10">
+                <DialogTitle className="text-3xl font-serif font-black mb-2">Asistente de Diseño IA</DialogTitle>
+                <DialogDescription className="text-white/80 text-lg leading-relaxed">
+                  Cuéntame un poco más sobre el proyecto y generaré una propuesta completa de items por ti.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+            
+            <div className="p-8 space-y-6 bg-white">
+              <div className="space-y-3">
+                <Label htmlFor="aiProjectName" className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                  Nombre del Proyecto
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input 
+                  id="aiProjectName"
+                  placeholder="Ej. Remodelación Cocina Colonial" 
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="h-14 rounded-2xl border-muted bg-muted/30 focus:bg-white transition-all text-lg font-bold"
+                />
+                <p className="text-[10px] text-muted-foreground/60 italic">Usa el nombre actual del proyecto o cámbialo aquí.</p>
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="aiDesc" className="text-sm font-black uppercase tracking-widest text-muted-foreground">¿De qué trata el proyecto?</Label>
+                <Textarea 
+                  id="aiDesc"
+                  placeholder="Describe los alcances... e.g. Cambio de pisos, pintura, iluminación LED, gabinetes empotrados." 
+                  value={aiProjectDescription}
+                  onChange={(e) => setAIProjectDescription(e.target.value)}
+                  className="min-h-[150px] rounded-2xl border-muted bg-muted/30 focus:bg-white transition-all p-4 leading-relaxed text-md resize-none"
+                />
+              </div>
+
+              <div className="pt-4 flex flex-col gap-4">
+                <Button 
+                  type="button"
+                  onClick={handleAIGenerate}
+                  disabled={isGeneratingAI || !projectName}
+                  className="h-16 w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:translate-y-0"
+                >
+                  {isGeneratingAI ? (
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      Generando Propuesta...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <Wand2 className="h-6 w-6" />
+                      Crear Cotización Mágica
+                    </div>
+                  )}
+                </Button>
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  onClick={() => setIsAIModalOpen(false)}
+                  className="h-10 text-muted-foreground font-bold hover:bg-muted/50 rounded-xl"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 
