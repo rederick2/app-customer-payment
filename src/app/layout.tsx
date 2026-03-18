@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { logout } from '@/app/login/actions';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar, Settings } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
 
@@ -90,6 +90,10 @@ export default async function RootLayout({
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
+                </Link>
+                <Link href="/settings" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
+                  <Settings className="mr-3 h-4 w-4" />
+                  Settings
                 </Link>
               </nav>
 

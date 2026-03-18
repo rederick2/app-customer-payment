@@ -26,7 +26,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
   // 1. Fetch full proforma data for the PDF
   const { data: proforma, error: pError } = await supabase
     .from('proformas')
-    .select('*, clients(*)')
+    .select('*, clients(*), applied_taxes:users (taxes (*))')
     .eq('id', proformaId)
     .single();
 
@@ -42,10 +42,10 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
   try {
     // 2. Generate PDF Buffer
     const pdfBuffer = await renderToBuffer(
-      React.createElement(ProformaPDF, { 
-        proforma, 
-        items: items || [], 
-        client: proforma.clients 
+      React.createElement(ProformaPDF, {
+        proforma,
+        items: items || [],
+        client: proforma.clients
       }) as React.ReactElement<DocumentProps>
     );
 
@@ -76,7 +76,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
     }
 
     revalidatePath(`/proforma/${proformaId}`);
-    revalidatePath('/page'); 
+    revalidatePath('/page');
 
     return { success: true };
 
@@ -170,7 +170,7 @@ export async function updateProformaStatus(proformaId: string, newStatus: string
   }
 
   revalidatePath(`/proforma/${proformaId}`);
-  revalidatePath('/page'); 
+  revalidatePath('/page');
   return { success: true };
 }
 
@@ -184,7 +184,7 @@ export async function scheduleJob(proformaId: string, startAt: string, endAt: st
 
   const { error } = await supabase
     .from('proformas')
-    .update({ 
+    .update({
       status: 'job',
       job_start_at: startAt,
       job_end_at: endAt
@@ -199,5 +199,153 @@ export async function scheduleJob(proformaId: string, startAt: string, endAt: st
   revalidatePath(`/proforma/${proformaId}`);
   revalidatePath('/page');
   revalidatePath('/calendar');
+  return { success: true };
+}
+
+export async function toggleItemOptional(itemId: string, proformaId: string, isExcluded: boolean) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  // 1. Fetch proforma and items to check status and calculate new totals
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('*, applied_taxes:users (taxes (*))')
+    .eq('id', proformaId)
+    .single();
+
+  if (proforma?.status === 'approved' || proforma?.status === 'job') {
+    return { error: 'No se puede editar una proforma aprobada o en proceso.' };
+  }
+
+  // 2. Update the specific item (using is_excluded for calculation state)
+  const { error: itemUpdateError } = await supabase
+    .from('proforma_items')
+    .update({ is_excluded: isExcluded })
+    .eq('id', itemId);
+
+  if (itemUpdateError) {
+    console.error('Error toggling excluded status:', itemUpdateError);
+    return { error: 'Error al actualizar el estado de cálculo.' };
+  }
+
+  // 3. Recalculate totals
+  return await recalculateProformaTotals(proformaId);
+}
+
+export async function updateItemsOrder(proformaId: string, items: { id: string, sort_order: number }[]) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'No autorizado' };
+
+  // Update each item's sort_order
+  const promises = items.map(item =>
+    supabase
+      .from('proforma_items')
+      .update({ sort_order: item.sort_order })
+      .eq('id', item.id)
+  );
+
+  await Promise.all(promises);
+
+  revalidatePath(`/proforma/${proformaId}`);
+  revalidatePath(`/p/${proformaId}`);
+  return { success: true };
+}
+
+export async function updateProformaItem(itemId: string, proformaId: string, data: any) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'No autorizado' };
+
+  // Calculate total_price for the item
+  const total_price = (data.quantity || 0) * (data.unit_price || 0);
+
+  const { error } = await supabase
+    .from('proforma_items')
+    .update({
+      description: data.description,
+      details: data.details,
+      quantity: data.quantity,
+      unit_price: data.unit_price,
+      total_price: total_price,
+      is_optional: data.is_optional,
+      is_excluded: data.is_excluded ?? data.is_optional,
+      photo_url: data.photo_url
+    })
+    .eq('id', itemId);
+
+  if (error) {
+    console.error('Error updating item:', error);
+    return { error: 'Error al actualizar el ítem.' };
+  }
+
+  // Recalculate proforma totals
+  return await recalculateProformaTotals(proformaId);
+}
+
+async function recalculateProformaTotals(proformaId: string) {
+  const supabase = await createClient();
+
+  // 1. Fetch proforma and items
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('*, applied_taxes:users (taxes (*))')
+    .eq('id', proformaId)
+    .single();
+
+  const { data: items } = await supabase
+    .from('proforma_items')
+    .select('*')
+    .eq('proforma_id', proformaId);
+
+  if (!proforma || !items) return { error: 'Error al obtener datos para el recálculo.' };
+
+  // 2. Calculate new Subtotal
+  const newSubtotal = items.reduce((acc, item) => {
+    if (item.is_excluded) return acc;
+    return acc + (item.quantity * item.unit_price);
+  }, 0);
+
+  // 3. Calculate Taxes
+  let newAppliedTaxes = [];
+  let newTotalTax = 0;
+
+  if (Array.isArray(proforma.applied_taxes.taxes)) {
+    newAppliedTaxes = proforma.applied_taxes.taxes.map((tax: any) => {
+      const amount = (newSubtotal * tax.percentage) / 100;
+      newTotalTax += amount;
+      return { ...tax, amount };
+    });
+  } else {
+    const taxRate = proforma.tax_rate || 16;
+    newTotalTax = (newSubtotal * taxRate) / 100;
+  }
+
+  const newTotal = newSubtotal + newTotalTax;
+
+  // 4. Update the Proforma
+  const { error: proformaUpdateError } = await supabase
+    .from('proformas')
+    .update({
+      subtotal: newSubtotal,
+      tax: newTotalTax,
+      total: newTotal
+      //applied_taxes: newAppliedTaxes
+    })
+    .eq('id', proformaId);
+
+  if (proformaUpdateError) {
+    console.error('Error updating proforma totals:', proformaUpdateError);
+    return { error: 'Error al actualizar los totales de la proforma.' };
+  }
+
+  revalidatePath(`/proforma/${proformaId}`);
+  revalidatePath(`/p/${proformaId}`);
   return { success: true };
 }

@@ -38,7 +38,7 @@ export default async function CalendarPage() {
     `)
     .order('due_date', { ascending: true });
 
-  console.log(tasks)
+  //console.log(tasks)
 
   if (tasksError) {
     console.error('Error fetching tasks for calendar:', tasksError);

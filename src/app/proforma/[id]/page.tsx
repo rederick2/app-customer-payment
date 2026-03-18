@@ -18,10 +18,15 @@ export default async function ProformaView({ params }: Props) {
     .from('proformas')
     .select(`
       *,
-      clients (*)
+      clients (*),
+      applied_taxes:users (
+      taxes (*)
+    )
     `)
     .eq('id', id)
     .single();
+
+  //console.log(proforma)
 
   if (proformaError || !proforma) {
     notFound();
@@ -80,7 +85,7 @@ export default async function ProformaView({ params }: Props) {
 
   if (proforma.status === 'job') {
     return (
-      <JobView 
+      <JobView
         proforma={proforma}
         items={items || []}
         id={id}
@@ -96,7 +101,7 @@ export default async function ProformaView({ params }: Props) {
   }
 
   return (
-    <QuoteView 
+    <QuoteView
       proforma={proforma}
       items={items || []}
       id={id}

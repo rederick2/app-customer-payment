@@ -55,7 +55,7 @@ const getGoogleCalendarUrl = (title: string, description: string, start: string,
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatGoogleDate(start)}/${formatGoogleDate(end)}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(address)}`;
 };
 
-const getAppleCalendarData = (title: string, description: string, start: string, end: string) => {
+const getAppleCalendarData = (title: string, description: string, start: string, end: string, address: string) => {
   const formatICSDate = (d: string) => format(parseISO(d), "yyyyMMdd'T'HHmmss");
   const icsContent = [
     'BEGIN:VCALENDAR',
@@ -65,6 +65,7 @@ const getAppleCalendarData = (title: string, description: string, start: string,
     `DTEND:${formatICSDate(end)}`,
     `SUMMARY:${title}`,
     `DESCRIPTION:${description}`,
+    `LOCATION:${address}`,
     'END:VEVENT',
     'END:VCALENDAR'
   ].join('\n');
@@ -594,7 +595,7 @@ function JobDetailContent({ job }: { job: Job }) {
               Google Calendar
             </a>
             <a
-              href={getAppleCalendarData(job.project_name, `Trabajo: ${job.project_name}`, job.job_start_at, job.job_end_at)}
+              href={getAppleCalendarData(job.project_name, `Trabajo: ${job.project_name}`, job.job_start_at, job.job_end_at, job.clients?.street_1 || '')}
               download={`${job.project_name.replace(/\s+/g, '_')}.ics`}
               className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-slate-100 hover:bg-slate-50 hover:text-slate-700 text-slate-600 transition-colors")}
             >
@@ -699,7 +700,7 @@ function TaskDetailContent({ task }: { task: Task }) {
               Google Calendar
             </a>
             <a
-              href={getAppleCalendarData(task.title, task.description, task.due_date, task.end_date || task.due_date)}
+              href={getAppleCalendarData(task.title, task.description, task.due_date, task.end_date || task.due_date, task.proformas?.clients?.street_1 || '')}
               download={`${task.title.replace(/\s+/g, '_')}.ics`}
               className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-slate-100 hover:bg-slate-50 hover:text-slate-700 text-slate-600 transition-colors")}
             >

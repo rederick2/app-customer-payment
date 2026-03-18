@@ -40,7 +40,9 @@ import { toast } from 'sonner';
 import ReceiptScanner from '@/components/ReceiptScanner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tag, Trash2, Camera, Loader2, Eye, Pencil, ChevronLeft, ChevronRight, FileDown } from 'lucide-react';
+import { Tag, Trash2, Camera, Loader2, Eye, Pencil, ChevronLeft, ChevronRight, FileDown, ZoomIn } from 'lucide-react';
+import { LineItemImage } from '@/components/LineItemImage';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -519,13 +521,15 @@ export function JobView({
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                  <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-black uppercase tracking-widest">
                     <tr>
-                      <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Product / Service</th>
-                      <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-center">Quantity</th>
-                      <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Cost</th>
-                      <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Price</th>
-                      <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Total</th>
+                      <th className="px-4 py-3 text-left w-10"></th>
+                      <th className="px-6 py-3 text-left">Product / Service</th>
+                      <th className="px-4 py-3 text-center w-24">Image</th>
+                      <th className="px-6 py-3 text-center w-24">Quantity</th>
+                      <th className="px-6 py-3 text-right">Cost</th>
+                      <th className="px-6 py-3 text-right">Price</th>
+                      <th className="px-6 py-3 text-right">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
@@ -533,14 +537,33 @@ export function JobView({
                       <tr 
                         key={item.id} 
                         className={cn(
-                          "hover:bg-muted/5 transition-colors cursor-pointer",
-                          editingItemId === item.id && "bg-primary/5"
+                          "hover:bg-muted/5 transition-colors cursor-pointer align-top",
+                          editingItemId === item.id && "bg-primary/5",
+                          item.is_optional && "opacity-60 bg-muted/5"
                         )}
                         onClick={() => editingItemId !== item.id && handleStartEditing(item)}
                       >
+                        <td className="px-4 py-5 text-center">
+                          <Checkbox checked={!item.is_optional} className="opacity-100 cursor-default" />
+                        </td>
                         <td className="px-6 py-4">
                           <p className="font-bold text-emerald-700">{item.description}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.details}</p>
+                          {item.details && (
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{item.details}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          {item.photo_url ? (
+                            <LineItemImage 
+                              src={item.photo_url} 
+                              alt={item.description} 
+                              className="h-12 w-12 mx-auto"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 mx-auto bg-muted/10 rounded-lg border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/30">
+                              <ZoomIn className="h-4 w-4" />
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-center font-medium">{item.quantity}</td>
                         <td className="px-6 py-4 text-right tabular-nums">
@@ -586,15 +609,18 @@ export function JobView({
                           )}
                         </td>
                         <td className="px-6 py-4 text-right tabular-nums text-muted-foreground">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                        <td className="px-6 py-4 text-right tabular-nums font-bold">${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                        <td className={cn("px-6 py-4 text-right tabular-nums font-bold", item.is_optional && "line-through italic text-muted-foreground")}>
+                          ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </td>
                       </tr>
                     ))}
-                    <tr className="bg-muted/5 font-bold">
-                      <td colSpan={2} className="px-6 py-4">
+                    <tr className="bg-muted/5 font-bold border-t border-border/40">
+                      <td colSpan={3} className="px-6 py-4 text-left">
                         <Button variant="outline" size="sm" className="h-8 gap-1 font-bold">
                           <Plus className="h-3 w-3" /> New Line Item
                         </Button>
                       </td>
+                      <td className="px-6 py-4" />
                       <td className="px-6 py-4 text-right tabular-nums">${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td className="px-6 py-4" />
                       <td className="px-6 py-4 text-right tabular-nums text-lg">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>

@@ -7,6 +7,10 @@ import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import PublicProformaActions from './components/PublicProformaActions';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { ZoomIn } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { LineItemImage } from '@/components/LineItemImage';
 
 export const revalidate = 0;
 
@@ -29,7 +33,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export default async function PublicProformaView({ params }: Props) {
   const { id } = await params;
-  
+
   // Use admin client because the user is not authenticated on this public link
   const supabase = createAdminClient();
 
@@ -38,7 +42,8 @@ export default async function PublicProformaView({ params }: Props) {
     .from('proformas')
     .select(`
       *,
-      clients (*)
+      clients (*),
+      applied_taxes:users (taxes (*))
     `)
     .eq('id', id)
     .single();
@@ -52,11 +57,12 @@ export default async function PublicProformaView({ params }: Props) {
   const { data: items, error: itemsError } = await supabase
     .from('proforma_items')
     .select('*')
-    .eq('proforma_id', id);
+    .eq('proforma_id', id)
+    .order('sort_order', { ascending: true });
 
   return (
     <div className="px-6 py-8 md:p-12 max-w-5xl mx-auto animate-in fade-in duration-500">
-      
+
       {/* Action Bar */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div className="flex items-center gap-4">
@@ -71,14 +77,14 @@ export default async function PublicProformaView({ params }: Props) {
 
       {/* Printable Document Area */}
       <div className="bg-card print:bg-transparent shadow-xl print:shadow-none border border-border/50 print:border-none p-8 md:p-12 mb-8 relative overflow-hidden">
-        
+
         {/* Invalid watermark if rejected */}
         {proforma.status === 'rejected' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 rotate-[-30deg] z-10">
             <span className="text-9xl font-bold font-serif uppercase tracking-widest text-red-500">Rechazada</span>
           </div>
         )}
-        
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-border pb-8 mb-8 relative z-20">
           <div>
@@ -122,7 +128,7 @@ export default async function PublicProformaView({ params }: Props) {
               {(() => {
                 const c = proforma.clients as any;
                 const hasDetailedAddress = c.street_1 || c.city || c.country;
-                
+
                 if (hasDetailedAddress) {
                   return (
                     <>
@@ -158,7 +164,9 @@ export default async function PublicProformaView({ params }: Props) {
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/30 print:bg-transparent print:border-b-2 print:border-foreground/20 text-muted-foreground border-y border-border/50">
               <tr>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider">Descripción</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider w-10 text-center">Opcional</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider">Concepto</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-center w-24">Imagen</th>
                 <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-24">Cant.</th>
                 <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-32">Precio Unit.</th>
                 <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-32">Total</th>
@@ -166,22 +174,41 @@ export default async function PublicProformaView({ params }: Props) {
             </thead>
             <tbody className="divide-y divide-border/30">
               {items && items.map((item, index) => (
-                <tr key={item.id} className="print:break-inside-avoid align-top">
-                  <td className="px-4 py-4">
-                    <div className="font-medium text-foreground">{item.description}</div>
-                    {item.details && (
-                      <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{item.details}</div>
+                <tr key={item.id} className={cn("print:break-inside-avoid align-top", item.is_optional && "opacity-60 bg-muted/5")}>
+                  <td className="px-4 py-5 text-center">
+                    {item.is_optional ? (
+                      <Checkbox checked={!item.is_excluded} className="opacity-100 cursor-default" />
+                    ) : (
+                      <span className="text-muted-foreground/20 text-[10px] font-black uppercase tracking-widest">Fijo</span>
                     )}
-                    {item.photo_url && (
-                      <div className="mt-3 relative w-32 h-32 md:w-48 md:h-48 rounded-md overflow-hidden border border-border/50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.photo_url} alt={item.description} className="object-cover w-full h-full" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="font-bold text-foreground text-md">{item.description}</div>
+                    {item.details && (
+                      <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed">{item.details}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {item.photo_url ? (
+                      <LineItemImage
+                        src={item.photo_url}
+                        alt={item.description}
+                        className="h-14 w-14 mx-auto"
+                      />
+                    ) : (
+                      <div className="h-14 w-14 mx-auto bg-muted/10 rounded-lg border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/30">
+                        <ZoomIn className="h-4 w-4" />
                       </div>
                     )}
                   </td>
                   <td className="px-4 py-4 text-right">{item.quantity}</td>
                   <td className="px-4 py-4 text-right">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                  <td className="px-4 py-4 text-right font-medium text-foreground">${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                  <td className={cn(
+                    "px-4 py-4 text-right font-semibold",
+                    item.is_excluded ? "text-muted-foreground line-through italic" : "text-foreground"
+                  )}>
+                    ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -191,18 +218,30 @@ export default async function PublicProformaView({ params }: Props) {
         {/* Totals Box */}
         <div className="flex justify-end mb-16 print:break-inside-avoid relative z-20">
           <div className="w-full sm:w-1/2 p-6 bg-muted/20 print:bg-transparent print:border print:border-border/50 space-y-3 rounded-lg">
-             <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground font-medium">Subtotal</span>
-                <span>${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-              </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground font-medium">Subtotal</span>
+              <span>${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </div>
+
+            {/* Dynamic Taxes */}
+            {Array.isArray(proforma.applied_taxes?.taxes) && proforma.applied_taxes.taxes.length > 0 ? (
+              proforma.applied_taxes.taxes.map((tax: any, idx: number) => (
+                <div key={idx} className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">{tax.name} ({tax.percentage}%)</span>
+                  <span>${((tax.percentage * proforma.subtotal) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
+              ))
+            ) : (
               <div className="flex justify-between items-center text-sm pb-3 border-b border-border/50">
                 <span className="text-muted-foreground font-medium">IVA (16%)</span>
                 <span>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between items-end pt-2">
-                <span className="text-lg font-serif font-bold text-foreground">Total Estimado</span>
-                <span className="text-xl font-bold text-primary">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-              </div>
+            )}
+
+            <div className="flex justify-between items-end pt-2 border-t border-border/50">
+              <span className="text-lg font-serif font-bold text-foreground">Total Estimado</span>
+              <span className="text-xl font-bold text-primary">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </div>
           </div>
         </div>
 
@@ -210,8 +249,8 @@ export default async function PublicProformaView({ params }: Props) {
         <div className="border-t border-border/50 pt-8 mt-auto print:fixed print:bottom-8 print:w-full print:border-t-2 relative z-20">
           <p className="text-xs text-muted-foreground mb-1 text-center font-medium">Términos y Condiciones</p>
           <p className="text-xs text-muted-foreground text-center">
-             Esta proforma representa un estimado inicial y está sujeta a cambios tras la medición final en sitio. 
-             Precios válidos hasta la fecha indicada. Para iniciar el proyecto se requiere un anticipo del 60%.
+            Esta proforma representa un estimado inicial y está sujeta a cambios tras la medición final en sitio.
+            Precios válidos hasta la fecha indicada. Para iniciar el proyecto se requiere un anticipo del 60%.
           </p>
         </div>
 

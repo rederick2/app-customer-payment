@@ -12,7 +12,8 @@ import {
   ListTodo, 
   Calendar, 
   MessageSquare,
-  LogOut 
+  LogOut,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
       label: 'Messages', 
       badge: unreadCount 
     },
+    { href: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   // Close menu when route changes
