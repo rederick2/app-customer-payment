@@ -14,6 +14,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Task {
   id: string;
@@ -58,6 +65,7 @@ export default function GlobalGanttChart({
   const supabase = createClient();
   const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
   const [addingTaskForProject, setAddingTaskForProject] = useState<string | null>(null);
+  const [selectedProjectFilters, setSelectedProjectFilters] = useState<string[]>([]);
   
   // New States for AI and Editing
   const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -165,7 +173,19 @@ export default function GlobalGanttChart({
       timelineEnd: endOfWeekBound,
       allProjects: Array.from(uniqueProjectsMap.values())
     };
-  }, [tasks]);
+  }, [tasks, activeJobs]);
+
+  const filteredProjects = useMemo(() => {
+    return projects.filter(proj => 
+      selectedProjectFilters.length === 0 || selectedProjectFilters.includes(proj.projectId)
+    );
+  }, [projects, selectedProjectFilters]);
+
+  const toggleProjectFilter = (pId: string) => {
+    setSelectedProjectFilters(prev => 
+      prev.includes(pId) ? prev.filter(id => id !== pId) : [...prev, pId]
+    );
+  };
 
   // Generate Array of days for styling headers
   const daysInTimeline = differenceInDays(timelineEnd, timelineStart) + 1;
@@ -195,12 +215,12 @@ export default function GlobalGanttChart({
     return duration * DAY_WIDTH;
   };
 
-  if (projects.length === 0) {
+  if (filteredProjects.length === 0) {
     return (
       <div className="py-24 flex flex-col items-center justify-center text-muted-foreground bg-muted/5 relative">
         <Calendar className="h-12 w-12 mb-4 opacity-50" />
         <p className="font-medium">No hay proyectos activos para mostrar.</p>
-        <p className="text-sm opacity-70">Empieza aprobando una cotización o añadiendo un proyecto.</p>
+        <p className="text-sm opacity-70">Ajusta los filtros o añade nuevas tareas.</p>
       </div>
     );
   }
@@ -214,10 +234,42 @@ export default function GlobalGanttChart({
             {tasks.length} Tareas Totales
           </Badge>
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            {projects.length} Proyectos Activos
+            {filteredProjects.length} Proyectos
           </Badge>
         </div>
-        <div>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-xs">
+                {selectedProjectFilters.length === 0 
+                  ? 'Ver Todos los Proyectos' 
+                  : `${selectedProjectFilters.length} Proyectos Seleccionados`}
+                <ChevronDown className="h-3 w-3" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[240px]">
+              <div className="px-2 py-1.5 text-sm font-semibold text-foreground">Filtrar por Proyecto</div>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={selectedProjectFilters.length === 0}
+                onCheckedChange={() => setSelectedProjectFilters([])}
+                className="font-bold"
+              >
+                Todos los Proyectos
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              <div className="max-h-[300px] overflow-y-auto">
+                {allProjects.map(p => (
+                  <DropdownMenuCheckboxItem
+                    key={p.id}
+                    checked={selectedProjectFilters.includes(p.id)}
+                    onCheckedChange={() => toggleProjectFilter(p.id)}
+                  >
+                    {p.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button 
             onClick={() => setAiModalOpen(true)}
             size="sm"
@@ -232,12 +284,12 @@ export default function GlobalGanttChart({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar (Names and Info) */}
         <div className="w-[380px] shrink-0 border-r border-border/40 bg-white flex flex-col overflow-y-auto no-scrollbar z-10 shadow-[4px_0_12px_-6px_rgba(0,0,0,0.1)] relative">
-          <div className="h-14 border-b border-border/40 bg-muted/5 sticky top-0 px-4 flex items-center shadow-sm">
+          <div className="h-14 border-b border-border/40 bg-white sticky top-0 px-4 flex items-center shadow-sm z-20">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proyecto / Tarea</span>
           </div>
 
           <div className="pb-8">
-            {projects.map(proj => (
+            {filteredProjects.map(proj => (
               <React.Fragment key={proj.projectId}>
                 {/* Project Header Row */}
                 <div className="px-4 py-3 border-b border-border/40 bg-muted/5 flex items-center gap-2 group">
@@ -389,7 +441,7 @@ export default function GlobalGanttChart({
 
               {/* Rows */}
               <div className="relative z-20">
-                {projects.map(proj => (
+                {filteredProjects.map(proj => (
                   <React.Fragment key={`timeline-${proj.projectId}`}>
                     {/* Project empty track row */}
                     <div className="h-[52px] border-b border-border/40 relative group">
