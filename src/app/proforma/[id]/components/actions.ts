@@ -312,22 +312,37 @@ async function recalculateProformaTotals(proformaId: string) {
     return acc + (item.quantity * item.unit_price);
   }, 0);
 
-  // 3. Calculate Taxes
-  let newAppliedTaxes = [];
+  // 3. Calculate Taxes and Discounts from dynamic adjustments
   let newTotalTax = 0;
+  let newTotalDiscount = 0;
+  const adjustments = (proforma.adjustments || []) as any[];
 
-  if (Array.isArray(proforma.applied_taxes.taxes)) {
-    newAppliedTaxes = proforma.applied_taxes.taxes.map((tax: any) => {
-      const amount = (newSubtotal * tax.percentage) / 100;
-      newTotalTax += amount;
-      return { ...tax, amount };
+  if (adjustments.length > 0) {
+    adjustments.forEach(adj => {
+      const amount = adj.valueType === 'percentage' 
+        ? (newSubtotal * adj.value) / 100 
+        : adj.value;
+      
+      if (adj.type === 'tax') {
+        newTotalTax += amount;
+      } else if (adj.type === 'discount') {
+        newTotalDiscount += amount;
+      }
     });
   } else {
-    const taxRate = proforma.tax_rate || 16;
-    newTotalTax = (newSubtotal * taxRate) / 100;
+    // Fallback to default user taxes if no dynamic adjustments are defined
+    if (Array.isArray(proforma.applied_taxes.taxes)) {
+      proforma.applied_taxes.taxes.forEach((tax: any) => {
+        const amount = (newSubtotal * tax.percentage) / 100;
+        newTotalTax += amount;
+      });
+    } else {
+      const taxRate = proforma.tax_rate || 16;
+      newTotalTax = (newSubtotal * taxRate) / 100;
+    }
   }
 
-  const newTotal = newSubtotal + newTotalTax;
+  const newTotal = newSubtotal + newTotalTax - newTotalDiscount;
 
   // 4. Update the Proforma
   const { error: proformaUpdateError } = await supabase
@@ -336,7 +351,6 @@ async function recalculateProformaTotals(proformaId: string) {
       subtotal: newSubtotal,
       tax: newTotalTax,
       total: newTotal
-      //applied_taxes: newAppliedTaxes
     })
     .eq('id', proformaId);
 

@@ -9,13 +9,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import Autocomplete from 'react-google-autocomplete';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Percent, DollarSign } from 'lucide-react';
 
 // DND Kit Imports
 import {
@@ -45,6 +54,7 @@ interface LineItem {
   quantity: number;
   unit_price: number;
   is_optional: boolean;
+  is_excluded?: boolean;
   sort_order: number;
   photo?: File | null;
   photoPreviewUrl?: string;
@@ -55,6 +65,14 @@ interface Tax {
   id: string;
   name: string;
   percentage: number;
+}
+
+interface Adjustment {
+  id: string;
+  label: string;
+  type: 'tax' | 'discount';
+  valueType: 'percentage' | 'amount';
+  value: number;
 }
 
 interface CatalogItem {
@@ -350,6 +368,18 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [availableTaxes, setAvailableTaxes] = useState<Tax[]>([]);
+  const [adjustments, setAdjustments] = useState<Adjustment[]>(
+    initialData?.proforma?.adjustments || []
+  );
+
+  // New States for Dialogs
+  const [isTaxDialogOpen, setIsTaxDialogOpen] = useState(false);
+  const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false);
+  const [newTaxName, setNewTaxName] = useState("");
+  const [newTaxPercent, setNewTaxPercent] = useState("");
+  const [depositAmount, setDepositAmount] = useState<number>(initialData?.proforma?.deposit_amount || 0);
+  const [paymentTerms, setPaymentTerms] = useState<string>(initialData?.proforma?.payment_terms || "");
+  const [isSavingTax, setIsSavingTax] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -512,19 +542,51 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
   const calculateSubtotal = () => {
     return items.reduce((acc, item) => {
-      if (item.is_optional) return acc;
+      if (item.is_optional || item.is_excluded) return acc;
       return acc + (item.quantity * item.unit_price);
     }, 0);
   };
 
+  const addItemAdjustment = () => {
+    setAdjustments([...adjustments, {
+      id: crypto.randomUUID(),
+      label: 'Nuevo Impuesto',
+      type: 'tax',
+      valueType: 'percentage',
+      value: 0
+    }]);
+  };
+
+  const removeAdjustment = (id: string) => {
+    setAdjustments(adjustments.filter(a => a.id !== id));
+  };
+
+  const updateAdjustment = (id: string, field: keyof Adjustment, value: any) => {
+    setAdjustments(adjustments.map(a => a.id === id ? { ...a, [field]: value } : a));
+  };
+
   const subtotal = calculateSubtotal();
-  const appliedTaxes = availableTaxes.map(tax => ({
-    name: tax.name,
-    percentage: tax.percentage,
-    amount: (subtotal * tax.percentage) / 100
-  }));
-  const totalTax = appliedTaxes.reduce((acc, t) => acc + t.amount, 0);
-  const total = subtotal + totalTax;
+
+  const discountAdjustment = adjustments.find(a => a.type === 'discount');
+  const totalDiscount = discountAdjustment 
+    ? (discountAdjustment.valueType === 'percentage' 
+        ? (subtotal * discountAdjustment.value) / 100 
+        : discountAdjustment.value)
+    : 0;
+
+  const taxableAmount = subtotal - totalDiscount;
+  const taxAdjustment = adjustments.find(a => a.type === 'tax');
+  const totalTax = taxAdjustment 
+    ? (taxableAmount * taxAdjustment.value) / 100 
+    : 0;
+
+  const total = taxableAmount + totalTax;
+
+  const calculatedAdjustments = adjustments.map(adj => {
+    if (adj.type === 'discount') return { ...adj, amount: totalDiscount };
+    if (adj.type === 'tax') return { ...adj, amount: totalTax };
+    return { ...adj, amount: 0 };
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -565,8 +627,10 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         valid_until: validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         subtotal,
         tax: totalTax,
-        total
-        //applied_taxes: appliedTaxes
+        total,
+        adjustments: adjustments,
+        payment_terms: paymentTerms,
+        deposit_amount: depositAmount
       };
 
       let proformaData;
@@ -883,24 +947,256 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
           </CardContent>
         </Card>
 
-        <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-3 px-2">
-          <div className="flex justify-between w-full sm:w-64 text-sm">
-            <span className="text-muted-foreground">Subtotal:</span>
-            <span className="font-medium">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+        <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
+          {/* Subtotal */}
+          <div className="flex justify-between w-full sm:w-80 text-sm font-bold pt-2 border-b border-border/10 pb-4">
+            <span className="text-muted-foreground uppercase text-[10px] tracking-widest self-center">Subtotal:</span>
+            <span className="font-bold text-lg">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
 
-          {appliedTaxes.map((tax, idx) => (
-            <div key={idx} className="flex justify-between w-full sm:w-64 text-sm">
-              <span className="text-muted-foreground">{tax.name} ({tax.percentage}%):</span>
-              <span className="font-medium">${tax.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-            </div>
-          ))}
+          <div className="w-full sm:w-80 space-y-4">
+            {/* Discount Row */}
+            {discountAdjustment ? (
+              <div className="flex justify-between items-center group/adj py-1">
+                <span className="text-sm font-medium text-foreground min-w-[100px]">Discount</span>
+                <div className="flex items-center gap-2 flex-1 justify-center max-w-[150px]">
+                  <div className="flex items-center border border-border/60 rounded-xl overflow-hidden bg-white shadow-sm h-11 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                    <Input
+                      type="number"
+                      value={discountAdjustment.value || ''}
+                      className="w-16 h-full text-center border-none focus-visible:ring-0 text-sm font-bold placeholder:text-muted-foreground/30"
+                      onChange={(e) => updateAdjustment(discountAdjustment.id, 'value', parseFloat(e.target.value) || 0)}
+                      placeholder="0"
+                    />
+                    <div className="h-5 w-px bg-border/20" />
+                    <select
+                      value={discountAdjustment.valueType}
+                      onChange={(e) => updateAdjustment(discountAdjustment.id, 'valueType', e.target.value)}
+                      className="pl-2 pr-3 h-full bg-transparent border-none text-[11px] font-bold uppercase text-muted-foreground focus:outline-none cursor-pointer hover:text-primary transition-colors appearance-none"
+                    >
+                      <option value="percentage">%</option>
+                      <option value="amount">$</option>
+                    </select>
+                    <ChevronDown className="h-3 w-3 mr-2 text-muted-foreground/50 pointer-events-none -ml-1" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 w-32 justify-end">
+                  <span className="font-bold text-sm text-foreground/80">
+                    {totalDiscount > 0 ? '-' : ''}${totalDiscount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeAdjustment(discountAdjustment.id)}
+                    className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="h-4.5 w-4.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
 
-          <div className="flex justify-between w-full sm:w-64 text-lg font-serif font-bold text-primary pt-1 border-t border-border/50 mt-2">
-            <span>Total:</span>
-            <span>${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            {/* Tax Row */}
+            {taxAdjustment ? (
+              <div className="flex justify-between items-center group/adj py-1">
+                <span className="text-sm font-medium text-foreground min-w-[100px]">Tax</span>
+                <div className="flex items-center gap-2 flex-1 justify-center max-w-[200px]">
+                  <div className="relative w-full">
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "new") {
+                          setIsTaxDialogOpen(true);
+                          return;
+                        }
+                        const tax = availableTaxes.find(t => t.id === val);
+                        if (tax) {
+                          updateAdjustment(taxAdjustment.id, 'value', tax.percentage);
+                          updateAdjustment(taxAdjustment.id, 'label', tax.name);
+                        }
+                      }}
+                      className="h-11 w-full pl-4 pr-10 border border-border/60 rounded-xl bg-white shadow-sm text-sm font-bold text-[#0D3B47] focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none transition-all cursor-pointer hover:border-primary/40"
+                      value={availableTaxes.find(t => t.name === taxAdjustment.label)?.id || ""}
+                    >
+                      <option value="" disabled>Select tax...</option>
+                      {availableTaxes.map(t => (
+                        <option key={t.id} value={t.id}>{t.name} ({t.percentage}%)</option>
+                      ))}
+                      <option value="new">+ Create new tax rate</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 w-32 justify-end">
+                  <span className="font-bold text-sm text-foreground/80">
+                    ${totalTax.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeAdjustment(taxAdjustment.id)}
+                    className="h-8 w-8 text-destructive/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <Trash2 className="h-4.5 w-4.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
+
+          <div className="flex flex-col items-end gap-2 w-full sm:w-80">
+            {!adjustments.find(a => a.type === 'discount') && (
+              <button
+                type="button"
+                onClick={() => setAdjustments([...adjustments, { id: crypto.randomUUID(), label: 'Descuento', type: 'discount', value: 0, valueType: 'percentage' }])}
+                className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:underline"
+              >
+                <PlusCircle className="h-3 w-3" /> Add Discount
+              </button>
+            )}
+            {!adjustments.find(a => a.type === 'tax') && (
+              <button
+                type="button"
+                onClick={() => {
+                  const defaultTax = availableTaxes[0] || { id: 'tax-default', name: 'Tax', percentage: 16 };
+                  setAdjustments([...adjustments, { id: defaultTax.id, label: defaultTax.name, type: 'tax', value: defaultTax.percentage, valueType: 'percentage' }]);
+                }}
+                className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:underline"
+              >
+                <PlusCircle className="h-3 w-3" /> Add Tax
+              </button>
+            )}
+          </div>
+
+          <div className="flex justify-between w-full sm:w-80 text-3xl font-serif font-black text-primary pt-6 border-t-2 border-primary/10 mt-6 pb-2">
+            <span className="uppercase text-[12px] tracking-[0.3em] self-center">Total:</span>
+            <span className="tabular-nums tracking-tighter">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setIsDepositDialogOpen(true)}
+            className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest hover:underline pt-2"
+          >
+            {depositAmount > 0 ? `Deposit: $${depositAmount.toLocaleString()} - Edit` : "Add Deposit or Payment Schedule"}
+          </button>
         </div>
+
+        {/* Dialogs */}
+        <Dialog open={isTaxDialogOpen} onOpenChange={setIsTaxDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-serif text-xl">Create New Tax Rate</DialogTitle>
+              <DialogDescription>Add a new tax name and percentage to your catalog.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Tax Name</Label>
+                <Input 
+                  placeholder="e.g. Sales Tax, IGV" 
+                  value={newTaxName}
+                  onChange={(e) => setNewTaxName(e.target.value)}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Percentage (%)</Label>
+                <div className="relative">
+                  <Input 
+                    type="number" 
+                    placeholder="0.00" 
+                    value={newTaxPercent}
+                    onChange={(e) => setNewTaxPercent(e.target.value)}
+                    className="rounded-xl"
+                  />
+                  <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="bg-transparent border-none p-0">
+              <Button variant="ghost" onClick={() => setIsTaxDialogOpen(false)}>Cancel</Button>
+              <Button 
+                className="bg-[#0D3B47] hover:bg-[#0D3B47]/90 text-white rounded-xl px-6"
+                onClick={async () => {
+                  if (!newTaxName || !newTaxPercent) return;
+                  setIsSavingTax(true);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                      const { data, error } = await supabase
+                        .from('taxes')
+                        .insert({ name: newTaxName, percentage: parseFloat(newTaxPercent), user_id: user.id })
+                        .select()
+                        .single();
+                      if (!error && data) {
+                        setAvailableTaxes([...availableTaxes, data]);
+                        // Auto-apply if there's an active tax row
+                        const taxAdj = adjustments.find(a => a.type === 'tax');
+                        if (taxAdj) {
+                          updateAdjustment(taxAdj.id, 'label', data.name);
+                          updateAdjustment(taxAdj.id, 'value', data.percentage);
+                        }
+                        setNewTaxName("");
+                        setNewTaxPercent("");
+                        setIsTaxDialogOpen(false);
+                        toast.success("Tax rate created");
+                      } else {
+                        throw error;
+                      }
+                    }
+                  } catch (err) {
+                    toast.error("Error creating tax");
+                  } finally {
+                    setIsSavingTax(false);
+                  }
+                }}
+                disabled={isSavingTax || !newTaxName || !newTaxPercent}
+              >
+                {isSavingTax ? "Saving..." : "Create Tax"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isDepositDialogOpen} onOpenChange={setIsDepositDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-serif text-xl">Deposit & Payment Schedule</DialogTitle>
+              <DialogDescription>Define the upfront payment required and terms.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Deposit Amount ($)</Label>
+                <div className="relative">
+                  <Input 
+                    type="number" 
+                    placeholder="0.00" 
+                    value={depositAmount || ""}
+                    onChange={(e) => setDepositAmount(parseFloat(e.target.value) || 0)}
+                    className="rounded-xl pl-8"
+                  />
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Payment Terms / Details</Label>
+                <Textarea 
+                  placeholder="e.g. 50% upfront, balance upon completion..." 
+                  value={paymentTerms}
+                  onChange={(e) => setPaymentTerms(e.target.value)}
+                  className="min-h-[100px] rounded-xl"
+                />
+              </div>
+            </div>
+            <DialogFooter className="bg-transparent border-none p-0">
+              <Button variant="ghost" onClick={() => setIsDepositDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => setIsDepositDialogOpen(false)} className="bg-[#0D3B47] hover:bg-[#0D3B47]/90 text-white rounded-xl px-6">
+                Save Terms
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="flex justify-end pt-4 pb-12">
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:-translate-y-1">

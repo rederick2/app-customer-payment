@@ -604,27 +604,75 @@ export function QuoteView({ proforma, items: initialItems, id }: QuoteViewProps)
               <span className="font-mono font-bold">${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
 
-            <div className="space-y-2 py-2">
-              {Array.isArray(proforma.applied_taxes.taxes) && proforma.applied_taxes.taxes.length > 0 ? (
-                proforma.applied_taxes.taxes.map((tax: any, idx: number) => (
-                  <div key={idx} className="flex justify-between items-center text-sm opacity-80">
-                    <span className="font-medium">{tax.name} <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 rounded">{tax.percentage}%</span></span>
-                    <span className="font-mono">${((tax.percentage * proforma.subtotal) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="flex justify-between items-center text-sm opacity-80">
-                  <span className="font-medium">Impuesto Estándar (16%)</span>
-                  <span className="font-mono">${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                </div>
-              )}
+            <div className="space-y-3 py-2">
+              {(() => {
+                const adjustments = (proforma.adjustments || []) as any[];
+                if (adjustments.length > 0) {
+                  const subtotal = proforma.subtotal;
+                  const discountAdjustments = adjustments.filter(a => a.type === 'discount');
+                  const taxAdjustments = adjustments.filter(a => a.type === 'tax');
+
+                  const totalDiscount = discountAdjustments.reduce((acc, adj) => {
+                    return acc + (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value);
+                  }, 0);
+
+                  const taxableAmount = subtotal - totalDiscount;
+
+                  return adjustments.map((adj, idx) => {
+                    const amount = adj.type === 'discount'
+                      ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
+                      : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
+
+                    return (
+                      <div key={idx} className="flex justify-between items-center text-sm opacity-80 group/adj">
+                        <span className="font-medium">
+                          {adj.label}
+                          {adj.valueType === 'percentage' && (
+                            <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{adj.value}%</span>
+                          )}
+                        </span>
+                        <span className={cn("font-mono font-bold", adj.type === 'discount' ? "text-red-600" : "")}>
+                          {adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    );
+                  });
+                } else if (Array.isArray(proforma.applied_taxes?.taxes) && proforma.applied_taxes.taxes.length > 0) {
+                  return proforma.applied_taxes.taxes.map((tax: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center text-sm opacity-80">
+                      <span className="font-medium">{tax.name} <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 rounded">{tax.percentage}%</span></span>
+                      <span className="font-mono">${((tax.percentage * proforma.subtotal) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ));
+                } else {
+                  return (
+                    <div className="flex justify-between items-center text-sm opacity-80">
+                      <span className="font-medium">Impuesto Estándar (16%)</span>
+                      <span className="font-mono">${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  );
+                }
+              })()}
             </div>
 
-            <div className="flex justify-between items-end pt-5 border-t border-[#0D3B47]/10">
-              <span className="text-lg font-serif font-bold text-[#0D3B47] tracking-tight">Total General</span>
-              <span className="text-2xl font-bold text-[#306C3E] tabular-nums underline decoration-2 underline-offset-8 decoration-primary/20">
-                ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
+            {(proforma as any).deposit_amount > 0 && (
+              <div className="pt-4 border-t border-dashed border-[#0D3B47]/20 mt-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Condición de Pago / Anticipo</span>
+                  <span className="font-mono font-bold text-[#306C3E] text-lg">
+                    ${(proforma as any).deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                {(proforma as any).payment_terms && (
+                  <p className="text-[10px] text-muted-foreground/80 mt-1 text-right italic leading-snug">
+                    {(proforma as any).payment_terms}
+                  </p>
+                )}
+              </div>
+            )}
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium tracking-wide uppercase opacity-70">Total</span>
+              <span className="font-mono font-bold">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>

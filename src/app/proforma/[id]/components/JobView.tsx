@@ -333,7 +333,20 @@ export function JobView({
     setExpenseCurrentPage(1); // Reset to first page on search
   };
 
-  const totalInvoiced = items.reduce((acc, item) => acc + item.total_price, 0);
+  const subtotal = items.reduce((acc, item) => {
+    if (item.is_excluded) return acc;
+    return acc + item.total_price;
+  }, 0);
+
+  const adjustments = (proforma.adjustments || []) as any[];
+  const totalDiscount = adjustments
+    .filter(adj => adj.type === 'discount')
+    .reduce((acc, adj) => {
+      const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
+      return acc + amount;
+    }, 0);
+
+  const totalInvoiced = subtotal - totalDiscount;
   const totalCost = items.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
   const totalLaborCost = timeEntries.reduce((acc, entry) => acc + (Number(entry.total_cost) || 0), 0);
   const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);

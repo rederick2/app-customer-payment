@@ -238,14 +238,60 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
               <Text style={styles.totalLabel}>Subtotal</Text>
               <Text>${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
             </View>
-            <View style={styles.totalsRow}>
-              <Text style={styles.totalLabel}>Tax (16%)</Text>
-              <Text>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-            </View>
+            
+            {(() => {
+              const adjustments = (proforma.adjustments || []) as any[];
+              const subtotal = proforma.subtotal;
+              const discountAdjustments = adjustments.filter(a => a.type === 'discount');
+              const totalDiscount = discountAdjustments.reduce((acc, adj) => {
+                return acc + (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value);
+              }, 0);
+              const taxableAmount = subtotal - totalDiscount;
+
+              if (adjustments.length > 0) {
+                return adjustments.map((adj: any, idx: number) => {
+                  const amount = adj.type === 'discount'
+                    ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
+                    : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
+                  return (
+                    <View key={idx} style={styles.totalsRow}>
+                      <Text style={styles.totalLabel}>
+                        {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
+                      </Text>
+                      <Text>{adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+                    </View>
+                  );
+                });
+              } else {
+                return (
+                  <View style={styles.totalsRow}>
+                    <Text style={styles.totalLabel}>Tax (16%)</Text>
+                    <Text>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+                  </View>
+                );
+              }
+            })()}
+
             <View style={styles.totalsRowMain}>
               <Text style={[styles.totalLabel, { color: '#0D3B47' }]}>Estimated Total</Text>
               <Text style={styles.mainTotalValue}>${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
             </View>
+
+            {proforma.deposit_amount > 0 && (
+              <View style={[styles.totalsRow, { marginTop: 10, borderTop: '1px dashed #e2e0d8', paddingTop: 8 }]}>
+                <Text style={[styles.totalLabel, { color: '#306C3E', fontSize: 10 }]}>Required Deposit</Text>
+                <Text style={{ color: '#306C3E', fontWeight: 'bold' }}>
+                  ${proforma.deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </Text>
+              </View>
+            )}
+            {proforma.payment_terms && (
+              <View style={{ marginTop: 4 }}>
+                <Text style={{ fontSize: 9, color: '#666', fontStyle: 'italic', textAlign: 'right' }}>
+                  {proforma.payment_terms}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
