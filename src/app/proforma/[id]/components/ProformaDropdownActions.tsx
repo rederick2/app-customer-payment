@@ -9,14 +9,31 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, FileText, Check, X, Eye, Loader2, Link as LinkIcon, Printer, Calendar as CalendarIcon } from 'lucide-react';
+import { MoreHorizontal, FileText, Check, X, Eye, Loader2, Link as LinkIcon, Printer, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { updateProformaStatus, scheduleJob } from './actions';
 import { toast } from 'sonner';
 import ScheduleJobModal from './ScheduleJobModal';
+import QuotePreviewModal from './QuotePreviewModal';
+import EmailQuoteModal from './EmailQuoteModal';
+import React from 'react';
 
-export default function ProformaDropdownActions({ proformaId, currentStatus, projectName }: { proformaId: string, currentStatus: string, projectName: string }) {
+export default function ProformaDropdownActions({
+  proformaId,
+  currentStatus,
+  projectName,
+  proforma,
+  items
+}: {
+  proformaId: string,
+  currentStatus: string,
+  projectName: string,
+  proforma: any,
+  items: any[]
+}) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   const handleStatusUpdate = async (newStatus: string) => {
     setIsUpdating(true);
@@ -44,11 +61,9 @@ export default function ProformaDropdownActions({ proformaId, currentStatus, pro
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Button variant="outline" className="flex items-center gap-2 border-border/50 bg-white shadow-sm" disabled={isUpdating}>
-          {isUpdating ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <MoreHorizontal className="h-4 w-4 text-primary" />}
-          More
-        </Button>
+      <DropdownMenuTrigger render={<Button variant="outline" className="flex items-center gap-2 border-border/50 bg-white shadow-sm" disabled={isUpdating} />}>
+        {isUpdating ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <MoreHorizontal className="h-4 w-4 text-primary" />}
+        More
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
 
@@ -89,19 +104,40 @@ export default function ProformaDropdownActions({ proformaId, currentStatus, pro
           </a>
         </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={handlePrint} className="cursor-pointer">
-          <Printer className="mr-2 h-4 w-4" />
-          Print or Save PDF
-        </DropdownMenuItem>
-
       </DropdownMenuContent>
-      
-      <ScheduleJobModal 
+
+      <ScheduleJobModal
         proformaId={proformaId}
         projectName={projectName}
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
       />
+
+      <QuotePreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        proforma={proforma}
+        items={items}
+        onSendEmail={() => {
+          setIsPreviewModalOpen(false);
+          setIsEmailModalOpen(true);
+        }}
+      />
+
+      {isEmailModalOpen && (
+        <EmailQuoteModal
+          proformaId={proformaId}
+          clientName={(() => {
+            const c = proforma.clients;
+            return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Cliente';
+          })()}
+          clientEmail={proforma.clients?.email || ''}
+          projectName={proforma.project_name}
+          total={proforma.total}
+          openOverride={isEmailModalOpen}
+          setOpenOverride={setIsEmailModalOpen}
+        />
+      )}
     </DropdownMenu>
   );
 }

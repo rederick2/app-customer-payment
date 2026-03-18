@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { logout } from '@/app/login/actions';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar, Settings, GanttChart } from 'lucide-react';
+import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar, Settings, GanttChart, FileText } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
 
@@ -69,6 +69,10 @@ export default async function RootLayout({
                 <Link href="/clients" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
                   <Users className="mr-3 h-4 w-4" />
                   Clients
+                </Link>
+                <Link href="/quotes" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
+                  <FileText className="mr-3 h-4 w-4" />
+                  Quotes
                 </Link>
                 <Link href="/proforma/new" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
                   <PlusCircle className="mr-3 h-4 w-4" />

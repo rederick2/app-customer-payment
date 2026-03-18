@@ -48,10 +48,23 @@ interface EmailQuoteModalProps {
   clientEmail: string;
   projectName: string;
   total: number;
+  openOverride?: boolean;
+  setOpenOverride?: (open: boolean) => void;
 }
 
-export default function EmailQuoteModal({ proformaId, clientName, clientEmail, projectName, total }: EmailQuoteModalProps) {
-  const [open, setOpen] = useState(false);
+export default function EmailQuoteModal({ 
+  proformaId, 
+  clientName, 
+  clientEmail, 
+  projectName, 
+  total,
+  openOverride,
+  setOpenOverride
+}: EmailQuoteModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openOverride ?? internalOpen;
+  const setOpen = setOpenOverride ?? setInternalOpen;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailTo, setEmailTo] = useState(clientEmail || '');
 
@@ -79,10 +92,12 @@ export default function EmailQuoteModal({ proformaId, clientName, clientEmail, p
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="default" className="bg-[#306C3E] hover:bg-[#306C3E]/90 text-white" />}>
-        <Mail className="mr-2 h-4 w-4" />
-        Send Email
-      </DialogTrigger>
+      {!openOverride && (
+        <DialogTrigger render={<Button variant="default" className="bg-[#306C3E] hover:bg-[#306C3E]/90 text-white" />}>
+          <Mail className="mr-2 h-4 w-4" />
+          Send Email
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
         <DialogHeader className="p-6 pb-2 border-b bg-white border-border/50">
           <DialogTitle className="text-xl font-bold text-[#0D3B47]">

@@ -52,6 +52,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -100,6 +101,8 @@ export function JobView({
   const [isAddingLabor, setIsAddingLabor] = React.useState(false);
   const [isAddingTask, setIsAddingTask] = React.useState(false);
   const [isManagingTeam, setIsManagingTeam] = React.useState(false);
+  const [isAddingLineItem, setIsAddingLineItem] = React.useState(false);
+  const [itemToDelete, setItemToDelete] = React.useState<any | null>(null);
 
   // Expenses search and pagination state
   const [expenseSearchTerm, setExpenseSearchTerm] = React.useState('');
@@ -110,6 +113,57 @@ export function JobView({
   const itemsPerPage = 10;
 
   const supabase = createClient();
+
+  const syncTotalsToDatabase = async (currentItems: any[]) => {
+    const newSubtotal = currentItems.reduce((acc, item) => {
+      if (item.is_excluded) return acc;
+      return acc + (item.total_price || 0);
+    }, 0);
+
+    const adjustments = (proforma.adjustments || []) as any[];
+    const discountAdjustments = adjustments.filter(a => a.type === 'discount');
+    const taxAdjustments = adjustments.filter(a => a.type === 'tax');
+
+    const totalDiscount = discountAdjustments.reduce((acc, adj) => {
+      const amount = adj.valueType === 'percentage' ? (newSubtotal * adj.value) / 100 : adj.value;
+      return acc + amount;
+    }, 0);
+
+    const taxableAmount = newSubtotal - totalDiscount;
+    const totalTax = taxAdjustments.reduce((acc, adj) => {
+      const amount = adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value;
+      return acc + amount;
+    }, 0);
+
+    const newTotal = newSubtotal - totalDiscount + totalTax;
+
+    const { error } = await supabase
+      .from('proformas')
+      .update({
+        subtotal: newSubtotal,
+        total: newTotal,
+        tax: totalTax // Updating tax field recursively if needed
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error syncing totals to DB:', error);
+    }
+  };
+
+  const fetchItems = async () => {
+    const { data, error } = await supabase
+      .from('proforma_items')
+      .select('*')
+      .eq('proforma_id', id)
+      .order('sort_order', { ascending: true });
+
+    if (!error) {
+      setItems(data || []);
+      // Sync totals to DB whenever items are fetched (e.g., after addition)
+      if (data) syncTotalsToDatabase(data);
+    }
+  };
 
   const fetchPayments = async () => {
     const { data, error } = await supabase
@@ -220,6 +274,24 @@ export function JobView({
       handleCancelEditing();
     }
     setIsSavingCost(false);
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    const { error } = await supabase
+      .from('proforma_items')
+      .delete()
+      .eq('id', itemId);
+
+    if (error) {
+      toast.error('Error al eliminar item');
+    } else {
+      const updatedItems = items.filter(item => item.id !== itemId);
+      setItems(updatedItems);
+      toast.success('Item eliminado');
+      setItemToDelete(null);
+      // Sync totals to DB after deletion
+      syncTotalsToDatabase(updatedItems);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, itemId: string) => {
@@ -346,7 +418,7 @@ export function JobView({
       return acc + amount;
     }, 0);
 
-  const totalInvoiced = subtotal - totalDiscount;
+  const totalInvoiced = subtotal;
   const totalCost = items.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
   const totalLaborCost = timeEntries.reduce((acc, entry) => acc + (Number(entry.total_cost) || 0), 0);
   const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);
@@ -384,7 +456,13 @@ export function JobView({
             <UserIcon className="h-4 w-4 text-[#0D3B47]" />
             <span className="hidden sm:inline">Manage Team</span>
           </Button>
-          <ProformaDropdownActions proformaId={id} currentStatus={proforma.status || 'draft'} projectName={proforma.project_name} />
+          <ProformaDropdownActions
+            proformaId={id}
+            currentStatus={proforma.status || 'draft'}
+            projectName={proforma.project_name}
+            proforma={proforma}
+            items={items}
+          />
         </div>
       </div>
 
@@ -529,26 +607,28 @@ export function JobView({
         {/* Sections Grid */}
         <div className="grid grid-cols-1 gap-6">
 
-          {/* Line Items */}
+          {/* Line Items Section */}
           <Card className="border-border/40 shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
               <CardTitle className="text-xl font-serif">Line Items</CardTitle>
-              <Button size="sm" className="h-8 gap-1 font-bold">
-                <Plus className="h-4 w-4" /> New Line Item
+              <Button size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingLineItem(true)}>
+                <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New Line Item</span>
               </Button>
             </CardHeader>
+
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {/* VISTA DESKTOP: Se mantiene la tabla pero se oculta en mobile */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-black uppercase tracking-widest">
                     <tr>
                       <th className="px-4 py-3 text-left w-10"></th>
                       <th className="px-6 py-3 text-left">Product / Service</th>
                       <th className="px-4 py-3 text-center w-24">Image</th>
-                      <th className="px-6 py-3 text-center w-24">Quantity</th>
+                      <th className="px-6 py-3 text-center w-24">Qty</th>
                       <th className="px-6 py-3 text-right">Cost</th>
-                      <th className="px-6 py-3 text-right">Price</th>
                       <th className="px-6 py-3 text-right">Total</th>
+                      <th className="px-4 py-3 text-center w-10">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
@@ -631,11 +711,24 @@ export function JobView({
                         <td className={cn("px-6 py-4 text-right tabular-nums font-bold", item.is_optional && "line-through italic text-muted-foreground")}>
                           ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
+                        <td className="px-4 py-4 text-center">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setItemToDelete(item);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                     <tr className="bg-muted/5 font-bold border-t border-border/40">
                       <td colSpan={3} className="px-6 py-4 text-left">
-                        <Button variant="outline" size="sm" className="h-8 gap-1 font-bold">
+                        <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingLineItem(true)}>
                           <Plus className="h-3 w-3" /> New Line Item
                         </Button>
                       </td>
@@ -643,9 +736,58 @@ export function JobView({
                       <td className="px-6 py-4 text-right tabular-nums">${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td className="px-6 py-4" />
                       <td className="px-6 py-4 text-right tabular-nums text-lg">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-6 py-4" />
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              {/* VISTA MOBILE: Se convierte en lista de cards */}
+              <div className="md:hidden divide-y divide-border/30">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 space-y-3 active:bg-muted/10 transition-colors"
+                    onClick={() => handleStartEditing(item)}
+                  >
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex gap-3">
+                        <Checkbox checked={!item.is_optional} className="mt-1" />
+                        <div>
+                          <p className="font-bold text-emerald-700 leading-tight">{item.description}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{item.details}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-sm">${item.total_price.toLocaleString('en-US')}</p>
+                        <p className="text-[10px] text-muted-foreground">Qty: {item.quantity}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-muted/5 p-2 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        {item.photo_url && (
+                          <img src={item.photo_url} className="h-8 w-8 rounded object-cover border" />
+                        )}
+                        <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Cost:</span>
+                        <span className="text-xs font-medium">${item.cost || 0}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold text-red-600 hover:text-red-700 hover:bg-red-50" onClick={(e) => {
+                          e.stopPropagation();
+                          setItemToDelete(item);
+                        }}>Delete</Button>
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold">Edit Cost</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer de Totales resumido para mobile */}
+              <div className="p-4 bg-muted/5 border-t border-border/40 flex justify-between items-center md:hidden">
+                <span className="text-[10px] font-black uppercase text-muted-foreground">Total Invoiced</span>
+                <span className="text-lg font-bold text-emerald-600">${totalInvoiced.toLocaleString('en-US')}</span>
               </div>
             </CardContent>
           </Card>
@@ -731,10 +873,8 @@ export function JobView({
                           </td>
                           <td className="px-6 py-4 text-right">
                             <DropdownMenu>
-                              <DropdownMenuTrigger>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
+                              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                <MoreVertical className="h-4 w-4" />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40">
                                 <DropdownMenuItem className="text-xs gap-2" onClick={() => {
@@ -875,10 +1015,8 @@ export function JobView({
                               <td className="px-6 py-4 text-right tabular-nums font-bold text-red-600 text-xs">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                               <td className="px-6 py-4 text-center">
                                 <DropdownMenu>
-                                  <DropdownMenuTrigger>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                                      <MoreVertical className="h-3.5 w-3.5" />
-                                    </Button>
+                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7" />}>
+                                    <MoreVertical className="h-3.5 w-3.5" />
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-40">
                                     <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedExpenseForEdit(exp)}>
@@ -985,10 +1123,8 @@ export function JobView({
                             <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                             <td className="px-6 py-4 text-center">
                               <DropdownMenu>
-                                <DropdownMenuTrigger>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity">
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                  </Button>
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
+                                  <MoreVertical className="h-3.5 w-3.5" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-32">
                                   <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handeDeleteLabor(entry.id)}>
@@ -1050,10 +1186,8 @@ export function JobView({
                           </div>
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" />}>
+                            <MoreVertical className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}>
@@ -1271,6 +1405,37 @@ export function JobView({
                 <p className="text-xs uppercase font-black tracking-widest">Cargando...</p>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      {isAddingLineItem && (
+        <LineItemFormModal
+          proformaId={id}
+          itemsCount={items.length}
+          onClose={() => setIsAddingLineItem(false)}
+          onSuccess={() => {
+            fetchItems();
+            setIsAddingLineItem(false);
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl border-b pb-4">Confirmar Eliminación</DialogTitle>
+            <DialogDescription className="py-4">
+              ¿Estás seguro de que deseas eliminar <strong>{itemToDelete?.description}</strong>? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-2">
+            <Button variant="outline" className="flex-1 rounded-xl h-11 font-bold" onClick={() => setItemToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" className="flex-1 rounded-xl h-11 font-bold bg-red-600 hover:bg-red-700" onClick={() => handleDeleteItem(itemToDelete.id)}>
+              Eliminar Item
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -2059,6 +2224,108 @@ function TeamMemberManager({ onClose, onSuccess }: { onClose: () => void, onSucc
               </tbody>
             </table>
           </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
+  proformaId: string,
+  itemsCount: number,
+  onClose: () => void,
+  onSuccess: () => void
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+
+    const quantity = parseFloat(formData.get('quantity') as string) || 1;
+    const unitPrice = parseFloat(formData.get('unit_price') as string) || 0;
+    const totalPrice = quantity * unitPrice;
+
+    const { error } = await supabase
+      .from('proforma_items')
+      .insert([{
+        proforma_id: proformaId,
+        description: formData.get('description') as string,
+        details: formData.get('details') as string,
+        quantity: quantity,
+        unit_price: unitPrice,
+        total_price: totalPrice,
+        cost: parseFloat(formData.get('cost') as string) || 0,
+        is_optional: formData.get('is_optional') === 'on',
+        sort_order: itemsCount
+      }]);
+
+    if (error) {
+      toast.error('Error al añadir item');
+      console.error(error);
+    } else {
+      toast.success('Item añadido correctamente');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <Card className="w-full max-w-md shadow-2xl border-none">
+        <CardHeader className="bg-[#306C3E] text-white rounded-t-xl">
+          <CardTitle className="text-lg">Nuevo Item de Proforma</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="description">Producto / Servicio</Label>
+              <Input id="description" name="description" placeholder="Nombre del item" required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="details">Detalles</Label>
+              <textarea
+                id="details"
+                name="details"
+                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Descripción detallada..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Cantidad</Label>
+                <Input id="quantity" name="quantity" type="number" defaultValue="1" step="0.01" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="unit_price">Precio Unitario</Label>
+                <Input id="unit_price" name="unit_price" type="number" step="0.01" placeholder="0.00" required />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cost">Costo (Estimado)</Label>
+                <Input id="cost" name="cost" type="number" step="0.01" placeholder="0.00" />
+              </div>
+              <div className="flex items-center space-x-2 pt-8">
+                <Checkbox id="is_optional_modal" name="is_optional" />
+                <Label htmlFor="is_optional_modal">¿Es opcional?</Label>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Añadir Item'}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

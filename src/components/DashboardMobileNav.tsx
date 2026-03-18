@@ -14,7 +14,8 @@ import {
   MessageSquare,
   LogOut,
   Settings,
-  GanttChart
+  GanttChart,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
   const links = [
     { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/clients', icon: Users, label: 'Clients' },
+    { href: '/quotes', icon: FileText, label: 'Quotes' },
     { href: '/proforma/new', icon: PlusCircle, label: 'New Quote' },
     { href: '/requests', icon: ListTodo, label: 'Requests' },
     { href: '/calendar', icon: Calendar, label: 'Calendar' },

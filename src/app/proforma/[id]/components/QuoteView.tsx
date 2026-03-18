@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import ProformaDropdownActions from './ProformaDropdownActions';
@@ -41,6 +41,7 @@ interface QuoteViewProps {
   proforma: any;
   items: any[];
   id: string;
+  hideActionBar?: boolean;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -363,15 +364,49 @@ function SortableRow({
   );
 }
 
-export function QuoteView({ proforma, items: initialItems, id }: QuoteViewProps) {
+export function QuoteView({ proforma, items: initialItems, id, hideActionBar = false }: QuoteViewProps) {
   const [items, setItems] = React.useState(initialItems);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const isReadOnly = proforma.status === 'approved' || proforma.status === 'job';
-  console.log(proforma)
-  console.log(1)
+
+  const [isMounted, setIsMounted] = React.useState(false);
+  const [isGenerating, setIsGenerating] = React.useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGenerating(true);
+    try {
+      // Dynamic import inside function to ensure client-side only
+      const { pdf } = await import('@react-pdf/renderer');
+      const ProformaPDFModule = await import('@/lib/pdf/ProformaPDF');
+      const ProformaPDFComponent = ProformaPDFModule.default;
+
+      const blob = await pdf(
+        <ProformaPDFComponent proforma={proforma} items={items} client={proforma.clients} />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      toast.error('Error al generar el PDF');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const proformaName = proforma.project_name || 'Quotations';
+  const fileName = `quote_${proforma.id.split('-')[0].toUpperCase()}.pdf`;
+
+  //console.log(proforma)
+  //console.log(1)
   // Sort items initially by sort_order
   React.useEffect(() => {
     setItems([...initialItems].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)));
+    setIsMounted(true);
   }, [initialItems]);
 
   const sensors = useSensors(
@@ -450,43 +485,65 @@ export function QuoteView({ proforma, items: initialItems, id }: QuoteViewProps)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
-
       {/* Action Bar */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver al Panel
-          </Link>
-          <span className="text-muted-foreground/40">·</span>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">Estado:</span>
-            <StatusBadge status={proforma.status || 'draft'} />
+      {!hideActionBar && (
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al Panel
+            </Link>
+            <span className="text-muted-foreground/40">·</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Estado:</span>
+              <StatusBadge status={proforma.status || 'draft'} />
+            </div>
+          </div>
+          <div className="flex gap-2 items-center flex-wrap">
+            {!isReadOnly && (
+              <Link
+                href={`/proforma/${id}/edit`}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-all"
+              >
+                <Pencil className="h-4 w-4" />
+                Editor Completo
+              </Link>
+            )}
+            <ProformaDropdownActions
+              proformaId={id}
+              currentStatus={proforma.status || 'draft'}
+              projectName={proforma.project_name}
+              proforma={proforma}
+              items={items}
+            />
+            {/* Download PDF Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!isMounted || isGenerating}
+              onClick={handleDownloadPDF}
+              className="h-10 gap-2 border-border/60 hover:bg-muted/50 font-bold px-4"
+            >
+              {isGenerating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {isGenerating ? 'Preparando...' : 'Descargar PDF'}
+            </Button>
+            <EmailQuoteModal
+              proformaId={id}
+              clientName={(() => {
+                const c = proforma.clients;
+                return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Cliente';
+              })()}
+              clientEmail={proforma.clients?.email || ''}
+              projectName={proforma.project_name}
+              total={proforma.total}
+            />
           </div>
         </div>
-        <div className="flex gap-2 items-center flex-wrap">
-          {!isReadOnly && (
-            <Link
-              href={`/proforma/${id}/edit`}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-all"
-            >
-              <Pencil className="h-4 w-4" />
-              Editor Completo
-            </Link>
-          )}
-          <ProformaDropdownActions proformaId={id} currentStatus={proforma.status || 'draft'} projectName={proforma.project_name} />
-          <EmailQuoteModal
-            proformaId={id}
-            clientName={(() => {
-              const c = proforma.clients as any;
-              return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || c?.name || 'Client';
-            })()}
-            clientEmail={(proforma.clients as any)?.email || ''}
-            projectName={proforma.project_name}
-            total={proforma.total}
-          />
-        </div>
-      </div>
+      )}
 
 
       {/* Printable Document Area */}

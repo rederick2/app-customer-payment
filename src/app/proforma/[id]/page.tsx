@@ -6,11 +6,13 @@ import { JobView } from './components/JobView';
 export const revalidate = 0;
 
 type Props = {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ view?: string }>
 }
 
-export default async function ProformaView({ params }: Props) {
+export default async function ProformaView({ params, searchParams }: Props) {
   const { id } = await params;
+  const { view } = await searchParams;
   const supabase = await createClient();
 
   // Fetch proforma and its client
@@ -83,7 +85,7 @@ export default async function ProformaView({ params }: Props) {
     .select('*')
     .order('name', { ascending: true });
 
-  if (proforma.status === 'job') {
+  if (proforma.status === 'job' && view !== 'quote') {
     return (
       <JobView
         proforma={proforma}
