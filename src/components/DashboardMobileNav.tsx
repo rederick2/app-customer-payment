@@ -13,7 +13,8 @@ import {
   Calendar, 
   MessageSquare,
   LogOut,
-  Settings
+  Settings,
+  GanttChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
     { href: '/proforma/new', icon: PlusCircle, label: 'New Quote' },
     { href: '/requests', icon: ListTodo, label: 'Requests' },
     { href: '/calendar', icon: Calendar, label: 'Calendar' },
+    { href: '/gantt', icon: GanttChart, label: 'Gantt' },
     { 
       href: '/messages', 
       icon: MessageSquare, 

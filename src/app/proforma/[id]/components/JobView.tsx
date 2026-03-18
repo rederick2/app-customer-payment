@@ -1,15 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { 
-  ArrowLeft, 
-  MessageSquare, 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Clock, 
-  Receipt, 
-  Calendar, 
+import {
+  ArrowLeft,
+  MessageSquare,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Clock,
+  Receipt,
+  Calendar,
   Plus,
   MoreVertical,
   ChevronDown,
@@ -69,14 +69,14 @@ interface JobViewProps {
   teamMembers: any[];
 }
 
-export function JobView({ 
-  proforma, 
-  items: itemsProp, 
-  id, 
-  expenses: initialExpenses, 
-  visits: initialVisits, 
-  timeEntries: initialTimeEntries, 
-  invoices, 
+export function JobView({
+  proforma,
+  items: itemsProp,
+  id,
+  expenses: initialExpenses,
+  visits: initialVisits,
+  timeEntries: initialTimeEntries,
+  invoices,
   payments: initialPayments,
   tasks: initialTasks,
   teamMembers: initialTeamMembers
@@ -92,7 +92,7 @@ export function JobView({
   const [timeEntries, setTimeEntries] = React.useState(initialTimeEntries);
   const [tasks, setTasks] = React.useState(initialTasks);
   const [teamMembers, setTeamMembers] = React.useState(initialTeamMembers);
-  
+
   const [isAddingExpense, setIsAddingExpense] = React.useState(false);
   const [isScanningExpense, setIsScanningExpense] = React.useState(false);
   const [isRecordingPayment, setIsRecordingPayment] = React.useState(false);
@@ -100,15 +100,15 @@ export function JobView({
   const [isAddingLabor, setIsAddingLabor] = React.useState(false);
   const [isAddingTask, setIsAddingTask] = React.useState(false);
   const [isManagingTeam, setIsManagingTeam] = React.useState(false);
-  
+
   // Expenses search and pagination state
   const [expenseSearchTerm, setExpenseSearchTerm] = React.useState('');
   const [expenseCurrentPage, setExpenseCurrentPage] = React.useState(1);
   const [selectedExpenseForEdit, setSelectedExpenseForEdit] = React.useState<any>(null);
   const [selectedFileUrl, setSelectedFileUrl] = React.useState<string | null>(null);
-  
+
   const itemsPerPage = 10;
-  
+
   const supabase = createClient();
 
   const fetchPayments = async () => {
@@ -204,7 +204,7 @@ export function JobView({
   const handleSaveCost = async (itemId: string) => {
     if (isSavingCost) return;
     setIsSavingCost(true);
-    
+
     const newCost = parseFloat(tempCost) || 0;
 
     const { error } = await supabase
@@ -316,7 +316,7 @@ export function JobView({
 
   // Totals calculations
   // Filtering and Pagination logic
-  const filteredExpenses = expenses.filter(exp => 
+  const filteredExpenses = expenses.filter(exp =>
     (exp.place?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
     (exp.description?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
     (exp.category?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '')
@@ -335,15 +335,15 @@ export function JobView({
 
   const totalInvoiced = items.reduce((acc, item) => acc + item.total_price, 0);
   const totalCost = items.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
-  const totalLaborCost = timeEntries.reduce((acc, entry) => acc + (Number(entry.total_cost) || 0), 0); 
+  const totalLaborCost = timeEntries.reduce((acc, entry) => acc + (Number(entry.total_cost) || 0), 0);
   const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);
-  
+
   const totalProfit = totalInvoiced - totalCost - totalLaborCost - totalExpenses;
   const profitMargin = totalInvoiced > 0 ? (totalProfit / totalInvoiced) * 100 : 0;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl animate-in fade-in duration-500">
-      
+
       {/* Action Bar */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -377,7 +377,7 @@ export function JobView({
 
       {/* Main Content Area */}
       <div className="space-y-6">
-        
+
         {/* Header Summary */}
         <div className="flex flex-col md:flex-row justify-between items-start gap-8 bg-white p-6 rounded-xl border border-border/40 shadow-sm">
           <div className="flex items-start gap-4">
@@ -393,6 +393,12 @@ export function JobView({
               </div>
               <h1 className="text-3xl font-serif font-bold text-foreground mb-1">{proforma.project_name}</h1>
               <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <UserIcon className="h-3.5 w-3.5" />
+                  <Link href={`/clients/${proforma.clients?.id}`}>
+                    <span>{proforma.clients?.company_name || proforma.clients?.name || 'No name provided'}</span>
+                  </Link>
+                </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-3.5 w-3.5" />
                   <span>{proforma.clients?.street_1 || proforma.clients?.address || 'No address provided'}</span>
@@ -428,7 +434,7 @@ export function JobView({
         {/* Profitability Panel */}
         <div className="bg-[#F8F7F2] rounded-xl border border-border/40 overflow-hidden">
           <div className="p-4 border-b border-border/40 flex items-center justify-between">
-            <button 
+            <button
               onClick={() => setShowProfitability(!showProfitability)}
               className="flex items-center gap-2 text-sm font-bold hover:text-primary transition-colors"
             >
@@ -436,7 +442,7 @@ export function JobView({
               {showProfitability ? 'Hide Profitability' : 'Show Profitability'}
             </button>
           </div>
-          
+
           {showProfitability && (
             <div className="p-6">
               <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
@@ -509,7 +515,7 @@ export function JobView({
 
         {/* Sections Grid */}
         <div className="grid grid-cols-1 gap-6">
-          
+
           {/* Line Items */}
           <Card className="border-border/40 shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
@@ -534,8 +540,8 @@ export function JobView({
                   </thead>
                   <tbody className="divide-y divide-border/30">
                     {items.map((item) => (
-                      <tr 
-                        key={item.id} 
+                      <tr
+                        key={item.id}
                         className={cn(
                           "hover:bg-muted/5 transition-colors cursor-pointer align-top",
                           editingItemId === item.id && "bg-primary/5",
@@ -554,9 +560,9 @@ export function JobView({
                         </td>
                         <td className="px-4 py-4 text-center">
                           {item.photo_url ? (
-                            <LineItemImage 
-                              src={item.photo_url} 
-                              alt={item.description} 
+                            <LineItemImage
+                              src={item.photo_url}
+                              alt={item.description}
                               className="h-12 w-12 mx-auto"
                             />
                           ) : (
@@ -582,18 +588,18 @@ export function JobView({
                                 />
                               </div>
                               <div className="flex gap-1">
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
                                   className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                                   onClick={() => handleSaveCost(item.id)}
                                   disabled={isSavingCost}
                                 >
                                   {isSavingCost ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                                 </Button>
-                                <Button 
-                                  size="icon" 
-                                  variant="ghost" 
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
                                   className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
                                   onClick={handleCancelEditing}
                                   disabled={isSavingCost}
@@ -660,12 +666,12 @@ export function JobView({
                       {tasks.map(task => (
                         <tr key={task.id} className="hover:bg-muted/5 transition-colors group">
                           <td className="px-6 py-4">
-                            <button 
+                            <button
                               onClick={() => handleToggleTaskStatus(task.id, task.status)}
                               className={cn(
                                 "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                                task.status === 'completed' 
-                                  ? "bg-emerald-500 border-emerald-500 text-white" 
+                                task.status === 'completed'
+                                  ? "bg-emerald-500 border-emerald-500 text-white"
                                   : "border-muted-foreground/30 hover:border-emerald-500"
                               )}
                             >
@@ -753,8 +759,8 @@ export function JobView({
             <Card className="border-border/40 shadow-sm overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
                 <CardTitle className="text-xl font-serif">Payments</CardTitle>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]"
                   onClick={() => setIsRecordingPayment(true)}
                 >
@@ -797,16 +803,16 @@ export function JobView({
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
                 <CardTitle className="text-xl font-serif">Expenses</CardTitle>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="h-8 gap-1.5 font-bold border-primary/20 hover:bg-primary/5"
                     onClick={() => setIsScanningExpense(true)}
                   >
                     <Camera className="h-4 w-4" /> Scanner AI
                   </Button>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]"
                     onClick={() => setIsAddingExpense(true)}
                   >
@@ -819,8 +825,8 @@ export function JobView({
                 <div className="p-4 border-b border-border/40 bg-white">
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Buscar por lugar, descripción o categoría..." 
+                    <Input
+                      placeholder="Buscar por lugar, descripción o categoría..."
                       className="pl-9 h-9 text-xs"
                       value={expenseSearchTerm}
                       onChange={handleSearchChange}
@@ -889,10 +895,10 @@ export function JobView({
                           Mostrando {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} de {filteredExpenses.length}
                         </p>
                         <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 w-8 p-0" 
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
                             disabled={expenseCurrentPage === 1}
                             onClick={() => setExpenseCurrentPage(prev => prev - 1)}
                           >
@@ -903,10 +909,10 @@ export function JobView({
                             <span className="text-[10px] text-muted-foreground">/</span>
                             <span className="text-xs text-muted-foreground">{totalExpensePages}</span>
                           </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 w-8 p-0" 
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
                             disabled={expenseCurrentPage === totalExpensePages}
                             onClick={() => setExpenseCurrentPage(prev => prev + 1)}
                           >
@@ -1006,17 +1012,17 @@ export function JobView({
                 </Button>
               </CardHeader>
               <CardContent className="p-0">
-                 {visits.length > 0 ? (
-                    <div className="divide-y divide-border/30">
-                      {visits.map(visit => (
-                        <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "h-10 w-10 rounded-lg flex items-center justify-center",
-                              visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
-                            )}>
-                               <Calendar className="h-5 w-5" />
-                            </div>
+                {visits.length > 0 ? (
+                  <div className="divide-y divide-border/30">
+                    {visits.map(visit => (
+                      <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className={cn(
+                            "h-10 w-10 rounded-lg flex items-center justify-center",
+                            visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                          )}>
+                            <Calendar className="h-5 w-5" />
+                          </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
@@ -1049,15 +1055,15 @@ export function JobView({
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
-                       <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                       <p className="text-xs font-medium">No visits scheduled for this job yet</p>
-                       <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
-                    </div>
-                  )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-xs font-medium">No visits scheduled for this job yet</p>
+                    <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1068,58 +1074,58 @@ export function JobView({
               <CardTitle className="text-xl font-serif">Invoices</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-               <div className="border-b border-border/40">
-                 <div className="flex gap-8 px-6 py-2 bg-muted/5">
-                   <button className="text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 py-1">Billing</button>
-                   <button className="text-sm font-medium text-muted-foreground py-1">Reminders</button>
-                 </div>
-               </div>
-               
-               <div className="p-6 space-y-6">
-                 <div className="flex items-center gap-3 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
-                    <input type="checkbox" className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500" />
-                    <label className="text-sm font-medium">Split into multiple invoices with a payment schedule</label>
-                 </div>
+              <div className="border-b border-border/40">
+                <div className="flex gap-8 px-6 py-2 bg-muted/5">
+                  <button className="text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 py-1">Billing</button>
+                  <button className="text-sm font-medium text-muted-foreground py-1">Reminders</button>
+                </div>
+              </div>
 
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border/40">
-                        <tr>
-                          <th className="px-4 py-3 text-left">Invoice</th>
-                          <th className="px-4 py-3 text-left">Due Date</th>
-                          <th className="px-4 py-3 text-left">Status</th>
-                          <th className="px-4 py-3 text-left">Subject</th>
-                          <th className="px-4 py-3 text-right">Balance</th>
-                          <th className="px-4 py-3 text-right">Total</th>
+              <div className="p-6 space-y-6">
+                <div className="flex items-center gap-3 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
+                  <input type="checkbox" className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500" />
+                  <label className="text-sm font-medium">Split into multiple invoices with a payment schedule</label>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border/40">
+                      <tr>
+                        <th className="px-4 py-3 text-left">Invoice</th>
+                        <th className="px-4 py-3 text-left">Due Date</th>
+                        <th className="px-4 py-3 text-left">Status</th>
+                        <th className="px-4 py-3 text-left">Subject</th>
+                        <th className="px-4 py-3 text-right">Balance</th>
+                        <th className="px-4 py-3 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30">
+                      {invoices.map(inv => (
+                        <tr key={inv.id} className="hover:bg-muted/5 transition-colors">
+                          <td className="px-4 py-4 font-bold text-emerald-600">#{inv.invoice_number}</td>
+                          <td className="px-4 py-4 text-muted-foreground">{format(new Date(inv.due_date || inv.issue_date), 'd MMM. yyyy', { locale: es })}</td>
+                          <td className="px-4 py-4">
+                            <Badge variant="outline" className={cn(
+                              "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-black uppercase tracking-widest",
+                              inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
+                            )}>
+                              <span className={cn("w-2 h-2 rounded-full", inv.status === 'paid' ? "bg-emerald-500" : "bg-blue-500")} />
+                              {inv.status.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-4 text-muted-foreground">{proforma.project_name}</td>
+                          <td className="px-4 py-4 text-right tabular-nums font-bold">${inv.status === 'paid' ? '0.00' : inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-right tabular-nums font-bold text-lg">${inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/30">
-                        {invoices.map(inv => (
-                          <tr key={inv.id} className="hover:bg-muted/5 transition-colors">
-                            <td className="px-4 py-4 font-bold text-emerald-600">#{inv.invoice_number}</td>
-                            <td className="px-4 py-4 text-muted-foreground">{format(new Date(inv.due_date || inv.issue_date), 'd MMM. yyyy', { locale: es })}</td>
-                            <td className="px-4 py-4">
-                              <Badge variant="outline" className={cn(
-                                "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-black uppercase tracking-widest",
-                                inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
-                              )}>
-                                <span className={cn("w-2 h-2 rounded-full", inv.status === 'paid' ? "bg-emerald-500" : "bg-blue-500")} />
-                                {inv.status.toUpperCase()}
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-4 text-muted-foreground">{proforma.project_name}</td>
-                            <td className="px-4 py-4 text-right tabular-nums font-bold">${inv.status === 'paid' ? '0.00' : inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td className="px-4 py-4 text-right tabular-nums font-bold text-lg">${inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                 </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-                 <Button variant="ghost" className="text-primary font-bold px-0 h-auto hover:bg-transparent">
-                   Create Invoice
-                 </Button>
-               </div>
+                <Button variant="ghost" className="text-primary font-bold px-0 h-auto hover:bg-transparent">
+                  Create Invoice
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -1130,14 +1136,14 @@ export function JobView({
               <p className="text-[10px] font-medium text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
             </CardHeader>
             <CardContent className="p-6">
-               <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
-                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 font-serif">Note details</p>
-                 <textarea 
-                  className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none" 
+              <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 font-serif">Note details</p>
+                <textarea
+                  className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none"
                   placeholder="Click here to add a note..."
                   rows={4}
-                 />
-               </div>
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -1145,29 +1151,29 @@ export function JobView({
       </div>
       {/* Modals */}
       {isAddingExpense && (
-        <ExpenseFormModal 
-          proformaId={id} 
-          onClose={() => setIsAddingExpense(false)} 
+        <ExpenseFormModal
+          proformaId={id}
+          onClose={() => setIsAddingExpense(false)}
           onSuccess={() => {
             setIsAddingExpense(false);
             fetchExpenses();
-          }} 
+          }}
         />
       )}
 
       {isScanningExpense && (
-        <ReceiptScanner 
-          proformaId={id} 
-          onClose={() => setIsScanningExpense(false)} 
+        <ReceiptScanner
+          proformaId={id}
+          onClose={() => setIsScanningExpense(false)}
           onSuccess={() => {
             setIsScanningExpense(false);
             fetchExpenses();
-          }} 
+          }}
         />
       )}
 
       {isRecordingPayment && (
-        <RecordPaymentModal 
+        <RecordPaymentModal
           proformaId={id}
           clientId={proforma.client_id}
           onClose={() => setIsRecordingPayment(false)}
@@ -1180,7 +1186,7 @@ export function JobView({
 
       {/* Edit Expense Modal */}
       {selectedExpenseForEdit && (
-        <EditExpenseModal 
+        <EditExpenseModal
           expense={selectedExpenseForEdit}
           onClose={() => setSelectedExpenseForEdit(null)}
           onSuccess={() => {
@@ -1195,23 +1201,23 @@ export function JobView({
         <LaborFormModal proformaId={id} teamMembers={teamMembers} onClose={() => setIsAddingLabor(false)} onSuccess={() => { setIsAddingLabor(false); fetchTimeEntries(); }} />
       )}
       {isAddingTask && (
-        <TaskFormModal 
-          proformaId={id} 
-          items={items} 
-          teamMembers={teamMembers} 
-          onClose={() => setIsAddingTask(false)} 
-          onSuccess={() => { setIsAddingTask(false); fetchTasks(); }} 
+        <TaskFormModal
+          proformaId={id}
+          items={items}
+          teamMembers={teamMembers}
+          onClose={() => setIsAddingTask(false)}
+          onSuccess={() => { setIsAddingTask(false); fetchTasks(); }}
         />
       )}
       {isManagingTeam && (
-        <TeamMemberManager 
-          onClose={() => setIsManagingTeam(false)} 
-          onSuccess={() => { fetchTeamMembers(); }} 
+        <TeamMemberManager
+          onClose={() => setIsManagingTeam(false)}
+          onSuccess={() => { fetchTeamMembers(); }}
         />
       )}
       {/* Visit Modal */}
       {isAddingVisit && (
-        <VisitFormModal 
+        <VisitFormModal
           proformaId={id}
           onClose={() => setIsAddingVisit(false)}
           onSuccess={() => {
@@ -1228,9 +1234,9 @@ export function JobView({
             <DialogTitle className="text-white text-sm font-bold flex items-center gap-2">
               <Eye className="h-4 w-4" /> Vista de Recibo
             </DialogTitle>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-white hover:bg-white/20 h-8 gap-2 font-bold"
               onClick={() => {
                 if (selectedFileUrl) window.open(selectedFileUrl, '_blank');
@@ -1241,9 +1247,9 @@ export function JobView({
           </DialogHeader>
           <div className="flex items-center justify-center min-h-[50vh] max-h-[85vh] p-4 pt-16">
             {selectedFileUrl ? (
-              <img 
-                src={selectedFileUrl} 
-                alt="Receipt" 
+              <img
+                src={selectedFileUrl}
+                alt="Receipt"
                 className="max-w-full max-h-full object-contain shadow-2xl rounded-sm"
               />
             ) : (
@@ -1267,7 +1273,7 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    
+
     const { error } = await supabase
       .from('payments')
       .insert([{
@@ -1311,9 +1317,9 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
 
             <div className="space-y-2">
               <Label htmlFor="payment_method">Método de Pago</Label>
-              <select 
-                id="payment_method" 
-                name="payment_method" 
+              <select
+                id="payment_method"
+                name="payment_method"
                 className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 required
               >
@@ -1327,9 +1333,9 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notas (Opcional)</Label>
-              <textarea 
-                id="notes" 
-                name="notes" 
+              <textarea
+                id="notes"
+                name="notes"
                 className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Detalles adicionales..."
               />
@@ -1358,7 +1364,7 @@ function ExpenseFormModal({ proformaId, onClose, onSuccess }: { proformaId: stri
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    
+
     const { error } = await supabase
       .from('job_expenses')
       .insert([{
@@ -1394,7 +1400,7 @@ function ExpenseFormModal({ proformaId, onClose, onSuccess }: { proformaId: stri
                 <Input id="place" name="place" className="pl-9" placeholder="Ej: Home Depot" required />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
               <Input id="description" name="description" placeholder="Ej: Pintura y brochas" required />
@@ -1445,7 +1451,7 @@ function EditExpenseModal({ expense, onClose, onSuccess }: { expense: any, onClo
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    
+
     const { error } = await supabase
       .from('job_expenses')
       .update({
@@ -1483,7 +1489,7 @@ function EditExpenseModal({ expense, onClose, onSuccess }: { expense: any, onClo
                 <Input id="place" name="place" className="pl-9" defaultValue={expense.place} placeholder="Ej: Home Depot" required />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
               <Input id="description" name="description" defaultValue={expense.description} placeholder="Ej: Pintura y brochas" required />
@@ -1526,11 +1532,11 @@ function EditExpenseModal({ expense, onClose, onSuccess }: { expense: any, onClo
   );
 }
 
-function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: { 
-  proformaId: string, 
+function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
+  proformaId: string,
   teamMembers: any[],
-  onClose: () => void, 
-  onSuccess: () => void 
+  onClose: () => void,
+  onSuccess: () => void
 }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [startTime, setStartTime] = React.useState('17:33');
@@ -1544,7 +1550,7 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
   React.useEffect(() => {
     const [startH, startM] = startTime.split(':').map(Number);
     const [endH, endM] = endTime.split(':').map(Number);
-    
+
     let diffMinutes = (endH * 60 + endM) - (startH * 60 + startM);
     if (diffMinutes < 0) diffMinutes += 24 * 60; // Handle overnight
 
@@ -1558,7 +1564,7 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    
+
     const { data: { user } } = await supabase.auth.getUser();
 
     const { error } = await supabase
@@ -1605,13 +1611,13 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
                 <div className="relative border border-border/40 rounded-xl px-4 py-2 bg-white">
                   <Label htmlFor="start_time" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Start time</Label>
                   <div className="flex items-center justify-between">
-                    <input 
-                      id="start_time" 
-                      type="time" 
+                    <input
+                      id="start_time"
+                      type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="text-base font-medium bg-transparent border-none outline-none w-full p-0 h-auto" 
-                      required 
+                      className="text-base font-medium bg-transparent border-none outline-none w-full p-0 h-auto"
+                      required
                     />
                     <Clock className="h-4 w-4 text-muted-foreground/60" />
                   </div>
@@ -1621,13 +1627,13 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
                 <div className="relative border border-border/40 rounded-xl px-4 py-2 bg-white">
                   <Label htmlFor="end_time" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">End time</Label>
                   <div className="flex items-center justify-between">
-                    <input 
-                      id="end_time" 
-                      type="time" 
+                    <input
+                      id="end_time"
+                      type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="text-base font-medium bg-transparent border-none outline-none w-full p-0 h-auto" 
-                      required 
+                      className="text-base font-medium bg-transparent border-none outline-none w-full p-0 h-auto"
+                      required
                     />
                     <Clock className="h-4 w-4 text-muted-foreground/60" />
                   </div>
@@ -1638,20 +1644,20 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
             {/* Hours/Minutes Row */}
             <div className="flex border border-border/40 rounded-xl divide-x divide-border/40 overflow-hidden">
               <div className="flex-1 p-2.5 flex items-center justify-between gap-3 bg-white">
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={hours}
                   onChange={(e) => setHours(Number(e.target.value))}
-                  className="w-12 border-none shadow-none focus:ring-0 text-base font-medium p-0 text-center bg-transparent" 
+                  className="w-12 border-none shadow-none focus:ring-0 text-base font-medium p-0 text-center bg-transparent"
                 />
                 <span className="text-sm font-medium text-muted-foreground">hours</span>
               </div>
               <div className="flex-1 p-2.5 flex items-center justify-between gap-3 bg-white">
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   value={minutes}
                   onChange={(e) => setMinutes(Number(e.target.value))}
-                  className="w-12 border-none shadow-none focus:ring-0 text-base font-medium p-0 text-center bg-transparent" 
+                  className="w-12 border-none shadow-none focus:ring-0 text-base font-medium p-0 text-center bg-transparent"
                 />
                 <span className="text-sm font-medium text-muted-foreground">minutes</span>
               </div>
@@ -1660,9 +1666,9 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
             {/* Notes */}
             <div className="space-y-2">
               <div className="relative border border-border/40 rounded-xl p-4 bg-white">
-                <textarea 
-                  id="notes" 
-                  name="notes" 
+                <textarea
+                  id="notes"
+                  name="notes"
                   className="w-full min-h-[90px] bg-transparent text-sm resize-none outline-none pt-2"
                   placeholder=" "
                 />
@@ -1675,13 +1681,13 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
               <div className="relative border border-border/40 rounded-xl p-4 bg-white flex items-center justify-between">
                 <div className="flex-1">
                   <Label htmlFor="date" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Date</Label>
-                  <input 
-                    id="date" 
-                    name="date" 
-                    type="date" 
-                    defaultValue={new Date().toISOString().split('T')[0]} 
+                  <input
+                    id="date"
+                    name="date"
+                    type="date"
+                    defaultValue={new Date().toISOString().split('T')[0]}
                     className="text-base font-medium bg-transparent border-none outline-none w-full p-0"
-                    required 
+                    required
                   />
                 </div>
                 <Calendar className="h-5 w-5 text-[#0D3B47]" />
@@ -1693,9 +1699,9 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
               <div className="relative border border-border/40 rounded-xl p-4 bg-white flex items-center justify-between">
                 <div className="flex-1">
                   <Label htmlFor="team_member_id" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Employee</Label>
-                  <select 
-                    id="team_member_id" 
-                    name="team_member_id" 
+                  <select
+                    id="team_member_id"
+                    name="team_member_id"
                     className="w-full bg-transparent border-none outline-none text-base font-medium appearance-none p-0"
                     required
                   >
@@ -1716,14 +1722,14 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
                   <Label htmlFor="hourly_rate" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Employee cost</Label>
                   <div className="flex items-center gap-1">
                     <span className="text-base font-medium text-foreground">$</span>
-                    <input 
-                      id="hourly_rate" 
-                      type="number" 
-                      step="0.01" 
+                    <input
+                      id="hourly_rate"
+                      type="number"
+                      step="0.01"
                       value={hourlyRate}
                       onChange={(e) => setHourlyRate(Number(e.target.value))}
-                      className="bg-transparent border-none outline-none text-base font-medium w-full p-0" 
-                      placeholder="0.00" 
+                      className="bg-transparent border-none outline-none text-base font-medium w-full p-0"
+                      placeholder="0.00"
                     />
                   </div>
                 </div>
@@ -1756,7 +1762,7 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    
+
     const { error } = await supabase
       .from('job_visits')
       .insert([{
@@ -1796,9 +1802,9 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Estado</Label>
-                <select 
-                  id="status" 
-                  name="status" 
+                <select
+                  id="status"
+                  name="status"
                   className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   required
                 >
@@ -1811,9 +1817,9 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notas</Label>
-              <textarea 
-                id="notes" 
-                name="notes" 
+              <textarea
+                id="notes"
+                name="notes"
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Instrucciones para la visita..."
               />
@@ -1834,12 +1840,12 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
   );
 }
 
-function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: { 
-  proformaId: string, 
-  items: any[], 
-  teamMembers: any[], 
-  onClose: () => void, 
-  onSuccess: () => void 
+function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
+  proformaId: string,
+  items: any[],
+  teamMembers: any[],
+  onClose: () => void,
+  onSuccess: () => void
 }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const supabase = createClient();
@@ -1848,7 +1854,7 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    
+
     const { error } = await supabase
       .from('job_tasks')
       .insert([{
@@ -1886,9 +1892,9 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
 
             <div className="space-y-2">
               <Label htmlFor="proforma_item_id">Asociar a Item (Opcional)</Label>
-              <select 
-                id="proforma_item_id" 
-                name="proforma_item_id" 
+              <select
+                id="proforma_item_id"
+                name="proforma_item_id"
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Ninguno</option>
@@ -1900,9 +1906,9 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
 
             <div className="space-y-2">
               <Label htmlFor="assigned_to">Asignar a</Label>
-              <select 
-                id="assigned_to" 
-                name="assigned_to" 
+              <select
+                id="assigned_to"
+                name="assigned_to"
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Sin asignar</option>
@@ -1925,9 +1931,9 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
 
             <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
-              <textarea 
-                id="description" 
-                name="description" 
+              <textarea
+                id="description"
+                name="description"
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 placeholder="Detalles adicionales..."
               />
