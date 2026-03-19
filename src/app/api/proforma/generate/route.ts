@@ -31,11 +31,7 @@ export async function POST(request: NextRequest) {
     Nombre del Proyecto: ${projectName}
     ${projectDescription ? `Descripción del Proyecto: ${projectDescription}` : ''}
     
-    Debes desglosar el proyecto en items lógicos y profesionales. Por ejemplo:
-    - Mano de obra especializada
-    - Materiales específicos
-    - Gestión de proyecto
-    - Mobiliario o acabados
+    Debes desglosar el proyecto en 1 item lógico y profesional. 
     
     Cada item debe incluir:
     1. Nombre (breve y profesional)
@@ -55,7 +51,7 @@ export async function POST(request: NextRequest) {
       ]
     }
     
-    Genera entre 3 y 8 items que cubran el alcance sugerido por el nombre y la descripción.
+    Genera 1 item que cubran el alcance sugerido por el nombre y la descripción.
     Asegúrate de que los precios y cantidades sean coherentes entre sí.
     `;
 
