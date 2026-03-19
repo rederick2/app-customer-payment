@@ -85,6 +85,12 @@ export default async function ProformaView({ params, searchParams }: Props) {
     .select('*')
     .order('name', { ascending: true });
 
+  const { data: materials } = await supabase
+    .from('job_materials')
+    .select('*')
+    .eq('proforma_id', id)
+    .order('created_at', { ascending: true });
+
   if (proforma.status === 'job' && view !== 'quote') {
     return (
       <JobView
@@ -98,6 +104,7 @@ export default async function ProformaView({ params, searchParams }: Props) {
         payments={payments || []}
         tasks={tasks || []}
         teamMembers={teamMembers || []}
+        materials={materials || []}
       />
     );
   }

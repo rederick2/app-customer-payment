@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO, formatISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ProformaDropdownActions from './ProformaDropdownActions';
+import EmailMaterialsModal from './EmailMaterialsModal';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import ReceiptScanner from '@/components/ReceiptScanner';
@@ -68,6 +69,7 @@ interface JobViewProps {
   payments: any[];
   tasks: any[];
   teamMembers: any[];
+  materials: any[];
 }
 
 export function JobView({
@@ -80,7 +82,8 @@ export function JobView({
   invoices,
   payments: initialPayments,
   tasks: initialTasks,
-  teamMembers: initialTeamMembers
+  teamMembers: initialTeamMembers,
+  materials: initialMaterials
 }: JobViewProps) {
   const [items, setItems] = React.useState(itemsProp);
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
@@ -93,14 +96,32 @@ export function JobView({
   const [timeEntries, setTimeEntries] = React.useState(initialTimeEntries);
   const [tasks, setTasks] = React.useState(initialTasks);
   const [teamMembers, setTeamMembers] = React.useState(initialTeamMembers);
+  const [materials, setMaterials] = React.useState(initialMaterials);
+
+  // Materials local state
+  const [editingMaterialId, setEditingMaterialId] = React.useState<string | null>(null);
+  const [tempMaterialQty, setTempMaterialQty] = React.useState<string>('');
+  const [isSavingMaterialQty, setIsSavingMaterialQty] = React.useState(false);
+  const [materialSearchTerm, setMaterialSearchTerm] = React.useState('');
+  const [materialCurrentPage, setMaterialCurrentPage] = React.useState(1);
+  const materialsPerPage = 10;
 
   const [isAddingExpense, setIsAddingExpense] = React.useState(false);
+  const [isGeneratingMaterials, setIsGeneratingMaterials] = React.useState(false);
+  const [aiMaterialPrompt, setAiMaterialPrompt] = React.useState('');
+  const [isAddingMaterial, setIsAddingMaterial] = React.useState(false);
+
+  const [isSearchingSodimac, setIsSearchingSodimac] = React.useState(false);
+  const [sodimacQuery, setSodimacQuery] = React.useState('');
+  const [sodimacResults, setSodimacResults] = React.useState<any[]>([]);
+  const [isSodimacLoading, setIsSodimacLoading] = React.useState(false);
   const [isScanningExpense, setIsScanningExpense] = React.useState(false);
   const [isRecordingPayment, setIsRecordingPayment] = React.useState(false);
   const [isAddingVisit, setIsAddingVisit] = React.useState(false);
   const [isAddingLabor, setIsAddingLabor] = React.useState(false);
   const [isAddingTask, setIsAddingTask] = React.useState(false);
   const [isManagingTeam, setIsManagingTeam] = React.useState(false);
+  const [isEmailingMaterials, setIsEmailingMaterials] = React.useState(false);
   const [isAddingLineItem, setIsAddingLineItem] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<any | null>(null);
 
@@ -386,8 +407,205 @@ export function JobView({
     }
   };
 
+  const handleGenerateMaterials = async () => {
+    if (!aiMaterialPrompt.trim()) {
+      toast.error('Ingrese una descripción para generar materiales.');
+      return;
+    }
+
+    setIsGeneratingMaterials(true);
+    try {
+      const response = await fetch('/api/materials/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectName: proforma.project_name,
+          projectDescription: aiMaterialPrompt
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al generar materiales');
+      }
+
+      const data = await response.json();
+
+      if (data.materials && data.materials.length > 0) {
+        // Save to Supabase
+        const materialsToInsert = data.materials.map((m: any) => ({
+          proforma_id: id,
+          name: m.name,
+          description: m.description,
+          quantity: m.quantity || 1,
+          unit_price: m.unit_price || 0,
+          total_price: (m.quantity || 1) * (m.unit_price || 0),
+          photo_url: null,
+          product_url: null
+        }));
+
+        const { data: inserted, error } = await supabase
+          .from('job_materials')
+          .insert(materialsToInsert)
+          .select();
+
+        if (error) throw error;
+
+        setMaterials(prev => [...(inserted || []), ...prev]);
+        toast.success('Materiales generados y agregados exitosamente.');
+        setIsAddingMaterial(false);
+        setAiMaterialPrompt('');
+      } else {
+        toast.error('No se generaron materiales.');
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Error de conexión');
+    } finally {
+      setIsGeneratingMaterials(false);
+    }
+  };
+
+  const handleSearchSodimac = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sodimacQuery.trim()) return;
+
+    setIsSodimacLoading(true);
+    setSodimacResults([]);
+    try {
+      const response = await fetch(`/api/materials/search?q=${encodeURIComponent(sodimacQuery)}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Error al buscar en Sodimac');
+      setSodimacResults(data.materials || []);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSodimacLoading(false);
+    }
+  };
+
+  const handleAddSodimacMaterial = async (mat: any) => {
+    try {
+      const { data: inserted, error } = await supabase
+        .from('job_materials')
+        .insert([{
+          proforma_id: id,
+          name: mat.name,
+          description: mat.description,
+          quantity: mat.quantity || 1,
+          unit_price: mat.unit_price || 0,
+          total_price: (mat.quantity || 1) * (mat.unit_price || 0),
+          photo_url: mat.photo_url || null,
+          product_url: mat.product_url || null
+        }])
+        .select();
+
+      if (error) throw error;
+
+      setMaterials(prev => [...(inserted || []), ...prev]);
+      toast.success('Material de Sodimac añadido exitosamente.');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error al guardar el material de Sodimac');
+    }
+  };
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    const { error } = await supabase
+      .from('job_materials')
+      .delete()
+      .eq('id', materialId);
+
+    if (error) {
+      toast.error('Error al eliminar material');
+    } else {
+      setMaterials(prev => prev.filter(m => m.id !== materialId));
+      toast.success('Material eliminado');
+    }
+  };
+
+  const handleToggleMaterialStatus = async (materialId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('job_materials')
+      .update({ is_purchased: !currentStatus })
+      .eq('id', materialId);
+
+    if (error) {
+      toast.error('Error al actualizar material');
+    } else {
+      setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, is_purchased: !currentStatus } : m));
+    }
+  };
+
+  const handleStartEditingMaterial = (mat: any) => {
+    setEditingMaterialId(mat.id);
+    setTempMaterialQty((mat.quantity || 1).toString());
+  };
+
+  const handleCancelEditingMaterial = () => {
+    setEditingMaterialId(null);
+    setTempMaterialQty('');
+  };
+
+  const handleSaveMaterialQty = async (materialId: string) => {
+    if (isSavingMaterialQty) return;
+    setIsSavingMaterialQty(true);
+
+    const newQty = parseFloat(tempMaterialQty) || 1;
+    const material = materials.find(m => m.id === materialId);
+    if (!material) {
+      setIsSavingMaterialQty(false);
+      return;
+    }
+    const newTotalPrice = newQty * (material.unit_price || 0);
+
+    const { error } = await supabase
+      .from('job_materials')
+      .update({ quantity: newQty, total_price: newTotalPrice })
+      .eq('id', materialId);
+
+    if (error) {
+      toast.error('Error al actualizar cantidad');
+    } else {
+      setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, quantity: newQty, total_price: newTotalPrice } : m));
+      toast.success('Cantidad actualizada');
+      handleCancelEditingMaterial();
+    }
+    setIsSavingMaterialQty(false);
+  };
+
+  const handleMaterialKeyDown = (e: React.KeyboardEvent, materialId: string) => {
+    if (e.key === 'Enter') {
+      handleSaveMaterialQty(materialId);
+    } else if (e.key === 'Escape') {
+      handleCancelEditingMaterial();
+    }
+  };
+
   // Totals calculations
   // Filtering and Pagination logic
+
+  const filteredMaterials = (materials || []).filter(mat =>
+    (mat.name?.toLowerCase().includes(materialSearchTerm.toLowerCase()) || '') ||
+    (mat.description?.toLowerCase().includes(materialSearchTerm.toLowerCase()) || '')
+  );
+
+  const totalMaterialPages = Math.ceil(filteredMaterials.length / materialsPerPage);
+  const paginatedMaterials = filteredMaterials.slice(
+    (materialCurrentPage - 1) * materialsPerPage,
+    materialCurrentPage * materialsPerPage
+  );
+
+  const handleMaterialSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMaterialSearchTerm(e.target.value);
+    setMaterialCurrentPage(1);
+  };
+
+  const totalMaterialsCost = (materials || []).reduce((acc, mat) => acc + (mat.total_price || 0), 0);
+
+
   const filteredExpenses = expenses.filter(exp =>
     (exp.place?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
     (exp.description?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
@@ -627,6 +845,7 @@ export function JobView({
                       <th className="px-4 py-3 text-center w-24">Image</th>
                       <th className="px-6 py-3 text-center w-24">Qty</th>
                       <th className="px-6 py-3 text-right">Cost</th>
+                      <th className="px-6 py-3 text-right">Price</th>
                       <th className="px-6 py-3 text-right">Total</th>
                       <th className="px-4 py-3 text-center w-10">Acciones</th>
                     </tr>
@@ -640,7 +859,7 @@ export function JobView({
                           editingItemId === item.id && "bg-primary/5",
                           item.is_optional && "opacity-60 bg-muted/5"
                         )}
-                        onClick={() => editingItemId !== item.id && handleStartEditing(item)}
+
                       >
                         <td className="px-4 py-5 text-center">
                           <Checkbox checked={!item.is_optional} className="opacity-100 cursor-default" />
@@ -665,7 +884,7 @@ export function JobView({
                           )}
                         </td>
                         <td className="px-6 py-4 text-center font-medium">{item.quantity}</td>
-                        <td className="px-6 py-4 text-right tabular-nums">
+                        <td className="px-6 py-4 text-right tabular-nums" onClick={() => editingItemId !== item.id && handleStartEditing(item)}>
                           {editingItemId === item.id ? (
                             <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                               <div className="relative">
@@ -677,7 +896,7 @@ export function JobView({
                                   onChange={(e) => setTempCost(e.target.value)}
                                   onKeyDown={(e) => handleKeyDown(e, item.id)}
                                   type="number"
-                                  step="0.01"
+                                  step="1"
                                 />
                               </div>
                               <div className="flex gap-1">
@@ -712,9 +931,9 @@ export function JobView({
                           ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="px-4 py-4 text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -789,6 +1008,208 @@ export function JobView({
                 <span className="text-[10px] font-black uppercase text-muted-foreground">Total Invoiced</span>
                 <span className="text-lg font-bold text-emerald-600">${totalInvoiced.toLocaleString('en-US')}</span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Materials Section */}
+          <Card className="border-border/40 shadow-sm overflow-hidden flex flex-col">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between py-4 bg-muted/5 gap-4">
+              <div className="flex items-center gap-2">
+                <ListTodo className="h-5 w-5 text-emerald-700" />
+                <CardTitle className="text-xl font-serif">Materials</CardTitle>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto overflow-x-auto">
+                <Button size="sm" variant="outline" className="h-8 gap-1 font-bold border-blue-600 text-blue-700 hover:bg-blue-50" onClick={() => setIsEmailingMaterials(true)}>
+                  <Mail className="h-4 w-4" /> Send Email
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 gap-1 font-bold border-[#306C3E] text-[#306C3E] hover:bg-[#306C3E] hover:text-white" onClick={() => setIsSearchingSodimac(true)}>
+                  <span>Buscar Sodimac</span>
+                </Button>
+                <Button size="sm" className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]" onClick={() => setIsAddingMaterial(true)}>
+                  <span>AI Auto-Gen</span>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 flex flex-col">
+              {/* Materials Search Bar */}
+              <div className="p-4 border-b border-border/40 bg-white">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar materiales..."
+                    className="pl-9 h-9 text-xs"
+                    value={materialSearchTerm}
+                    onChange={handleMaterialSearchChange}
+                  />
+                </div>
+              </div>
+
+              {paginatedMaterials && paginatedMaterials.length > 0 ? (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-black uppercase tracking-widest">
+                        <tr>
+                          <th className="px-4 py-3 text-left w-10">Done</th>
+                          <th className="px-4 py-3 text-center w-16">Img</th>
+                          <th className="px-6 py-3 text-left">Material</th>
+                          <th className="px-6 py-3 text-center w-32 border-x border-emerald-500/30">Qty</th>
+                          <th className="px-6 py-3 text-right">Unit Price</th>
+                          <th className="px-6 py-3 text-right">Total</th>
+                          <th className="px-4 py-3 text-center w-10">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/30">
+                        {paginatedMaterials.map((mat: any) => (
+                          <tr
+                            key={mat.id}
+                            className={cn("hover:bg-muted/5 transition-colors align-top cursor-pointer", mat.is_purchased && "opacity-60 bg-muted/5", editingMaterialId === mat.id && "bg-primary/5")}
+
+                          >
+                            <td className="px-4 py-5 text-center" onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={mat.is_purchased}
+                                onCheckedChange={() => handleToggleMaterialStatus(mat.id, mat.is_purchased)}
+                              />
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              {mat.photo_url ? (
+                                <img src={mat.photo_url} alt={mat.name} className="h-10 w-10 object-cover rounded-md mx-auto border border-border/50" />
+                              ) : (
+                                <div className="h-10 w-10 mx-auto bg-muted/10 rounded-md border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/30">
+                                  <ListTodo className="h-4 w-4" />
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              {mat.product_url ? (
+                                <a href={mat.product_url} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-600 hover:underline" onClick={(e) => e.stopPropagation()}>
+                                  {mat.name}
+                                </a>
+                              ) : (
+                                <p className="font-bold text-foreground">{mat.name}</p>
+                              )}
+                              {mat.description && (
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mat.description}</p>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-center bg-emerald-50/20 border-x border-emerald-500/10 hover:bg-emerald-50/50 transition-colors cursor-text" onClick={() => editingMaterialId !== mat.id && handleStartEditingMaterial(mat)}>
+                              {editingMaterialId === mat.id ? (
+                                <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                  <Input
+                                    autoFocus
+                                    className="w-16 h-8 text-center text-sm font-bold"
+                                    value={tempMaterialQty}
+                                    onChange={(e) => setTempMaterialQty(e.target.value)}
+                                    onKeyDown={(e) => handleMaterialKeyDown(e, mat.id)}
+                                    type="number"
+                                    step="0.01"
+                                  />
+                                  <div className="flex flex-col gap-0.5 ml-1">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-4 w-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-full"
+                                      onClick={() => handleSaveMaterialQty(mat.id)}
+                                      disabled={isSavingMaterialQty}
+                                    >
+                                      {isSavingMaterialQty ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-4 w-4 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                                      onClick={handleCancelEditingMaterial}
+                                      disabled={isSavingMaterialQty}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="font-bold text-emerald-700 border-b border-dashed border-emerald-600/30 pb-0.5">
+                                  {mat.quantity}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-right tabular-nums text-muted-foreground">${(mat.unit_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td className={cn("px-6 py-4 text-right tabular-nums font-bold", mat.is_purchased && "line-through italic text-muted-foreground")}>
+                              ${(mat.total_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              {!mat.is_purchased && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteMaterial(mat.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {/* Total Materials Footer inside table */}
+                        <tr className="bg-muted/5 font-bold border-t border-border/40">
+                          <td colSpan={5} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Total Materials
+                          </td>
+                          <td className="px-6 py-4 text-right tabular-nums text-emerald-600 text-lg">
+                            ${totalMaterialsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td />
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Materials Pagination Controls */}
+                  {totalMaterialPages > 1 && (
+                    <div className="p-4 border-t border-border/40 flex items-center justify-between bg-white mt-auto">
+                      <p className="text-[10px] text-muted-foreground">
+                        Mostrando {(materialCurrentPage - 1) * materialsPerPage + 1} - {Math.min(materialCurrentPage * materialsPerPage, filteredMaterials.length)} de {filteredMaterials.length}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={materialCurrentPage === 1}
+                          onClick={() => setMaterialCurrentPage(prev => prev - 1)}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <div className="flex items-center gap-1.5 px-2">
+                          <span className="text-xs font-bold text-foreground">{materialCurrentPage}</span>
+                          <span className="text-[10px] text-muted-foreground">/</span>
+                          <span className="text-xs text-muted-foreground">{totalMaterialPages}</span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={materialCurrentPage === totalMaterialPages}
+                          onClick={() => setMaterialCurrentPage(prev => prev + 1)}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="p-8 text-center flex flex-col items-center justify-center opacity-60">
+                  <ListTodo className="h-10 w-10 text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium">
+                    {materialSearchTerm ? 'No se encontraron materiales que coincidan con la búsqueda' : 'No hay materiales registrados.'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Genera una lista automáticamente con IA basada en precios de Home Depot.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1297,6 +1718,116 @@ export function JobView({
         </div>
       </div>
       {/* Modals */}
+
+      <Dialog open={isAddingMaterial} onOpenChange={setIsAddingMaterial}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Generar Materiales con IA</DialogTitle>
+            <DialogDescription>
+              Describe qué materiales necesitas (ej. "Remodelación de baño 10m2").
+              La IA calculará cantidades y usará precios promedio de Home Depot.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="aiPrompt">Descripción del Proyecto / Materiales</Label>
+              <textarea
+                id="aiPrompt"
+                className="w-full min-h-[100px] rounded-md border border-input bg-background p-3 text-sm"
+                placeholder="Ej: Instalación de piso laminado para una sala de 20 metros cuadrados..."
+                value={aiMaterialPrompt}
+                onChange={(e) => setAiMaterialPrompt(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsAddingMaterial(false)} disabled={isGeneratingMaterials}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGenerateMaterials} disabled={isGeneratingMaterials} className="bg-[#306C3E] hover:bg-[#265832]">
+              {isGeneratingMaterials ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                'Generar con IA'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSearchingSodimac} onOpenChange={setIsSearchingSodimac}>
+        <DialogContent className="sm:max-w-[700px] bg-background">
+          <DialogHeader>
+            <DialogTitle>Buscador Manual Sodimac</DialogTitle>
+            <DialogDescription>
+              Busca productos directamente en Sodimac Perú y añádelos a la proforma.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4 min-h-[400px]">
+            <form onSubmit={handleSearchSodimac} className="flex gap-2">
+              <Input
+                placeholder="Ejemplo: Cemento sol, pintura latex blanco..."
+                value={sodimacQuery}
+                onChange={(e) => setSodimacQuery(e.target.value)}
+                className="flex-1"
+                autoFocus
+              />
+              <Button type="submit" disabled={isSodimacLoading} className="bg-[#306C3E] hover:bg-[#265832]">
+                {isSodimacLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                Buscar
+              </Button>
+            </form>
+
+            <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: '50vh' }}>
+              {isSodimacLoading ? (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
+                  <Loader2 className="h-8 w-8 animate-spin mb-4 text-[#306C3E]" />
+                  <p>Buscando en Sodimac...</p>
+                </div>
+              ) : sodimacResults.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {sodimacResults.map((result, idx) => (
+                    <div key={idx} className="border border-border/50 rounded-lg p-3 flex gap-4 bg-muted/10 hover:bg-muted/30 transition-colors">
+                      <div className="h-16 w-16 bg-white rounded flex-shrink-0 flex items-center justify-center border border-border/50">
+                        {result.photo_url ? (
+                          <img src={result.photo_url} alt={result.name} className="h-full w-full object-contain" />
+                        ) : (
+                          <ListTodo className="h-6 w-6 text-muted-foreground/30" />
+                        )}
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <a href={result.product_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-foreground leading-tight hover:underline line-clamp-2">
+                          {result.name}
+                        </a>
+                        <p className="text-sm font-bold text-emerald-600 mt-1">S/ {result.unit_price.toFixed(2)}</p>
+                        <Button
+                          size="sm"
+                          className="mt-2 h-7 text-[10px] w-fit"
+                          onClick={() => handleAddSodimacMaterial(result)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" /> Añadir
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : sodimacQuery && !isSodimacLoading ? (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
+                  <p>No se encontraron resultados para "{sodimacQuery}"</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
+                  <p>Escribe un término y presiona Buscar</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {isAddingExpense && (
         <ExpenseFormModal
           proformaId={id}
@@ -1343,7 +1874,17 @@ export function JobView({
         />
       )}
 
+      {isEmailingMaterials && (
+        <EmailMaterialsModal
+          proformaId={id}
+          projectName={proforma.project_name}
+          openOverride={isEmailingMaterials}
+          setOpenOverride={setIsEmailingMaterials}
+        />
+      )}
+
       {/* Labor Modal */}
+
       {isAddingLabor && (
         <LaborFormModal proformaId={id} teamMembers={teamMembers} onClose={() => setIsAddingLabor(false)} onSuccess={() => { setIsAddingLabor(false); fetchTimeEntries(); }} />
       )}

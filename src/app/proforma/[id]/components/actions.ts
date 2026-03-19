@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { renderToBuffer, DocumentProps } from '@react-pdf/renderer';
 import ProformaPDF from '@/lib/pdf/ProformaPDF';
+import MaterialsPDF from '@/lib/pdf/MaterialsPDF';
 import { sendEmail } from '@/lib/mail';
 import React from 'react';
 
@@ -362,4 +363,70 @@ async function recalculateProformaTotals(proformaId: string) {
   revalidatePath(`/proforma/${proformaId}`);
   revalidatePath(`/p/${proformaId}`);
   return { success: true };
+}
+
+export async function sendMaterialsEmail(proformaId: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const to = formData.get('to') as string;
+  const subject = formData.get('subject') as string;
+  const message = formData.get('message') as string;
+
+  if (!to || !subject || !message) {
+    return { error: 'Por favor completa todos los campos requeridos.' };
+  }
+
+  // Fetch proforma and materials data
+  const { data: proforma, error: pError } = await supabase
+    .from('proformas')
+    .select('*, clients(*)')
+    .eq('id', proformaId)
+    .single();
+
+  if (pError || !proforma) {
+    return { error: 'No se pudo cargar la información del trabajo.' };
+  }
+
+  const { data: materials } = await supabase
+    .from('job_materials')
+    .select('*')
+    .eq('proforma_id', proformaId);
+
+  try {
+    const pdfBuffer = await renderToBuffer(
+      React.createElement(MaterialsPDF, {
+        proforma,
+        materials: materials || [],
+        client: proforma.clients
+      }) as React.ReactElement<DocumentProps>
+    );
+
+    const { success } = await sendEmail({
+      to: [to],
+      subject: subject,
+      text: message,
+      html: buildEmailHtml(message, proformaId),
+      attachments: [
+        {
+          filename: `materiales_${proformaNumber(proformaId)}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    });
+
+    if (!success) {
+      return { error: 'Ocurrió un error al intentar enviar el correo vía SMTP.' };
+    }
+
+    return { success: true };
+
+  } catch (err: any) {
+    console.error('Materials PDF Generation or SMTP Email Error:', err);
+    return { error: `Error al enviar el correo: ${err.message}` };
+  }
 }
