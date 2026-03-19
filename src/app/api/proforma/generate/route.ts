@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
     {
       "items": [
         {
-          "description": "Nombre del Item (en español)",
-          "details": "Descripción detallada del item (en español)",
+          "description": "Nombre del Item (en ingles)",
+          "details": "Descripción detallada del item (en ingles)",
           "quantity": 1,
           "unit_price": 500.00
         }
