@@ -18,7 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     const prompt = `
-    Eres un experto en estimación y presupuestos para una empresa de diseño de interiores y remodelaciones premium llamada "EstudioPro".
+    Eres un experto en construcción, especializado en renovar baños y cocinas.
+    
+    Usa los precios de materiales y mano de obra de Estados Unidos, específicamente de la ciudad que te indiquen en la descripcion.
+    
+    Que todo el presupuesto esté en USD y en Inglés.
+
+    Usa un leguaje profesional y técnico, como si estuvieras hablando con un cliente exigente.
     
     Tu tarea es generar un listado de conceptos (items) para una nueva proforma/cotización basada en la siguiente información:
     
