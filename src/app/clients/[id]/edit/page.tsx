@@ -5,11 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Save, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ArrowLeft, Save, Trash2, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Autocomplete from 'react-google-autocomplete';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function EditClientPage() {
   const router = useRouter();
@@ -32,6 +34,29 @@ export default function EditClientPage() {
   const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('');
 
+  const [workPhone, setWorkPhone] = useState('');
+  const [mobilePhone, setMobilePhone] = useState('');
+  const [homePhone, setHomePhone] = useState('');
+  const [faxPhone, setFaxPhone] = useState('');
+  const [otherPhones, setOtherPhones] = useState('');
+
+  const [billingStreet1, setBillingStreet1] = useState('');
+  const [billingStreet2, setBillingStreet2] = useState('');
+  const [billingCity, setBillingCity] = useState('');
+  const [billingState, setBillingState] = useState('');
+  const [billingPostalCode, setBillingPostalCode] = useState('');
+  const [billingCountry, setBillingCountry] = useState('');
+
+  const [tags, setTags] = useState('');
+  const [leadSource, setLeadSource] = useState('');
+
+  const [reminders, setReminders] = useState(true);
+  const [jobFollowUps, setJobFollowUps] = useState(true);
+  const [quoteFollowUps, setQuoteFollowUps] = useState(true);
+  const [invoiceFollowUps, setInvoiceFollowUps] = useState(true);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   useEffect(() => {
     async function loadClient() {
       const { data, error } = await supabase
@@ -52,6 +77,27 @@ export default function EditClientPage() {
         setProvince(data.province || '');
         setPostalCode(data.postal_code || '');
         setCountry(data.country || '');
+
+        setWorkPhone(data.work_phone || '');
+        setMobilePhone(data.mobile_phone || '');
+        setHomePhone(data.home_phone || '');
+        setFaxPhone(data.fax_phone || '');
+        setOtherPhones(data.other_phones || '');
+
+        setBillingStreet1(data.billing_street_1 || '');
+        setBillingStreet2(data.billing_street_2 || '');
+        setBillingCity(data.billing_city || '');
+        setBillingState(data.billing_state || '');
+        setBillingPostalCode(data.billing_zip_code || '');
+        setBillingCountry(data.billing_country || '');
+
+        setTags(data.tags || '');
+        setLeadSource(data.lead_source || '');
+
+        setReminders(data.receives_automatic_visit_reminders ?? true);
+        setJobFollowUps(data.receives_automatic_job_follow_ups ?? true);
+        setQuoteFollowUps(data.receives_automatic_quote_follow_ups ?? true);
+        setInvoiceFollowUps(data.receives_automatic_invoice_follow_ups ?? true);
       }
       setIsLoading(false);
     }
@@ -101,7 +147,24 @@ export default function EditClientPage() {
           city,
           province,
           postal_code: postalCode,
-          country
+          country,
+          work_phone: workPhone,
+          mobile_phone: mobilePhone,
+          home_phone: homePhone,
+          fax_phone: faxPhone,
+          other_phones: otherPhones,
+          billing_street_1: billingStreet1,
+          billing_street_2: billingStreet2,
+          billing_city: billingCity,
+          billing_state: billingState,
+          billing_zip_code: billingPostalCode,
+          billing_country: billingCountry,
+          tags,
+          lead_source: leadSource,
+          receives_automatic_visit_reminders: reminders,
+          receives_automatic_job_follow_ups: jobFollowUps,
+          receives_automatic_quote_follow_ups: quoteFollowUps,
+          receives_automatic_invoice_follow_ups: invoiceFollowUps
         })
         .eq('id', params.id);
 
@@ -117,21 +180,29 @@ export default function EditClientPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (confirm('¿Estás seguro de que deseas eliminar este cliente? Se eliminarán también todas sus proformas.')) {
-      setIsSubmitting(true);
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', params.id);
+  const copyServiceAddress = () => {
+    setBillingStreet1(street1);
+    setBillingStreet2(street2);
+    setBillingCity(city);
+    setBillingState(province);
+    setBillingPostalCode(postalCode);
+    setBillingCountry(country);
+  };
 
-      if (error) {
-        alert('Error al eliminar cliente');
-        setIsSubmitting(false);
-      } else {
-        router.push('/clients');
-        router.refresh();
-      }
+  const handleDelete = async () => {
+    setIsSubmitting(true);
+    const { error } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', params.id);
+
+    if (error) {
+      alert('Error al eliminar cliente');
+      setIsSubmitting(false);
+      setShowDeleteDialog(false);
+    } else {
+      router.push('/clients');
+      router.refresh();
     }
   };
 
@@ -149,11 +220,30 @@ export default function EditClientPage() {
           </Link>
           <h1 className="font-serif text-3xl font-bold tracking-tight">Editar Cliente</h1>
         </div>
-        <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isSubmitting}>
+        <Button variant="destructive" size="sm" type="button" onClick={() => setShowDeleteDialog(true)} disabled={isSubmitting}>
           <Trash2 className="mr-2 h-4 w-4" />
           Eliminar
         </Button>
       </div>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" /> Confirmar Eliminación
+            </DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar este cliente permanentemente? Se eliminarán también todas sus proformas, facturas y registros asociados. Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isSubmitting}>Cancelar</Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
+              Sí, eliminar cliente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <form onSubmit={handleSubmit} className="space-y-8">
 
@@ -186,6 +276,48 @@ export default function EditClientPage() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" placeholder="correo@ejemplo.com" value={email} onChange={e => setEmail(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <Input id="tags" placeholder="VIP, lead, etc." value={tags} onChange={e => setTags(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leadSource">Lead Source</Label>
+                <Input id="leadSource" placeholder="Referencia, Google, etc." value={leadSource} onChange={e => setLeadSource(e.target.value)} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Extra Phones */}
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-serif">Teléfonos Adicionales</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="workPhone">Trabajo</Label>
+                <Input id="workPhone" type="tel" value={workPhone} onChange={e => setWorkPhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mobilePhone">Móvil</Label>
+                <Input id="mobilePhone" type="tel" value={mobilePhone} onChange={e => setMobilePhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="homePhone">Casa</Label>
+                <Input id="homePhone" type="tel" value={homePhone} onChange={e => setHomePhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="faxPhone">Fax</Label>
+                <Input id="faxPhone" type="tel" value={faxPhone} onChange={e => setFaxPhone(e.target.value)} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="otherPhones">Otros Teléfonos</Label>
+                <Input id="otherPhones" type="text" value={otherPhones} onChange={e => setOtherPhones(e.target.value)} />
               </div>
             </div>
           </CardContent>
@@ -237,6 +369,80 @@ export default function EditClientPage() {
                 <Label htmlFor="country">País</Label>
                 <Input id="country" placeholder="España" value={country} onChange={e => setCountry(e.target.value)} />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Billing Address */}
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div>
+              <CardTitle className="text-lg font-serif">Dirección de Facturación</CardTitle>
+              <CardDescription>Opcional. Si es igual a la de servicio, puede quedar vacía.</CardDescription>
+            </div>
+            <Button 
+               variant="secondary" 
+               size="sm" 
+               type="button" 
+               onClick={copyServiceAddress}
+               className="text-[11px] h-8 font-medium"
+            >
+              Copiar Dirección
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="billingStreet1">Línea de Calle 1</Label>
+              <Input id="billingStreet1" value={billingStreet1} onChange={e => setBillingStreet1(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="billingStreet2">Línea de Calle 2</Label>
+              <Input id="billingStreet2" placeholder="Departamento, Suite, Piso..." value={billingStreet2} onChange={e => setBillingStreet2(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="billingCity">Ciudad</Label>
+                <Input id="billingCity" value={billingCity} onChange={e => setBillingCity(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="billingState">Provincia / Estado</Label>
+                <Input id="billingState" value={billingState} onChange={e => setBillingState(e.target.value)} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="billingPostalCode">Código Postal</Label>
+                <Input id="billingPostalCode" value={billingPostalCode} onChange={e => setBillingPostalCode(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="billingCountry">País</Label>
+                <Input id="billingCountry" value={billingCountry} onChange={e => setBillingCountry(e.target.value)} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Preferences */}
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-serif">Preferencias</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox id="reminders" checked={reminders} onCheckedChange={(c) => setReminders(!!c)} />
+              <Label htmlFor="reminders" className="cursor-pointer">Recibir recordatorios de visita automáticos</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="jobFollowUps" checked={jobFollowUps} onCheckedChange={(c) => setJobFollowUps(!!c)} />
+              <Label htmlFor="jobFollowUps" className="cursor-pointer">Recibir seguimientos de trabajo automáticos</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="quoteFollowUps" checked={quoteFollowUps} onCheckedChange={(c) => setQuoteFollowUps(!!c)} />
+              <Label htmlFor="quoteFollowUps" className="cursor-pointer">Recibir seguimientos de cotización automáticos</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="invoiceFollowUps" checked={invoiceFollowUps} onCheckedChange={(c) => setInvoiceFollowUps(!!c)} />
+              <Label htmlFor="invoiceFollowUps" className="cursor-pointer">Recibir seguimientos de factura automáticos</Label>
             </div>
           </CardContent>
         </Card>

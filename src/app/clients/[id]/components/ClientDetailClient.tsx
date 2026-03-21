@@ -17,7 +17,9 @@ import {
   Quote,
   Search,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -51,6 +53,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
   const [selectedJobDetail, setSelectedJobDetail] = React.useState<any | null>(null);
+  const [showMoreDetails, setShowMoreDetails] = React.useState(false);
 
   // Reset pagination when tab or search changes
   React.useEffect(() => {
@@ -166,6 +169,72 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
               </div>
               {!client.phone && !client.email && (
                 <div className="py-8 text-center text-muted-foreground">No hay información de contacto adicional.</div>
+              )}
+              
+              <div className="p-3 border-t border-border/40 bg-muted/5 flex justify-center">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowMoreDetails(!showMoreDetails)}
+                >
+                  {showMoreDetails ? (
+                    <><ChevronUp className="mr-2 h-4 w-4" /> Ocultar detalles</>
+                  ) : (
+                    <><ChevronDown className="mr-2 h-4 w-4" /> Ver más detalles</>
+                  )}
+                </Button>
+              </div>
+              
+              {showMoreDetails && (
+                <div className="p-6 border-t border-border/40 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-muted/10 rounded-b-lg">
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold border-b pb-2">Teléfonos Adicionales</h4>
+                    <div className="space-y-2">
+                      {client.work_phone && <p className="text-sm flex justify-between"><span className="text-muted-foreground">Trabajo:</span> <span className="font-medium">{client.work_phone}</span></p>}
+                      {client.mobile_phone && <p className="text-sm flex justify-between"><span className="text-muted-foreground">Móvil:</span> <span className="font-medium">{client.mobile_phone}</span></p>}
+                      {client.home_phone && <p className="text-sm flex justify-between"><span className="text-muted-foreground">Casa:</span> <span className="font-medium">{client.home_phone}</span></p>}
+                      {client.fax_phone && <p className="text-sm flex justify-between"><span className="text-muted-foreground">Fax:</span> <span className="font-medium">{client.fax_phone}</span></p>}
+                      {client.other_phones && <p className="text-sm flex justify-between"><span className="text-muted-foreground">Otros:</span> <span className="font-medium">{client.other_phones}</span></p>}
+                      {!client.work_phone && !client.mobile_phone && !client.home_phone && !client.fax_phone && !client.other_phones && (
+                        <p className="text-sm text-muted-foreground italic">No hay teléfonos registrados.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold border-b pb-2">Dirección de Facturación</h4>
+                    {client.billing_street_1 ? (
+                      <div className="text-sm font-medium space-y-1">
+                        <p>{client.billing_street_1}</p>
+                        {client.billing_street_2 && <p>{client.billing_street_2}</p>}
+                        <p>{client.billing_city}{client.billing_state ? `, ${client.billing_state}` : ''} {client.billing_zip_code}</p>
+                        <p className="text-muted-foreground">{client.billing_country}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">No especificada o igual a la de servicio.</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold border-b pb-2">Otros Datos</h4>
+                    <div className="space-y-2">
+                      {client.tags && <p className="text-sm flex flex-col"><span className="text-muted-foreground text-xs mb-1">Tags:</span> <span className="font-medium">{client.tags}</span></p>}
+                      {client.lead_source && <p className="text-sm flex justify-between"><span className="text-muted-foreground">Lead Source:</span> <span className="font-medium">{client.lead_source}</span></p>}
+                      {client.import_id && <p className="text-sm flex justify-between"><span className="text-muted-foreground">ID Externo:</span> <span className="font-medium">{client.import_id}</span></p>}
+                      
+                      <div className="pt-2">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Preferencias Automáticas:</p>
+                        <ul className="text-xs space-y-1.5 list-disc pl-4 font-medium">
+                          {client.receives_automatic_visit_reminders && <li>Recordatorios de visita</li>}
+                          {client.receives_automatic_job_follow_ups && <li>Seguimientos de trabajo</li>}
+                          {client.receives_automatic_quote_follow_ups && <li>Seguimientos de cotización</li>}
+                          {client.receives_automatic_invoice_follow_ups && <li>Seguimientos de factura</li>}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

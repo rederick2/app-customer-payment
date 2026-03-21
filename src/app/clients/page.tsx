@@ -4,15 +4,37 @@ import { createClient } from '@/lib/supabase/server';
 import { PlusCircle, Users, Edit } from 'lucide-react';
 import Link from 'next/link';
 
+import { ImportClientsModal } from './components/ImportClientsModal';
+import { ClientSearchInput } from './components/ClientSearchInput';
+import { ClientPagination } from './components/ClientPagination';
+
 export const revalidate = 0;
 
-export default async function ClientsPage() {
+export default async function ClientsPage(
+  props: { searchParams?: Promise<{ [key: string]: string | undefined }> }
+) {
+  const searchParams = await props.searchParams;
   const supabase = await createClient();
+  const PAGE_SIZE = 10;
+  const page = searchParams?.page ? parseInt(searchParams.page) : 1;
+  const q = searchParams?.q || '';
 
-  const { data: clients, error } = await supabase
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  let query = supabase
     .from('clients')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .select('*', { count: 'exact' });
+
+  if (q) {
+    query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,company_name.ilike.%${q}%,email.ilike.%${q}%`);
+  }
+
+  const { data: clients, error, count } = await query
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0;
 
   if (error) {
     console.error('Error fetching clients:', error);
@@ -32,9 +54,12 @@ export default async function ClientsPage() {
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Directorio de Clientes</h1>
           <p className="text-muted-foreground">Gestiona tus contactos y su información.</p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <ClientSearchInput />
+          <ImportClientsModal />
           <Link href="/clients/new">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-1">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-1 whitespace-nowrap">
               <PlusCircle className="mr-2 h-4 w-4" />
               Nuevo Cliente
             </Button>
@@ -100,6 +125,9 @@ export default async function ClientsPage() {
             </div>
           )}
         </div>
+        {totalPages > 1 && (
+          <ClientPagination totalPages={totalPages} />
+        )}
       </Card>
     </div>
   );

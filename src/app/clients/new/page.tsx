@@ -10,6 +10,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import Autocomplete from 'react-google-autocomplete';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function NewClientPage() {
   const router = useRouter();
@@ -30,6 +31,28 @@ export default function NewClientPage() {
   const [province, setProvince] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('');
+
+  const [workPhone, setWorkPhone] = useState('');
+  const [mobilePhone, setMobilePhone] = useState('');
+  const [homePhone, setHomePhone] = useState('');
+  const [faxPhone, setFaxPhone] = useState('');
+  const [otherPhones, setOtherPhones] = useState('');
+
+  const [sameAsProperty, setSameAsProperty] = useState(true);
+  const [billingStreet1, setBillingStreet1] = useState('');
+  const [billingStreet2, setBillingStreet2] = useState('');
+  const [billingCity, setBillingCity] = useState('');
+  const [billingState, setBillingState] = useState('');
+  const [billingPostalCode, setBillingPostalCode] = useState('');
+  const [billingCountry, setBillingCountry] = useState('');
+
+  const [tags, setTags] = useState('');
+  const [leadSource, setLeadSource] = useState('');
+
+  const [reminders, setReminders] = useState(true);
+  const [jobFollowUps, setJobFollowUps] = useState(true);
+  const [quoteFollowUps, setQuoteFollowUps] = useState(true);
+  const [invoiceFollowUps, setInvoiceFollowUps] = useState(true);
 
   const handlePlaceSelected = (place: any) => {
     let streetNumber = '';
@@ -75,7 +98,24 @@ export default function NewClientPage() {
           city,
           province,
           postal_code: postalCode,
-          country
+          country,
+          work_phone: workPhone,
+          mobile_phone: mobilePhone,
+          home_phone: homePhone,
+          fax_phone: faxPhone,
+          other_phones: otherPhones,
+          billing_street_1: sameAsProperty ? street1 : billingStreet1,
+          billing_street_2: sameAsProperty ? street2 : billingStreet2,
+          billing_city: sameAsProperty ? city : billingCity,
+          billing_state: sameAsProperty ? province : billingState,
+          billing_zip_code: sameAsProperty ? postalCode : billingPostalCode,
+          billing_country: sameAsProperty ? country : billingCountry,
+          tags,
+          lead_source: leadSource,
+          receives_automatic_visit_reminders: reminders,
+          receives_automatic_job_follow_ups: jobFollowUps,
+          receives_automatic_quote_follow_ups: quoteFollowUps,
+          receives_automatic_invoice_follow_ups: invoiceFollowUps
         }]);
 
       if (error) throw error;
@@ -137,6 +177,48 @@ export default function NewClientPage() {
                 <Input id="email" type="email" placeholder="correo@ejemplo.com" value={email} onChange={e => setEmail(e.target.value)} />
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <Input id="tags" placeholder="VIP, lead, etc." value={tags} onChange={e => setTags(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leadSource">Lead Source</Label>
+                <Input id="leadSource" placeholder="Referencia, Google, etc." value={leadSource} onChange={e => setLeadSource(e.target.value)} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Extra Phones */}
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-serif">Teléfonos Adicionales</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="workPhone">Trabajo</Label>
+                <Input id="workPhone" type="tel" value={workPhone} onChange={e => setWorkPhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mobilePhone">Móvil</Label>
+                <Input id="mobilePhone" type="tel" value={mobilePhone} onChange={e => setMobilePhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="homePhone">Casa</Label>
+                <Input id="homePhone" type="tel" value={homePhone} onChange={e => setHomePhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="faxPhone">Fax</Label>
+                <Input id="faxPhone" type="tel" value={faxPhone} onChange={e => setFaxPhone(e.target.value)} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="otherPhones">Otros Teléfonos</Label>
+                <Input id="otherPhones" type="text" value={otherPhones} onChange={e => setOtherPhones(e.target.value)} />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -186,6 +268,77 @@ export default function NewClientPage() {
                 <Label htmlFor="country">País</Label>
                 <Input id="country" placeholder="España" value={country} onChange={e => setCountry(e.target.value)} />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Billing Address */}
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-serif">Dirección de Facturación</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox id="sameAsProperty" checked={sameAsProperty} onCheckedChange={(c) => setSameAsProperty(!!c)} />
+              <Label htmlFor="sameAsProperty" className="cursor-pointer">Es idéntica a la dirección de servicio (Property Address)</Label>
+            </div>
+            
+            {!sameAsProperty && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                <div className="space-y-2">
+                  <Label htmlFor="billingStreet1">Línea de Calle 1</Label>
+                  <Input id="billingStreet1" value={billingStreet1} onChange={e => setBillingStreet1(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="billingStreet2">Línea de Calle 2</Label>
+                  <Input id="billingStreet2" placeholder="Departamento, Suite, Piso..." value={billingStreet2} onChange={e => setBillingStreet2(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="billingCity">Ciudad</Label>
+                    <Input id="billingCity" value={billingCity} onChange={e => setBillingCity(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="billingState">Provincia / Estado</Label>
+                    <Input id="billingState" value={billingState} onChange={e => setBillingState(e.target.value)} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="billingPostalCode">Código Postal</Label>
+                    <Input id="billingPostalCode" value={billingPostalCode} onChange={e => setBillingPostalCode(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="billingCountry">País</Label>
+                    <Input id="billingCountry" value={billingCountry} onChange={e => setBillingCountry(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Preferences */}
+        <Card className="shadow-sm border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-serif">Preferencias</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox id="reminders" checked={reminders} onCheckedChange={(c) => setReminders(!!c)} />
+              <Label htmlFor="reminders" className="cursor-pointer">Recibir recordatorios de visita automáticos</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="jobFollowUps" checked={jobFollowUps} onCheckedChange={(c) => setJobFollowUps(!!c)} />
+              <Label htmlFor="jobFollowUps" className="cursor-pointer">Recibir seguimientos de trabajo automáticos</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="quoteFollowUps" checked={quoteFollowUps} onCheckedChange={(c) => setQuoteFollowUps(!!c)} />
+              <Label htmlFor="quoteFollowUps" className="cursor-pointer">Recibir seguimientos de cotización automáticos</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="invoiceFollowUps" checked={invoiceFollowUps} onCheckedChange={(c) => setInvoiceFollowUps(!!c)} />
+              <Label htmlFor="invoiceFollowUps" className="cursor-pointer">Recibir seguimientos de factura automáticos</Label>
             </div>
           </CardContent>
         </Card>
