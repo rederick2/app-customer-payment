@@ -149,19 +149,26 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                     }
                   }
                   
-                  return pages.map((page, index) => (
-                    <Button
-                      key={`${page}-${index}`}
-                      variant={currentPage === page ? "default" : "ghost"}
-                      size="sm"
-                      className={`h-8 w-8 rounded-lg p-0 text-xs font-bold ${currentPage === page ? 'bg-primary text-primary-foreground' : ''} ${page === '...' ? 'cursor-default hover:bg-transparent pointer-events-none' : ''}`}
-                      onClick={() => {
-                        if (typeof page === 'number') setCurrentPage(page);
-                      }}
-                    >
-                      {page}
-                    </Button>
-                  ));
+                  return pages.map((page, index) => {
+                    if (page === '...') {
+                      return (
+                        <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground/50 font-bold select-none cursor-default">
+                          ...
+                        </span>
+                      );
+                    }
+                    return (
+                      <Button
+                        key={`page-${page}`}
+                        variant={currentPage === page ? "default" : "ghost"}
+                        size="sm"
+                        className={`h-8 w-8 rounded-lg p-0 text-xs font-bold ${currentPage === page ? 'bg-primary text-primary-foreground' : ''}`}
+                        onClick={() => setCurrentPage(page as number)}
+                      >
+                        {page}
+                      </Button>
+                    );
+                  });
                 })()}
               </div>
               <Button
