@@ -71,7 +71,7 @@ export default async function PublicProformaView({ params }: Props) {
         </div>
         <div className="flex gap-2 items-center flex-wrap">
           <PublicProformaActions proformaId={proforma.id} status={proforma.status || 'draft'} />
-          <PrintButton />
+          <PrintButton proforma={proforma} items={items || []} />
         </div>
       </div>
 

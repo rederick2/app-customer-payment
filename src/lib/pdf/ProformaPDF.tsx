@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
 // Add a standard modern font
 Font.register({
@@ -109,8 +109,16 @@ const styles = StyleSheet.create({
   },
   totalsContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 40
+  },
+  signatureBox: {
+    width: '40%',
+    paddingTop: 10,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E0D8'
   },
   totalsBox: {
     width: '50%',
@@ -231,8 +239,29 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
           ))}
         </View>
 
-        {/* Totals */}
+        {/* Totals & Signature */}
         <View style={styles.totalsContainer} wrap={false}>
+          {/* Signature Box (Left) */}
+          <View style={{ width: '45%', marginTop: 20 }}>
+            {proforma.status === 'approved' && (proforma.client_signature_data || proforma.client_signed_name) ? (
+              <View style={styles.signatureBox}>
+                <Text style={{ fontSize: 8, fontWeight: 700, color: '#6e7a7e', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}>Firma Autorizada</Text>
+                {proforma.client_signature_data ? (
+                  <Image src={proforma.client_signature_data} style={{ width: 140, height: 60, objectFit: 'contain' }} />
+                ) : (
+                  <Text style={{ fontFamily: 'Times-Italic', fontSize: 20, color: '#0f172a', paddingVertical: 15 }}>{proforma.client_signed_name}</Text>
+                )}
+                <Text style={{ fontSize: 9, color: '#6e7a7e', marginTop: 10 }}>{clientNameDisplay}</Text>
+                {proforma.approved_at && (
+                  <Text style={{ fontSize: 7, color: '#6e7a7e', marginTop: 4 }}>
+                    {new Date(proforma.approved_at).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}
+                  </Text>
+                )}
+              </View>
+            ) : null}
+          </View>
+
+          {/* Totals Box (Right) */}
           <View style={styles.totalsBox}>
             <View style={styles.totalsRow}>
               <Text style={styles.totalLabel}>Subtotal</Text>

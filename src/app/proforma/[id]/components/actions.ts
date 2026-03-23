@@ -160,9 +160,14 @@ export async function updateProformaStatus(proformaId: string, newStatus: string
     return { error: 'No autorizado' };
   }
 
+  const updatePayload: any = { status: newStatus };
+  if (newStatus === 'approved') {
+    updatePayload.approved_at = new Date().toISOString();
+  }
+
   const { error } = await supabase
     .from('proformas')
-    .update({ status: newStatus })
+    .update(updatePayload)
     .eq('id', proformaId);
 
   if (error) {
@@ -188,7 +193,8 @@ export async function scheduleJob(proformaId: string, startAt: string, endAt: st
     .update({
       status: 'job',
       job_start_at: startAt,
-      job_end_at: endAt
+      job_end_at: endAt,
+      job_converted_at: new Date().toISOString()
     })
     .eq('id', proformaId);
 

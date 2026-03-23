@@ -3,10 +3,13 @@ import { Card } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/server';
 import { PlusCircle, Users, Edit } from 'lucide-react';
 import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 import { ImportClientsModal } from './components/ImportClientsModal';
 import { ClientSearchInput } from './components/ClientSearchInput';
 import { ClientPagination } from './components/ClientPagination';
+import { ClientActivityTrigger } from './components/ClientActivityTrigger';
 
 export const revalidate = 0;
 
@@ -24,7 +27,20 @@ export default async function ClientsPage(
 
   let query = supabase
     .from('clients')
-    .select('*, proformas ( created_at )');
+    .select(`
+      *,
+      proformas (
+        id,
+        created_at,
+        approved_at,
+        job_converted_at,
+        project_name,
+        job_tasks ( created_at, title ),
+        job_expenses ( created_at, amount, place )
+      ),
+      payments ( created_at, amount ),
+      invoices ( created_at, invoice_number )
+    `);
 
   if (q) {
     query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,company_name.ilike.%${q}%,email.ilike.%${q}%`);
@@ -38,13 +54,38 @@ export default async function ClientsPage(
 
   let clients_data = allClients || [];
 
-  // Sort by last proforma date (proxy for last job done)
+  // Sort by last activity across all related entities
   clients_data.sort((a, b) => {
-    const aProformas = a.proformas || [];
-    const bProformas = b.proformas || [];
-    const aTime = aProformas.length > 0 ? Math.max(...aProformas.map((p: any) => new Date(p.created_at).getTime())) : new Date(a.created_at).getTime();
-    const bTime = bProformas.length > 0 ? Math.max(...bProformas.map((p: any) => new Date(p.created_at).getTime())) : new Date(b.created_at).getTime();
-    return bTime - aTime;
+    const getLatestDate = (client: any) => {
+      const dates = [new Date(client.created_at).getTime()];
+      
+      if (client.proformas) {
+        client.proformas.forEach((p: any) => {
+          if (p.created_at) dates.push(new Date(p.created_at).getTime());
+          if (p.approved_at) dates.push(new Date(p.approved_at).getTime());
+          if (p.job_converted_at) dates.push(new Date(p.job_converted_at).getTime());
+          if (p.job_tasks) {
+            p.job_tasks.forEach((t: any) => dates.push(new Date(t.created_at).getTime()));
+          }
+          if (p.job_expenses) {
+            p.job_expenses.forEach((e: any) => dates.push(new Date(e.created_at).getTime()));
+          }
+        });
+      }
+      if (client.payments) {
+        client.payments.forEach((py: any) => dates.push(new Date(py.created_at).getTime()));
+      }
+      if (client.invoices) {
+        client.invoices.forEach((i: any) => dates.push(new Date(i.created_at).getTime()));
+      }
+      
+      return Math.max(...dates);
+    };
+
+    if (!a._latestActivity) a._latestActivity = getLatestDate(a);
+    if (!b._latestActivity) b._latestActivity = getLatestDate(b);
+
+    return b._latestActivity - a._latestActivity;
   });
 
   const count = clients_data.length;
@@ -89,6 +130,7 @@ export default async function ClientsPage(
                   <th scope="col" className="px-6 py-4 font-medium">Nombre</th>
                   <th scope="col" className="px-6 py-4 font-medium">Email / Teléfono</th>
                   <th scope="col" className="px-6 py-4 font-medium">Dirección</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Última Actividad</th>
                   <th scope="col" className="px-6 py-4 text-right font-medium">Acción</th>
                 </tr>
               </thead>
@@ -114,6 +156,12 @@ export default async function ClientsPage(
                       <Link href={`/clients/${client.id}`} className="block px-6 py-4 text-muted-foreground">
                         {client.city ? `${client.city}, ${client.province}` : (client.street_1 || '-')}
                       </Link>
+                    </td>
+                    <td className="p-0">
+                      <ClientActivityTrigger 
+                        client={client} 
+                        latestActivity={client._latestActivity ? new Date(client._latestActivity) : null} 
+                      />
                     </td>
 
                     {/* Celda de acciones (Edit) */}

@@ -17,12 +17,16 @@ export async function markMessagesAsRead(proformaId: string, readerRole: 'client
 }
 
 
-export async function approveProforma(proformaId: string) {
+export async function approveProforma(proformaId: string, signatureData?: string, signatureName?: string) {
   const supabase = createAdminClient();
+
+  const updatePayload: any = { status: 'approved', approved_at: new Date().toISOString() };
+  if (signatureData) updatePayload.client_signature_data = signatureData;
+  if (signatureName) updatePayload.client_signed_name = signatureName;
 
   const { error } = await supabase
     .from('proformas')
-    .update({ status: 'approved' })
+    .update(updatePayload)
     .eq('id', proformaId);
 
   if (error) {

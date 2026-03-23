@@ -642,7 +642,9 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   const taxableAmount = subtotal - totalDiscount;
   const taxAdjustment = adjustments.find(a => a.type === 'tax');
   const totalTax = taxAdjustment 
-    ? (taxableAmount * taxAdjustment.value) / 100 
+    ? (taxAdjustment.valueType === 'percentage'
+        ? (taxableAmount * taxAdjustment.value) / 100 
+        : taxAdjustment.value)
     : 0;
 
   const total = taxableAmount + totalTax;
@@ -693,7 +695,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         subtotal,
         tax: totalTax,
         total,
-        adjustments: adjustments,
+        adjustments: calculatedAdjustments,
         payment_terms: paymentTerms,
         deposit_amount: depositAmount,
         required_deposit: requiredDeposit
