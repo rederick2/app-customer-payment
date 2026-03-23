@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Card } from '@/components/ui/card';
 import { FileText, Search, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -12,6 +13,7 @@ interface QuotesListProps {
 }
 
 export function QuotesList({ initialProformas }: QuotesListProps) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
@@ -65,19 +67,20 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
               </thead>
               <tbody className="divide-y divide-border/30">
                 {paginatedProformas.map((proforma) => (
-                  <tr key={proforma.id} className="group relative hover:bg-muted/50 transition-colors cursor-pointer">
+                  <tr 
+                    key={proforma.id} 
+                    className="group hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/proforma/${proforma.id}?view=quote`)}
+                  >
                     <td className="px-6 py-4">
-                      <Link href={`/proforma/${proforma.id}?view=quote`} className="absolute inset-0 z-0">
-                        <span className="sr-only">Ver Proforma</span>
-                      </Link>
-                      <p className="font-bold text-foreground relative z-10">{proforma.project_name}</p>
-                      <p className="text-[10px] font-mono text-muted-foreground/60 uppercase relative z-10">REF: {proforma.id.split('-')[0]}</p>
+                      <p className="font-bold text-foreground">{proforma.project_name}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground/60 uppercase">REF: {proforma.id.split('-')[0]}</p>
                     </td>
-                    <td className="px-6 py-4 relative z-10">{(proforma.clients as any)?.name || 'Sin Cliente'}</td>
-                    <td className="px-6 py-4 text-muted-foreground relative z-10">
+                    <td className="px-6 py-4">{(proforma.clients as any)?.name || 'Sin Cliente'}</td>
+                    <td className="px-6 py-4 text-muted-foreground">
                       {new Date(proforma.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
-                    <td className="px-6 py-4 relative z-10">
+                    <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                         proforma.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                         proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -87,15 +90,21 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                         {proforma.status || 'draft'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-bold tabular-nums relative z-10 text-primary">
+                    <td className="px-6 py-4 text-right font-bold tabular-nums text-primary">
                       ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-6 py-4 text-right relative z-10">
-                      <Link href={`/proforma/${proforma.id}?view=quote`}>
-                        <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-primary/20 hover:bg-primary/5 px-4 rounded-lg">
-                          Ver Detalle
-                        </Button>
-                      </Link>
+                    <td className="px-6 py-4 text-right">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 text-xs font-bold border-primary/20 hover:bg-primary/5 px-4 rounded-lg"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/proforma/${proforma.id}?view=quote`);
+                        }}
+                      >
+                        Ver Detalle
+                      </Button>
                     </td>
                   </tr>
                 ))}
