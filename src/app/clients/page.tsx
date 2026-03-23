@@ -24,21 +24,34 @@ export default async function ClientsPage(
 
   let query = supabase
     .from('clients')
-    .select('*', { count: 'exact' });
+    .select('*, proformas ( created_at )');
 
   if (q) {
     query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,company_name.ilike.%${q}%,email.ilike.%${q}%`);
   }
 
-  const { data: clients, error, count } = await query
-    .order('created_at', { ascending: false })
-    .range(from, to);
-
-  const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 0;
+  const { data: allClients, error } = await query;
 
   if (error) {
     console.error('Error fetching clients:', error);
   }
+
+  let clients_data = allClients || [];
+
+  // Sort by last proforma date (proxy for last job done)
+  clients_data.sort((a, b) => {
+    const aProformas = a.proformas || [];
+    const bProformas = b.proformas || [];
+    const aTime = aProformas.length > 0 ? Math.max(...aProformas.map((p: any) => new Date(p.created_at).getTime())) : new Date(a.created_at).getTime();
+    const bTime = bProformas.length > 0 ? Math.max(...bProformas.map((p: any) => new Date(p.created_at).getTime())) : new Date(b.created_at).getTime();
+    return bTime - aTime;
+  });
+
+  const count = clients_data.length;
+  const totalPages = Math.ceil(count / PAGE_SIZE);
+  
+  // Apply pagination
+  const clients = clients_data.slice(from, to + 1);
 
   const getDisplayName = (client: any) => {
     if (client.first_name || client.last_name) {

@@ -96,7 +96,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
           <Link href={`/clients/${client.id}/edit`} className={cn(buttonVariants({ variant: 'outline' }), "shadow-sm font-bold")}>
             Editar Perfil
           </Link>
-          <Link href="/proforma/new" className={cn(buttonVariants({ variant: 'default' }), "bg-[#306C3E] hover:bg-[#265832] font-bold")}>
+          <Link href={`/proforma/new?clientId=${client.id}`} className={cn(buttonVariants({ variant: 'default' }), "bg-[#306C3E] hover:bg-[#265832] font-bold")}>
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Proyecto
           </Link>

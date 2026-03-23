@@ -398,8 +398,18 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         if (taxesData) setAvailableTaxes(taxesData);
       }
 
-      const { data: clientsData } = await supabase.from('clients').select('*').order('name');
-      if (clientsData) setClients(clientsData);
+      const { data: clientsData } = await supabase.from('clients').select('*, proformas(created_at)');
+      if (clientsData) {
+        const sortedClients = clientsData.sort((a, b) => {
+          const aDocs = a.proformas || [];
+          const bDocs = b.proformas || [];
+          const aMax = aDocs.length > 0 ? Math.max(...aDocs.map((p: any) => new Date(p.created_at).getTime())) : new Date(a.created_at || 0).getTime();
+          const bMax = bDocs.length > 0 ? Math.max(...bDocs.map((p: any) => new Date(p.created_at).getTime())) : new Date(b.created_at || 0).getTime();
+          if (aMax !== bMax) return bMax - aMax;
+          return (a.name || a.company_name || '').localeCompare(b.name || b.company_name || '');
+        });
+        setClients(sortedClients);
+      }
 
       const { data: catalogData } = await supabase
         .from('proforma_items')

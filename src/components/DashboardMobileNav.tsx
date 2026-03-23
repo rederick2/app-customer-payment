@@ -15,7 +15,9 @@ import {
   LogOut,
   Settings,
   GanttChart,
-  FileText
+  FileText,
+  Briefcase,
+  Receipt
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,6 +35,8 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
     { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/clients', icon: Users, label: 'Clients' },
     { href: '/quotes', icon: FileText, label: 'Quotes' },
+    { href: '/jobs', icon: Briefcase, label: 'Jobs' },
+    { href: '/invoices', icon: Receipt, label: 'Invoices' },
     { href: '/proforma/new', icon: PlusCircle, label: 'New Quote' },
     { href: '/requests', icon: ListTodo, label: 'Requests' },
     { href: '/calendar', icon: Calendar, label: 'Calendar' },

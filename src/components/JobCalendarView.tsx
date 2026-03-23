@@ -45,7 +45,8 @@ import {
   isSameMonth,
   startOfMonth,
   endOfMonth,
-  getDay
+  getDay,
+  endOfDay
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
@@ -132,14 +133,26 @@ export default function JobCalendarView({ jobs, tasks }: CalendarViewProps) {
   const goToToday = () => setCurrentDate(new Date())
 
   // Calculate event position and height
-  const getEventStyle = (start: string, end: string) => {
+  const getEventStyle = (start: string, end: string, currentDay?: Date) => {
     const startDate = parseISO(start)
-    const endDate = parseISO(end)
+    let endDate = parseISO(end)
+    if (isNaN(endDate.getTime()) || endDate < startDate) endDate = new Date(startDate.getTime() + 60 * 60 * 1000)
 
-    // Minutes from start of day (midnight)
-    const startMinutes = getHours(startDate) * 60 + getMinutes(startDate)
-    const endMinutes = getHours(endDate) * 60 + getMinutes(endDate)
-    const durationMinutes = Math.max(endMinutes - startMinutes, 30) // Min 30 mins
+    let visualStart = startDate;
+    let visualEnd = endDate;
+
+    if (currentDay) {
+      const dayStart = startOfDay(currentDay);
+      const dayEnd = endOfDay(currentDay);
+      if (visualStart < dayStart) visualStart = dayStart;
+      if (visualEnd > dayEnd) visualEnd = dayEnd;
+    }
+
+    const startMinutes = getHours(visualStart) * 60 + getMinutes(visualStart)
+    const endMinutes = getHours(visualEnd) * 60 + getMinutes(visualEnd) + (getHours(visualEnd) === 23 && getMinutes(visualEnd) === 59 ? 1 : 0)
+    
+    let durationMinutes = endMinutes - startMinutes;
+    if (durationMinutes < 30) durationMinutes = 30;
 
     // Each hour is 64px high (h-16)
     const top = (startMinutes / 60) * 64
@@ -289,19 +302,28 @@ function WeekView({ jobs, tasks, currentDate, days, getEventStyle }: { jobs: Job
           {/* Grid Columns for Days */}
           <div className="flex-1 grid grid-cols-7 relative">
             {days.map((day) => {
-              const dayJobs = jobs.filter(j => isSameDay(parseISO(j.job_start_at), day))
-              const dayTasks = tasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), day))
+              const dayJobs = jobs.filter(j => {
+                const s = parseISO(j.job_start_at);
+                const e = parseISO(j.job_end_at);
+                return s <= endOfDay(day) && e >= startOfDay(day);
+              })
+              const dayTasks = tasks.filter(t => {
+                if (!t.due_date) return false;
+                const s = parseISO(t.due_date);
+                const e = parseISO(t.end_date || t.due_date);
+                return s <= endOfDay(day) && e >= startOfDay(day);
+              })
               return (
                 <div key={day.toString()} className="relative border-r border-border/20 last:border-r-0">
                   {HOURS.map((hour) => (
                     <div key={hour} className="h-16 border-b border-border/10 last:border-b-0" />
                   ))}
                   {dayJobs.map((job) => (
-                    <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at)} />
+                    <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, day)} />
                   ))}
                   {dayTasks.map((task, idx) => (
                     <TaskCard key={task.id} task={task} style={{
-                      ...getEventStyle(task.due_date, task.end_date || task.due_date),
+                      ...getEventStyle(task.due_date, task.end_date || task.due_date, day),
                       left: `${50 + (idx * 5)}%`,
                       width: '45%',
                       zIndex: 40
@@ -328,8 +350,17 @@ function WeekView({ jobs, tasks, currentDate, days, getEventStyle }: { jobs: Job
 }
 
 function DayView({ jobs, tasks, currentDate, getEventStyle }: { jobs: Job[], tasks: Task[], currentDate: Date, getEventStyle: any }) {
-  const dayJobs = jobs.filter(j => isSameDay(parseISO(j.job_start_at), currentDate))
-  const dayTasks = tasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), currentDate))
+  const dayJobs = jobs.filter(j => {
+    const s = parseISO(j.job_start_at);
+    const e = parseISO(j.job_end_at);
+    return s <= endOfDay(currentDate) && e >= startOfDay(currentDate);
+  })
+  const dayTasks = tasks.filter(t => {
+    if (!t.due_date) return false;
+    const s = parseISO(t.due_date);
+    const e = parseISO(t.end_date || t.due_date);
+    return s <= endOfDay(currentDate) && e >= startOfDay(currentDate);
+  })
 
   return (
     <div className="flex-1 flex flex-col bg-[#F9F9F7]">
@@ -360,11 +391,11 @@ function DayView({ jobs, tasks, currentDate, getEventStyle }: { jobs: Job[], tas
               <div key={hour} className="h-16 border-b border-border/10 last:border-b-0" />
             ))}
             {dayJobs.map((job) => (
-              <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at)} />
+              <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, currentDate)} />
             ))}
             {dayTasks.map((task, idx) => (
               <TaskCard key={task.id} task={task} style={{
-                ...getEventStyle(task.due_date, task.end_date || task.due_date),
+                ...getEventStyle(task.due_date, task.end_date || task.due_date, currentDate),
                 left: `${50 + (idx * 5)}%`,
                 width: '45%',
                 zIndex: 40
@@ -403,7 +434,17 @@ function MonthView({ jobs, tasks, currentDate }: { jobs: Job[], tasks: Task[], c
       </div>
       <div className="flex-1 grid grid-cols-7 min-h-0 bg-border/5">
         {calendarDays.map((day) => {
-          const dayJobs = jobs.filter(j => isSameDay(parseISO(j.job_start_at), day))
+          const dayJobs = jobs.filter(j => {
+            const s = parseISO(j.job_start_at);
+            const e = parseISO(j.job_end_at);
+            return s <= endOfDay(day) && e >= startOfDay(day);
+          })
+          const dayTasks = tasks.filter(t => {
+            if (!t.due_date) return false;
+            const s = parseISO(t.due_date);
+            const e = parseISO(t.end_date || t.due_date);
+            return s <= endOfDay(day) && e >= startOfDay(day);
+          })
           return (
             <div key={day.toString()} className={cn(
               "p-2 border-r border-b border-border/10 min-h-[120px] bg-background transition-colors hover:bg-muted/5",
@@ -417,10 +458,10 @@ function MonthView({ jobs, tasks, currentDate }: { jobs: Job[], tasks: Task[], c
               </div>
               <div className="space-y-1 mt-1 overflow-y-auto max-h-[80px] scrollbar-hide">
                 {dayJobs.map(job => (
-                  <JobCardCompact key={job.id} job={job} />
+                  <JobCardCompact key={`job-${job.id}-${day.toString()}`} job={job} />
                 ))}
-                {tasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), day)).map(task => (
-                  <TaskCardCompact key={task.id} task={task} />
+                {dayTasks.map(task => (
+                  <TaskCardCompact key={`task-${task.id}-${day.toString()}`} task={task} />
                 ))}
               </div>
             </div>
