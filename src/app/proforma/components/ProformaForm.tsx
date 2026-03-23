@@ -1373,22 +1373,20 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
         {/* AI Generation Modal */}
         <Dialog open={isAIModalOpen} onOpenChange={setIsAIModalOpen}>
-          <DialogContent className="sm:max-w-lg border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-10 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-8 -translate-y-8">
-                <Sparkles className="h-32 w-32" />
-              </div>
-              <DialogHeader className="relative z-10">
-                <DialogTitle className="text-3xl font-serif font-black mb-2">AI Design Assistant</DialogTitle>
-                <DialogDescription className="text-white/80 text-lg leading-relaxed">
-                  Tell me a little more about the project and I'll generate a complete quote proposal for you.
-                </DialogDescription>
-              </DialogHeader>
-            </div>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Sparkles className="h-5 w-5 text-primary" />
+                AI Design Assistant
+              </DialogTitle>
+              <DialogDescription>
+                Tell me a little more about the project and I'll generate a complete quote proposal for you.
+              </DialogDescription>
+            </DialogHeader>
             
-            <div className="p-8 space-y-6 bg-white">
-              <div className="space-y-3">
-                <Label htmlFor="aiProjectName" className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <div className="space-y-5 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="aiProjectName" className="text-sm font-semibold flex items-center gap-1">
                   Project Name
                   <span className="text-destructive">*</span>
                 </Label>
@@ -1397,48 +1395,48 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                   placeholder="e.g. Colonial Kitchen Remodel" 
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  className="h-14 rounded-2xl border-muted bg-muted/30 focus:bg-white transition-all text-lg font-bold"
+                  className="h-10"
                 />
-                <p className="text-[10px] text-muted-foreground/60 italic">Use the current project name or change it here.</p>
+                <p className="text-xs text-muted-foreground italic">Use the current project name or change it here.</p>
               </div>
 
-              <div className="space-y-3">
-                <Label htmlFor="aiDesc" className="text-sm font-black uppercase tracking-widest text-muted-foreground">What is the project about?</Label>
+              <div className="space-y-2">
+                <Label htmlFor="aiDesc" className="text-sm font-semibold">What is the project about?</Label>
                 <Textarea 
                   id="aiDesc"
                   placeholder="Describe the scope... e.g. Floor replacement, painting, LED lighting, built-in cabinets." 
                   value={aiProjectDescription}
                   onChange={(e) => setAIProjectDescription(e.target.value)}
-                  className="min-h-[150px] rounded-2xl border-muted bg-muted/30 focus:bg-white transition-all p-4 leading-relaxed text-md resize-none"
+                  className="min-h-[130px] resize-none"
                 />
               </div>
 
-              <div className="pt-4 flex flex-col gap-4">
-                <Button 
-                  type="button"
-                  onClick={handleAIGenerate}
-                  disabled={isGeneratingAI || !projectName}
-                  className="h-16 w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:translate-y-0"
-                >
-                  {isGeneratingAI ? (
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="h-6 w-6 animate-spin" />
-                      Generating Proposal...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <Wand2 className="h-6 w-6" />
-                      Create Magic Quote
-                    </div>
-                  )}
-                </Button>
+              <div className="flex gap-3 pt-2">
                 <Button 
                   type="button"
                   variant="ghost" 
                   onClick={() => setIsAIModalOpen(false)}
-                  className="h-10 text-muted-foreground font-bold hover:bg-muted/50 rounded-xl"
+                  className="flex-1"
                 >
                   Cancel
+                </Button>
+                <Button 
+                  type="button"
+                  onClick={handleAIGenerate}
+                  disabled={isGeneratingAI || !projectName}
+                  className="flex-1 bg-[#0D3B47] hover:bg-[#072a33] text-white"
+                >
+                  {isGeneratingAI ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generating...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Wand2 className="h-4 w-4" />
+                      Generate Quote
+                    </div>
+                  )}
                 </Button>
               </div>
             </div>

@@ -21,8 +21,8 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Estudio de Diseño | Generador de Proformas',
-  description: 'Generador de cotizaciones premium para proyectos de diseño interior.',
+  title: 'EstudioPro | Quote Generator',
+  description: 'Premium quote generator for interior design projects.',
 };
 
 export default async function RootLayout({
@@ -50,7 +50,7 @@ export default async function RootLayout({
     }
   }
   return (
-    <html lang="es">
+    <html lang="en">
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen bg-background text-foreground flex`}
       >

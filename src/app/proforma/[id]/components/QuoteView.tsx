@@ -110,17 +110,17 @@ function ItemEditor({ item, onSave, onCancel, isReadOnly }: ItemEditorProps) {
           {/* Main Grid: Name, Quantity, Unit Price, Total */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
             <div className="md:col-span-4 space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Nombre</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Name</Label>
               <Input
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 className="h-14 border-border/60 focus:border-primary/40 bg-background font-bold text-lg px-4"
-                placeholder="e.g. Demoler Baño"
+                placeholder="e.g. Bathroom Demolition"
               />
             </div>
 
             <div className="md:col-span-2 space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 text-center block">Cantidad</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 text-center block">Quantity</Label>
               <div className="h-14 border-2 border-primary/20 rounded-xl flex items-center justify-center bg-background focus-within:border-primary transition-all overflow-hidden shadow-sm">
                 <input
                   type="number"
@@ -132,7 +132,7 @@ function ItemEditor({ item, onSave, onCancel, isReadOnly }: ItemEditorProps) {
             </div>
 
             <div className="md:col-span-3 space-y-2 text-right">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 pr-2">Precio Unitario</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 pr-2">Unit Price</Label>
               <div className="h-14 flex items-center justify-end px-4 bg-background border border-border/60 rounded-xl focus-within:border-primary/40 transition-all shadow-sm">
                 <input
                   type="number"
@@ -156,17 +156,17 @@ function ItemEditor({ item, onSave, onCancel, isReadOnly }: ItemEditorProps) {
           {/* Middle Grid: Description and Image */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 pb-4">
             <div className="lg:col-span-3 space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Descripción</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Description</Label>
               <Textarea
                 value={formData.details}
                 onChange={e => setFormData({ ...formData, details: e.target.value })}
                 className="min-h-[140px] bg-background border-dashed border-border/80 focus:border-primary/30 text-md leading-relaxed p-5 rounded-xl resize-none"
-                placeholder="Añade más detalles..."
+                placeholder="Add more details..."
               />
             </div>
 
             <div className="lg:col-span-1 space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Foto del Item</Label>
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Item Photo</Label>
               <div className="relative h-40 w-full rounded-2xl overflow-hidden border-2 border-border/40 bg-background group shadow-sm hover:shadow-md transition-all flex items-center justify-center">
                 {formData.photoPreviewUrl ? (
                   <>
@@ -196,7 +196,7 @@ function ItemEditor({ item, onSave, onCancel, isReadOnly }: ItemEditorProps) {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <ImageIcon className="h-10 w-10 stroke-[1.5px]" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Subir Foto</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Upload Photo</span>
                   </div>
                 )}
                 <input
@@ -219,18 +219,18 @@ function ItemEditor({ item, onSave, onCancel, isReadOnly }: ItemEditorProps) {
                 onCheckedChange={(checked) => setFormData({ ...formData, is_optional: !!checked })}
                 className="h-6 w-6 rounded-lg border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all group-hover/opt:scale-110"
               />
-              <Label htmlFor="is_optional_edit" className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 cursor-pointer select-none">Marcar como opcional</Label>
+              <Label htmlFor="is_optional_edit" className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground/80 cursor-pointer select-none">Mark as optional</Label>
             </div>
 
             <div className="flex items-center gap-4">
               <Button variant="ghost" onClick={onCancel} className="font-black text-[10px] uppercase tracking-[0.3em] h-12 px-10 text-muted-foreground hover:text-foreground">
-                Cancelar
+                Cancel
               </Button>
               <Button
                 onClick={() => onSave(formData)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl h-14 px-12 font-black text-[10px] uppercase tracking-[0.3em] shadow-2xl shadow-primary/30 active:scale-95 transition-all"
               >
-                <Check className="mr-3 h-5 w-5" /> Guardar Cambios
+                <Check className="mr-3 h-5 w-5" /> Save Changes
               </Button>
             </div>
           </div>
@@ -334,7 +334,7 @@ function SortableRow({
       <td className="px-4 py-4">
         <div className="font-bold text-foreground text-md flex items-center gap-2">
           {item.description}
-          {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Opcional</Badge>}
+          {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
         </div>
         {item.details && (
           <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed italic">{item.details}</div>
@@ -392,7 +392,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Error generating PDF:', err);
-      toast.error('Error al generar el PDF');
+      toast.error('Error generating PDF');
     } finally {
       setIsGenerating(false);
     }
@@ -449,7 +449,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
     let photo_url = data.photoPreviewUrl;
 
     if (data.photo) {
-      const toastId = toast.loading('Subiendo foto...');
+      const toastId = toast.loading('Uploading photo...');
       try {
         const uploadFormData = new FormData();
         uploadFormData.append('file', data.photo);
@@ -459,13 +459,13 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         if (response.ok) {
           const { url } = await response.json();
           photo_url = url;
-          toast.success('Foto subida', { id: toastId });
+          toast.success('Photo uploaded', { id: toastId });
         } else {
-          toast.error('Error al subir la foto', { id: toastId });
+          toast.error('Error uploading photo', { id: toastId });
         }
       } catch (err) {
         console.error('Error uploading photo:', err);
-        toast.error('Error al subir la foto', { id: toastId });
+        toast.error('Error uploading photo', { id: toastId });
       }
     }
 
@@ -478,7 +478,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
     if (res.error) {
       toast.error(res.error);
     } else {
-      toast.success('Item actualizado');
+      toast.success('Item updated');
       setEditingId(null);
     }
   };
@@ -491,11 +491,11 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
           <div className="flex items-center gap-3">
             <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver al Panel
+              Back to Dashboard
             </Link>
             <span className="text-muted-foreground/40">·</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Estado:</span>
+              <span className="text-sm font-medium text-muted-foreground">Status:</span>
               <StatusBadge status={proforma.status || 'draft'} />
             </div>
           </div>
@@ -506,7 +506,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-all"
               >
                 <Pencil className="h-4 w-4" />
-                Editor Completo
+                Full Editor
               </Link>
             )}
             <ProformaDropdownActions
@@ -529,13 +529,13 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {isGenerating ? 'Preparando...' : 'Descargar PDF'}
+              {isGenerating ? 'Preparing...' : 'Download PDF'}
             </Button>
             <EmailQuoteModal
               proformaId={id}
               clientName={(() => {
                 const c = proforma.clients;
-                return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Cliente';
+                return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Client';
               })()}
               clientEmail={proforma.clients?.email || ''}
               projectName={proforma.project_name}
@@ -557,14 +557,14 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-border/50 pb-10 mb-10 relative z-10">
           <div>
             <h1 className="font-serif text-5xl font-bold tracking-tight text-primary">EstudioPro</h1>
-            <p className="text-md text-muted-foreground mt-2 font-medium tracking-wide">Diseño de Interiores & Remodelaciones</p>
+            <p className="text-md text-muted-foreground mt-2 font-medium tracking-wide">Interior Design & Remodeling</p>
           </div>
           <div className="mt-8 sm:mt-0 text-right space-y-2">
-            <h2 className="text-3xl font-bold text-foreground font-serif uppercase tracking-[0.2em] text-muted-foreground/30 print:text-muted-foreground/80">Cotización</h2>
+            <h2 className="text-3xl font-bold text-foreground font-serif uppercase tracking-[0.2em] text-muted-foreground/30 print:text-muted-foreground/80">Quote</h2>
             <div className="space-y-1">
-              <p className="text-sm font-semibold">REF Nº: <span className="font-mono text-primary">{proforma.id.split('-')[0].toUpperCase()}</span></p>
-              <p className="text-sm text-muted-foreground">Emitida: {new Date(proforma.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              <p className="text-sm text-muted-foreground">Válida por 30 días</p>
+              <p className="text-sm font-semibold">REF No: <span className="font-mono text-primary">{proforma.id.split('-')[0].toUpperCase()}</span></p>
+              <p className="text-sm text-muted-foreground">Issued: {new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              <p className="text-sm text-muted-foreground">Valid for 30 days</p>
             </div>
           </div>
         </div>
@@ -572,7 +572,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         {/* Client & Project Info */}
         <div className="grid sm:grid-cols-2 gap-12 mb-16 relative z-10">
           <div className="p-6 rounded-xl bg-muted/5 border border-border/30">
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-4">Información del Cliente</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-4">Client Information</h3>
             <p className="font-bold text-xl text-foreground mb-1">
               {(() => {
                 const c = proforma.clients as any;
@@ -604,7 +604,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
           </div>
 
           <div className="flex flex-col justify-center">
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-2">Presupuesto del Proyecto</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-2">Project Quote</h3>
             <p className="font-serif text-3xl font-bold text-foreground italic leading-tight">"{proforma.project_name}"</p>
           </div>
         </div>
@@ -621,11 +621,11 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
               <thead className="bg-[#F4F2EC]/80 backdrop-blur-sm print:bg-transparent text-[#0D3B47] border-y border-primary/10">
                 <tr>
                   <th className="px-4 py-4 font-bold uppercase tracking-wider w-10"></th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider w-10 text-center text-[10px]">Suma</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider">Producto / Servicio</th>
+                  <th className="px-4 py-4 font-bold uppercase tracking-wider w-10 text-center text-[10px]">Include</th>
+                  <th className="px-4 py-4 font-bold uppercase tracking-wider">Product / Service</th>
                   <th className="px-4 py-4 font-bold uppercase tracking-wider text-center w-24">Media</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-24">Cantidad</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-32">Precio Unitario</th>
+                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-24">Qty</th>
+                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-32">Unit Price</th>
                   <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-32">Total</th>
                 </tr>
               </thead>
@@ -716,7 +716,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
               <div className="pt-4 border-t border-dashed border-[#0D3B47]/20 mt-2 space-y-2">
                 {(proforma as any).required_deposit > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Depósito Requerido</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Required Deposit</span>
                     <span className="font-mono font-bold text-primary text-lg">
                       ${(proforma as any).required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
@@ -724,7 +724,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 )}
                 {(proforma as any).deposit_amount > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Monto Depositado</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Amount Collected</span>
                     <span className="font-mono font-bold text-[#306C3E] text-lg">
                       ${(proforma as any).deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
@@ -768,8 +768,8 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
               <MessageSquare className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-bold">Discusión del Proyecto</p>
-              <p className="text-xs text-muted-foreground">Colabora con el equipo del estudio en tiempo real</p>
+              <p className="text-sm font-bold">Project Discussion</p>
+              <p className="text-xs text-muted-foreground">Collaborate with the studio team in real time</p>
             </div>
           </div>
           <Badge className="bg-emerald-500/10 text-emerald-600 border-none animate-pulse">Live Link</Badge>

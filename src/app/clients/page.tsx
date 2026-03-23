@@ -98,15 +98,15 @@ export default async function ClientsPage(
     if (client.first_name || client.last_name) {
       return `${client.title ? client.title + ' ' : ''}${client.first_name || ''} ${client.last_name || ''}`.trim();
     }
-    return client.name || 'Sin Nombre';
+    return client.name || 'No Name';
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Directorio de Clientes</h1>
-          <p className="text-muted-foreground">Gestiona tus contactos y su información.</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Client Directory</h1>
+          <p className="text-muted-foreground">Manage your contacts and their information.</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -115,7 +115,7 @@ export default async function ClientsPage(
           <Link href="/clients/new">
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-1 whitespace-nowrap">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Nuevo Cliente
+              New Client
             </Button>
           </Link>
         </div>
@@ -127,11 +127,11 @@ export default async function ClientsPage(
             <table className="w-full text-sm text-left border-collapse">
               <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
                 <tr>
-                  <th scope="col" className="px-6 py-4 font-medium">Nombre</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Email / Teléfono</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Dirección</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Última Actividad</th>
-                  <th scope="col" className="px-6 py-4 text-right font-medium">Acción</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Name</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Email / Phone</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Address</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Last Activity</th>
+                  <th scope="col" className="px-6 py-4 text-right font-medium">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
@@ -179,9 +179,9 @@ export default async function ClientsPage(
           ) : (
             <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
               <Users className="h-12 w-12 text-muted/50 mb-4" />
-              <p>No tienes clientes en tu directorio.</p>
+              <p>You have no clients in your directory.</p>
               <Link href="/clients/new" className="mt-4 text-primary hover:underline">
-                Añadir tu primer cliente
+                Add your first client
               </Link>
             </div>
           )}

@@ -43,7 +43,7 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
         <div className="relative w-full group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input 
-            placeholder="Buscar por proyecto o cliente..." 
+            placeholder="Search by project or client..." 
             className="pl-10 h-10 border-border/40 bg-card/50 backdrop-blur-sm focus-visible:ring-primary/20 transition-all rounded-xl"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -57,12 +57,12 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] font-black uppercase tracking-widest bg-muted/50 text-muted-foreground border-b border-border/40">
                 <tr>
-                  <th scope="col" className="px-6 py-4">Proyecto</th>
-                  <th scope="col" className="px-6 py-4">Cliente</th>
-                  <th scope="col" className="px-6 py-4">Fecha</th>
-                  <th scope="col" className="px-6 py-4">Estado</th>
+                  <th scope="col" className="px-6 py-4">Project</th>
+                  <th scope="col" className="px-6 py-4">Client</th>
+                  <th scope="col" className="px-6 py-4">Date</th>
+                  <th scope="col" className="px-6 py-4">Status</th>
                   <th scope="col" className="px-6 py-4 text-right">Total</th>
-                  <th scope="col" className="px-6 py-4 text-right">Acción</th>
+                  <th scope="col" className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
@@ -76,9 +76,9 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                       <p className="font-bold text-foreground">{proforma.project_name}</p>
                       <p className="text-[10px] font-mono text-muted-foreground/60 uppercase">REF: {proforma.id.split('-')[0]}</p>
                     </td>
-                    <td className="px-6 py-4">{(proforma.clients as any)?.name || 'Sin Cliente'}</td>
+                    <td className="px-6 py-4">{(proforma.clients as any)?.name || 'No Client'}</td>
                     <td className="px-6 py-4 text-muted-foreground">
-                      {new Date(proforma.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
@@ -103,7 +103,7 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                           router.push(`/proforma/${proforma.id}?view=quote`);
                         }}
                       >
-                        Ver Detalle
+                        View Details
                       </Button>
                     </td>
                   </tr>
@@ -113,14 +113,14 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
           ) : (
             <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
               <FileText className="h-16 w-16 text-muted/20 mb-4" />
-              <p className="text-lg font-serif italic">No se encontraron proformas.</p>
+              <p className="text-lg font-serif italic">No quotes found.</p>
               {searchTerm && (
                 <Button 
                   variant="link" 
                   className="mt-2 text-primary" 
                   onClick={() => setSearchTerm('')}
                 >
-                  Limpiar búsqueda
+                  Clear search
                 </Button>
               )}
             </div>
@@ -131,7 +131,7 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
         {totalPages > 1 && (
           <div className="px-6 py-4 border-t border-border/30 flex items-center justify-between bg-muted/20">
             <div className="text-xs text-muted-foreground font-medium">
-              Mostrando <span className="text-foreground">{Math.min(filteredProformas.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(filteredProformas.length, currentPage * itemsPerPage)}</span> de <span className="text-foreground">{filteredProformas.length}</span> proformas
+              Showing <span className="text-foreground">{Math.min(filteredProformas.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(filteredProformas.length, currentPage * itemsPerPage)}</span> of <span className="text-foreground">{filteredProformas.length}</span> quotes
             </div>
             <div className="flex items-center gap-1">
               <Button

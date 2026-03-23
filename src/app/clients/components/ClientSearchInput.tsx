@@ -45,7 +45,7 @@ export function ClientSearchInput() {
       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
         type="search"
-        placeholder="Buscar cliente, empresa o email..."
+        placeholder="Search client, company or email..."
         className="pl-8 bg-background shadow-sm"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}

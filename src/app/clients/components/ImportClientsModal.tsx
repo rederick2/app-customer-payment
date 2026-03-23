@@ -38,13 +38,13 @@ export function ImportClientsModal() {
         let successCount = 0;
         let errorCount = 0;
 
-        // Limitar la importación a un tamaño manejable por lote
+        // Limit import to a manageable batch size
         const BATCH_SIZE = 50;
         
         for (let i = 0; i < rows.length; i += BATCH_SIZE) {
           const batch = rows.slice(i, i + BATCH_SIZE);
           const formattedBatch = batch.map(row => {
-            // Recolectar campos custom
+            // Collect custom fields
             const customFields: Record<string, any> = {};
             Object.keys(row).forEach(key => {
               if (key.startsWith('CFT[') || key.startsWith('CFL[')) {
@@ -52,7 +52,7 @@ export function ImportClientsModal() {
               }
             });
 
-            // Función auxiliar para parsear booleanos
+            // Helper function to parse booleans
             const parseBool = (val: string, defaultVal = false) => {
               if (val === 'true' || val === 'TRUE' || val === '1') return true;
               if (val === 'false' || val === 'FALSE' || val === '0') return false;
@@ -109,7 +109,7 @@ export function ImportClientsModal() {
 
           const { error } = await supabase
             .from('clients')
-            .upsert(formattedBatch, { onConflict: 'import_id' }); // asumiendo que import_id es UNIQUE para evitar dupes
+            .upsert(formattedBatch, { onConflict: 'import_id' }); // assuming import_id is UNIQUE to avoid dupes
 
           if (error) {
             console.error('Error batch inserting clients:', error);
@@ -148,14 +148,14 @@ export function ImportClientsModal() {
     <>
       <Button variant="outline" className="gap-2" onClick={() => setOpen(true)}>
         <Upload className="h-4 w-4" />
-        Importar CSV
+        Import CSV
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-          <DialogTitle>Importar Clientes</DialogTitle>
+          <DialogTitle>Import Clients</DialogTitle>
           <DialogDescription>
-            Sube un archivo CSV (formato Jobber u otro) para importar tus clientes masivamente.
+            Upload a CSV file (Jobber format or other) to bulk import your clients.
           </DialogDescription>
         </DialogHeader>
 
@@ -179,8 +179,8 @@ export function ImportClientsModal() {
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className="font-medium">Haz clic para seleccionar un archivo</p>
-                  <p className="text-sm text-muted-foreground">O arrastra un archivo .csv aquí</p>
+                  <p className="font-medium">Click to select a file</p>
+                  <p className="text-sm text-muted-foreground">Or drag a .csv file here</p>
                 </div>
               )}
             </div>
@@ -188,23 +188,23 @@ export function ImportClientsModal() {
             <div className="p-4 border rounded-md space-y-3 bg-muted/20">
               <h4 className="font-semibold flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Resumen de Importación
+                Import Summary
               </h4>
               <ul className="text-sm space-y-1">
-                <li className="flex justify-between"><span>Total procesados:</span> <span className="font-medium">{importStatus.total}</span></li>
-                <li className="flex justify-between text-green-600"><span>Exitosos:</span> <span className="font-medium">{importStatus.success}</span></li>
+                <li className="flex justify-between"><span>Total processed:</span> <span className="font-medium">{importStatus.total}</span></li>
+                <li className="flex justify-between text-green-600"><span>Successful:</span> <span className="font-medium">{importStatus.success}</span></li>
                 {importStatus.errors > 0 && (
-                  <li className="flex justify-between text-red-600"><span>Errores:</span> <span className="font-medium">{importStatus.errors}</span></li>
+                  <li className="flex justify-between text-red-600"><span>Errors:</span> <span className="font-medium">{importStatus.errors}</span></li>
                 )}
               </ul>
               {importStatus.errors > 0 ? (
                  <div className="flex items-start gap-2 text-xs text-orange-600 mt-2 bg-orange-50 p-2 rounded border border-orange-200">
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <p>Hubo algunos errores, verifica la consola para detalles. Puede que falte configurar las nuevas columnas en la base de datos.</p>
-                 </div>
+                     <p>There were some errors. Check the console for details. You may need to set up new columns in the database.</p>
+                  </div>
               ) : (
                 <p className="text-xs text-muted-foreground mt-2">
-                  La importación se completó sin errores reintentables o ignorables.
+                  Import completed without any retryable or ignorable errors.
                 </p>
               )}
             </div>
@@ -213,17 +213,17 @@ export function ImportClientsModal() {
 
         <DialogFooter>
           <Button variant="ghost" onClick={handleClose} disabled={isImporting}>
-            {importStatus ? "Cerrar" : "Cancelar"}
+            {importStatus ? "Close" : "Cancel"}
           </Button>
           {!importStatus && (
             <Button onClick={processImport} disabled={!file || isImporting} className="gap-2">
               {isImporting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Importando...
+                  Importing...
                 </>
               ) : (
-                "Iniciar Importación"
+                "Start Import"
               )}
             </Button>
           )}

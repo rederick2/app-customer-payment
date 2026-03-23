@@ -1018,7 +1018,7 @@ export function JobView({
                   <Mail className="h-4 w-4" /> Send Email
                 </Button>
                 <Button size="sm" variant="outline" className="h-8 gap-1 font-bold border-[#306C3E] text-[#306C3E] hover:bg-[#306C3E] hover:text-white" onClick={() => setIsSearchingSodimac(true)}>
-                  <span>Buscar Sodimac</span>
+                  <span>Search Sodimac</span>
                 </Button>
                 <Button size="sm" className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]" onClick={() => setIsAddingMaterial(true)}>
                   <span>AI Auto-Gen</span>
@@ -1031,7 +1031,7 @@ export function JobView({
                 <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar materiales..."
+                    placeholder="Search materials..."
                     className="pl-9 h-9 text-xs"
                     value={materialSearchTerm}
                     onChange={handleMaterialSearchChange}
@@ -1051,7 +1051,7 @@ export function JobView({
                           <th className="px-6 py-3 text-center w-32 border-x border-emerald-500/30">Qty</th>
                           <th className="px-6 py-3 text-right">Unit Price</th>
                           <th className="px-6 py-3 text-right">Total</th>
-                          <th className="px-4 py-3 text-center w-10">Acciones</th>
+                          <th className="px-4 py-3 text-center w-10">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/30">
@@ -1166,7 +1166,7 @@ export function JobView({
                   {totalMaterialPages > 1 && (
                     <div className="p-4 border-t border-border/40 flex items-center justify-between bg-white mt-auto">
                       <p className="text-[10px] text-muted-foreground">
-                        Mostrando {(materialCurrentPage - 1) * materialsPerPage + 1} - {Math.min(materialCurrentPage * materialsPerPage, filteredMaterials.length)} de {filteredMaterials.length}
+                        Showing {(materialCurrentPage - 1) * materialsPerPage + 1} - {Math.min(materialCurrentPage * materialsPerPage, filteredMaterials.length)} of {filteredMaterials.length}
                       </p>
                       <div className="flex gap-2">
                         <Button
@@ -1200,9 +1200,9 @@ export function JobView({
                 <div className="p-8 text-center flex flex-col items-center justify-center opacity-60">
                   <ListTodo className="h-10 w-10 text-muted-foreground mb-2" />
                   <p className="text-sm font-medium">
-                    {materialSearchTerm ? 'No se encontraron materiales que coincidan con la búsqueda' : 'No hay materiales registrados.'}
+                    {materialSearchTerm ? 'No materials found matching your search' : 'No materials registered.'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">Genera una lista automáticamente con IA basada en precios de Home Depot.</p>
+                  <p className="text-xs text-muted-foreground mt-1">Auto-generate a list using AI based on Home Depot prices.</p>
                 </div>
               )}
             </CardContent>
@@ -1302,7 +1302,7 @@ export function JobView({
                                   <CalendarDays className="h-3.5 w-3.5" /> Add to Google
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteTask(task.id)}>
-                                  <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                  <Trash2 className="h-3.5 w-3.5" /> Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1385,7 +1385,7 @@ export function JobView({
                     className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]"
                     onClick={() => setIsAddingExpense(true)}
                   >
-                    <Plus className="h-4 w-4" /> Nuevo Gasto
+                    <Plus className="h-4 w-4" /> New Expense
                   </Button>
                 </div>
               </CardHeader>
@@ -1395,7 +1395,7 @@ export function JobView({
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar por lugar, descripción o categoría..."
+                      placeholder="Search by place, description or category..."
                       className="pl-9 h-9 text-xs"
                       value={expenseSearchTerm}
                       onChange={handleSearchChange}
@@ -1409,19 +1409,19 @@ export function JobView({
                       <table className="w-full text-sm">
                         <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                           <tr>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Fecha</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Lugar</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Descripción</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Categoría</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Monto</th>
-                            <th className="px-6 py-3 w-10 text-center">Acciones</th>
+                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Date</th>
+                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Place</th>
+                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Description</th>
+                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Category</th>
+                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Amount</th>
+                            <th className="px-6 py-3 w-10 text-center">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border/30">
                           {paginatedExpenses.map(exp => (
                             <tr key={exp.id} className="hover:bg-muted/5 transition-colors group">
                               <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(exp.date), 'dd/MM/yyyy')}</td>
-                              <td className="px-6 py-4 font-bold text-foreground text-xs">{exp.place || 'Proveedor'}</td>
+                              <td className="px-6 py-4 font-bold text-foreground text-xs">{exp.place || 'Supplier'}</td>
                               <td className="px-6 py-4 text-xs text-muted-foreground line-clamp-1 max-w-[150px]">{exp.description}</td>
                               <td className="px-6 py-4">
                                 <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
@@ -1436,15 +1436,15 @@ export function JobView({
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-40">
                                     <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedExpenseForEdit(exp)}>
-                                      <Pencil className="h-3.5 w-3.5" /> Editar
+                                      <Pencil className="h-3.5 w-3.5" /> Edit
                                     </DropdownMenuItem>
                                     {exp.image_url && (
                                       <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedFileUrl(exp.image_url)}>
-                                        <Eye className="h-3.5 w-3.5" /> Ver Archivo
+                                        <Eye className="h-3.5 w-3.5" /> View File
                                       </DropdownMenuItem>
                                     )}
                                     <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(exp.id)}>
-                                      <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                      <Trash2 className="h-3.5 w-3.5" /> Delete
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -1459,7 +1459,7 @@ export function JobView({
                     {totalExpensePages > 1 && (
                       <div className="p-4 border-t border-border/40 flex items-center justify-between bg-white mt-auto">
                         <p className="text-[10px] text-muted-foreground">
-                          Mostrando {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} de {filteredExpenses.length}
+                          Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} of {filteredExpenses.length}
                         </p>
                         <div className="flex gap-2">
                           <Button
@@ -1493,7 +1493,7 @@ export function JobView({
                   <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
                     <Receipt className="h-10 w-10 text-muted-foreground" />
                     <p className="text-xs font-medium px-8 text-center">
-                      {expenseSearchTerm ? 'No se encontraron gastos que coincidan con la búsqueda' : 'Registra tus gastos para tener un control detallado de los costos del trabajo'}
+                      {expenseSearchTerm ? 'No expenses found matching your search' : 'Log your expenses to track detailed job costs'}
                     </p>
                   </div>
                 )}
@@ -1544,7 +1544,7 @@ export function JobView({
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-32">
                                   <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handeDeleteLabor(entry.id)}>
-                                    <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                                    <Trash2 className="h-3.5 w-3.5" /> Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -1607,13 +1607,13 @@ export function JobView({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}>
-                              <CheckCircle2 className="h-4 w-4" /> Finalizar Visita
+                              <CheckCircle2 className="h-4 w-4" /> Complete Visit
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'scheduled')}>
-                              <Calendar className="h-4 w-4" /> Reprogramar
+                              <Calendar className="h-4 w-4" /> Reschedule
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteVisit(visit.id)}>
-                              <Trash2 className="h-4 w-4" /> Eliminar
+                              <Trash2 className="h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1717,19 +1717,19 @@ export function JobView({
       <Dialog open={isAddingMaterial} onOpenChange={setIsAddingMaterial}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Generar Materiales con IA</DialogTitle>
+            <DialogTitle>Generate Materials with AI</DialogTitle>
             <DialogDescription>
-              Describe qué materiales necesitas (ej. "Remodelación de baño 10m2").
-              La IA calculará cantidades y usará precios promedio de Home Depot.
+              Describe what materials you need (e.g. "Bathroom remodel 10m2").
+              The AI will calculate quantities using average Home Depot prices.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="aiPrompt">Descripción del Proyecto / Materiales</Label>
+              <Label htmlFor="aiPrompt">Project / Materials Description</Label>
               <textarea
                 id="aiPrompt"
                 className="w-full min-h-[100px] rounded-md border border-input bg-background p-3 text-sm"
-                placeholder="Ej: Instalación de piso laminado para una sala de 20 metros cuadrados..."
+                placeholder="E.g: Laminate floor installation for a 20 square meter living room..."
                 value={aiMaterialPrompt}
                 onChange={(e) => setAiMaterialPrompt(e.target.value)}
               />
@@ -1737,16 +1737,16 @@ export function JobView({
           </div>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setIsAddingMaterial(false)} disabled={isGeneratingMaterials}>
-              Cancelar
+              Cancel
             </Button>
             <Button onClick={handleGenerateMaterials} disabled={isGeneratingMaterials} className="bg-[#306C3E] hover:bg-[#265832]">
               {isGeneratingMaterials ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generando...
+                  Generating...
                 </>
               ) : (
-                'Generar con IA'
+                'Generate with AI'
               )}
             </Button>
           </div>
@@ -1756,9 +1756,9 @@ export function JobView({
       <Dialog open={isSearchingSodimac} onOpenChange={setIsSearchingSodimac}>
         <DialogContent className="sm:max-w-[700px] bg-background">
           <DialogHeader>
-            <DialogTitle>Buscador Manual Sodimac</DialogTitle>
+            <DialogTitle>Sodimac Manual Search</DialogTitle>
             <DialogDescription>
-              Busca productos directamente en Sodimac Perú y añádelos a la proforma.
+              Search products directly on Sodimac and add them to the proforma.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4 min-h-[400px]">
@@ -1772,7 +1772,7 @@ export function JobView({
               />
               <Button type="submit" disabled={isSodimacLoading} className="bg-[#306C3E] hover:bg-[#265832]">
                 {isSodimacLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-                Buscar
+                Search
               </Button>
             </form>
 
@@ -1780,7 +1780,7 @@ export function JobView({
               {isSodimacLoading ? (
                 <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
                   <Loader2 className="h-8 w-8 animate-spin mb-4 text-[#306C3E]" />
-                  <p>Buscando en Sodimac...</p>
+                  <p>Searching Sodimac...</p>
                 </div>
               ) : sodimacResults.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1803,7 +1803,7 @@ export function JobView({
                           className="mt-2 h-7 text-[10px] w-fit"
                           onClick={() => handleAddSodimacMaterial(result)}
                         >
-                          <Plus className="h-3 w-3 mr-1" /> Añadir
+                          <Plus className="h-3 w-3 mr-1" /> Add
                         </Button>
                       </div>
                     </div>
@@ -1811,7 +1811,7 @@ export function JobView({
                 </div>
               ) : sodimacQuery && !isSodimacLoading ? (
                 <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
-                  <p>No se encontraron resultados para "{sodimacQuery}"</p>
+                  <p>No results found for "{sodimacQuery}"</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
@@ -1909,7 +1909,7 @@ export function JobView({
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-none">
           <DialogHeader className="p-4 bg-white/10 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-row items-center justify-between">
             <DialogTitle className="text-white text-sm font-bold flex items-center gap-2">
-              <Eye className="h-4 w-4" /> Vista de Recibo
+              <Eye className="h-4 w-4" /> Receipt View
             </DialogTitle>
             <Button
               variant="ghost"
@@ -1919,7 +1919,7 @@ export function JobView({
                 if (selectedFileUrl) window.open(selectedFileUrl, '_blank');
               }}
             >
-              <FileDown className="h-4 w-4" /> Descargar
+              <FileDown className="h-4 w-4" /> Download
             </Button>
           </DialogHeader>
           <div className="flex items-center justify-center min-h-[50vh] max-h-[85vh] p-4 pt-16">
@@ -1932,7 +1932,7 @@ export function JobView({
             ) : (
               <div className="text-white/40 flex flex-col items-center gap-2">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <p className="text-xs uppercase font-black tracking-widest">Cargando...</p>
+                <p className="text-xs uppercase font-black tracking-widest">Loading...</p>
               </div>
             )}
           </div>
@@ -1954,17 +1954,17 @@ export function JobView({
       <Dialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl border-b pb-4">Confirmar Eliminación</DialogTitle>
+            <DialogTitle className="font-serif text-xl border-b pb-4">Confirm Deletion</DialogTitle>
             <DialogDescription className="py-4">
-              ¿Estás seguro de que deseas eliminar <strong>{itemToDelete?.description}</strong>? Esta acción no se puede deshacer.
+              Are you sure you want to delete <strong>{itemToDelete?.description}</strong>? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 pt-2">
             <Button variant="outline" className="flex-1 rounded-xl h-11 font-bold" onClick={() => setItemToDelete(null)}>
-              Cancelar
+              Cancel
             </Button>
             <Button variant="destructive" className="flex-1 rounded-xl h-11 font-bold bg-red-600 hover:bg-red-700" onClick={() => handleDeleteItem(itemToDelete.id)}>
-              Eliminar Item
+              Delete Item
             </Button>
           </div>
         </DialogContent>
@@ -1994,73 +1994,70 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
       }]);
 
     if (error) {
-      toast.error('Error al registrar el pago');
+      toast.error('Error recording payment');
     } else {
-      toast.success('Pago registrado correctamente');
+      toast.success('Payment recorded successfully');
       onSuccess();
     }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="bg-[#306C3E] text-white rounded-t-xl">
-          <CardTitle className="text-lg">Registrar Pago</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Monto ($)</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" placeholder="0.00" required />
-              </div>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Record Payment</DialogTitle>
+          <DialogDescription>Log a payment received for this job.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount ($)</Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" placeholder="0.00" required />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="payment_date">Fecha de Pago</Label>
-              <Input id="payment_date" name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="payment_date">Payment Date</Label>
+            <Input id="payment_date" name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="payment_method">Método de Pago</Label>
-              <select
-                id="payment_method"
-                name="payment_method"
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                required
-              >
-                <option value="Cash">Efectivo</option>
-                <option value="Transfer">Transferencia</option>
-                <option value="Card">Tarjeta</option>
-                <option value="Check">Cheque</option>
-                <option value="Other">Otro</option>
-              </select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="payment_method">Payment Method</Label>
+            <select
+              id="payment_method"
+              name="payment_method"
+              className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              required
+            >
+              <option value="Cash">Cash</option>
+              <option value="Transfer">Transfer</option>
+              <option value="Card">Card</option>
+              <option value="Check">Check</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notas (Opcional)</Label>
-              <textarea
-                id="notes"
-                name="notes"
-                className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Detalles adicionales..."
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <textarea
+              id="notes"
+              name="notes"
+              className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Additional details..."
+            />
+          </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Registrar Pago'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Record Payment'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2085,69 +2082,66 @@ function ExpenseFormModal({ proformaId, onClose, onSuccess }: { proformaId: stri
       }]);
 
     if (error) {
-      toast.error('Error al guardar el gasto');
+      toast.error('Error saving expense');
     } else {
-      toast.success('Gasto guardado correctamente');
+      toast.success('Expense saved successfully');
       onSuccess();
     }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="bg-[#0D3B47] text-white rounded-t-xl">
-          <CardTitle className="text-lg">Agregar Nuevo Gasto</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Expense</DialogTitle>
+          <DialogDescription>Log a purchase or cost for this job.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="place">Place of Purchase</Label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input id="place" name="place" className="pl-9" placeholder="e.g. Home Depot" required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input id="description" name="description" placeholder="e.g. Paint and brushes" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="place">Lugar de Compra</Label>
+              <Label htmlFor="category">Category</Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="place" name="place" className="pl-9" placeholder="Ej: Home Depot" required />
+                <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="category" name="category" className="pl-9" placeholder="e.g. Materials" required />
               </div>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
-              <Input id="description" name="description" placeholder="Ej: Pintura y brochas" required />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoría</Label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="category" name="category" className="pl-9" placeholder="Ej: Materiales" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="amount">Monto ($)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" placeholder="0.00" required />
-                </div>
+              <Label htmlFor="amount">Amount ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" placeholder="0.00" required />
               </div>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date">Fecha</Label>
-              <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
+          </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Guardar Gasto'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Expense'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2172,71 +2166,66 @@ function EditExpenseModal({ expense, onClose, onSuccess }: { expense: any, onClo
       .eq('id', expense.id);
 
     if (error) {
-      toast.error('Error al actualizar el gasto');
+      toast.error('Error updating expense');
     } else {
-      toast.success('Gasto actualizado correctamente');
+      toast.success('Expense updated successfully');
       onSuccess();
     }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="bg-[#306C3E] text-white rounded-t-xl">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Pencil className="h-5 w-5" /> Editar Gasto
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" /> Edit Expense</DialogTitle>
+          <DialogDescription>Update the details of this expense.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="place">Place of Purchase</Label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input id="place" name="place" className="pl-9" defaultValue={expense.place} placeholder="e.g. Home Depot" required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input id="description" name="description" defaultValue={expense.description} placeholder="e.g. Paint and brushes" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="place">Lugar de Compra</Label>
+              <Label htmlFor="category">Category</Label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="place" name="place" className="pl-9" defaultValue={expense.place} placeholder="Ej: Home Depot" required />
+                <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="category" name="category" className="pl-9" defaultValue={expense.category} placeholder="e.g. Materials" required />
               </div>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
-              <Input id="description" name="description" defaultValue={expense.description} placeholder="Ej: Pintura y brochas" required />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoría</Label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="category" name="category" className="pl-9" defaultValue={expense.category} placeholder="Ej: Materiales" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="amount">Monto ($)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" defaultValue={expense.amount} placeholder="0.00" required />
-                </div>
+              <Label htmlFor="amount">Amount ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" defaultValue={expense.amount} placeholder="0.00" required />
               </div>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date">Fecha</Label>
-              <Input id="date" name="date" type="date" defaultValue={expense.date} required />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" name="date" type="date" defaultValue={expense.date} required />
+          </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Actualizar Gasto'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Expense'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2294,182 +2283,150 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
       }]);
 
     if (error) {
-      toast.error('Error al registrar labor');
+      toast.error('Error logging time entry');
     } else {
-      toast.success('Labor registrada correctamente');
+      toast.success('Time entry logged successfully');
       onSuccess();
     }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <Card className="w-full max-w-lg shadow-2xl border-none rounded-3xl bg-white/95 backdrop-blur-md max-h-[90vh] flex flex-col overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between py-6 px-8 border-b border-border/5 bg-gradient-to-r from-muted/30 to-transparent shrink-0">
-          <div>
-            <CardTitle className="text-2xl font-serif font-bold text-[#0D3B47] tracking-tight">Time Entry</CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">Record a new shift or labor assignment</p>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Time Entry</DialogTitle>
+          <DialogDescription>Record a new shift or labor assignment.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {/* Start / End Time */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="start_time">Start Time</Label>
+              <Input
+                id="start_time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="end_time">End Time</Label>
+              <Input
+                id="end_time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                required
+              />
+            </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-9 w-9 hover:bg-black/5 hover:text-black transition-colors">
-            <X className="h-5 w-5 text-muted-foreground/70" />
-          </Button>
-        </CardHeader>
-        <CardContent className="p-8 overflow-y-auto flex-1">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Start/End Time Row */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
-                <div className="relative border border-border/60 rounded-2xl px-5 py-3 bg-white hover:border-border/80 transition-colors shadow-sm">
-                  <Label htmlFor="start_time" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Start time</Label>
-                  <div className="flex items-center justify-between">
-                    <input
-                      id="start_time"
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className="text-lg font-medium bg-transparent border-none outline-none w-full p-0 h-auto text-[#0D3B47]"
-                      required
-                    />
-                    <Clock className="h-5 w-5 text-emerald-600/60" />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-1.5 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
-                <div className="relative border border-border/60 rounded-2xl px-5 py-3 bg-white hover:border-border/80 transition-colors shadow-sm">
-                  <Label htmlFor="end_time" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">End time</Label>
-                  <div className="flex items-center justify-between">
-                    <input
-                      id="end_time"
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      className="text-lg font-medium bg-transparent border-none outline-none w-full p-0 h-auto text-[#0D3B47]"
-                      required
-                    />
-                    <Clock className="h-5 w-5 text-emerald-600/60" />
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Hours/Minutes Row */}
-            <div className="flex border border-border/60 rounded-2xl divide-x divide-border/40 overflow-hidden shadow-sm hover:border-border/80 transition-colors bg-white">
-              <div className="flex-1 p-3.5 flex items-center justify-between gap-3 focus-within:bg-muted/5 transition-colors">
-                <input
+          {/* Duration (calculated) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="hours">Hours</Label>
+              <Input
+                id="hours"
+                type="number"
+                min={0}
+                value={hours}
+                onChange={(e) => setHours(Number(e.target.value))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="minutes">Minutes</Label>
+              <Input
+                id="minutes"
+                type="number"
+                min={0}
+                max={59}
+                value={minutes}
+                onChange={(e) => setMinutes(Number(e.target.value))}
+              />
+            </div>
+          </div>
+
+          {/* Date */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              name="date"
+              type="date"
+              defaultValue={new Date().toISOString().split('T')[0]}
+              required
+            />
+          </div>
+
+          {/* Team Member */}
+          <div className="space-y-2">
+            <Label htmlFor="team_member_id">Team Member</Label>
+            <select
+              id="team_member_id"
+              name="team_member_id"
+              className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onChange={(e) => {
+                const selectedMember = teamMembers.find(m => m.id === e.target.value);
+                if (selectedMember && selectedMember.hourly_cost !== undefined) {
+                  setHourlyRate(Number(selectedMember.hourly_cost));
+                }
+              }}
+              required
+            >
+              <option value="" disabled>Select an employee...</option>
+              {teamMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name} {member.hourly_cost ? `($${member.hourly_cost}/hr)` : ''}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Hourly Rate + Total */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="hourly_rate"
                   type="number"
-                  value={hours}
-                  onChange={(e) => setHours(Number(e.target.value))}
-                  className="w-16 border-none shadow-none focus:ring-0 text-xl font-bold p-0 text-center bg-transparent text-[#0D3B47]"
-                />
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mr-2">hours</span>
-              </div>
-              <div className="flex-1 p-3.5 flex items-center justify-between gap-3 focus-within:bg-muted/5 transition-colors">
-                <input
-                  type="number"
-                  value={minutes}
-                  onChange={(e) => setMinutes(Number(e.target.value))}
-                  className="w-16 border-none shadow-none focus:ring-0 text-xl font-bold p-0 text-center bg-transparent text-[#0D3B47]"
-                />
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mr-2">mins</span>
-              </div>
-            </div>
-
-            {/* Date */}
-            <div className="space-y-2 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
-              <div className="relative border border-border/60 rounded-2xl p-5 bg-white flex items-center justify-between hover:border-border/80 transition-colors shadow-sm">
-                <div className="flex-1">
-                  <Label htmlFor="date" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Date</Label>
-                  <input
-                    id="date"
-                    name="date"
-                    type="date"
-                    defaultValue={new Date().toISOString().split('T')[0]}
-                    className="text-base font-medium bg-transparent border-none outline-none w-full p-0 text-[#0D3B47]"
-                    required
-                  />
-                </div>
-                <Calendar className="h-5 w-5 text-emerald-600/60" />
-              </div>
-            </div>
-
-            {/* Employee */}
-            <div className="space-y-2 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
-              <div className="relative border border-border/60 rounded-2xl p-5 bg-white flex items-center justify-between hover:border-border/80 transition-colors shadow-sm">
-                <div className="flex-1 relative z-10">
-                  <Label htmlFor="team_member_id" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Team Member</Label>
-                  <select
-                    id="team_member_id"
-                    name="team_member_id"
-                    className="w-full bg-transparent border-none outline-none text-base font-medium appearance-none p-0 cursor-pointer text-[#0D3B47]"
-                    onChange={(e) => {
-                      const selectedMember = teamMembers.find(m => m.id === e.target.value);
-                      if (selectedMember && selectedMember.hourly_cost !== undefined) {
-                        setHourlyRate(Number(selectedMember.hourly_cost));
-                      }
-                    }}
-                    required
-                  >
-                    <option value="" disabled selected>Select an employee...</option>
-                    {teamMembers.map(member => (
-                      <option key={member.id} value={member.id}>{member.name} {member.hourly_cost ? `($${member.hourly_cost}/hr)` : ''}</option>
-                    ))}
-                  </select>
-                </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Employee Cost */}
-            <div className="space-y-1">
-              <div className="relative border border-emerald-600/30 rounded-2xl px-5 py-4 bg-emerald-50/50 flex items-center justify-between shadow-sm">
-                <div className="flex-1">
-                  <Label htmlFor="hourly_rate" className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest block mb-1">Standard Hourly Rate</Label>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xl font-bold text-emerald-900">$</span>
-                    <input
-                      id="hourly_rate"
-                      type="number"
-                      step="0.01"
-                      value={hourlyRate}
-                      onChange={(e) => setHourlyRate(Number(e.target.value))}
-                      className="bg-transparent border-none outline-none text-xl font-bold w-full p-0 text-emerald-900 placeholder:text-emerald-900/40"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-800/70 block mb-1">Total Labor Cost</span>
-                  <span className="text-2xl font-black text-emerald-700">${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-2 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
-              <div className="relative border border-border/60 rounded-2xl p-5 bg-white shadow-sm hover:border-border/80 transition-colors">
-                <Label htmlFor="notes" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Shift Notes (Optional)</Label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  className="w-full min-h-[60px] bg-transparent text-sm resize-none outline-none text-[#0D3B47] placeholder:text-muted-foreground/50"
-                  placeholder="Record summary of work completed during this shift..."
+                  step="0.01"
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(Number(e.target.value))}
+                  className="pl-9"
+                  placeholder="0.00"
                 />
               </div>
             </div>
-
-            {/* Footer Buttons */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-border/5">
-              <Button type="button" variant="ghost" className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-muted/20 hover:text-foreground" onClick={onClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" className="h-12 px-8 rounded-xl font-bold bg-[#0D3B47] hover:bg-[#08242b] text-white shadow-md active:scale-95 transition-all text-sm tracking-wide" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'Log Time Entry'}
-              </Button>
+            <div className="space-y-2">
+              <Label>Total Labor Cost</Label>
+              <div className="flex h-10 items-center rounded-md border border-input bg-muted/30 px-3 text-sm font-semibold text-foreground">
+                ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
             </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Shift Notes (Optional)</Label>
+            <textarea
+              id="notes"
+              name="notes"
+              className="w-full min-h-[70px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Record summary of work completed during this shift..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Log Time Entry'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2493,69 +2450,66 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
       }]);
 
     if (error) {
-      toast.error('Error al programar visita');
+      toast.error('Error scheduling visit');
     } else {
-      toast.success('Visita programada correctamente');
+      toast.success('Visit scheduled successfully');
       onSuccess();
     }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="bg-[#306C3E] text-white rounded-t-xl">
-          <CardTitle className="text-lg">Programar Nueva Visita</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Schedule New Visit</DialogTitle>
+          <DialogDescription>Plan an on-site visit for this job.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="assigned_name">Assign To</Label>
+            <Input id="assigned_name" name="assigned_name" placeholder="Full name" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="assigned_name">Asignar a</Label>
-              <Input id="assigned_name" name="assigned_name" placeholder="Nombre completo" required />
+              <Label htmlFor="visit_date">Date &amp; Time</Label>
+              <Input id="visit_date" name="visit_date" type="datetime-local" required />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="visit_date">Fecha y Hora</Label>
-                <Input id="visit_date" name="visit_date" type="datetime-local" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Estado</Label>
-                <select
-                  id="status"
-                  name="status"
-                  className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  required
-                >
-                  <option value="scheduled">Programada</option>
-                  <option value="completed">Completada</option>
-                  <option value="cancelled">Cancelada</option>
-                </select>
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label htmlFor="notes">Notas</Label>
-              <textarea
-                id="notes"
-                name="notes"
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Instrucciones para la visita..."
-              />
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                name="status"
+                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                required
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </div>
+          </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Programar Visita'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <textarea
+              id="notes"
+              name="notes"
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Visit instructions..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Schedule Visit'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2588,88 +2542,85 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
       }]);
 
     if (error) {
-      toast.error('Error al crear tarea');
+      toast.error('Error creating task');
     } else {
-      toast.success('Tarea creada correctamente');
+      toast.success('Task created successfully');
       onSuccess();
     }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="bg-[#0D3B47] text-white rounded-t-xl">
-          <CardTitle className="text-lg">Nueva Tarea</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New Task</DialogTitle>
+          <DialogDescription>Create a task and optionally assign it to a team member.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="title">Task Title</Label>
+            <Input id="title" name="title" placeholder="e.g. Buy paint" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="proforma_item_id">Link to Line Item (Optional)</Label>
+            <select
+              id="proforma_item_id"
+              name="proforma_item_id"
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">None</option>
+              {items.map(item => (
+                <option key={item.id} value={item.id}>{item.description}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assigned_to">Assign To</Label>
+            <select
+              id="assigned_to"
+              name="assigned_to"
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Unassigned</option>
+              {teamMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Título de la Tarea</Label>
-              <Input id="title" name="title" placeholder="Ej: Comprar pintura" required />
+              <Label htmlFor="due_date">Start Date/Time</Label>
+              <Input id="due_date" name="due_date" type="datetime-local" />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="proforma_item_id">Asociar a Item (Opcional)</Label>
-              <select
-                id="proforma_item_id"
-                name="proforma_item_id"
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="">Ninguno</option>
-                {items.map(item => (
-                  <option key={item.id} value={item.id}>{item.description}</option>
-                ))}
-              </select>
+              <Label htmlFor="end_date">End Date/Time</Label>
+              <Input id="end_date" name="end_date" type="datetime-local" />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="assigned_to">Asignar a</Label>
-              <select
-                id="assigned_to"
-                name="assigned_to"
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="">Sin asignar</option>
-                {teamMembers.map(member => (
-                  <option key={member.id} value={member.id}>{member.name}</option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <textarea
+              id="description"
+              name="description"
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Additional details..."
+            />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="due_date">Start Date/Time</Label>
-                <Input id="due_date" name="due_date" type="datetime-local" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_date">End Date/Time</Label>
-                <Input id="end_date" name="end_date" type="datetime-local" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
-              <textarea
-                id="description"
-                name="description"
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Detalles adicionales..."
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Crear Tarea'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create Task'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2757,16 +2708,16 @@ function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
               </div>
               <div className="flex items-center space-x-2 pt-8">
                 <Checkbox id="is_optional_modal" name="is_optional" />
-                <Label htmlFor="is_optional_modal">¿Es opcional?</Label>
+                <Label htmlFor="is_optional_modal">Is optional?</Label>
               </div>
             </div>
 
             <div className="flex gap-3 pt-4">
               <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancelar
+                Cancel
               </Button>
               <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Añadir Item'}
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item'}
               </Button>
             </div>
           </form>
