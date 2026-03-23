@@ -38,11 +38,15 @@ export default async function EditProforma({ params }: Props) {
   }
 
   // Fetch line items
-  const { data: items } = await supabase
+  const { data: items, error: itemsError } = await supabase
     .from('proforma_items')
     .select('*')
     .eq('proforma_id', id)
-    .order('created_at', { ascending: true });
+    .order('sort_order', { ascending: true, nullsFirst: false });
+    
+  if (itemsError) {
+    console.error("Error fetching items:", itemsError);
+  }
 
   return (
     <ProformaForm 

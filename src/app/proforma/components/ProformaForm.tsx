@@ -347,7 +347,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
   // Project Details
   const [projectName, setProjectName] = useState(initialData?.proforma?.project_name || '');
-  const [validUntil, setValidUntil] = useState(initialData?.proforma?.valid_until || '');
+  const [validUntil, setValidUntil] = useState(initialData?.proforma?.valid_until || new Date().toISOString().split('T')[0]);
 
   // Line Items
   const [items, setItems] = useState<LineItem[]>(

@@ -30,6 +30,7 @@ export function ImportQuotesModal() {
     const items: any[] = [];
     const regex = /(.*?)\s*\((\d+),\s*\$([\d.]+)\)/g;
     let match;
+    let index = 0;
 
     while ((match = regex.exec(itemsStr)) !== null) {
       let description = match[1].trim();
@@ -48,7 +49,9 @@ export function ImportQuotesModal() {
         quantity,
         unit_price,
         total_price,
+        sort_order: index,
       });
+      index++;
     }
 
     return items;
