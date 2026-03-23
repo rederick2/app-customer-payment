@@ -2314,20 +2314,23 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-lg shadow-2xl border-none overflow-hidden rounded-2xl bg-white">
-        <CardHeader className="flex flex-row items-center justify-between py-5 px-8 border-b border-border/10">
-          <CardTitle className="text-xl font-bold text-[#0D3B47]">New time entry</CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8 hover:bg-muted/10">
-            <X className="h-5 w-5 text-muted-foreground" />
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <Card className="w-full max-w-lg shadow-2xl border-none rounded-3xl bg-white/95 backdrop-blur-md max-h-[90vh] flex flex-col overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between py-6 px-8 border-b border-border/5 bg-gradient-to-r from-muted/30 to-transparent shrink-0">
+          <div>
+            <CardTitle className="text-2xl font-serif font-bold text-[#0D3B47] tracking-tight">Time Entry</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">Record a new shift or labor assignment</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-9 w-9 hover:bg-black/5 hover:text-black transition-colors">
+            <X className="h-5 w-5 text-muted-foreground/70" />
           </Button>
         </CardHeader>
-        <CardContent className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <CardContent className="p-8 overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Start/End Time Row */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <div className="relative border border-border/40 rounded-xl px-4 py-2 bg-white">
+              <div className="space-y-1.5 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
+                <div className="relative border border-border/60 rounded-2xl px-5 py-3 bg-white hover:border-border/80 transition-colors shadow-sm">
                   <Label htmlFor="start_time" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Start time</Label>
                   <div className="flex items-center justify-between">
                     <input
@@ -2335,15 +2338,15 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="text-base font-medium bg-transparent border-none outline-none w-full p-0 h-auto"
+                      className="text-lg font-medium bg-transparent border-none outline-none w-full p-0 h-auto text-[#0D3B47]"
                       required
                     />
-                    <Clock className="h-4 w-4 text-muted-foreground/60" />
+                    <Clock className="h-5 w-5 text-emerald-600/60" />
                   </div>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <div className="relative border border-border/40 rounded-xl px-4 py-2 bg-white">
+              <div className="space-y-1.5 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
+                <div className="relative border border-border/60 rounded-2xl px-5 py-3 bg-white hover:border-border/80 transition-colors shadow-sm">
                   <Label htmlFor="end_time" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">End time</Label>
                   <div className="flex items-center justify-between">
                     <input
@@ -2351,119 +2354,127 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="text-base font-medium bg-transparent border-none outline-none w-full p-0 h-auto"
+                      className="text-lg font-medium bg-transparent border-none outline-none w-full p-0 h-auto text-[#0D3B47]"
                       required
                     />
-                    <Clock className="h-4 w-4 text-muted-foreground/60" />
+                    <Clock className="h-5 w-5 text-emerald-600/60" />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Hours/Minutes Row */}
-            <div className="flex border border-border/40 rounded-xl divide-x divide-border/40 overflow-hidden">
-              <div className="flex-1 p-2.5 flex items-center justify-between gap-3 bg-white">
+            <div className="flex border border-border/60 rounded-2xl divide-x divide-border/40 overflow-hidden shadow-sm hover:border-border/80 transition-colors bg-white">
+              <div className="flex-1 p-3.5 flex items-center justify-between gap-3 focus-within:bg-muted/5 transition-colors">
                 <input
                   type="number"
                   value={hours}
                   onChange={(e) => setHours(Number(e.target.value))}
-                  className="w-12 border-none shadow-none focus:ring-0 text-base font-medium p-0 text-center bg-transparent"
+                  className="w-16 border-none shadow-none focus:ring-0 text-xl font-bold p-0 text-center bg-transparent text-[#0D3B47]"
                 />
-                <span className="text-sm font-medium text-muted-foreground">hours</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mr-2">hours</span>
               </div>
-              <div className="flex-1 p-2.5 flex items-center justify-between gap-3 bg-white">
+              <div className="flex-1 p-3.5 flex items-center justify-between gap-3 focus-within:bg-muted/5 transition-colors">
                 <input
                   type="number"
                   value={minutes}
                   onChange={(e) => setMinutes(Number(e.target.value))}
-                  className="w-12 border-none shadow-none focus:ring-0 text-base font-medium p-0 text-center bg-transparent"
+                  className="w-16 border-none shadow-none focus:ring-0 text-xl font-bold p-0 text-center bg-transparent text-[#0D3B47]"
                 />
-                <span className="text-sm font-medium text-muted-foreground">minutes</span>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-2">
-              <div className="relative border border-border/40 rounded-xl p-4 bg-white">
-                <textarea
-                  id="notes"
-                  name="notes"
-                  className="w-full min-h-[90px] bg-transparent text-sm resize-none outline-none pt-2"
-                  placeholder=" "
-                />
-                <Label htmlFor="notes" className="absolute left-4 top-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Notes</Label>
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground mr-2">mins</span>
               </div>
             </div>
 
             {/* Date */}
-            <div className="space-y-2">
-              <div className="relative border border-border/40 rounded-xl p-4 bg-white flex items-center justify-between">
+            <div className="space-y-2 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
+              <div className="relative border border-border/60 rounded-2xl p-5 bg-white flex items-center justify-between hover:border-border/80 transition-colors shadow-sm">
                 <div className="flex-1">
-                  <Label htmlFor="date" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Date</Label>
+                  <Label htmlFor="date" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Date</Label>
                   <input
                     id="date"
                     name="date"
                     type="date"
                     defaultValue={new Date().toISOString().split('T')[0]}
-                    className="text-base font-medium bg-transparent border-none outline-none w-full p-0"
+                    className="text-base font-medium bg-transparent border-none outline-none w-full p-0 text-[#0D3B47]"
                     required
                   />
                 </div>
-                <Calendar className="h-5 w-5 text-[#0D3B47]" />
+                <Calendar className="h-5 w-5 text-emerald-600/60" />
               </div>
             </div>
 
             {/* Employee */}
-            <div className="space-y-2">
-              <div className="relative border border-border/40 rounded-xl p-4 bg-white flex items-center justify-between">
-                <div className="flex-1">
-                  <Label htmlFor="team_member_id" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Employee</Label>
+            <div className="space-y-2 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
+              <div className="relative border border-border/60 rounded-2xl p-5 bg-white flex items-center justify-between hover:border-border/80 transition-colors shadow-sm">
+                <div className="flex-1 relative z-10">
+                  <Label htmlFor="team_member_id" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Team Member</Label>
                   <select
                     id="team_member_id"
                     name="team_member_id"
-                    className="w-full bg-transparent border-none outline-none text-base font-medium appearance-none p-0"
+                    className="w-full bg-transparent border-none outline-none text-base font-medium appearance-none p-0 cursor-pointer text-[#0D3B47]"
+                    onChange={(e) => {
+                      const selectedMember = teamMembers.find(m => m.id === e.target.value);
+                      if (selectedMember && selectedMember.hourly_cost !== undefined) {
+                        setHourlyRate(Number(selectedMember.hourly_cost));
+                      }
+                    }}
                     required
                   >
-                    <option value="">Select a member</option>
+                    <option value="" disabled selected>Select an employee...</option>
                     {teamMembers.map(member => (
-                      <option key={member.id} value={member.id}>{member.name}</option>
+                      <option key={member.id} value={member.id}>{member.name} {member.hourly_cost ? `($${member.hourly_cost}/hr)` : ''}</option>
                     ))}
                   </select>
                 </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                <ChevronDown className="h-5 w-5 text-muted-foreground absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
             {/* Employee Cost */}
             <div className="space-y-1">
-              <div className="relative border border-border/40 rounded-xl px-4 py-3 bg-white flex items-center justify-between">
+              <div className="relative border border-emerald-600/30 rounded-2xl px-5 py-4 bg-emerald-50/50 flex items-center justify-between shadow-sm">
                 <div className="flex-1">
-                  <Label htmlFor="hourly_rate" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Employee cost</Label>
+                  <Label htmlFor="hourly_rate" className="text-[10px] font-bold text-emerald-800 uppercase tracking-widest block mb-1">Standard Hourly Rate</Label>
                   <div className="flex items-center gap-1">
-                    <span className="text-base font-medium text-foreground">$</span>
+                    <span className="text-xl font-bold text-emerald-900">$</span>
                     <input
                       id="hourly_rate"
                       type="number"
                       step="0.01"
                       value={hourlyRate}
                       onChange={(e) => setHourlyRate(Number(e.target.value))}
-                      className="bg-transparent border-none outline-none text-base font-medium w-full p-0"
+                      className="bg-transparent border-none outline-none text-xl font-bold w-full p-0 text-emerald-900 placeholder:text-emerald-900/40"
                       placeholder="0.00"
                     />
                   </div>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">per hour</span>
+                <div className="text-right">
+                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-800/70 block mb-1">Total Labor Cost</span>
+                  <span className="text-2xl font-black text-emerald-700">${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                </div>
               </div>
-              <p className="text-[11px] text-muted-foreground ml-1">Total cost: ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2 focus-within:ring-2 ring-[#0D3B47]/10 rounded-2xl transition-all">
+              <div className="relative border border-border/60 rounded-2xl p-5 bg-white shadow-sm hover:border-border/80 transition-colors">
+                <Label htmlFor="notes" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Shift Notes (Optional)</Label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  className="w-full min-h-[60px] bg-transparent text-sm resize-none outline-none text-[#0D3B47] placeholder:text-muted-foreground/50"
+                  placeholder="Record summary of work completed during this shift..."
+                />
+              </div>
             </div>
 
             {/* Footer Buttons */}
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" className="h-10 px-6 rounded-lg font-bold text-muted-foreground hover:bg-muted/5 border-border/40" onClick={onClose} disabled={isSubmitting}>
+            <div className="flex justify-end gap-3 pt-4 border-t border-border/5">
+              <Button type="button" variant="ghost" className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-muted/20 hover:text-foreground" onClick={onClose} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" className="h-10 px-6 rounded-lg font-bold bg-[#306C3E] hover:bg-[#265832] text-white shadow-sm" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save Time Entry'}
+              <Button type="submit" className="h-12 px-8 rounded-xl font-bold bg-[#0D3B47] hover:bg-[#08242b] text-white shadow-md active:scale-95 transition-all text-sm tracking-wide" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'Log Time Entry'}
               </Button>
             </div>
           </form>
@@ -2673,103 +2684,6 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
   );
 }
 
-function TeamMemberManager({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [members, setMembers] = React.useState<any[]>([]);
-  const supabase = createClient();
-
-  React.useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const fetchMembers = async () => {
-    const { data } = await supabase.from('team_members').select('*').order('name', { ascending: true });
-    setMembers(data || []);
-  };
-
-  const handleAddMember = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
-    const { error } = await supabase.from('team_members').insert([{
-      name: formData.get('name'),
-      email: formData.get('email'),
-      role: formData.get('role')
-    }]);
-
-    if (!error) {
-      toast.success('Miembro añadido');
-      fetchMembers();
-      onSuccess();
-      e.currentTarget.reset();
-    }
-    setIsSubmitting(false);
-  };
-
-  const handleDeleteMember = async (id: string) => {
-    const { error } = await supabase.from('team_members').delete().eq('id', id);
-    if (!error) {
-      toast.success('Miembro eliminado');
-      fetchMembers();
-      onSuccess();
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-lg shadow-2xl border-none">
-        <CardHeader className="bg-[#0D3B47] text-white rounded-t-xl flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Manage Team Members</CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/10">
-            <X className="h-5 w-5" />
-          </Button>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          <form onSubmit={handleAddMember} className="grid grid-cols-3 gap-3">
-            <div className="space-y-1 col-span-1">
-              <Label htmlFor="name" className="text-xs">Name</Label>
-              <Input id="name" name="name" className="h-9 text-xs" required />
-            </div>
-            <div className="space-y-1 col-span-1">
-              <Label htmlFor="email" className="text-xs">Email</Label>
-              <Input id="email" name="email" className="h-9 text-xs" type="email" />
-            </div>
-            <div className="flex items-end col-span-1">
-              <Button type="submit" size="sm" className="w-full h-9 bg-emerald-600 hover:bg-emerald-700" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add'}
-              </Button>
-            </div>
-          </form>
-
-          <div className="border border-border/40 rounded-xl overflow-hidden">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/5 border-b border-border/40">
-                <tr>
-                  <th className="px-4 py-3 text-left">Name</th>
-                  <th className="px-4 py-3 text-left">Email</th>
-                  <th className="px-4 py-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/30">
-                {members.map(member => (
-                  <tr key={member.id}>
-                    <td className="px-4 py-3 font-bold">{member.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{member.email || '-'}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600" onClick={() => handleDeleteMember(member.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
   proformaId: string,

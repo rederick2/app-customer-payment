@@ -4,10 +4,19 @@ import { useState } from 'react';
 import ProfileForm from './components/ProfileForm';
 import PaymentForm from './components/PaymentForm';
 import TaxSettings from './components/TaxSettings';
+import TeamSettings from './components/TeamSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, CreditCard, Percent } from 'lucide-react';
+import { User, CreditCard, Percent, Users } from 'lucide-react';
 
-export default function SettingsClient({ initialProfile, initialTaxes }: { initialProfile: any, initialTaxes: any[] }) {
+export default function SettingsClient({ 
+  initialProfile, 
+  initialTaxes, 
+  initialTeamMembers 
+}: { 
+  initialProfile: any, 
+  initialTaxes: any[],
+  initialTeamMembers: any[]
+}) {
   const [activeTab, setActiveTab] = useState('profile');
 
   return (
@@ -46,6 +55,15 @@ export default function SettingsClient({ initialProfile, initialTaxes }: { initi
             <Percent className="h-4 w-4" />
             <span>Taxes</span>
           </TabsTrigger>
+          <TabsTrigger 
+            value="team" 
+            data-state={activeTab === 'team' ? 'active' : 'inactive'}
+            onClick={() => setActiveTab('team')}
+            className="flex items-center space-x-2"
+          >
+            <Users className="h-4 w-4" />
+            <span>Team Members</span>
+          </TabsTrigger>
         </TabsList>
 
         {activeTab === 'profile' && (
@@ -63,6 +81,12 @@ export default function SettingsClient({ initialProfile, initialTaxes }: { initi
         {activeTab === 'taxes' && (
           <TabsContent value="taxes">
             <TaxSettings initialTaxes={initialTaxes} />
+          </TabsContent>
+        )}
+
+        {activeTab === 'team' && (
+          <TabsContent value="team">
+            <TeamSettings initialTeamMembers={initialTeamMembers} />
           </TabsContent>
         )}
       </Tabs>

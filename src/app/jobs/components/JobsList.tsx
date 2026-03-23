@@ -18,7 +18,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
   const itemsPerPage = 10;
 
   // Filtering
-  const filteredProformas = initialProformas.filter(p => 
+  const filteredProformas = initialProformas.filter(p =>
     p.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (p.clients as any)?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -41,8 +41,8 @@ export function JobsList({ initialProformas }: JobsListProps) {
       <div className="flex items-center gap-4 max-w-md w-full ml-auto">
         <div className="relative w-full group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input 
-            placeholder="Buscar por proyecto o cliente..." 
+          <Input
+            placeholder="Buscar por proyecto o cliente..."
             className="pl-10 h-10 border-border/40 bg-card/50 backdrop-blur-sm focus-visible:ring-primary/20 transition-all rounded-xl"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -66,8 +66,8 @@ export function JobsList({ initialProformas }: JobsListProps) {
               </thead>
               <tbody className="divide-y divide-border/30">
                 {paginatedProformas.map((proforma) => (
-                  <tr 
-                    key={proforma.id} 
+                  <tr
+                    key={proforma.id}
                     className="group hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => router.push(`/proforma/${proforma.id}?view=quote`)}
                   >
@@ -80,12 +80,11 @@ export function JobsList({ initialProformas }: JobsListProps) {
                       {new Date(proforma.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                        proforma.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                        proforma.status === 'job' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                        'bg-muted/50 text-muted-foreground border-border/40'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${proforma.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                          proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            proforma.status === 'job' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                              'bg-muted/50 text-muted-foreground border-border/40'
+                        }`}>
                         {proforma.status || 'draft'}
                       </span>
                     </td>
@@ -93,13 +92,13 @@ export function JobsList({ initialProformas }: JobsListProps) {
                       ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="h-8 text-xs font-bold border-primary/20 hover:bg-primary/5 px-4 rounded-lg"
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/proforma/${proforma.id}?view=quote`);
+                          router.push(`/proforma/${proforma.id}`);
                         }}
                       >
                         Ver Detalle
@@ -114,9 +113,9 @@ export function JobsList({ initialProformas }: JobsListProps) {
               <FileText className="h-16 w-16 text-muted/20 mb-4" />
               <p className="text-lg font-serif italic">No se encontraron jobs.</p>
               {searchTerm && (
-                <Button 
-                  variant="link" 
-                  className="mt-2 text-primary" 
+                <Button
+                  variant="link"
+                  className="mt-2 text-primary"
                   onClick={() => setSearchTerm('')}
                 >
                   Limpiar búsqueda
@@ -156,7 +155,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
                       pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
                     }
                   }
-                  
+
                   return pages.map((page, index) => {
                     if (page === '...') {
                       return (

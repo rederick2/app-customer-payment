@@ -1,0 +1,63 @@
+{
+  "users": [
+    {
+      "id": "37d1215c-25c7-43ce-adcf-e6ce838449fc",
+      "email": "test@test.com"
+    },
+    {
+      "id": "1a90ae9d-6e29-4ce9-a449-ac73815a70b8",
+      "email": "test@example.com"
+    },
+    {
+      "id": "a3f23540-d75e-471c-9417-ec6a4889a03c",
+      "email": "alexander_sz74@hotmail.com"
+    },
+    {
+      "id": "7572c5e6-461b-455f-b259-f61fdae04e00",
+      "email": "rederick2@gmail.com"
+    },
+    {
+      "id": "7aed45dd-2671-4306-9f5d-cdefb08b99c9",
+      "email": "test2@agent.com"
+    }
+  ],
+  "team_members": [
+    {
+      "id": "d50612bc-3239-4686-971d-3bb5d134d6b2",
+      "name": "Staff Member",
+      "email": null,
+      "role": "Technician",
+      "created_at": "2026-03-17T02:07:25.229214+00:00",
+      "user_id": "37d1215c-25c7-43ce-adcf-e6ce838449fc",
+      "hourly_cost": 0
+    },
+    {
+      "id": "a827dddf-030a-4230-9f28-2b0665d5f30f",
+      "name": "Alexander Santillan",
+      "email": "alexander_sz74@hotmail.com",
+      "role": null,
+      "created_at": "2026-03-17T21:03:31.082838+00:00",
+      "user_id": "37d1215c-25c7-43ce-adcf-e6ce838449fc",
+      "hourly_cost": 0
+    },
+    {
+      "id": "440ef37e-a70c-44b1-8a48-d9407df39938",
+      "name": "Pedro",
+      "email": "",
+      "role": null,
+      "created_at": "2026-03-23T20:27:53.377423+00:00",
+      "user_id": "37d1215c-25c7-43ce-adcf-e6ce838449fc",
+      "hourly_cost": 0
+    },
+    {
+      "id": "4bf7e709-fa5d-4a13-bfc8-f2cdd41ffc22",
+      "name": "Bryancito Santillan",
+      "email": "alexander_sz74@hotmail.com",
+      "role": null,
+      "created_at": "2026-03-23T20:29:14.963988+00:00",
+      "user_id": "37d1215c-25c7-43ce-adcf-e6ce838449fc",
+      "hourly_cost": 0
+    }
+  ],
+  "error": null
+}
