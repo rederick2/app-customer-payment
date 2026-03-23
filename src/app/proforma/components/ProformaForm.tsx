@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -53,6 +53,8 @@ interface LineItem {
   details: string;
   quantity: number;
   unit_price: number;
+  cost?: number;
+  markup?: number;
   is_optional: boolean;
   is_excluded?: boolean;
   sort_order: number;
@@ -170,9 +172,9 @@ function SortableItem({
           {/* Main Context Row */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
             <div className="md:col-span-5 space-y-2">
-              <Label>Nombre del Item *</Label>
+              <Label>Item Name *</Label>
               <Input
-                placeholder="Nombre del producto o servicio..."
+                placeholder="Product or service name..."
                 value={item.description}
                 required
                 onChange={(e) => {
@@ -188,7 +190,7 @@ function SortableItem({
             </div>
 
             <div className="md:col-span-2 space-y-2">
-              <Label className="text-center block">Cantidad *</Label>
+              <Label className="text-center block">Quantity *</Label>
               <Input
                 type="number"
                 min="1"
@@ -200,18 +202,76 @@ function SortableItem({
             </div>
 
             <div className="md:col-span-2 space-y-2 text-right">
-              <Label className="px-2">Precio Unitario *</Label>
-              <div className="relative">
+              <Label className="px-2">Unit Price *</Label>
+              <div className="relative group/price">
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={item.unit_price || ''}
+                  value={item.unit_price === 0 && item.cost === undefined ? '' : item.unit_price}
                   required
-                  onChange={(e) => updateItem(item.id, 'unit_price', parseFloat(e.target.value) || 0)}
-                  className="text-right font-bold pr-10"
+                  onChange={(e) => {
+                    const newPrice = parseFloat(e.target.value) || 0;
+                    const currentMarkup = item.markup || 0;
+                    const newCost = Number((newPrice / (1 + currentMarkup / 100)).toFixed(2));
+                    updateItemFields(item.id, { unit_price: newPrice, cost: newCost });
+                  }}
+                  className="text-right font-bold pr-10 cursor-pointer peer"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">USD</span>
+                
+                <div className="absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
+                  <div className="space-y-2 text-left">
+                    <Label className="text-xs font-bold text-muted-foreground">Unit Cost</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.cost === undefined ? '' : item.cost}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            updateItemFields(item.id, { cost: undefined });
+                            return;
+                          }
+                          const newCost = parseFloat(val) || 0;
+                          const currentMarkup = item.markup || 0;
+                          const newPrice = Number((newCost * (1 + currentMarkup / 100)).toFixed(2));
+                          updateItemFields(item.id, { cost: newCost, unit_price: newPrice });
+                        }}
+                        className="pl-7 font-medium text-left"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">$</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-left">
+                    <Label className="text-xs font-bold text-muted-foreground">Markup (%)</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        placeholder="0"
+                        value={item.markup === undefined ? '' : item.markup}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            updateItemFields(item.id, { markup: undefined });
+                            return;
+                          }
+                          const newMarkup = parseFloat(val) || 0;
+                          const currentCost = item.cost || 0;
+                          const newPrice = Number((currentCost * (1 + newMarkup / 100)).toFixed(2));
+                          updateItemFields(item.id, { markup: newMarkup, unit_price: newPrice });
+                        }}
+                        className="pr-7 font-medium text-left"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">%</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-tight text-center pt-2 border-t border-border/40">These calculations won't be visible to your clients</p>
+                </div>
               </div>
             </div>
 
@@ -240,9 +300,9 @@ function SortableItem({
           {/* Description & Photo Row */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-3 space-y-2">
-              <Label>Descripción</Label>
+              <Label>Description</Label>
               <Textarea
-                placeholder="Descripción detallada del producto o materiales..."
+                placeholder="Detailed description of product or materials..."
                 value={item.details}
                 onChange={(e) => updateItem(item.id, 'details', e.target.value)}
                 className="min-h-[100px] bg-muted/5 border-dashed border-border/60 focus:border-primary/20 text-md leading-relaxed rounded-xl p-4 resize-none"
@@ -250,7 +310,7 @@ function SortableItem({
             </div>
 
             <div className="lg:col-span-1 space-y-2">
-              <Label>Foto del Item</Label>
+              <Label>Item Photo</Label>
               <div className="relative h-32 w-full rounded-2xl overflow-hidden border-2 border-border/40 bg-muted/10 group/img flex items-center justify-center hover:border-primary/20 transition-all shadow-sm">
                 {item.photoPreviewUrl ? (
                   <>
@@ -284,7 +344,7 @@ function SortableItem({
                 ) : (
                   <label className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground/20 cursor-pointer hover:bg-muted/20 transition-colors">
                     <Upload className="h-8 w-8 stroke-[1.5px]" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Agregar Foto</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Add Photo</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -310,7 +370,7 @@ function SortableItem({
                 onCheckedChange={(checked) => updateItem(item.id, 'is_optional', !!checked)}
                 className="h-5 w-5 rounded-md border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all group-hover/opt:scale-110"
               />
-              <Label htmlFor={`opt-${item.id}`} className="text-xs font-medium text-muted-foreground cursor-pointer select-none">Marcar como opcional</Label>
+              <Label htmlFor={`opt-${item.id}`} className="text-xs font-medium text-muted-foreground cursor-pointer select-none">Mark as optional</Label>
             </div>
           </div>
         </div>
@@ -357,6 +417,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
       details: item.details || '',
       quantity: item.quantity,
       unit_price: item.unit_price,
+      cost: item.cost || undefined,
+      markup: item.cost && item.unit_price ? Number((((item.unit_price / item.cost) - 1) * 100).toFixed(2)) : undefined,
       is_optional: item.is_optional || false,
       sort_order: item.sort_order || 0,
       existingPhotoUrl: item.photo_url,
@@ -538,8 +600,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
           ...item,
           photo: file,
           photoPreviewUrl: file ? URL.createObjectURL(file) : item.existingPhotoUrl,
-          // Si quitamos la foto (file null), mantenemos el existingPhotoUrl a menos que queramos borrarlo explícitamente.
-          // Pero en el UI, si le da a la 'X', llamamos con null. 
+          // If we remove the photo (file null), we keep existingPhotoUrl unless we want to explicitly delete it.
+          // In the UI, clicking 'X' calls with null. 
         };
       }
       return item;
@@ -558,7 +620,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
   const handleAIGenerate = async () => {
     if (!projectName) {
-      toast.error("Por favor ingresa un nombre para el proyecto.");
+      toast.error("Please enter a project name.");
       return;
     }
 
@@ -588,18 +650,18 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         photo: null
       }));
 
-      // Si el primer item está vacío (que es el default), lo reemplazamos
+      // If the first item is empty (the default), replace it
       if (items.length === 1 && !items[0].description && items[0].unit_price === 0) {
         setItems(newItems);
       } else {
         setItems([...items, ...newItems]);
       }
 
-      toast.success("Items generados con éxito");
+      toast.success("Items generated successfully");
       setIsAIModalOpen(false);
     } catch (error) {
       console.error("AI Generation Error:", error);
-      toast.error("Error al generar la proforma con IA");
+      toast.error("Error generating proforma with AI");
     } finally {
       setIsGeneratingAI(false);
     }
@@ -615,7 +677,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   const addItemAdjustment = () => {
     setAdjustments([...adjustments, {
       id: crypto.randomUUID(),
-      label: 'Nuevo Impuesto',
+      label: 'New Tax',
       type: 'tax',
       valueType: 'percentage',
       value: 0
@@ -751,6 +813,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
           details: item.details,
           quantity: item.quantity,
           unit_price: item.unit_price,
+          cost: item.cost || 0,
           total_price: item.quantity * item.unit_price,
           is_optional: item.is_optional,
           sort_order: index, // Use current array index as sort_order
@@ -761,13 +824,13 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
       const { error: itemsError } = await supabase.from('proforma_items').insert(itemsToInsert);
       if (itemsError) throw itemsError;
 
-      toast.success(mode === 'edit' ? 'Proforma actualizada' : 'Proforma creada');
+      toast.success(mode === 'edit' ? 'Proforma updated' : 'Proforma created');
       router.push(`/proforma/${proformaData.id}`);
       router.refresh();
 
     } catch (error) {
       console.error('Error saving proforma:', error);
-      toast.error('Error al guardar la proforma');
+      toast.error('Error saving proforma');
       setIsSubmitting(false);
     }
   };
@@ -778,10 +841,10 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         <div>
           <Link href={mode === 'edit' ? `/proforma/${initialData?.proforma?.id}` : "/"} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            {mode === 'edit' ? 'Volver a la Proforma' : 'Volver al Dashboard'}
+            {mode === 'edit' ? 'Back to Proforma' : 'Back to Dashboard'}
           </Link>
           <h1 className="font-serif text-3xl font-bold tracking-tight">
-            {mode === 'edit' ? 'Editar Proforma' : 'Nueva Proforma'}
+            {mode === 'edit' ? 'Edit Proforma' : 'New Proforma'}
           </h1>
         </div>
 
@@ -792,7 +855,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center gap-2 h-12 px-6 rounded-2xl"
           >
             <Sparkles className="h-5 w-5 fill-white/20" />
-            <span className="font-bold tracking-tight">Generar con IA</span>
+            <span className="font-bold tracking-tight">Generate with AI</span>
           </Button>
         )}
       </div>
@@ -801,12 +864,12 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="shadow-sm border-border/50">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-serif">Datos del Cliente</CardTitle>
+              <CardTitle className="text-lg font-serif">Client Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {mode === 'create' && (
                 <div className="space-y-2">
-                  <Label>Seleccionar Cliente</Label>
+                  <Label>Select Client</Label>
                   <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
                     <PopoverTrigger
                       role="combobox"
@@ -814,7 +877,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                       className="w-full justify-between h-auto py-3 font-normal bg-background inline-flex items-center px-4 rounded-md border border-input ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {selectedClientId === 'new' ? (
-                        <span className="text-muted-foreground text-left flex-1">Seleccionar un cliente...</span>
+                        <span className="text-muted-foreground text-left flex-1">Select a client...</span>
                       ) : (() => {
                         const selectedClient = clients.find(c => c.id === selectedClientId);
                         return selectedClient ? (
@@ -823,21 +886,21 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                               {selectedClient.company_name || selectedClient.first_name || selectedClient.name}
                             </div>
                             <div className="text-sm text-muted-foreground truncate">
-                              {selectedClient.first_name && selectedClient.company_name && <span>Atte: {selectedClient.first_name} {selectedClient.last_name} &bull; </span>}
-                              {selectedClient.street_1 || selectedClient.email || 'Sin detalles adicionales'}
+                              {selectedClient.first_name && selectedClient.company_name && <span>Attn: {selectedClient.first_name} {selectedClient.last_name} &bull; </span>}
+                              {selectedClient.street_1 || selectedClient.email || 'No additional details'}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-left flex-1">Seleccionar un cliente...</span>
+                          <span className="text-muted-foreground text-left flex-1">Select a client...</span>
                         );
                       })()}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </PopoverTrigger>
                     <PopoverContent className="w-[400px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="Buscar clientes..." />
+                        <CommandInput placeholder="Search clients..." />
                         <CommandList>
-                          <CommandEmpty>No se encontraron clientes.</CommandEmpty>
+                          <CommandEmpty>No clients found.</CommandEmpty>
                           <CommandGroup>
                             {clients.map((client) => {
                               const nameDisplay = [client.title, client.first_name, client.last_name].filter(Boolean).join(' ') || client.name;
@@ -853,7 +916,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                                     {selectedClientId === client.id && <Check className="h-4 w-4 text-primary" />}
                                   </div>
                                   <div className="text-sm text-muted-foreground w-full truncate space-x-1">
-                                    {client.company_name && <span>Atte: {nameDisplay}</span>}
+                                    {client.company_name && <span>Attn: {nameDisplay}</span>}
                                     {client.company_name && client.street_1 && <span>&bull;</span>}
                                     {client.street_1 && <span>{client.street_1}</span>}
                                     {client.street_1 && client.email && <span>&bull;</span>}
@@ -872,7 +935,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                             onClick={() => handleClientSelect('new')}
                           >
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Crear nuevo cliente
+                            Create new client
                           </Button>
                         </div>
                       </Command>
@@ -884,71 +947,71 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
               {(selectedClientId === 'new' || mode === 'edit') && (
                 <div className={cn("space-y-4 pt-4 border-t mt-4 border-border/50", mode === 'edit' && "border-t-0 pt-0 mt-0")}>
                   <div className="space-y-2">
-                    <Label htmlFor="companyName">Razón Social o Compañía (Opcional)</Label>
-                    <Input id="companyName" placeholder="Ej. Empresa SA" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+                    <Label htmlFor="companyName">Company Name (Optional)</Label>
+                    <Input id="companyName" placeholder="e.g. Acme Corp" value={companyName} onChange={e => setCompanyName(e.target.value)} />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="title">Título</Label>
-                      <Input id="title" placeholder="Sr., Sra., Ing." value={title} onChange={e => setTitle(e.target.value)} />
+                      <Label htmlFor="title">Title</Label>
+                      <Input id="title" placeholder="Mr., Mrs., Dr." value={title} onChange={e => setTitle(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">Nombre *</Label>
-                      <Input id="firstName" required placeholder="Ej. Juan" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input id="firstName" required placeholder="e.g. John" value={firstName} onChange={e => setFirstName(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Apellido *</Label>
-                      <Input id="lastName" required placeholder="Ej. Pérez" value={lastName} onChange={e => setLastName(e.target.value)} />
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input id="lastName" required placeholder="e.g. Doe" value={lastName} onChange={e => setLastName(e.target.value)} />
                     </div>
                   </div>
 
                   <div className="space-y-2 pt-2 border-t border-border/10">
-                    <Label htmlFor="street1">Línea de Calle 1 (Busca con Google) *</Label>
+                    <Label htmlFor="street1">Address Line 1 (Search with Google) *</Label>
                     <Autocomplete
                       apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
                       onPlaceSelected={handlePlaceSelected}
                       options={{ types: ["address"] }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Empieza a escribir una dirección..."
+                      placeholder="Start typing an address..."
                       defaultValue={street1}
                       onChange={(e: any) => setStreet1(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="street2">Línea de Calle 2 (Opcional)</Label>
-                    <Input id="street2" placeholder="Departamento, Suite, Piso..." value={street2} onChange={e => setStreet2(e.target.value)} />
+                    <Label htmlFor="street2">Address Line 2 (Optional)</Label>
+                    <Input id="street2" placeholder="Apt, Suite, Floor..." value={street2} onChange={e => setStreet2(e.target.value)} />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="city">Ciudad</Label>
-                      <Input id="city" placeholder="Ej. Madrid" value={city} onChange={e => setCity(e.target.value)} />
+                      <Label htmlFor="city">City</Label>
+                      <Input id="city" placeholder="e.g. New York" value={city} onChange={e => setCity(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="province">Provincia / Estado</Label>
-                      <Input id="province" placeholder="Ej. Madrid" value={province} onChange={e => setProvince(e.target.value)} />
+                      <Label htmlFor="province">State / Province</Label>
+                      <Input id="province" placeholder="e.g. NY" value={province} onChange={e => setProvince(e.target.value)} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="postalCode">Código Postal</Label>
-                      <Input id="postalCode" placeholder="28001" value={postalCode} onChange={e => setPostalCode(e.target.value)} />
+                      <Label htmlFor="postalCode">Postal Code</Label>
+                      <Input id="postalCode" placeholder="10001" value={postalCode} onChange={e => setPostalCode(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country">País</Label>
-                      <Input id="country" placeholder="España" value={country} onChange={e => setCountry(e.target.value)} />
+                      <Label htmlFor="country">Country</Label>
+                      <Input id="country" placeholder="USA" value={country} onChange={e => setCountry(e.target.value)} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/10">
                     <div className="space-y-2">
-                      <Label htmlFor="clientEmail">Email (Opcional)</Label>
-                      <Input id="clientEmail" type="email" placeholder="correo@ejemplo.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
+                      <Label htmlFor="clientEmail">Email (Optional)</Label>
+                      <Input id="clientEmail" type="email" placeholder="email@example.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="clientPhone">Teléfono (Opcional)</Label>
+                      <Label htmlFor="clientPhone">Phone (Optional)</Label>
                       <Input id="clientPhone" placeholder="+123456789" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
                     </div>
                   </div>
@@ -959,15 +1022,15 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
           <Card className="shadow-sm border-border/50">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-serif">Detalles del Proyecto</CardTitle>
+              <CardTitle className="text-lg font-serif">Project Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="projectName">Nombre del Proyecto *</Label>
-                <Input id="projectName" required placeholder="Ej. Remodelación Sala Principal" value={projectName} onChange={e => setProjectName(e.target.value)} />
+                <Label htmlFor="projectName">Project Name *</Label>
+                <Input id="projectName" required placeholder="e.g. Living Room Remodel" value={projectName} onChange={e => setProjectName(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="validUntil">Válida Hasta *</Label>
+                <Label htmlFor="validUntil">Valid Until *</Label>
                 <Input id="validUntil" type="date" required value={validUntil} onChange={e => setValidUntil(e.target.value)} />
               </div>
             </CardContent>
@@ -976,7 +1039,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
         <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
           <CardHeader className="pb-8 px-10 pt-10 flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-serif font-bold tracking-tight">Conceptos de Cotización</CardTitle>
+            <CardTitle className="text-2xl font-serif font-bold tracking-tight">Quote Items</CardTitle>
           </CardHeader>
           <CardContent className="px-10 pb-10">
             <datalist id="catalog-descriptions">
@@ -1020,7 +1083,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                 className="bg-primary text-white font-bold px-10 h-14 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]"
               >
                 <PlusCircle className="h-4 w-4" />
-                Agregar Ítem
+                Add Item
               </Button>
             </div>
           </CardContent>
@@ -1129,7 +1192,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             {!adjustments.find(a => a.type === 'discount') && (
               <button
                 type="button"
-                onClick={() => setAdjustments([...adjustments, { id: crypto.randomUUID(), label: 'Descuento', type: 'discount', value: 0, valueType: 'percentage' }])}
+                onClick={() => setAdjustments([...adjustments, { id: crypto.randomUUID(), label: 'Discount', type: 'discount', value: 0, valueType: 'percentage' }])}
                 className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:underline"
               >
                 <PlusCircle className="h-3 w-3" /> Add Discount
@@ -1245,21 +1308,39 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
               <DialogDescription>Define the upfront payment required and terms.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Required Deposit ($) - Depósito Requerido</Label>
-                <div className="relative">
-                  <Input 
-                    type="number" 
-                    placeholder="0.00" 
-                    value={requiredDeposit || ""}
-                    onChange={(e) => setRequiredDeposit(parseFloat(e.target.value) || 0)}
-                    className="rounded-xl pl-8"
-                  />
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Required Deposit ($)</Label>
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      placeholder="0.00" 
+                      value={requiredDeposit || ""}
+                      onChange={(e) => setRequiredDeposit(parseFloat(e.target.value) || 0)}
+                      className="rounded-xl pl-8"
+                    />
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Required Deposit (%)</Label>
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      placeholder="0" 
+                      value={requiredDeposit ? (isNaN(total) || total <= 0 ? 0 : Number(((requiredDeposit / total) * 100).toFixed(2))) : ""}
+                      onChange={(e) => {
+                         const pct = parseFloat(e.target.value) || 0;
+                         setRequiredDeposit(Number((total * pct / 100).toFixed(2)));
+                      }}
+                      className="rounded-xl pr-8"
+                    />
+                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Collected Amount ($) - Monto Depositado</Label>
+                <Label>Collected Amount ($)</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
@@ -1298,9 +1379,9 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                 <Sparkles className="h-32 w-32" />
               </div>
               <DialogHeader className="relative z-10">
-                <DialogTitle className="text-3xl font-serif font-black mb-2">Asistente de Diseño IA</DialogTitle>
+                <DialogTitle className="text-3xl font-serif font-black mb-2">AI Design Assistant</DialogTitle>
                 <DialogDescription className="text-white/80 text-lg leading-relaxed">
-                  Cuéntame un poco más sobre el proyecto y generaré una propuesta completa de items por ti.
+                  Tell me a little more about the project and I'll generate a complete quote proposal for you.
                 </DialogDescription>
               </DialogHeader>
             </div>
@@ -1308,24 +1389,24 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             <div className="p-8 space-y-6 bg-white">
               <div className="space-y-3">
                 <Label htmlFor="aiProjectName" className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                  Nombre del Proyecto
+                  Project Name
                   <span className="text-destructive">*</span>
                 </Label>
                 <Input 
                   id="aiProjectName"
-                  placeholder="Ej. Remodelación Cocina Colonial" 
+                  placeholder="e.g. Colonial Kitchen Remodel" 
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   className="h-14 rounded-2xl border-muted bg-muted/30 focus:bg-white transition-all text-lg font-bold"
                 />
-                <p className="text-[10px] text-muted-foreground/60 italic">Usa el nombre actual del proyecto o cámbialo aquí.</p>
+                <p className="text-[10px] text-muted-foreground/60 italic">Use the current project name or change it here.</p>
               </div>
 
               <div className="space-y-3">
-                <Label htmlFor="aiDesc" className="text-sm font-black uppercase tracking-widest text-muted-foreground">¿De qué trata el proyecto?</Label>
+                <Label htmlFor="aiDesc" className="text-sm font-black uppercase tracking-widest text-muted-foreground">What is the project about?</Label>
                 <Textarea 
                   id="aiDesc"
-                  placeholder="Describe los alcances... e.g. Cambio de pisos, pintura, iluminación LED, gabinetes empotrados." 
+                  placeholder="Describe the scope... e.g. Floor replacement, painting, LED lighting, built-in cabinets." 
                   value={aiProjectDescription}
                   onChange={(e) => setAIProjectDescription(e.target.value)}
                   className="min-h-[150px] rounded-2xl border-muted bg-muted/30 focus:bg-white transition-all p-4 leading-relaxed text-md resize-none"
@@ -1342,12 +1423,12 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                   {isGeneratingAI ? (
                     <div className="flex items-center gap-3">
                       <Loader2 className="h-6 w-6 animate-spin" />
-                      Generando Propuesta...
+                      Generating Proposal...
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
                       <Wand2 className="h-6 w-6" />
-                      Crear Cotización Mágica
+                      Create Magic Quote
                     </div>
                   )}
                 </Button>
@@ -1357,7 +1438,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                   onClick={() => setIsAIModalOpen(false)}
                   className="h-10 text-muted-foreground font-bold hover:bg-muted/50 rounded-xl"
                 >
-                  Cancelar
+                  Cancel
                 </Button>
               </div>
             </div>
@@ -1367,7 +1448,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         <div className="flex justify-end pt-4 pb-12">
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:-translate-y-1">
             <Save className="mr-2 h-5 w-5" />
-            {isSubmitting ? 'Guardando Proforma...' : mode === 'edit' ? 'Actualizar Proforma' : 'Generar y Guardar Proforma'}
+            {isSubmitting ? 'Saving Proforma...' : mode === 'edit' ? 'Update Proforma' : 'Generate and Save Proforma'}
           </Button>
         </div>
       </form>
