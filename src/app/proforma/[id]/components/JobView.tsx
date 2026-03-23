@@ -120,7 +120,6 @@ export function JobView({
   const [isAddingVisit, setIsAddingVisit] = React.useState(false);
   const [isAddingLabor, setIsAddingLabor] = React.useState(false);
   const [isAddingTask, setIsAddingTask] = React.useState(false);
-  const [isManagingTeam, setIsManagingTeam] = React.useState(false);
   const [isEmailingMaterials, setIsEmailingMaterials] = React.useState(false);
   const [isAddingLineItem, setIsAddingLineItem] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<any | null>(null);
@@ -669,10 +668,6 @@ export function JobView({
           <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm">
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Search</span>
-          </Button>
-          <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm" onClick={() => setIsManagingTeam(true)}>
-            <UserIcon className="h-4 w-4 text-[#0D3B47]" />
-            <span className="hidden sm:inline">Manage Team</span>
           </Button>
           <ProformaDropdownActions
             proformaId={id}
@@ -1895,12 +1890,6 @@ export function JobView({
           teamMembers={teamMembers}
           onClose={() => setIsAddingTask(false)}
           onSuccess={() => { setIsAddingTask(false); fetchTasks(); }}
-        />
-      )}
-      {isManagingTeam && (
-        <TeamMemberManager
-          onClose={() => setIsManagingTeam(false)}
-          onSuccess={() => { fetchTeamMembers(); }}
         />
       )}
       {/* Visit Modal */}
