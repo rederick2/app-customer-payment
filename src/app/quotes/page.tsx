@@ -3,6 +3,7 @@ import { PlusCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { QuotesList } from './components/QuotesList';
+import { ImportQuotesModal } from './components/ImportQuotesModal';
 
 export const revalidate = 0;
 
@@ -37,12 +38,15 @@ export default async function QuotesPage() {
           </div>
           <p className="text-muted-foreground">Listado completo de todas las cotizaciones y proformas.</p>
         </div>
-        <Link href="/proforma/new">
-          <Button className="bg-[#306C3E] hover:bg-[#265832] text-white shadow-md">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nueva Proforma
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ImportQuotesModal />
+          <Link href="/proforma/new">
+            <Button className="bg-[#306C3E] hover:bg-[#265832] text-white shadow-md">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Nueva Proforma
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <QuotesList initialProformas={proformas || []} />

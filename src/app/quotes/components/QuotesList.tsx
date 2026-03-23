@@ -135,17 +135,34 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <div className="flex items-center gap-1 mx-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "ghost"}
-                    size="sm"
-                    className={`h-8 w-8 rounded-lg p-0 text-xs font-bold ${currentPage === page ? 'bg-primary text-primary-foreground' : ''}`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {(() => {
+                  const pages = [];
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pages.push(i);
+                  } else {
+                    if (currentPage <= 4) {
+                      pages.push(1, 2, 3, 4, 5, '...', totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                    } else {
+                      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                    }
+                  }
+                  
+                  return pages.map((page, index) => (
+                    <Button
+                      key={`${page}-${index}`}
+                      variant={currentPage === page ? "default" : "ghost"}
+                      size="sm"
+                      className={`h-8 w-8 rounded-lg p-0 text-xs font-bold ${currentPage === page ? 'bg-primary text-primary-foreground' : ''} ${page === '...' ? 'cursor-default hover:bg-transparent pointer-events-none' : ''}`}
+                      onClick={() => {
+                        if (typeof page === 'number') setCurrentPage(page);
+                      }}
+                    >
+                      {page}
+                    </Button>
+                  ));
+                })()}
               </div>
               <Button
                 variant="outline"

@@ -704,7 +704,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 } else {
                   return (
                     <div className="flex justify-between items-center text-sm opacity-80">
-                      <span className="font-medium">Impuesto Estándar (16%)</span>
+                      <span className="font-medium">Tax (0%)</span>
                       <span className="font-mono">${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                   );
@@ -712,14 +712,24 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
               })()}
             </div>
 
-            {(proforma as any).deposit_amount > 0 && (
-              <div className="pt-4 border-t border-dashed border-[#0D3B47]/20 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Condición de Pago / Anticipo</span>
-                  <span className="font-mono font-bold text-[#306C3E] text-lg">
-                    ${(proforma as any).deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
+            {((proforma as any).deposit_amount > 0 || (proforma as any).required_deposit > 0) && (
+              <div className="pt-4 border-t border-dashed border-[#0D3B47]/20 mt-2 space-y-2">
+                {(proforma as any).required_deposit > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Depósito Requerido</span>
+                    <span className="font-mono font-bold text-primary text-lg">
+                      ${(proforma as any).required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
+                {(proforma as any).deposit_amount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Monto Depositado</span>
+                    <span className="font-mono font-bold text-[#306C3E] text-lg">
+                      ${(proforma as any).deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
                 {(proforma as any).payment_terms && (
                   <p className="text-[10px] text-muted-foreground/80 mt-1 text-right italic leading-snug">
                     {(proforma as any).payment_terms}

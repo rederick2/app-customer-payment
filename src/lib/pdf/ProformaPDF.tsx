@@ -164,9 +164,9 @@ interface ProformaPDFProps {
 }
 
 export default function ProformaPDF({ proforma, items, client }: ProformaPDFProps) {
-  const clientNameDisplay = client?.company_name || 
-    [client?.first_name, client?.last_name].filter(Boolean).join(' ') || 
-    client?.name || 
+  const clientNameDisplay = client?.company_name ||
+    [client?.first_name, client?.last_name].filter(Boolean).join(' ') ||
+    client?.name ||
     'Cliente';
 
   const proformaNumber = proforma.id.split('-')[0].toUpperCase();
@@ -176,7 +176,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        
+
         {/* Header */}
         <View style={styles.headerRow}>
           <View>
@@ -184,10 +184,10 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
             <Text style={styles.companySub}>Interior Design & Remodeling</Text>
           </View>
           <View>
-             <Text style={styles.proformaTitle}>Quote</Text>
-             <Text style={styles.proformaDetails}>Nº: {proformaNumber}</Text>
-             <Text style={styles.proformaDetails}>Date: {dateFormatted}</Text>
-             <Text style={styles.proformaDetails}>Valid until: {validUntilFormatted}</Text>
+            <Text style={styles.proformaTitle}>Quote</Text>
+            <Text style={styles.proformaDetails}>Nº: {proformaNumber}</Text>
+            <Text style={styles.proformaDetails}>Date: {dateFormatted}</Text>
+            <Text style={styles.proformaDetails}>Valid until: {validUntilFormatted}</Text>
           </View>
         </View>
 
@@ -213,7 +213,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
             <Text style={styles.colPrice}>Unit Price</Text>
             <Text style={styles.colTotal}>Total</Text>
           </View>
-          
+
           {items && items.map((item, i) => (
             <View wrap={false} key={i} style={styles.tableRow}>
               <View style={styles.colDesc}>
@@ -238,7 +238,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
               <Text style={styles.totalLabel}>Subtotal</Text>
               <Text>${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
             </View>
-            
+
             {(() => {
               const adjustments = (proforma.adjustments || []) as any[];
               const subtotal = proforma.subtotal;
@@ -265,7 +265,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
               } else {
                 return (
                   <View style={styles.totalsRow}>
-                    <Text style={styles.totalLabel}>Tax (16%)</Text>
+                    <Text style={styles.totalLabel}>Tax (0%)</Text>
                     <Text>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
                   </View>
                 );
@@ -277,9 +277,17 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
               <Text style={styles.mainTotalValue}>${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
             </View>
 
-            {proforma.deposit_amount > 0 && (
+            {proforma.required_deposit > 0 && (
               <View style={[styles.totalsRow, { marginTop: 10, borderTop: '1px dashed #e2e0d8', paddingTop: 8 }]}>
-                <Text style={[styles.totalLabel, { color: '#306C3E', fontSize: 10 }]}>Required Deposit</Text>
+                <Text style={[styles.totalLabel, { color: '#0D3B47', fontSize: 10 }]}>Depósito Requerido</Text>
+                <Text style={{ color: '#0D3B47', fontWeight: 'bold' }}>
+                  ${proforma.required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </Text>
+              </View>
+            )}
+            {proforma.deposit_amount > 0 && (
+              <View style={[styles.totalsRow, { marginTop: proforma.required_deposit > 0 ? 4 : 10, borderTop: proforma.required_deposit > 0 ? 'none' : '1px dashed #e2e0d8', paddingTop: proforma.required_deposit > 0 ? 0 : 8 }]}>
+                <Text style={[styles.totalLabel, { color: '#306C3E', fontSize: 10 }]}>Monto Depositado</Text>
                 <Text style={{ color: '#306C3E', fontWeight: 'bold' }}>
                   ${proforma.deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </Text>

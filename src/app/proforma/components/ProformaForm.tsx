@@ -378,6 +378,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   const [newTaxName, setNewTaxName] = useState("");
   const [newTaxPercent, setNewTaxPercent] = useState("");
   const [depositAmount, setDepositAmount] = useState<number>(initialData?.proforma?.deposit_amount || 0);
+  const [requiredDeposit, setRequiredDeposit] = useState<number>(initialData?.proforma?.required_deposit || 0);
   const [paymentTerms, setPaymentTerms] = useState<string>(initialData?.proforma?.payment_terms || "");
   const [isSavingTax, setIsSavingTax] = useState(false);
   
@@ -684,7 +685,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         total,
         adjustments: adjustments,
         payment_terms: paymentTerms,
-        deposit_amount: depositAmount
+        deposit_amount: depositAmount,
+        required_deposit: requiredDeposit
       };
 
       let proformaData;
@@ -1144,7 +1146,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             onClick={() => setIsDepositDialogOpen(true)}
             className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest hover:underline pt-2"
           >
-            {depositAmount > 0 ? `Deposit: $${depositAmount.toLocaleString()} - Edit` : "Add Deposit or Payment Schedule"}
+            {(depositAmount > 0 || requiredDeposit > 0) ? `Required: $${requiredDeposit.toLocaleString()} | Deposit: $${depositAmount.toLocaleString()} - Edit` : "Add Deposit or Payment Schedule"}
           </button>
         </div>
 
@@ -1232,7 +1234,20 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Deposit Amount ($)</Label>
+                <Label>Required Deposit ($) - Depósito Requerido</Label>
+                <div className="relative">
+                  <Input 
+                    type="number" 
+                    placeholder="0.00" 
+                    value={requiredDeposit || ""}
+                    onChange={(e) => setRequiredDeposit(parseFloat(e.target.value) || 0)}
+                    className="rounded-xl pl-8"
+                  />
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Collected Amount ($) - Monto Depositado</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
