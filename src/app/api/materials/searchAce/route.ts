@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     // LA CLAVE: Esperar 3 segundos extra para que el JavaScript de Ace Hardware 
     // termine de consultar el inventario de la tienda e inyecte los precios en el HTML.
     console.log("Esperando a que los precios locales carguen...");
-    await new Promise(resolve => setTimeout(resolve, 3500));
+    await new Promise(resolve => setTimeout(resolve, 5500));
 
     // 6. Extracción de los datos
     const products = await page.evaluate(() => {

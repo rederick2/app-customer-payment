@@ -497,7 +497,7 @@ export function JobView({
     setIsSodimacLoading(true);
     setSodimacResults([]);
     try {
-      const response = await fetch(`/api/materials/searchace?q=${encodeURIComponent(sodimacQuery)}`);
+      const response = await fetch(`/api/materials/searcha?q=${encodeURIComponent(sodimacQuery)}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || 'Error al buscar en Ace Hardware');
