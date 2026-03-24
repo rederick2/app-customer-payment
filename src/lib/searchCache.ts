@@ -21,33 +21,69 @@ type Material = {
 };
 
 function normalizeQuery(query: string): string {
-  return query.toLowerCase().trim();
+  // Replace hyphens with spaces so 'rust-oleum' and 'rustoleum' split consistently
+  return query.toLowerCase().trim().replace(/-/g, ' ').replace(/\s+/g, ' ');
 }
 
 /**
  * Returns cached materials for (store, query), or null if not cached / expired.
+ *
+ * Phase 1 — Exact match: looks for a row with the exact normalized query key.
+ * Phase 2 — Fuzzy match: if no exact match, searches inside ALL non-expired
+ *   cached results for this store and returns products whose name or description
+ *   contain at least one of the query words. This avoids hitting the scraping
+ *   API for queries that are subsets or variations of already-cached searches.
  */
 export async function getCached(
   store: string,
   query: string
 ): Promise<Material[] | null> {
-  const { data, error } = await supabase
+  const normalized = normalizeQuery(query);
+
+  // ── Phase 1: Exact key match ────────────────────────────────────────────
+  const { data: exact } = await supabase
     .from('material_search_cache')
     .select('results, expires_at')
     .eq('store', store)
-    .eq('query', normalizeQuery(query))
+    .eq('query', normalized)
     .single();
 
-  if (error || !data) return null;
-
-  // Check expiry
-  if (new Date(data.expires_at) <= new Date()) {
-    console.log(`[Cache EXPIRED] ${store}: "${query}"`);
-    return null;
+  if (exact && new Date(exact.expires_at) > new Date()) {
+    console.log(`[Cache HIT exact] ${store}: "${query}"`);
+    return exact.results as Material[];
   }
 
-  console.log(`[Cache HIT] ${store}: "${query}"`);
-  return data.results as Material[];
+  // ── Phase 2: Fuzzy search inside all cached results for this store ──────
+  // Only consider words longer than 2 chars to avoid noise ("de", "el", etc.)
+  const words = normalized.split(/\s+/).filter(w => w.length > 2);
+  if (words.length === 0) return null;
+
+  const { data: allEntries, error } = await supabase
+    .from('material_search_cache')
+    .select('results')
+    .eq('store', store)
+    .gt('expires_at', new Date().toISOString());
+
+  if (error || !allEntries || allEntries.length === 0) return null;
+
+  // Flatten all products from every cache entry and filter by query words
+  const allProducts: Material[] = allEntries.flatMap(e => e.results as Material[]);
+
+  const matched = allProducts.filter(product => {
+    // Normalize hyphens in haystack too so 'Rust-Oleum' matches 'rustoleum' or 'rust oleum'
+    const haystack = `${product.name} ${product.description ?? ''}`
+      .toLowerCase()
+      .replace(/-/g, ' ');
+    return words.every(word => haystack.includes(word));
+  });
+
+  if (matched.length > 0) {
+    console.log(`[Cache HIT fuzzy] ${store}: "${query}" — ${matched.length} product(s) found in existing cache`);
+    return matched.slice(0, 15);
+  }
+
+  console.log(`[Cache MISS] ${store}: "${query}" — will scrape`);
+  return null;
 }
 
 /**
