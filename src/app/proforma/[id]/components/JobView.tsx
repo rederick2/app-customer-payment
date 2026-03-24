@@ -2658,71 +2658,71 @@ function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
       }]);
 
     if (error) {
-      toast.error('Error al añadir item');
+      toast.error('Error adding item');
       console.error(error);
     } else {
-      toast.success('Item añadido correctamente');
+      toast.success('Item added successfully');
       onSuccess();
     }
     setIsSubmitting(false);
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-none">
-        <CardHeader className="bg-[#306C3E] text-white rounded-t-xl">
-          <CardTitle className="text-lg">Nuevo Item de Proforma</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New Proforma Item</DialogTitle>
+          <DialogDescription>Add a product or service line item to this proforma.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="description">Product / Service</Label>
+            <Input id="description" name="description" placeholder="Item name" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="details">Details</Label>
+            <textarea
+              id="details"
+              name="details"
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Detailed description..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Producto / Servicio</Label>
-              <Input id="description" name="description" placeholder="Nombre del item" required />
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input id="quantity" name="quantity" type="number" defaultValue="1" step="0.01" required />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="details">Detalles</Label>
-              <textarea
-                id="details"
-                name="details"
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Descripción detallada..."
-              />
+              <Label htmlFor="unit_price">Unit Price</Label>
+              <Input id="unit_price" name="unit_price" type="number" step="0.01" placeholder="0.00" required />
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Cantidad</Label>
-                <Input id="quantity" name="quantity" type="number" defaultValue="1" step="0.01" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit_price">Precio Unitario</Label>
-                <Input id="unit_price" name="unit_price" type="number" step="0.01" placeholder="0.00" required />
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cost">Estimated Cost</Label>
+              <Input id="cost" name="cost" type="number" step="0.01" placeholder="0.00" />
             </div>
+            <div className="flex items-center space-x-2 pt-8">
+              <Checkbox id="is_optional_modal" name="is_optional" />
+              <Label htmlFor="is_optional_modal">Is optional?</Label>
+            </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cost">Costo (Estimado)</Label>
-                <Input id="cost" name="cost" type="number" step="0.01" placeholder="0.00" />
-              </div>
-              <div className="flex items-center space-x-2 pt-8">
-                <Checkbox id="is_optional_modal" name="is_optional" />
-                <Label htmlFor="is_optional_modal">Is optional?</Label>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
+
