@@ -14,7 +14,7 @@ export function MonthlyBarChart({ data }: Props) {
         <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
         <YAxis tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} allowDecimals={false} width={28} />
         <Tooltip
-          formatter={(value: number) => [value, 'Quotes']}
+          formatter={(value) => [Number(value), 'Quotes']}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
           cursor={{ fill: 'rgba(13,59,71,0.05)' }}
         />

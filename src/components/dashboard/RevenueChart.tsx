@@ -3,6 +3,7 @@
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import type { ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface Props {
   data: { month: string; revenue: number }[];
@@ -28,9 +29,10 @@ export function RevenueChart({ data }: Props) {
           width={46}
         />
         <Tooltip
-          formatter={(value: number) =>
-            [`$${value.toLocaleString('en-US', { minimumFractionDigits: 0 })}`, 'Revenue']
-          }
+          formatter={(value: ValueType | undefined) => {
+            const num = typeof value === 'number' ? value : 0;
+            return [`$${num.toLocaleString('en-US', { minimumFractionDigits: 0 })}`, 'Revenue'];
+          }}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
         />
         <Area

@@ -43,7 +43,7 @@ export function StatusDonutChart({ data }: Props) {
           ))}
         </Pie>
         <Tooltip
-          formatter={(value: number, name: string) => [value, name]}
+          formatter={(value, name) => [value, name]}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
         />
         <Legend
