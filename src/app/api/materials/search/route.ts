@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chromium } from "playwright-core";
 
-const TOKEN = "2UClDYVduQry0Zua5d3befc1422d95fe36408ac0fa22701c9"; // Tu token de Browserless
+const TOKEN = process.env.BROWSERLESS_API_KEY; // Tu token de Browserless
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

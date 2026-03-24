@@ -115,6 +115,7 @@ export function JobView({
   const [sodimacQuery, setSodimacQuery] = React.useState('');
   const [sodimacResults, setSodimacResults] = React.useState<any[]>([]);
   const [isSodimacLoading, setIsSodimacLoading] = React.useState(false);
+  const [searchStore, setSearchStore] = React.useState<'homedepot' | 'ace'>('homedepot');
   const [isScanningExpense, setIsScanningExpense] = React.useState(false);
   const [isRecordingPayment, setIsRecordingPayment] = React.useState(false);
   const [isAddingVisit, setIsAddingVisit] = React.useState(false);
@@ -470,13 +471,36 @@ export function JobView({
     e.preventDefault();
     if (!sodimacQuery.trim()) return;
 
+    if (searchStore === 'ace') {
+      return handleSearchAce(e);
+    }
+
     setIsSodimacLoading(true);
     setSodimacResults([]);
     try {
       const response = await fetch(`/api/materials/search?q=${encodeURIComponent(sodimacQuery)}`);
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error || 'Error al buscar en Sodimac');
+      if (!response.ok) throw new Error(data.error || 'Error al buscar en Home Depot');
+      setSodimacResults(data.materials || []);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSodimacLoading(false);
+    }
+  };
+
+  const handleSearchAce = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sodimacQuery.trim()) return;
+
+    setIsSodimacLoading(true);
+    setSodimacResults([]);
+    try {
+      const response = await fetch(`/api/materials/searchAce?q=${encodeURIComponent(sodimacQuery)}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Error al buscar en Ace Hardware');
       setSodimacResults(data.materials || []);
     } catch (error: any) {
       toast.error(error.message);
@@ -1770,6 +1794,14 @@ export function JobView({
                 className="flex-1"
                 autoFocus
               />
+              <select
+                value={searchStore}
+                onChange={(e) => setSearchStore(e.target.value as 'homedepot' | 'ace')}
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="homedepot">Home Depot</option>
+                <option value="ace">Ace Hardware</option>
+              </select>
               <Button type="submit" disabled={isSodimacLoading} className="bg-[#306C3E] hover:bg-[#265832]">
                 {isSodimacLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
                 Search
@@ -1780,7 +1812,7 @@ export function JobView({
               {isSodimacLoading ? (
                 <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
                   <Loader2 className="h-8 w-8 animate-spin mb-4 text-[#306C3E]" />
-                  <p>Searching Sodimac...</p>
+                  <p>Searching {searchStore === 'ace' ? 'Ace Hardware' : 'Home Depot'}...</p>
                 </div>
               ) : sodimacResults.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
