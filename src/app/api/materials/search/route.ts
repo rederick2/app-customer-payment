@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chromium } from "playwright-core";
+import { getCached, setCached } from '@/lib/searchCache';
 
 const TOKEN = process.env.BROWSERLESS_API_KEY; // Tu token de Browserless
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q') || 'drywall';
+
+  // --- Supabase cache check ---
+  const cached = await getCached('homedepot', query);
+  if (cached) {
+    return NextResponse.json({ materials: cached, fromCache: true });
+  }
+  console.log(`[Cache MISS] Home Depot: "${query}" — iniciando scraping`);
 
   let browser;
 
@@ -166,7 +174,10 @@ export async function GET(request: NextRequest) {
 
     console.log(`Extracción exitosa: ${validProducts.length} productos obtenidos.`);
 
-    return NextResponse.json({ materials: validProducts });
+    // --- Persist to Supabase cache ---
+    await setCached('homedepot', query, validProducts);
+
+    return NextResponse.json({ materials: validProducts, fromCache: false });
 
   } catch (error: any) {
     console.error("Error en HD Scraping:", error.message);

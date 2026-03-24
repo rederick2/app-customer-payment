@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { getCached, setCached } from '@/lib/searchCache';
 
-const SCRAPINGBEE_API_KEY = process.env.SCRAPINGBEE_API_KEY; // Pega tu llave aquí
+const SCRAPINGBEE_API_KEY = process.env.SCRAPINGBEE_API_KEY;
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || 'drywall';
+
+    // --- Supabase cache check ---
+    const cached = await getCached('acehardware', query);
+    if (cached) {
+        return NextResponse.json({ materials: cached, fromCache: true });
+    }
+    console.log(`[Cache MISS] Ace Hardware: "${query}" — iniciando scraping`);
 
     const targetUrl = `https://www.acehardware.com/search?query=${encodeURIComponent(query)}`;
 
@@ -83,7 +91,10 @@ export async function GET(request: NextRequest) {
         const validProducts = products.slice(0, 15);
         console.log(`¡Éxito total! Extraídos ${validProducts.length} productos sin bloqueos.`);
 
-        return NextResponse.json({ materials: validProducts });
+        // --- Persist to Supabase cache ---
+        await setCached('acehardware', query, validProducts);
+
+        return NextResponse.json({ materials: validProducts, fromCache: false });
 
     } catch (error: any) {
         console.error("Error en extracción:", error.message);
