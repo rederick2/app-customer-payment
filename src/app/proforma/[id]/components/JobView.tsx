@@ -1018,7 +1018,7 @@ export function JobView({
                   <Mail className="h-4 w-4" /> Send Email
                 </Button>
                 <Button size="sm" variant="outline" className="h-8 gap-1 font-bold border-[#306C3E] text-[#306C3E] hover:bg-[#306C3E] hover:text-white" onClick={() => setIsSearchingSodimac(true)}>
-                  <span>Search Sodimac</span>
+                  <span>Search Materials</span>
                 </Button>
                 <Button size="sm" className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]" onClick={() => setIsAddingMaterial(true)}>
                   <span>AI Auto-Gen</span>
@@ -1756,9 +1756,9 @@ export function JobView({
       <Dialog open={isSearchingSodimac} onOpenChange={setIsSearchingSodimac}>
         <DialogContent className="sm:max-w-[700px] bg-background">
           <DialogHeader>
-            <DialogTitle>Sodimac Manual Search</DialogTitle>
+            <DialogTitle>Manual Search</DialogTitle>
             <DialogDescription>
-              Search products directly on Sodimac and add them to the proforma.
+              Search products directly and add them to the proforma.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4 min-h-[400px]">
@@ -1797,7 +1797,7 @@ export function JobView({
                         <a href={result.product_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-foreground leading-tight hover:underline line-clamp-2">
                           {result.name}
                         </a>
-                        <p className="text-sm font-bold text-emerald-600 mt-1">S/ {result.unit_price.toFixed(2)}</p>
+                        <p className="text-sm font-bold text-emerald-600 mt-1">$ {result.unit_price.toFixed(2)}</p>
                         <Button
                           size="sm"
                           className="mt-2 h-7 text-[10px] w-fit"
