@@ -58,10 +58,11 @@ export function JobsList({ initialProformas }: JobsListProps) {
                 <tr>
                   <th scope="col" className="px-6 py-4">Project</th>
                   <th scope="col" className="px-6 py-4">Client</th>
+                  <th scope="col" className="px-6 py-4">Address</th>
                   <th scope="col" className="px-6 py-4">Date</th>
                   <th scope="col" className="px-6 py-4">Status</th>
                   <th scope="col" className="px-6 py-4 text-right">Total</th>
-                  <th scope="col" className="px-6 py-4 text-right">Action</th>
+                  <th scope="col" className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
@@ -69,21 +70,32 @@ export function JobsList({ initialProformas }: JobsListProps) {
                   <tr
                     key={proforma.id}
                     className="group hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => router.push(`/proforma/${proforma.id}?view=quote`)}
+                    onClick={() => { }}
                   >
                     <td className="px-6 py-4">
                       <p className="font-bold text-foreground">{proforma.project_name}</p>
                       <p className="text-[10px] font-mono text-muted-foreground/60 uppercase">REF: {proforma.id.split('-')[0]}</p>
                     </td>
-                    <td className="px-6 py-4">{(proforma.clients as any)?.name || 'No Client'}</td>
+                    <td className="px-6 py-4"><a href={`/clients/${proforma.clients.id}`}>
+                      {(proforma.clients as any)?.name || 'No Client'}</a></td>
+                    <td className="px-6 py-4">{(proforma.clients as any)?.street_1 ? (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${proforma.clients.street_1}, ${proforma.clients.city}, ${proforma.clients.province} ${proforma.clients.postal_code}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-primary hover:underline transition-all"
+                      >
+                        {`${(proforma.clients as any)?.street_1}, ${(proforma.clients as any)?.city}, ${(proforma.clients as any)?.province} ${(proforma.clients as any)?.postal_code}`}
+                      </a>
+                    ) : '-'}</td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${proforma.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                          proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                            proforma.status === 'job' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                              'bg-muted/50 text-muted-foreground border-border/40'
+                        proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                          proforma.status === 'job' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                            'bg-muted/50 text-muted-foreground border-border/40'
                         }`}>
                         {proforma.status || 'draft'}
                       </span>
@@ -95,13 +107,9 @@ export function JobsList({ initialProformas }: JobsListProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 text-xs font-bold border-primary/20 hover:bg-primary/5 px-4 rounded-lg"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/proforma/${proforma.id}`);
-                        }}
+                        onClick={() => router.push(`/proforma/${proforma.id}`)}
                       >
-                        View Details
+                        View
                       </Button>
                     </td>
                   </tr>

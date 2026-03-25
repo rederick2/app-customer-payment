@@ -135,9 +135,16 @@ export function JobView({
   const [isAddingVisit, setIsAddingVisit] = React.useState(false);
   const [isAddingLabor, setIsAddingLabor] = React.useState(false);
   const [isAddingTask, setIsAddingTask] = React.useState(false);
+  const [editingTask, setEditingTask] = React.useState<any>(null);
   const [isEmailingMaterials, setIsEmailingMaterials] = React.useState(false);
   const [isAddingLineItem, setIsAddingLineItem] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<any | null>(null);
+  const [paymentToDelete, setPaymentToDelete] = React.useState<any | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = React.useState<any | null>(null);
+  const [laborToDelete, setLaborToDelete] = React.useState<any | null>(null);
+  const [taskToDelete, setTaskToDelete] = React.useState<any | null>(null);
+  const [editingPayment, setEditingPayment] = React.useState<any | null>(null);
+  const [editingLabor, setEditingLabor] = React.useState<any | null>(null);
 
   // Task media
   const [uploadingForTask, setUploadingForTask] = React.useState<any | null>(null);
@@ -408,6 +415,21 @@ export function JobView({
     }
   };
 
+  const handleDeletePayment = async (paymentId: string) => {
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', paymentId);
+
+    if (error) {
+      toast.error('Error al eliminar pago');
+    } else {
+      setPayments(prev => prev.filter(p => p.id !== paymentId));
+      toast.success('Pago eliminado');
+      setPaymentToDelete(null);
+    }
+  };
+
   const handleDeleteExpense = async (expenseId: string) => {
     const { error } = await supabase
       .from('job_expenses')
@@ -419,6 +441,7 @@ export function JobView({
     } else {
       setExpenses(prev => prev.filter(e => e.id !== expenseId));
       toast.success('Gasto eliminado');
+      setExpenseToDelete(null);
     }
   };
 
@@ -447,6 +470,7 @@ export function JobView({
     } else {
       setTimeEntries(prev => prev.filter(t => t.id !== laborId));
       toast.success('Labor eliminada');
+      setLaborToDelete(null);
     }
   };
 
@@ -475,6 +499,7 @@ export function JobView({
     } else {
       setTasks(prev => prev.filter(t => t.id !== taskId));
       toast.success('Tarea eliminada');
+      setTaskToDelete(null);
     }
   };
 
@@ -1430,15 +1455,10 @@ export function JobView({
                                 <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
                                   <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2" onClick={() => {
-                                  const start = task.due_date ? new Date(task.due_date).toISOString().replace(/-|:|\.\d\d\d/g, "") : new Date().toISOString().replace(/-|:|\.\d\d\d/g, "");
-                                  const end = new Date(new Date(task.due_date || new Date()).getTime() + 3600000).toISOString().replace(/-|:|\.\d\d\d/g, "");
-                                  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description || '')}&dates=${start}/${end}`;
-                                  window.open(url, '_blank');
-                                }}>
-                                  <CalendarDays className="h-3.5 w-3.5" /> Add to Google
+                                <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingTask(task)}>
+                                  <Pencil className="h-3.5 w-3.5" /> Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteTask(task.id)}>
+                                <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
                                   <Trash2 className="h-3.5 w-3.5" /> Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -1482,14 +1502,30 @@ export function JobView({
                           <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Date</th>
                           <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Method</th>
                           <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Amount</th>
+                          <th className="px-6 py-3 w-10 text-center font-black text-[10px] uppercase tracking-widest">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/30">
                         {payments.map(payment => (
-                          <tr key={payment.id} className="hover:bg-muted/5 transition-colors">
+                          <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
                             <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
                             <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
                             <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td className="px-6 py-4 text-center">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                  <MoreVertical className="h-4 w-4" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
+                                    <Pencil className="h-3.5 w-3.5" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
+                                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1580,7 +1616,7 @@ export function JobView({
                                         <Eye className="h-3.5 w-3.5" /> View File
                                       </DropdownMenuItem>
                                     )}
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(exp.id)}>
+                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
                                       <Trash2 className="h-3.5 w-3.5" /> Delete
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
@@ -1680,7 +1716,10 @@ export function JobView({
                                   <MoreVertical className="h-3.5 w-3.5" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-32">
-                                  <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handeDeleteLabor(entry.id)}>
+                                  <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}>
+                                    <Pencil className="h-3.5 w-3.5" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}>
                                     <Trash2 className="h-3.5 w-3.5" /> Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -2185,30 +2224,140 @@ export function JobView({
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Deletion Confirmation Dialogs */}
       <Dialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl border-b pb-4">Confirm Deletion</DialogTitle>
-            <DialogDescription className="py-4">
-              Are you sure you want to delete <strong>{itemToDelete?.description}</strong>? This action cannot be undone.
+            <DialogTitle>Eliminar Item</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar "{itemToDelete?.description}"? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-3 pt-2">
-            <Button variant="outline" className="flex-1 rounded-xl h-11 font-bold" onClick={() => setItemToDelete(null)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" className="flex-1 rounded-xl h-11 font-bold bg-red-600 hover:bg-red-700" onClick={() => handleDeleteItem(itemToDelete.id)}>
-              Delete Item
-            </Button>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setItemToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => handleDeleteItem(itemToDelete.id)}>Eliminar</Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!paymentToDelete} onOpenChange={(open) => !open && setPaymentToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Pago</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar este pago de ${Number(paymentToDelete?.amount).toLocaleString()}? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setPaymentToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => handleDeletePayment(paymentToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Gasto</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar el gasto "{expenseToDelete?.description || expenseToDelete?.place}"? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setExpenseToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => handleDeleteExpense(expenseToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!laborToDelete} onOpenChange={(open) => !open && setLaborToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Labor</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar esta entrada de labor para {laborToDelete?.user_name}? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setLaborToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => handeDeleteLabor(laborToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Tarea</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar la tarea "{taskToDelete?.title}"? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setTaskToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => handleDeleteTask(taskToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editing Modals */}
+      {editingPayment && (
+        <RecordPaymentModal
+          proformaId={id}
+          clientId={proforma.client_id}
+          payment={editingPayment}
+          onClose={() => setEditingPayment(null)}
+          onSuccess={() => {
+            setEditingPayment(null);
+            fetchPayments();
+          }}
+        />
+      )}
+
+      {editingLabor && (
+        <LaborFormModal
+          proformaId={id}
+          teamMembers={teamMembers}
+          entry={editingLabor}
+          onClose={() => setEditingLabor(null)}
+          onSuccess={() => {
+            setEditingLabor(null);
+            fetchTimeEntries();
+          }}
+        />
+      )}
+
+      {editingTask && (
+        <TaskFormModal
+          proformaId={id}
+          items={items}
+          teamMembers={teamMembers}
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSuccess={() => {
+            setEditingTask(null);
+            fetchTasks();
+          }}
+        />
+      )}
+
+      {isAddingLineItem && (
+        <LineItemFormModal
+          proformaId={id}
+          itemsCount={items.length}
+          itemPresets={itemPresets}
+          onClose={() => setIsAddingLineItem(false)}
+          onSuccess={() => {
+            fetchItems();
+            setIsAddingLineItem(false);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { proformaId: string, clientId: string, onClose: () => void, onSuccess: () => void }) {
+function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess, payment }: { proformaId: string, clientId: string, onClose: () => void, onSuccess: () => void, payment?: any }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const supabase = createClient();
 
@@ -2217,21 +2366,24 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
 
-    const { error } = await supabase
-      .from('payments')
-      .insert([{
-        proforma_id: proformaId,
-        client_id: clientId,
-        amount: parseFloat(formData.get('amount') as string),
-        payment_date: formData.get('payment_date'),
-        payment_method: formData.get('payment_method'),
-        notes: formData.get('notes')
-      }]);
+    const paymentData = {
+      proforma_id: proformaId,
+      client_id: clientId,
+      amount: parseFloat(formData.get('amount') as string),
+      payment_date: formData.get('payment_date'),
+      payment_method: formData.get('payment_method'),
+      type: 'payment',
+      notes: formData.get('notes')
+    };
+
+    const { error } = payment
+      ? await supabase.from('payments').update(paymentData).eq('id', payment.id)
+      : await supabase.from('payments').insert([paymentData]);
 
     if (error) {
-      toast.error('Error recording payment');
+      toast.error(payment ? 'Error updating payment' : 'Error recording payment');
     } else {
-      toast.success('Payment recorded successfully');
+      toast.success(payment ? 'Payment updated successfully' : 'Payment recorded successfully');
       onSuccess();
     }
     setIsSubmitting(false);
@@ -2241,21 +2393,21 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Record Payment</DialogTitle>
-          <DialogDescription>Log a payment received for this job.</DialogDescription>
+          <DialogTitle>{payment ? 'Edit Payment' : 'Record Payment'}</DialogTitle>
+          <DialogDescription>{payment ? 'Update the details of this payment.' : 'Log a payment received for this job.'}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="amount">Amount ($)</Label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" placeholder="0.00" required />
+              <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" defaultValue={payment?.amount} placeholder="0.00" required />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="payment_date">Payment Date</Label>
-            <Input id="payment_date" name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
+            <Input id="payment_date" name="payment_date" type="date" defaultValue={payment?.payment_date || new Date().toISOString().split('T')[0]} required />
           </div>
 
           <div className="space-y-2">
@@ -2263,6 +2415,7 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
             <select
               id="payment_method"
               name="payment_method"
+              defaultValue={payment?.payment_method || 'Cash'}
               className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               required
             >
@@ -2279,6 +2432,7 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
             <textarea
               id="notes"
               name="notes"
+              defaultValue={payment?.notes || ''}
               className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Additional details..."
             />
@@ -2287,7 +2441,7 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess }: { prof
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
             <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Record Payment'}
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : payment ? 'Update Payment' : 'Record Payment'}
             </Button>
           </div>
         </form>
@@ -2464,22 +2618,28 @@ function EditExpenseModal({ expense, onClose, onSuccess }: { expense: any, onClo
   );
 }
 
-function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
+function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: {
   proformaId: string,
   teamMembers: any[],
   onClose: () => void,
-  onSuccess: () => void
+  onSuccess: () => void,
+  entry?: any
 }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [startTime, setStartTime] = React.useState('17:33');
-  const [endTime, setEndTime] = React.useState('18:33');
-  const [hours, setHours] = React.useState(1);
-  const [minutes, setMinutes] = React.useState(0);
-  const [hourlyRate, setHourlyRate] = React.useState(0);
+  const [startTime, setStartTime] = React.useState(entry?.start_time || '08:00');
+  const [endTime, setEndTime] = React.useState(entry?.end_time || '17:00');
+  const [hours, setHours] = React.useState(entry?.hours || 8);
+  const [minutes, setMinutes] = React.useState(entry?.minutes || 0);
+  const [hourlyRate, setHourlyRate] = React.useState(entry?.hourly_rate || 0);
+  const [date, setDate] = React.useState(entry?.date || new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = React.useState(entry?.notes || '');
+  const [teamMemberId, setTeamMemberId] = React.useState(entry?.team_member_id || '');
+  
   const supabase = createClient();
 
   // Calculate hours/minutes when start/end time changes
   React.useEffect(() => {
+    if (!startTime || !endTime) return;
     const [startH, startM] = startTime.split(':').map(Number);
     const [endH, endM] = endTime.split(':').map(Number);
 
@@ -2495,32 +2655,30 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const laborData = {
+      proforma_id: proformaId,
+      team_member_id: teamMemberId,
+      user_name: teamMembers.find(m => m.id === teamMemberId)?.name,
+      duration: `${hours}h ${minutes}m`,
+      hours: hours,
+      minutes: minutes,
+      start_time: startTime,
+      end_time: endTime,
+      hourly_rate: hourlyRate,
+      total_cost: totalCost,
+      date: date,
+      notes: notes
+    };
 
-    const { error } = await supabase
-      .from('job_time_entries')
-      .insert([{
-        proforma_id: proformaId,
-        user_id: user?.id,
-        team_member_id: formData.get('team_member_id'),
-        user_name: teamMembers.find(m => m.id === formData.get('team_member_id'))?.name,
-        duration: `${hours}h ${minutes}m`,
-        hours: hours,
-        minutes: minutes,
-        start_time: startTime,
-        end_time: endTime,
-        hourly_rate: hourlyRate,
-        total_cost: totalCost,
-        date: formData.get('date'),
-        notes: formData.get('notes')
-      }]);
+    const { error } = entry
+      ? await supabase.from('job_time_entries').update(laborData).eq('id', entry.id)
+      : await supabase.from('job_time_entries').insert([laborData]);
 
     if (error) {
-      toast.error('Error logging time entry');
+      toast.error(entry ? 'Error updating labor' : 'Error logging labor');
     } else {
-      toast.success('Time entry logged successfully');
+      toast.success(entry ? 'Labor updated successfully' : 'Labor logged successfully');
       onSuccess();
     }
     setIsSubmitting(false);
@@ -2530,8 +2688,8 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Time Entry</DialogTitle>
-          <DialogDescription>Record a new shift or labor assignment.</DialogDescription>
+          <DialogTitle>{entry ? 'Edit Labor Entry' : 'Time Entry'}</DialogTitle>
+          <DialogDescription>{entry ? 'Update the details of this labor entry.' : 'Record a new shift or labor assignment.'}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Start / End Time */}
@@ -2590,7 +2748,8 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
               id="date"
               name="date"
               type="date"
-              defaultValue={new Date().toISOString().split('T')[0]}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               required
             />
           </div>
@@ -2601,9 +2760,12 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
             <select
               id="team_member_id"
               name="team_member_id"
+              value={teamMemberId}
               className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onChange={(e) => {
-                const selectedMember = teamMembers.find(m => m.id === e.target.value);
+                const id = e.target.value;
+                setTeamMemberId(id);
+                const selectedMember = teamMembers.find(m => m.id === id);
                 if (selectedMember && selectedMember.hourly_cost !== undefined) {
                   setHourlyRate(Number(selectedMember.hourly_cost));
                 }
@@ -2648,6 +2810,8 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
             <textarea
               id="notes"
               name="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
               className="w-full min-h-[70px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Record summary of work completed during this shift..."
             />
@@ -2656,7 +2820,7 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess }: {
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
             <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Log Time Entry'}
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : entry ? 'Update Labor' : 'Log Time Entry'}
             </Button>
           </div>
         </form>
@@ -2748,12 +2912,13 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
   );
 }
 
-function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
+function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess, task }: {
   proformaId: string,
   items: any[],
   teamMembers: any[],
   onClose: () => void,
-  onSuccess: () => void
+  onSuccess: () => void,
+  task?: any
 }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const supabase = createClient();
@@ -2763,23 +2928,25 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
 
-    const { error } = await supabase
-      .from('job_tasks')
-      .insert([{
-        proforma_id: proformaId,
-        proforma_item_id: (formData.get('proforma_item_id') as string) || null,
-        assigned_to: (formData.get('assigned_to') as string) || null,
-        title: formData.get('title') as string,
-        description: formData.get('description') as string,
-        due_date: formData.get('due_date') ? formatISO(new Date(formData.get('due_date') as string)) : null,
-        end_date: formData.get('end_date') ? formatISO(new Date(formData.get('end_date') as string)) : null,
-        status: 'pending'
-      }]);
+    const taskData = {
+      proforma_id: proformaId,
+      proforma_item_id: (formData.get('proforma_item_id') as string) || null,
+      assigned_to: (formData.get('assigned_to') as string) || null,
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      due_date: formData.get('due_date') ? formatISO(new Date(formData.get('due_date') as string)) : null,
+      end_date: formData.get('end_date') ? formatISO(new Date(formData.get('end_date') as string)) : null,
+      status: task ? task.status : 'pending'
+    };
+
+    const { error } = task
+      ? await supabase.from('job_tasks').update(taskData).eq('id', task.id)
+      : await supabase.from('job_tasks').insert([taskData]);
 
     if (error) {
-      toast.error('Error creating task');
+      toast.error(task ? 'Error updating task' : 'Error creating task');
     } else {
-      toast.success('Task created successfully');
+      toast.success(task ? 'Task updated successfully' : 'Task created successfully');
       onSuccess();
     }
     setIsSubmitting(false);
@@ -2789,13 +2956,15 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New Task</DialogTitle>
-          <DialogDescription>Create a task and optionally assign it to a team member.</DialogDescription>
+          <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
+          <DialogDescription>
+            {task ? 'Update task details and assignments.' : 'Create a task and optionally assign it to a team member.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="title">Task Title</Label>
-            <Input id="title" name="title" placeholder="e.g. Buy paint" required />
+            <Input id="title" name="title" defaultValue={task?.title} placeholder="e.g. Buy paint" required />
           </div>
 
           <div className="space-y-2">
@@ -2803,6 +2972,7 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
             <select
               id="proforma_item_id"
               name="proforma_item_id"
+              defaultValue={task?.proforma_item_id || ''}
               className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">None</option>
@@ -2817,6 +2987,7 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
             <select
               id="assigned_to"
               name="assigned_to"
+              defaultValue={task?.assigned_to || ''}
               className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Unassigned</option>
@@ -2829,11 +3000,21 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="due_date">Start Date/Time</Label>
-              <Input id="due_date" name="due_date" type="datetime-local" />
+              <Input
+                id="due_date"
+                name="due_date"
+                type="datetime-local"
+                defaultValue={task?.due_date ? format(new Date(task.due_date), "yyyy-MM-dd'T'HH:mm") : ''}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="end_date">End Date/Time</Label>
-              <Input id="end_date" name="end_date" type="datetime-local" />
+              <Input
+                id="end_date"
+                name="end_date"
+                type="datetime-local"
+                defaultValue={task?.end_date ? format(new Date(task.end_date), "yyyy-MM-dd'T'HH:mm") : ''}
+              />
             </div>
           </div>
 
@@ -2842,6 +3023,7 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
             <textarea
               id="description"
               name="description"
+              defaultValue={task?.description || ''}
               className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="Additional details..."
             />
@@ -2850,7 +3032,7 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
             <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create Task'}
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : task ? 'Update Task' : 'Create Task'}
             </Button>
           </div>
         </form>

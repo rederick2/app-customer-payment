@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 export default async function JobsPage() {
   const supabase = await createClient();
-  
+
   const { data: proformas, error } = await supabase
     .from('proformas')
     .select(`
@@ -17,7 +17,7 @@ export default async function JobsPage() {
       total,
       created_at,
       status,
-      clients ( name )
+      clients ( id, name, street_1, city, province, postal_code )
     `)
     .eq('status', 'job')
     .order('created_at', { ascending: false });
