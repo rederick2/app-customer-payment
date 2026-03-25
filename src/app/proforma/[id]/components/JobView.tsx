@@ -57,6 +57,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 interface JobViewProps {
   proforma: any;
@@ -110,6 +123,7 @@ export function JobView({
   const [isGeneratingMaterials, setIsGeneratingMaterials] = React.useState(false);
   const [aiMaterialPrompt, setAiMaterialPrompt] = React.useState('');
   const [isAddingMaterial, setIsAddingMaterial] = React.useState(false);
+  const [isAddingMaterialManually, setIsAddingMaterialManually] = React.useState(false);
 
   const [isSearchingSodimac, setIsSearchingSodimac] = React.useState(false);
   const [sodimacQuery, setSodimacQuery] = React.useState('');
@@ -125,11 +139,18 @@ export function JobView({
   const [isAddingLineItem, setIsAddingLineItem] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<any | null>(null);
 
+  // Task media
+  const [uploadingForTask, setUploadingForTask] = React.useState<any | null>(null);
+  const [taskMedia, setTaskMedia] = React.useState<Record<string, any[]>>({});
+  const [isUploadingMedia, setIsUploadingMedia] = React.useState(false);
+  const [mediaCaption, setMediaCaption] = React.useState('');
+
   // Expenses search and pagination state
   const [expenseSearchTerm, setExpenseSearchTerm] = React.useState('');
   const [expenseCurrentPage, setExpenseCurrentPage] = React.useState(1);
   const [selectedExpenseForEdit, setSelectedExpenseForEdit] = React.useState<any>(null);
   const [selectedFileUrl, setSelectedFileUrl] = React.useState<string | null>(null);
+  const [itemPresets, setItemPresets] = React.useState<any[]>([]);
 
   const itemsPerPage = 10;
 
@@ -255,6 +276,66 @@ export function JobView({
     }
   };
 
+  const fetchItemPresets = async () => {
+    const { data, error } = await supabase
+      .from('proforma_items')
+      .select('description, details, unit_price, cost')
+      .order('description', { ascending: true });
+
+    if (!error && data) {
+      // Group by description to get unique presets
+      const unique = data.reduce((acc: any[], cur: any) => {
+        if (!acc.find(item => item.description === cur.description)) {
+          acc.push(cur);
+        }
+        return acc;
+      }, []);
+      setItemPresets(unique);
+    }
+  };
+
+  const fetchTaskMedia = async (taskId: string) => {
+    const res = await fetch(`/api/tasks/${taskId}/media`);
+    if (res.ok) {
+      const { media } = await res.json();
+      setTaskMedia(prev => ({ ...prev, [taskId]: media || [] }));
+    }
+  };
+
+  const handleOpenMediaUpload = async (task: any) => {
+    setUploadingForTask(task);
+    setMediaCaption('');
+    await fetchTaskMedia(task.id);
+  };
+
+  const handleUploadTaskMedia = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !uploadingForTask) return;
+    setIsUploadingMedia(true);
+    try {
+      for (const file of Array.from(files)) {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('proforma_id', id);
+        form.append('caption', mediaCaption);
+        const res = await fetch(`/api/tasks/${uploadingForTask.id}/media`, {
+          method: 'POST',
+          body: form,
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Upload failed');
+        }
+      }
+      toast.success('Media uploaded successfully');
+      setMediaCaption('');
+      await fetchTaskMedia(uploadingForTask.id);
+    } catch (err: any) {
+      toast.error(err.message || 'Error uploading media');
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  };
+
   const fetchTeamMembers = async () => {
     const { data, error } = await supabase
       .from('team_members')
@@ -265,6 +346,10 @@ export function JobView({
       setTeamMembers(data || []);
     }
   };
+
+  React.useEffect(() => {
+    fetchItemPresets();
+  }, []);
 
   const handleStartEditing = (item: any) => {
     setEditingItemId(item.id);
@@ -1038,15 +1123,25 @@ export function JobView({
                 <CardTitle className="text-xl font-serif">Materials</CardTitle>
               </div>
               <div className="flex gap-2 w-full sm:w-auto overflow-x-auto">
-                <Button size="sm" variant="outline" className="h-8 gap-1 font-bold border-blue-600 text-blue-700 hover:bg-blue-50" onClick={() => setIsEmailingMaterials(true)}>
-                  <Mail className="h-4 w-4" /> Send Email
-                </Button>
-                <Button size="sm" variant="outline" className="h-8 gap-1 font-bold border-[#306C3E] text-[#306C3E] hover:bg-[#306C3E] hover:text-white" onClick={() => setIsSearchingSodimac(true)}>
-                  <span>Search Materials</span>
-                </Button>
-                <Button size="sm" className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]" onClick={() => setIsAddingMaterial(true)}>
-                  <span>AI Auto-Gen</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger render={<Button size="sm" className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]" />}>
+                    <Plus className="h-4 w-4" /> Add Materials
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsEmailingMaterials(true)}>
+                      <Mail className="h-4 w-4 text-blue-600" /> Send Email List
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsSearchingSodimac(true)}>
+                      <Search className="h-4 w-4 text-[#306C3E]" /> Search Products
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterial(true)}>
+                      <TrendingUp className="h-4 w-4 text-[#306C3E]" /> AI Auto-Gen
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterialManually(true)}>
+                      <Pencil className="h-4 w-4 text-[#306C3E]" /> Manual Add
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </CardHeader>
             <CardContent className="p-0 flex-1 flex flex-col">
@@ -1274,10 +1369,25 @@ export function JobView({
                             </button>
                           </td>
                           <td className="px-6 py-4">
-                            <h3 className={cn(
-                              "font-bold",
-                              task.status === 'completed' && "line-through text-muted-foreground"
-                            )}>{task.title}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className={cn(
+                                "font-bold",
+                                task.status === 'completed' && "line-through text-muted-foreground"
+                              )}>{task.title}</h3>
+                              {task.status === 'completed' && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 rounded-full text-emerald-600 hover:bg-emerald-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenMediaUpload(task);
+                                  }}
+                                >
+                                  <Camera className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
                             {task.description && (
                               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
                             )}
@@ -1316,7 +1426,10 @@ export function JobView({
                               <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
                                 <MoreVertical className="h-4 w-4" />
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
+                                  <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
+                                </DropdownMenuItem>
                                 <DropdownMenuItem className="text-xs gap-2" onClick={() => {
                                   const start = task.due_date ? new Date(task.due_date).toISOString().replace(/-|:|\.\d\d\d/g, "") : new Date().toISOString().replace(/-|:|\.\d\d\d/g, "");
                                   const end = new Date(new Date(task.due_date || new Date()).getTime() + 3600000).toISOString().replace(/-|:|\.\d\d\d/g, "");
@@ -1905,6 +2018,7 @@ export function JobView({
         <EmailMaterialsModal
           proformaId={id}
           projectName={proforma.project_name}
+          teamMembers={teamMembers}
           openOverride={isEmailingMaterials}
           setOpenOverride={setIsEmailingMaterials}
         />
@@ -1935,6 +2049,84 @@ export function JobView({
           }}
         />
       )}
+
+      {/* Task Media Upload Dialog */}
+      <Dialog open={!!uploadingForTask} onOpenChange={(open) => !open && setUploadingForTask(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold">
+              <Camera className="h-4 w-4 text-emerald-600" />
+              Upload Work Media
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {uploadingForTask?.title}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            {/* Caption */}
+            <div className="space-y-1">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Caption (optional)</Label>
+              <Input
+                placeholder="e.g. Tile installation completed"
+                value={mediaCaption}
+                onChange={e => setMediaCaption(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+
+            {/* File Picker */}
+            <div>
+              <label className="cursor-pointer block">
+                <div className={cn(
+                  "border-2 border-dashed border-border/50 rounded-xl p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-all",
+                  isUploadingMedia && "opacity-60 pointer-events-none"
+                )}>
+                  {isUploadingMedia ? (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                      <p className="text-sm font-medium">Uploading…</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Camera className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-sm font-medium">Click to select photos or videos</p>
+                      <p className="text-xs">JPG, PNG, WEBP, MP4 supported</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+                  onChange={e => handleUploadTaskMedia(e.target.files)}
+                  disabled={isUploadingMedia}
+                />
+              </label>
+            </div>
+
+            {/* Uploaded media thumbnails */}
+            {uploadingForTask && (taskMedia[uploadingForTask.id] || []).length > 0 && (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Uploaded</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {(taskMedia[uploadingForTask.id] || []).map((m: any) => (
+                    <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer"
+                      className="block aspect-square rounded-lg overflow-hidden border border-border/50 hover:opacity-80 transition-opacity bg-muted/10">
+                      {m.type === 'video' ? (
+                        <video src={m.url} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={m.url} alt={m.caption || 'media'} className="w-full h-full object-cover" />
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* File Viewer Modal */}
       <Dialog open={!!selectedFileUrl} onOpenChange={(open) => !open && setSelectedFileUrl(null)}>
@@ -1970,10 +2162,21 @@ export function JobView({
           </div>
         </DialogContent>
       </Dialog>
+      {isAddingMaterialManually && (
+        <ManualMaterialFormModal
+          proformaId={id}
+          onClose={() => setIsAddingMaterialManually(false)}
+          onSuccess={() => {
+            //fetchMaterials();
+            setIsAddingMaterialManually(false);
+          }}
+        />
+      )}
       {isAddingLineItem && (
         <LineItemFormModal
           proformaId={id}
           itemsCount={items.length}
+          itemPresets={itemPresets}
           onClose={() => setIsAddingLineItem(false)}
           onSuccess={() => {
             fetchItems();
@@ -2657,35 +2860,53 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess }: {
 }
 
 
-function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
+function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, onSuccess }: {
   proformaId: string,
   itemsCount: number,
+  itemPresets?: any[],
   onClose: () => void,
   onSuccess: () => void
 }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [comboboxOpen, setComboboxOpen] = React.useState(false);
+
+  // Controlled fields
+  const [description, setDescription] = React.useState('');
+  const [details, setDetails] = React.useState('');
+  const [quantity, setQuantity] = React.useState('1');
+  const [unitPrice, setUnitPrice] = React.useState('0.00');
+  const [cost, setCost] = React.useState('0.00');
+  const [isOptional, setIsOptional] = React.useState(false);
+
   const supabase = createClient();
+
+  const handleSelectPreset = (preset: any) => {
+    setDescription(preset.description || '');
+    setDetails(preset.details || '');
+    setUnitPrice((preset.unit_price || 0).toString());
+    setCost((preset.cost || 0).toString());
+    setComboboxOpen(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
 
-    const quantity = parseFloat(formData.get('quantity') as string) || 1;
-    const unitPrice = parseFloat(formData.get('unit_price') as string) || 0;
-    const totalPrice = quantity * unitPrice;
+    const qty = parseFloat(quantity) || 1;
+    const price = parseFloat(unitPrice) || 0;
+    const totalPrice = qty * price;
 
     const { error } = await supabase
       .from('proforma_items')
       .insert([{
         proforma_id: proformaId,
-        description: formData.get('description') as string,
-        details: formData.get('details') as string,
-        quantity: quantity,
-        unit_price: unitPrice,
+        description: description,
+        details: details,
+        quantity: qty,
+        unit_price: price,
         total_price: totalPrice,
-        cost: parseFloat(formData.get('cost') as string) || 0,
-        is_optional: formData.get('is_optional') === 'on',
+        cost: parseFloat(cost) || 0,
+        is_optional: isOptional,
         sort_order: itemsCount
       }]);
 
@@ -2709,14 +2930,65 @@ function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="description">Product / Service</Label>
-            <Input id="description" name="description" placeholder="Item name" required />
+            <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+              <PopoverTrigger render={<div className="relative" />}>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Item name"
+                  autoComplete="off"
+                  required
+                />
+                {itemPresets.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-0 hover:bg-transparent"
+                    onClick={() => setComboboxOpen(!comboboxOpen)}
+                  >
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", comboboxOpen && "rotate-180")} />
+                  </Button>
+                )}
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search existing items..." />
+                  <CommandList className="max-h-[300px] overflow-y-auto">
+                    <CommandEmpty>No previous items found.</CommandEmpty>
+                    <CommandGroup heading="Recent Items">
+                      {itemPresets.map((preset, idx) => (
+                        <CommandItem
+                          key={idx}
+                          value={preset.description}
+                          onSelect={() => handleSelectPreset(preset)}
+                          className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <span className="font-bold">{preset.description}</span>
+                            <span className="text-xs font-bold text-emerald-600">$ {preset.unit_price.toFixed(2)}</span>
+                          </div>
+                          {preset.details && (
+                            <div className="text-xs text-muted-foreground truncate w-full">
+                              {preset.details}
+                            </div>
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="details">Details</Label>
             <textarea
               id="details"
-              name="details"
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
               className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="Detailed description..."
             />
@@ -2725,21 +2997,47 @@ function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
-              <Input id="quantity" name="quantity" type="number" defaultValue="1" step="0.01" required />
+              <Input
+                id="quantity"
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                step="0.01"
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="unit_price">Unit Price</Label>
-              <Input id="unit_price" name="unit_price" type="number" step="0.01" placeholder="0.00" required />
+              <Input
+                id="unit_price"
+                type="number"
+                value={unitPrice}
+                onChange={(e) => setUnitPrice(e.target.value)}
+                step="0.01"
+                placeholder="0.00"
+                required
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cost">Estimated Cost</Label>
-              <Input id="cost" name="cost" type="number" step="0.01" placeholder="0.00" />
+              <Input
+                id="cost"
+                type="number"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                step="0.01"
+                placeholder="0.00"
+              />
             </div>
             <div className="flex items-center space-x-2 pt-8">
-              <Checkbox id="is_optional_modal" name="is_optional" />
+              <Checkbox
+                id="is_optional_modal"
+                checked={isOptional}
+                onCheckedChange={(checked) => setIsOptional(checked as boolean)}
+              />
               <Label htmlFor="is_optional_modal">Is optional?</Label>
             </div>
           </div>
@@ -2758,3 +3056,95 @@ function LineItemFormModal({ proformaId, itemsCount, onClose, onSuccess }: {
   );
 }
 
+function ManualMaterialFormModal({ proformaId, onClose, onSuccess }: {
+  proformaId: string,
+  onClose: () => void,
+  onSuccess: () => void
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+
+    const quantity = parseFloat(formData.get('quantity') as string) || 1;
+    const unitPrice = parseFloat(formData.get('unit_price') as string) || 0;
+    const totalPrice = quantity * unitPrice;
+
+    const { error } = await supabase
+      .from('job_materials')
+      .insert([{
+        proforma_id: proformaId,
+        name: formData.get('name') as string,
+        description: formData.get('description') as string,
+        quantity: quantity,
+        unit_price: unitPrice,
+        total_price: totalPrice,
+        is_purchased: false
+      }]);
+
+    if (error) {
+      toast.error('Error adding material');
+      console.error(error);
+    } else {
+      toast.success('Material added successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Pencil className="h-5 w-5 text-[#306C3E]" />
+            New Manual Material
+          </DialogTitle>
+          <DialogDescription>Add a material manually without searching online.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="name">Material Name</Label>
+            <Input id="name" name="name" placeholder="e.g. 5 Gallon White Paint" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input id="quantity" name="quantity" type="number" defaultValue="1" step="0.01" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unit_price">Unit Price ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground font-bold" />
+                <Input id="unit_price" name="unit_price" type="number" step="0.01" className="pl-8" placeholder="0.00" required />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Notes / Details (Optional)</Label>
+            <textarea
+              id="description"
+              name="description"
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder="e.g. Specific brand or color codes..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Material'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

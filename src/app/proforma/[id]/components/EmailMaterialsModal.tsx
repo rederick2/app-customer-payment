@@ -5,14 +5,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Loader2, X, FileText } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { sendMaterialsEmail } from './actions';
-import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Mail, Loader2, X, FileText, Check, ChevronsUpDown } from 'lucide-react';
 
 interface EmailMaterialsModalProps {
   proformaId: string;
   projectName: string;
+  teamMembers?: any[];
   openOverride?: boolean;
   setOpenOverride?: (open: boolean) => void;
 }
@@ -20,6 +24,7 @@ interface EmailMaterialsModalProps {
 export default function EmailMaterialsModal({ 
   proformaId, 
   projectName, 
+  teamMembers = [],
   openOverride,
   setOpenOverride
 }: EmailMaterialsModalProps) {
@@ -29,6 +34,8 @@ export default function EmailMaterialsModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailTo, setEmailTo] = useState('');
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
 
   const defaultSubject = `Materials List - Project ${projectName}`;
   const defaultMessage = `Hi team,\n\nPlease find attached the Materials List for the project: ${projectName}.\n\nLet me know if you have any questions.\n\nBest,\n\nEstudioPro`;
@@ -76,38 +83,85 @@ export default function EmailMaterialsModal({
            <div className="flex-1 p-6 overflow-y-auto bg-white">
               <div className="space-y-5">
                 
-                {/* To Field */}
+                {/* Recipient Selection (To) */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground uppercase">To</label>
-                  <div className="flex items-center min-h-[40px] px-3 border border-border/50 rounded-md bg-white focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                     {emailTo ? (
-                        <div className="flex items-center gap-1 bg-muted/50 px-2.5 py-1 rounded-full text-sm font-medium border border-border/80">
-                           {emailTo}
-                           <button type="button" onClick={() => setEmailTo('')} className="text-muted-foreground hover:text-foreground ml-1">
-                              <X className="h-3.5 w-3.5" />
-                           </button>
-                        </div>
-                     ) : (
-                        <input 
-                          type="email" 
-                          placeholder="Enter team member email..." 
-                          className="flex-1 outline-none bg-transparent text-sm min-w-[120px]"
-                          onBlur={(e) => {
-                             if(e.target.value) setEmailTo(e.target.value);
-                             e.target.value = '';
-                          }}
+                  <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                    <PopoverTrigger
+                      role="combobox"
+                      aria-expanded={comboboxOpen}
+                      className="w-full justify-between h-auto py-3 font-normal bg-white border border-border/50 hover:bg-muted/5 text-left rounded-md px-3 flex items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      {(() => {
+                        const selectedMember = selectedMemberId ? teamMembers.find(m => m.id === selectedMemberId) : null;
+                        
+                        if (selectedMember) {
+                          return (
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-bold text-foreground truncate">{selectedMember.name}</span>
+                              <span className="text-xs text-muted-foreground truncate">{selectedMember.email}</span>
+                            </div>
+                          );
+                        }
+                        
+                        return emailTo ? (
+                          <div className="flex items-center gap-1 bg-muted/50 px-2.5 py-1 rounded-full text-sm font-medium border border-border/80">
+                             {emailTo}
+                             <button type="button" onClick={(e) => { e.stopPropagation(); setEmailTo(''); setSelectedMemberId(null); }} className="text-muted-foreground hover:text-foreground ml-1">
+                                <X className="h-3.5 w-3.5" />
+                             </button>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Select team member or enter email...</span>
+                        );
+                      })()}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Search team members or type email..." 
                           onKeyDown={(e) => {
-                             if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
-                                e.preventDefault();
-                                if(e.currentTarget.value) {
-                                   setEmailTo(e.currentTarget.value);
-                                   e.currentTarget.value = '';
-                                }
-                             }
+                            if (e.key === 'Enter') {
+                              const value = e.currentTarget.value;
+                              if (value && value.includes('@')) {
+                                setEmailTo(value);
+                                setSelectedMemberId(null);
+                                setComboboxOpen(false);
+                              }
+                            }
                           }}
                         />
-                     )}
-                  </div>
+                        <CommandList className="max-h-[250px] overflow-y-auto">
+                          <CommandEmpty>
+                            <p className="p-4 text-sm text-muted-foreground">No team members found. Press Enter to use manual email.</p>
+                          </CommandEmpty>
+                          <CommandGroup heading="Team Members">
+                            {teamMembers.map((member) => (
+                              <CommandItem
+                                key={member.id}
+                                value={`${member.name} ${member.email || ''} ${member.id}`}
+                                onSelect={() => {
+                                  setEmailTo(member.email || '');
+                                  setSelectedMemberId(member.id);
+                                  setComboboxOpen(false);
+                                }}
+                                className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
+                              >
+                                <div className="flex w-full items-center justify-between">
+                                  <span className="font-bold">{member.name}</span>
+                                  {selectedMemberId === member.id && <Check className="h-4 w-4 text-primary" />}
+                                </div>
+                                <div className="text-sm text-muted-foreground truncate w-full">
+                                  {member.email || 'No email provided'}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <input type="hidden" name="to" value={emailTo} required />
                 </div>
 

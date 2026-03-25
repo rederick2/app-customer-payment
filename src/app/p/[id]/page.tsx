@@ -60,6 +60,23 @@ export default async function PublicProformaView({ params }: Props) {
     .eq('proforma_id', id)
     .order('sort_order', { ascending: true });
 
+  // Fetch task media for Work Progress gallery
+  const { data: taskMediaRows } = await supabase
+    .from('task_media')
+    .select('*, job_tasks(title)')
+    .eq('proforma_id', id)
+    .order('created_at', { ascending: true });
+
+  // Group media by task
+  const mediaByTask: Record<string, { taskTitle: string; items: any[] }> = {};
+  for (const row of taskMediaRows || []) {
+    const taskTitle = row.job_tasks?.title || 'Task';
+    if (!mediaByTask[row.task_id]) {
+      mediaByTask[row.task_id] = { taskTitle, items: [] };
+    }
+    mediaByTask[row.task_id].items.push(row);
+  }
+
   return (
     <div className="px-6 py-8 md:p-12 max-w-5xl mx-auto animate-in fade-in duration-500">
 
@@ -253,6 +270,61 @@ export default async function PublicProformaView({ params }: Props) {
             Precios válidos hasta la fecha indicada. Para iniciar el proyecto se requiere un anticipo del 60%.
           </p>
         </div>
+
+        {/* Work Progress Gallery */}
+        {Object.keys(mediaByTask).length > 0 && (
+          <div className="mt-8 border-t border-border/50 pt-8 relative z-20 print:hidden">
+            <h2 className="text-xl font-serif font-bold text-foreground mb-1">Work Progress</h2>
+            <p className="text-sm text-muted-foreground mb-6">Photos and videos from completed tasks</p>
+            <div className="space-y-8">
+              {Object.values(mediaByTask).map((group) => (
+                <div key={group.taskTitle}>
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+                    {group.taskTitle}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {group.items.map((m: any) => (
+                      <a
+                        key={m.id}
+                        href={m.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block group relative aspect-square rounded-xl overflow-hidden border border-border/50 bg-muted/10 hover:shadow-md transition-all"
+                      >
+                        {m.type === 'video' ? (
+                          <>
+                            <video
+                              src={m.url}
+                              className="w-full h-full object-cover"
+                              muted
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                              <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </>
+                        ) : (
+                          <img
+                            src={m.url}
+                            alt={m.caption || group.taskTitle}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        )}
+                        {m.caption && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+                            <p className="text-white text-[10px] truncate">{m.caption}</p>
+                          </div>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
