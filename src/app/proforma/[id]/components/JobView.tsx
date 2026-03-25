@@ -145,6 +145,19 @@ export function JobView({
   const [taskToDelete, setTaskToDelete] = React.useState<any | null>(null);
   const [editingPayment, setEditingPayment] = React.useState<any | null>(null);
   const [editingLabor, setEditingLabor] = React.useState<any | null>(null);
+  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
+
+  const toggleItemExpansion = (itemId: string) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
 
   // Task media
   const [uploadingForTask, setUploadingForTask] = React.useState<any | null>(null);
@@ -993,10 +1006,32 @@ export function JobView({
                         <td className="px-4 py-5 text-center">
                           <Checkbox checked={!item.is_optional} className="opacity-100 cursor-default" />
                         </td>
-                        <td className="px-6 py-4">
-                          <p className="font-bold text-emerald-700">{item.description}</p>
+                        <td className="px-6 py-4 max-w-md">
+                          <p className="font-bold text-[#0D3B47] text-base leading-tight">{item.description}</p>
                           {item.details && (
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{item.details}</p>
+                            <div className="mt-1.5">
+                              <p className={cn(
+                                "text-sm text-muted-foreground leading-relaxed transition-all duration-300 whitespace-pre-wrap",
+                                !expandedItems.has(item.id) && "line-clamp-2"
+                              )}>
+                                {item.details}
+                              </p>
+                              {item.details.length > 100 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleItemExpansion(item.id);
+                                  }}
+                                  className="text-[10px] font-black uppercase tracking-widest text-[#306C3E] hover:text-[#265832] mt-1 flex items-center gap-1 group"
+                                >
+                                  {expandedItems.has(item.id) ? (
+                                    <>Ver menos <ChevronUp className="h-3 w-3 transition-transform group-hover:-translate-y-0.5" /></>
+                                  ) : (
+                                    <>Leer más <ChevronDown className="h-3 w-3 transition-transform group-hover:translate-y-0.5" /></>
+                                  )}
+                                </button>
+                              )}
+                            </div>
                           )}
                         </td>
                         <td className="px-4 py-4 text-center">
@@ -1102,8 +1137,28 @@ export function JobView({
                       <div className="flex gap-3">
                         <Checkbox checked={!item.is_optional} className="mt-1" />
                         <div>
-                          <p className="font-bold text-emerald-700 leading-tight">{item.description}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{item.details}</p>
+                          <p className="font-bold text-[#0D3B47] leading-tight">{item.description}</p>
+                          {item.details && (
+                            <div className="mt-1">
+                              <p className={cn(
+                                "text-[11px] text-muted-foreground leading-relaxed transition-all duration-300",
+                                !expandedItems.has(item.id) && "line-clamp-2"
+                              )}>
+                                {item.details}
+                              </p>
+                              {item.details.length > 60 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleItemExpansion(item.id);
+                                  }}
+                                  className="text-[9px] font-black uppercase tracking-widest text-[#306C3E] mt-1"
+                                >
+                                  {expandedItems.has(item.id) ? 'Ver menos' : 'Leer más'}
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">

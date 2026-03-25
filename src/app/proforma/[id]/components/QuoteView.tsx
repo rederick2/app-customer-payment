@@ -292,75 +292,93 @@ function SortableRow({
   }
 
   return (
-    <tr
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "group transition-all hover:bg-muted/30 cursor-pointer align-top",
-        isDragging && "bg-accent shadow-lg ring-1 ring-primary/20",
-        item.is_excluded && "opacity-60 grayscale-[0.3]"
-      )}
-      onClick={onEdit}
-    >
-      <td className="px-4 py-5 text-center">
-        {!isReadOnly && !isEditing && (
-          <div
-            {...attributes}
-            {...listeners}
-            className="p-1.5 rounded hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground/50 group-hover:text-muted-foreground transition-colors"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <GripVertical className="h-4 w-4" />
-          </div>
+    <React.Fragment>
+      <tr
+        ref={setNodeRef}
+        style={style}
+        className={cn(
+          "group transition-all hover:bg-muted/30 cursor-pointer align-top",
+          isDragging && "bg-accent shadow-lg ring-1 ring-primary/20",
+          item.is_excluded && "opacity-60 grayscale-[0.3]"
         )}
-      </td>
-      <td className="px-4 py-5 text-center">
-        {item.is_optional && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <Checkbox
-              checked={!item.is_excluded}
-              disabled={isReadOnly}
-              onCheckedChange={(checked) => {
-                onToggleExcluded(item.id, !checked);
-              }}
-              className={cn(
-                "opacity-100",
-                !isReadOnly ? "cursor-pointer" : "cursor-default"
-              )}
-            />
-          </div>
-        )}
-      </td>
-      <td className="px-4 py-4">
-        <div className="font-bold text-foreground text-md flex items-center gap-2">
-          {item.description}
-          {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
-        </div>
-        {item.details && (
-          <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed italic">{item.details}</div>
-        )}
-      </td>
-      <td className="px-4 py-4 text-center">
-        <div onClick={(e) => e.stopPropagation()}>
-          {item.photo_url ? (
-            <LineItemImage
-              src={item.photo_url}
-              alt={item.description}
-              className="h-14 w-14 mx-auto rounded-lg shadow-sm group-hover:shadow transition-shadow"
-            />
-          ) : (
-            <div className="h-14 w-14 mx-auto bg-muted/10 rounded-lg border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors">
-              <ZoomIn className="h-4 w-4" />
+        onClick={onEdit}
+      >
+        <td className="px-4 py-5 text-center">
+          {!isReadOnly && !isEditing && (
+            <div
+              {...attributes}
+              {...listeners}
+              className="p-1.5 rounded hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground/50 group-hover:text-muted-foreground transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GripVertical className="h-4 w-4" />
             </div>
           )}
-        </div>
-      </td>
-      <td className="px-4 py-4 text-right tabular-nums">{item.quantity}</td>
-      <td className="px-4 py-4 text-right tabular-nums">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-      <td className={cn("px-4 py-4 text-right font-bold tabular-nums", item.is_excluded ? "text-muted-foreground line-through decoration-primary/40" : "text-foreground")}>
-        ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-      </td>
-    </tr>
+        </td>
+        <td className="px-4 py-5 text-center">
+          {item.is_optional && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <Checkbox
+                checked={!item.is_excluded}
+                disabled={isReadOnly}
+                onCheckedChange={(checked) => {
+                  onToggleExcluded(item.id, !checked);
+                }}
+                className={cn(
+                  "opacity-100",
+                  !isReadOnly ? "cursor-pointer" : "cursor-default"
+                )}
+              />
+            </div>
+          )}
+        </td>
+        <td className="px-4 py-5">
+          <div className="font-bold text-[#0D3B47] text-base flex items-center gap-2">
+            {item.description}
+            {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
+          </div>
+        </td>
+        <td className="px-4 py-4 text-center">
+          <div onClick={(e) => e.stopPropagation()}>
+            {item.photo_url ? (
+              <LineItemImage
+                src={item.photo_url}
+                alt={item.description}
+                className="h-14 w-14 mx-auto rounded-lg shadow-sm group-hover:shadow transition-shadow"
+              />
+            ) : (
+              <div className="h-14 w-14 mx-auto bg-muted/10 rounded-lg border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors">
+                <ZoomIn className="h-4 w-4" />
+              </div>
+            )}
+          </div>
+        </td>
+        <td className="px-4 py-5 text-right tabular-nums">{item.quantity}</td>
+        <td className="px-4 py-5 text-right tabular-nums">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+        <td className={cn("px-4 py-5 text-right font-bold tabular-nums", item.is_excluded ? "text-muted-foreground line-through decoration-primary/40" : "text-[#0D3B47]")}>
+          ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+        </td>
+      </tr>
+      {item.details && (
+        <tr 
+          style={style}
+          className={cn(
+            "group transition-all hover:bg-muted/30 cursor-pointer border-b border-primary/5",
+            isDragging && "opacity-0", // Hide during drag to avoid clutter
+            item.is_excluded && "opacity-60 grayscale-[0.3]"
+          )}
+          onClick={onEdit}
+        >
+          <td />
+          <td />
+          <td colSpan={5} className="px-4 pb-6 pt-0">
+            <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap border-l-2 border-primary/10 pl-4 py-1 italic">
+              {item.details}
+            </div>
+          </td>
+        </tr>
+      )}
+    </React.Fragment>
   );
 }
 
