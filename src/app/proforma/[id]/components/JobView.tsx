@@ -369,7 +369,16 @@ export function JobView({
 
   React.useEffect(() => {
     fetchItemPresets();
-  }, []);
+    
+    // Track recently visited job
+    try {
+      const recentlyVisited = JSON.parse(localStorage.getItem('recentlyVisitedJobs') || '[]');
+      const updated = [id, ...recentlyVisited.filter((viewedId: string) => viewedId !== id)].slice(0, 20);
+      localStorage.setItem('recentlyVisitedJobs', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error tracking visited job:', e);
+    }
+  }, [id]);
 
   const handleStartEditing = (item: any) => {
     setEditingItemId(item.id);
