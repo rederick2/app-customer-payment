@@ -54,6 +54,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -146,6 +147,8 @@ export function JobView({
   const [editingPayment, setEditingPayment] = React.useState<any | null>(null);
   const [editingLabor, setEditingLabor] = React.useState<any | null>(null);
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
+  const [adjustments, setAdjustments] = React.useState((proforma.adjustments || []) as any[]);
+  const [isEditingAdjustments, setIsEditingAdjustments] = React.useState(false);
 
   const toggleItemExpansion = (itemId: string) => {
     setExpandedItems(prev => {
@@ -176,15 +179,14 @@ export function JobView({
 
   const supabase = createClient();
 
-  const syncTotalsToDatabase = async (currentItems: any[]) => {
+  const syncTotalsToDatabase = async (currentItems: any[], currentAdjustments: any[] = adjustments) => {
     const newSubtotal = currentItems.reduce((acc, item) => {
       if (item.is_excluded) return acc;
       return acc + (item.total_price || 0);
     }, 0);
 
-    const adjustments = (proforma.adjustments || []) as any[];
-    const discountAdjustments = adjustments.filter(a => a.type === 'discount');
-    const taxAdjustments = adjustments.filter(a => a.type === 'tax');
+    const discountAdjustments = currentAdjustments.filter(a => a.type === 'discount');
+    const taxAdjustments = currentAdjustments.filter(a => a.type === 'tax');
 
     const totalDiscount = discountAdjustments.reduce((acc, adj) => {
       const amount = adj.valueType === 'percentage' ? (newSubtotal * adj.value) / 100 : adj.value;
@@ -204,7 +206,8 @@ export function JobView({
       .update({
         subtotal: newSubtotal,
         total: newTotal,
-        tax: totalTax // Updating tax field recursively if needed
+        tax: totalTax,
+        adjustments: currentAdjustments
       })
       .eq('id', id);
 
@@ -223,7 +226,7 @@ export function JobView({
     if (!error) {
       setItems(data || []);
       // Sync totals to DB whenever items are fetched (e.g., after addition)
-      if (data) syncTotalsToDatabase(data);
+      if (data) syncTotalsToDatabase(data, adjustments);
     }
   };
 
@@ -369,7 +372,7 @@ export function JobView({
 
   React.useEffect(() => {
     fetchItemPresets();
-    
+
     // Track recently visited job
     try {
       const recentlyVisited = JSON.parse(localStorage.getItem('recentlyVisitedJobs') || '[]');
@@ -780,18 +783,24 @@ export function JobView({
 
   const subtotal = items.reduce((acc, item) => {
     if (item.is_excluded) return acc;
-    return acc + item.total_price;
+    return acc + (item.total_price || 0);
   }, 0);
 
-  const adjustments = (proforma.adjustments || []) as any[];
-  const totalDiscount = adjustments
-    .filter(adj => adj.type === 'discount')
-    .reduce((acc, adj) => {
-      const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
-      return acc + amount;
-    }, 0);
+  const discountAdjustments = adjustments.filter(adj => adj.type === 'discount');
+  const taxAdjustments = adjustments.filter(adj => adj.type === 'tax');
 
-  const totalInvoiced = subtotal;
+  const totalDiscount = discountAdjustments.reduce((acc, adj) => {
+    const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
+    return acc + amount;
+  }, 0);
+
+  const taxableAmount = subtotal - totalDiscount;
+  const totalTax = taxAdjustments.reduce((acc, adj) => {
+    const amount = adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value;
+    return acc + amount;
+  }, 0);
+
+  const totalInvoiced = subtotal - totalDiscount + totalTax;
   const totalCost = items.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
   const totalLaborCost = timeEntries.reduce((acc, entry) => acc + (Number(entry.total_cost) || 0), 0);
   const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);
@@ -1034,9 +1043,9 @@ export function JobView({
                                   className="text-[10px] font-black uppercase tracking-widest text-[#306C3E] hover:text-[#265832] mt-1 flex items-center gap-1 group"
                                 >
                                   {expandedItems.has(item.id) ? (
-                                    <>Ver menos <ChevronUp className="h-3 w-3 transition-transform group-hover:-translate-y-0.5" /></>
+                                    <>view less <ChevronUp className="h-3 w-3 transition-transform group-hover:-translate-y-0.5" /></>
                                   ) : (
-                                    <>Leer más <ChevronDown className="h-3 w-3 transition-transform group-hover:translate-y-0.5" /></>
+                                    <>view more <ChevronDown className="h-3 w-3 transition-transform group-hover:translate-y-0.5" /></>
                                   )}
                                 </button>
                               )}
@@ -1125,9 +1134,49 @@ export function JobView({
                         </Button>
                       </td>
                       <td className="px-6 py-4" />
-                      <td className="px-6 py-4 text-right tabular-nums">${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Subtotal</td>
                       <td className="px-6 py-4" />
-                      <td className="px-6 py-4 text-right tabular-nums text-lg">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-6 py-4 text-right tabular-nums">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-6 py-4" />
+                    </tr>
+                    {discountAdjustments.map((adj, idx) => {
+                      const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
+                      return (
+                        <tr key={`discount-${idx}`} className="bg-red-50/10 text-red-700/80 italic text-xs">
+                          <td colSpan={4} />
+                          <td className="px-6 py-2 text-right uppercase tracking-tighter font-black">
+                            {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
+                          </td>
+                          <td className="px-6 py-2" />
+                          <td className="px-6 py-2 text-right tabular-nums">-${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-6 py-2" />
+                        </tr>
+                      );
+                    })}
+                    {taxAdjustments.map((adj, idx) => {
+                      const amount = adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value;
+                      return (
+                        <tr key={`tax-${idx}`} className="bg-muted/5 font-bold border-t border-border/40">
+                          <td colSpan={4} />
+                          <td className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">
+                            {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
+                          </td>
+                          <td className="px-6 py-4" />
+                          <td className="px-6 py-4 text-right tabular-nums">+${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-6 py-4" />
+                        </tr>
+                      );
+                    })}
+                    <tr className="bg-emerald-50/30 font-bold border-t border-emerald-500/20">
+                      <td colSpan={2} className="px-6 py-4 text-left">
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-black tracking-widest text-primary hover:bg-primary/5" onClick={() => setIsEditingAdjustments(true)}>
+                          <Tag className="h-3 w-3 mr-1" /> Manage Adjustments
+                        </Button>
+                      </td>
+                      <td colSpan={2} />
+                      <td className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-emerald-900/40">Total Job Value</td>
+                      <td className="px-6 py-4" />
+                      <td className="px-6 py-4 text-right tabular-nums text-xl text-emerald-700">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td className="px-6 py-4" />
                     </tr>
                   </tbody>
@@ -2063,7 +2112,7 @@ export function JobView({
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
-                  <p>Escribe un término y presiona Buscar</p>
+                  <p>Type a term and press Search</p>
                 </div>
               )}
             </div>
@@ -2417,7 +2466,193 @@ export function JobView({
           }}
         />
       )}
+
+      {isEditingAdjustments && (
+        <AdjustmentsModal
+          initialAdjustments={adjustments}
+          onClose={() => setIsEditingAdjustments(false)}
+          onSave={async (newAdjustments) => {
+            setAdjustments(newAdjustments);
+            await syncTotalsToDatabase(items, newAdjustments);
+            setIsEditingAdjustments(false);
+            toast.success('Adjustments updated successfully');
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function AdjustmentsModal({ initialAdjustments, onClose, onSave }: {
+  initialAdjustments: any[],
+  onClose: () => void,
+  onSave: (adjustments: any[]) => Promise<void>
+}) {
+  const [adjustments, setAdjustments] = React.useState([...initialAdjustments]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleAddAdjustment = (type: 'tax' | 'discount') => {
+    setAdjustments([
+      ...adjustments,
+      {
+        id: crypto.randomUUID(),
+        label: type === 'tax' ? 'Sales Tax' : 'Discount',
+        type,
+        valueType: 'percentage',
+        value: 0
+      }
+    ]);
+  };
+
+  const handleUpdateAdjustment = (id: string, field: string, value: any) => {
+    setAdjustments(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+  };
+
+  const handleRemoveAdjustment = (id: string) => {
+    setAdjustments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    await onSave(adjustments);
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5 text-primary" />
+            Manage Adjustments
+          </DialogTitle>
+          <DialogDescription>
+            Add or modify taxes and discounts for this job.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            {adjustments.length > 0 ? (
+              adjustments.map((adj, index) => (
+                <div key={adj.id || index} className="p-4 rounded-xl border border-border/40 bg-muted/5 space-y-4 relative group">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-full"
+                    onClick={() => handleRemoveAdjustment(adj.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Label</Label>
+                      <Input
+                        value={adj.label}
+                        onChange={(e) => handleUpdateAdjustment(adj.id, 'label', e.target.value)}
+                        placeholder="e.g. Christmas Discount"
+                        className="h-9 text-sm font-bold"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Type</Label>
+                      <select
+                        value={adj.type}
+                        onChange={(e) => handleUpdateAdjustment(adj.id, 'type', e.target.value)}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm font-bold focus:ring-2 focus:ring-ring outline-none"
+                      >
+                        <option value="tax">Tax (+)</option>
+                        <option value="discount">Discount (-)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Value Type</Label>
+                      <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'percentage')}
+                          className={cn(
+                            "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+                            adj.valueType === 'percentage' ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          Percent (%)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'amount')}
+                          className={cn(
+                            "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+                            adj.valueType === 'amount' ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          Fixed Amount ($)
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Value</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-xs">
+                          {adj.valueType === 'percentage' ? '%' : '$'}
+                        </span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={adj.value}
+                          onChange={(e) => handleUpdateAdjustment(adj.id, 'value', parseFloat(e.target.value) || 0)}
+                          className="pl-7 h-9 text-sm font-bold"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center border-2 border-dashed border-border/40 rounded-2xl bg-muted/5">
+                <p className="text-sm text-muted-foreground">No adjustments applied yet.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 gap-2 border-dashed font-bold h-11"
+              onClick={() => handleAddAdjustment('tax')}
+            >
+              <Plus className="h-4 w-4" /> Add Tax
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 gap-2 border-dashed font-bold h-11"
+              onClick={() => handleAddAdjustment('discount')}
+            >
+              <Plus className="h-4 w-4" /> Add Discount
+            </Button>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="font-bold">
+              Cancel
+            </Button>
+            <Button type="submit" className="bg-primary hover:bg-primary/90 font-bold min-w-[120px]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Adjustments'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -2698,7 +2933,7 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: 
   const [date, setDate] = React.useState(entry?.date || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = React.useState(entry?.notes || '');
   const [teamMemberId, setTeamMemberId] = React.useState(entry?.team_member_id || '');
-  
+
   const supabase = createClient();
 
   // Calculate hours/minutes when start/end time changes
