@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, ListTodo, FileText, Phone, LogOut, ThumbsUp, MessageSquare } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 import PublicMobileNav from '@/components/PublicMobileNav';
+import ContactUsModal from '@/components/ContactUsModal';
 
 export default async function PublicProformaLayout({
   children,
@@ -14,7 +15,7 @@ export default async function PublicProformaLayout({
   params: Promise<{ id: string }>;
 }>) {
   const { id } = await params;
-  
+
   // Verify proforma and fetch client
   const supabase = createAdminClient();
   const { data: proforma, error } = await supabase
@@ -26,6 +27,10 @@ export default async function PublicProformaLayout({
         company_name,
         first_name,
         last_name
+      ),
+      users (
+        phone,
+        display_name
       )
     `)
     .eq('id', id)
@@ -44,17 +49,17 @@ export default async function PublicProformaLayout({
     .is('read_at', null);
 
   const clientData = proforma.clients as any;
-  const clientName = clientData?.company_name || 
-    [clientData?.first_name, clientData?.last_name].filter(Boolean).join(' ') || 
-    clientData?.name || 
+  const clientName = clientData?.company_name ||
+    [clientData?.first_name, clientData?.last_name].filter(Boolean).join(' ') ||
+    clientData?.name ||
     'Cliente';
 
   return (
     <div className="flex bg-[#F4F2EC] min-h-screen">
-      
+
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 border-r border-[#E2E0D8] bg-[#EFECE5] h-screen sticky top-0 px-4 py-8">
-        
+
         {/* Client Branding */}
         <div className="mb-8 px-2">
           <h2 className="text-xl font-bold text-[#0D3B47]">{clientName}</h2>
@@ -101,22 +106,19 @@ export default async function PublicProformaLayout({
 
         {/* Bottom Links */}
         <div className="pt-4 space-y-1 border-t border-[#E2E0D8]">
-          <Link href="#" className="flex items-center px-3 py-3 text-sm font-semibold text-[#0D3B47] rounded-md hover:bg-black/5 transition-colors">
-            <Phone className="mr-3 h-5 w-5 text-[#0D3B47]" />
-            Contact Us
-          </Link>
-          <div className="flex items-center px-3 py-3 text-sm font-semibold text-[#0D3B47] rounded-md hover:bg-black/5 transition-colors cursor-pointer">
+          <ContactUsModal phoneNumber={(proforma.users as any)?.phone} />
+          {/*<div className="flex items-center px-3 py-3 text-sm font-semibold text-[#0D3B47] rounded-md hover:bg-black/5 transition-colors cursor-pointer">
             <LogOut className="mr-3 h-5 w-5 text-[#0D3B47]" />
             Log Out
-          </div>
+          </div>*/}
         </div>
 
-        <div className="pt-4 mt-2 space-y-1 border-t border-[#E2E0D8]">
+        {/*<div className="pt-4 mt-2 space-y-1 border-t border-[#E2E0D8]">
            <Link href="#" className="flex items-center px-3 py-3 text-sm font-semibold text-[#0D3B47] rounded-md hover:bg-black/5 transition-colors">
             <ThumbsUp className="mr-3 h-5 w-5 text-[#0D3B47]" />
             Refer a Friend
           </Link>
-        </div>
+        </div>*/}
       </aside>
 
       {/* Main Content Area */}
@@ -132,7 +134,7 @@ export default async function PublicProformaLayout({
       </main>
 
       {/* Mobile Navigation (bottom tab bar + top header) */}
-      <PublicMobileNav id={id} unreadCount={unreadCount ?? 0} />
+      <PublicMobileNav id={id} unreadCount={unreadCount ?? 0} phoneNumber={(proforma.users as any)?.phone} companyName={(proforma.users as any)?.display_name} />
 
       {/* Invisible realtime listener — keeps the badge count live for the client */}
       <RealtimeNotifier proformaIds={[id]} watchSenderType="company" />

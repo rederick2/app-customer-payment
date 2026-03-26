@@ -2,14 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ListTodo, FileText, MessageSquare, Plus } from 'lucide-react';
+import { ListTodo, FileText, MessageSquare, Plus, Phone } from 'lucide-react';
+import ContactUsModal from '@/components/ContactUsModal';
 
 type Props = {
   id: string;
   unreadCount: number;
+  phoneNumber?: string;
+  companyName?: string;
 };
 
-export default function PublicMobileNav({ id, unreadCount }: Props) {
+export default function PublicMobileNav({ id, unreadCount, phoneNumber, companyName }: Props) {
   const pathname = usePathname();
 
   const links = [
@@ -22,7 +25,7 @@ export default function PublicMobileNav({ id, unreadCount }: Props) {
     <>
       {/* Mobile Top Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#EFECE5] border-b border-[#E2E0D8] flex items-center justify-between px-4 h-14 shadow-sm">
-        <span className="font-serif font-bold text-base text-[#0D3B47]">EstudioPro</span>
+        <span className="font-serif font-bold text-base text-[#0D3B47]">{companyName}</span>
         <Link
           href={`/p/${id}/request`}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#306C3E] border border-[#D0CECB] rounded-lg text-xs font-semibold shadow-sm"
@@ -40,9 +43,8 @@ export default function PublicMobileNav({ id, unreadCount }: Props) {
             <Link
               key={href}
               href={href}
-              className={`relative flex flex-col items-center gap-1 flex-1 py-1 rounded-lg transition-colors ${
-                isActive ? 'text-[#0D3B47]' : 'text-[#0D3B47]/50 hover:text-[#0D3B47]/80'
-              }`}
+              className={`relative flex flex-col items-center gap-1 flex-1 py-1 rounded-lg transition-colors ${isActive ? 'text-[#0D3B47]' : 'text-[#0D3B47]/50 hover:text-[#0D3B47]/80'
+                }`}
             >
               <div className="relative">
                 <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
@@ -61,7 +63,24 @@ export default function PublicMobileNav({ id, unreadCount }: Props) {
             </Link>
           );
         })}
+
+        <ContactUsModal
+          phoneNumber={phoneNumber}
+          trigger={
+            <button
+              className="relative flex flex-col items-center gap-1 flex-1 py-1 rounded-lg transition-colors text-[#0D3B47]/50 hover:text-[#0D3B47]/80"
+            >
+              <div className="relative">
+                <Phone className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-semibold text-[#0D3B47]/50">
+                Contact
+              </span>
+            </button>
+          }
+        />
       </nav>
     </>
   );
 }
+

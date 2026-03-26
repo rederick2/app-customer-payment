@@ -10,7 +10,7 @@ type Props = {
 
 export default async function PublicNewServiceRequest({ params }: Props) {
   const { id } = await params;
-  
+
   // Usar admin client ya que es ruta pública
   const supabase = createAdminClient();
 
@@ -35,17 +35,17 @@ export default async function PublicNewServiceRequest({ params }: Props) {
   }
 
   const clientData = proforma.clients as any;
-  const clientName = clientData.company_name || 
-    [clientData.first_name, clientData.last_name].filter(Boolean).join(' ') || 
-    clientData.name || 
+  const clientName = clientData.company_name ||
+    [clientData.first_name, clientData.last_name].filter(Boolean).join(' ') ||
+    clientData.name ||
     'Cliente';
 
   return (
     <div className="px-6 py-8 md:p-12 max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-primary">Solicitar Nuevo Servicio</h1>
+        <h1 className="font-serif text-3xl font-bold tracking-tight text-primary">Request New Service</h1>
         <p className="text-muted-foreground mt-1">
-          Asociado al proyecto: <span className="font-medium text-foreground">{proforma.project_name}</span>
+          Associated project: <span className="font-medium text-foreground">{proforma.project_name}</span>
         </p>
       </div>
 

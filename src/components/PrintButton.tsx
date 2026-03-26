@@ -40,13 +40,13 @@ export default function PrintButton({ proforma, items }: PrintButtonProps) {
   };
 
   return (
-    <Button 
+    <Button
       onClick={handleDownloadPDF}
       disabled={isGenerating}
       className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-1"
     >
       {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-      {isGenerating ? 'Preparando...' : 'Descargar PDF'}
+      {isGenerating ? 'Preparing...' : 'Download PDF'}
     </Button>
   );
 }

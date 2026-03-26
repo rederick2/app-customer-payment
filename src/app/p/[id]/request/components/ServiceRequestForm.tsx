@@ -19,17 +19,17 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [date, setDate] = useState<Date>();
-  
+
   // Image handling
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedImages, setSelectedImages] = useState<{file: File, preview: string}[]>([]);
+  const [selectedImages, setSelectedImages] = useState<{ file: File, preview: string }[]>([]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).filter(file => file.type.startsWith('image/'));
-      
+
       if (selectedImages.length + newFiles.length > 10) {
-        toast.error('Límite de imágenes', { description: 'Solo puedes subir un máximo de 10 imágenes.'});
+        toast.error('Límite de imágenes', { description: 'Solo puedes subir un máximo de 10 imágenes.' });
         return;
       }
 
@@ -37,7 +37,7 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
         file,
         preview: URL.createObjectURL(file)
       }));
-      
+
       setSelectedImages(prev => [...prev, ...newImages]);
     }
   };
@@ -56,7 +56,7 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    
+
     // Add date correctly
     if (date) {
       // Date in YYYY-MM-DD
@@ -69,16 +69,16 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
     });
 
     const result = await submitServiceRequest(proformaId, formData);
-    
+
     setIsSubmitting(false);
 
     if (result.success) {
-      toast.success('Solicitud enviada', {
-        description: 'Hemos recibido tu solicitud exitosamente. Nos pondremos en contacto pronto.',
+      toast.success('Service request sent', {
+        description: 'We have received your request successfully. We will contact you soon.',
       });
       router.push(`/p/${proformaId}`);
     } else {
-      toast.error('Error al enviar', {
+      toast.error('Error sending request', {
         description: result.error,
       });
     }
@@ -86,19 +86,19 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-500">
-      
+
       {/* Overview */}
       <Card className="border-border/50 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl">Resumen del Servicio</CardTitle>
-          <p className="text-sm text-muted-foreground">Por favor, proporciona toda la información posible sobre lo que necesitas.</p>
+          <CardTitle className="text-xl">Service Details</CardTitle>
+          <p className="text-sm text-muted-foreground">Please provide all the information possible about what you need.</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Detalles del Servicio *</label>
-            <Textarea 
+            <label className="text-sm font-medium">Service Details *</label>
+            <Textarea
               name="details"
-              placeholder="Describe el trabajo a realizar..." 
+              placeholder="Describe the work to be done..."
               required
               className="min-h-[140px] resize-y"
             />
@@ -106,22 +106,22 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
 
           <div className="space-y-4">
             <div className="flex justify-between items-center text-sm font-medium">
-              <label>Imágenes del trabajo a realizar</label>
+              <label>Images of the work to be done</label>
               <span className="text-muted-foreground">{selectedImages.length}/10</span>
             </div>
-            
+
             <div className="border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center bg-muted/20 hover:bg-muted/30 transition-colors cursor-pointer"
-                 onClick={() => fileInputRef.current?.click()}
+              onClick={() => fileInputRef.current?.click()}
             >
               <ImagePlus className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-foreground font-medium">Click para agregar imágenes</p>
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG hasta 10MB</p>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                multiple 
-                accept="image/*" 
+              <p className="text-sm text-foreground font-medium">Click to add images</p>
+              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG up to 10MB</p>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                multiple
+                accept="image/*"
                 onChange={handleImageSelect}
               />
             </div>
@@ -132,7 +132,7 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
                   <div key={index} className="relative group aspect-square rounded-md overflow-hidden border border-border">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img.preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
-                    <button 
+                    <button
                       type="button"
                       onClick={() => removeImage(index)}
                       className="absolute top-1 right-1 bg-black/60 hover:bg-black text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -150,14 +150,14 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
       {/* On-site assessment */}
       <Card className="border-border/50 shadow-sm relative">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-xl">Evaluación en sitio</CardTitle>
+          <CardTitle className="text-xl">On-site assessment</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">Instrucciones Especiales</label>
-            <Textarea 
+            <label className="text-sm font-medium text-muted-foreground">Special Instructions</label>
+            <Textarea
               name="onSiteInstructions"
-              placeholder="¿Hay algo que debemos saber antes de visitar el lugar? (Ej: Código de puerta, cuidado con el perro, etc.)" 
+              placeholder="Is there anything we should know before visiting the site? (Ex: Door code, beware of dog, etc.)"
               className="min-h-[100px] resize-y"
             />
           </div>
@@ -167,49 +167,67 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
       {/* Schedule */}
       <Card className="border-border/50 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl">Agenda de Visita</CardTitle>
-          <p className="text-sm text-muted-foreground">Selecciona el día y horario preferido para la evaluación en sitio.</p>
+          <CardTitle className="text-xl">Schedule</CardTitle>
+          <p className="text-sm text-muted-foreground">Select the preferred day and time for the on-site assessment.</p>
         </CardHeader>
         <CardContent className="grid sm:grid-cols-2 gap-8">
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Fecha Propuesta</label>
+
+          <div className="flex flex-col space-y-2">
+            <label htmlFor="proposed-date" className="text-sm font-semibold text-foreground/90">
+              Proposed Date
+            </label>
             <Popover>
-              <PopoverTrigger>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal bg-background/50",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, 'PPP', { locale: es }) : <span>Selecciona una fecha</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverTrigger
+                render={
+                  <Button
+                    id="proposed-date"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal transition-all duration-200",
+                      "border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      !date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
+                    {date ? (
+                      <span className="font-medium text-foreground">
+                        {format(date, 'PPP', { locale: es })}
+                      </span>
+                    ) : (
+                      <span>Seleccionar una fecha</span>
+                    )}
+                  </Button>
+                }
+              />
+              <PopoverContent
+                className="w-auto p-0 shadow-lg border-border rounded-xl"
+                align="start"
+              >
                 <Calendar
                   mode="single"
                   selected={date}
                   onSelect={setDate}
                   initialFocus
                   locale={es}
-                  disabled={(d) => d < new Date(new Date().setHours(0,0,0,0))}
+                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                  className="rounded-xl"
                 />
               </PopoverContent>
             </Popover>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Preferencia de Horario</label>
+            <label htmlFor="proposed-date" className="text-sm font-semibold text-foreground/90">
+              Time Preference
+            </label>
             <Select name="timePreference" defaultValue="anytime">
               <SelectTrigger className="w-full bg-background/50">
-                <SelectValue placeholder="Selecciona un horario" />
+                <SelectValue placeholder="Select a time" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="morning">Por la Mañana (8:00 AM - 12:00 PM)</SelectItem>
-                <SelectItem value="afternoon">Por la Tarde (1:00 PM - 5:00 PM)</SelectItem>
-                <SelectItem value="anytime">Cualquier momento del día</SelectItem>
+                <SelectItem value="morning">Morning (8:00 AM - 12:00 PM)</SelectItem>
+                <SelectItem value="afternoon">Afternoon (1:00 PM - 5:00 PM)</SelectItem>
+                <SelectItem value="anytime">Anytime</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -219,13 +237,13 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
 
       <div className="flex items-center justify-end gap-4 pb-10">
         <Button variant="ghost" type="button" onClick={() => router.back()}>
-          Cancelar
+          Cancel
         </Button>
         <Button type="submit" className="px-8" disabled={isSubmitting}>
           {isSubmitting ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...</>
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
           ) : (
-            'Aceptar Solicitud'
+            'Accept Request'
           )}
         </Button>
       </div>

@@ -27,7 +27,7 @@ export default function AdminRequestActions({ requestId, currentStatus }: { requ
     if (result.error) {
       toast.error('Error', { description: result.error });
     } else {
-      toast.success('Estado actualizado', { description: 'La solicitud ha sido actualizada.' });
+      toast.success('Status updated', { description: 'The request has been updated.' });
     }
   };
 
@@ -36,14 +36,14 @@ export default function AdminRequestActions({ requestId, currentStatus }: { requ
       {isUpdating && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
       <Select defaultValue={currentStatus} onValueChange={handleStatusChange} disabled={isUpdating}>
         <SelectTrigger className="w-[140px] h-8 text-xs bg-background">
-          <SelectValue placeholder="Actualizar Estado" />
+          <SelectValue placeholder="Update Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="pending">Pendiente</SelectItem>
-          <SelectItem value="reviewed">Revisada</SelectItem>
-          <SelectItem value="scheduled">Programada</SelectItem>
-          <SelectItem value="completed">Completada</SelectItem>
-          <SelectItem value="cancelled">Cancelada</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="reviewed">Reviewed</SelectItem>
+          <SelectItem value="scheduled">Scheduled</SelectItem>
+          <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
     </div>

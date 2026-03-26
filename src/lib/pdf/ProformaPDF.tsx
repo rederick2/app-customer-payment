@@ -188,14 +188,12 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
         {/* Header */}
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.companyName}>EstudioPro</Text>
-            <Text style={styles.companySub}>Interior Design & Remodeling</Text>
+            <Text style={styles.companyName}>{proforma.users.display_name}</Text>
           </View>
           <View>
             <Text style={styles.proformaTitle}>Quote</Text>
             <Text style={styles.proformaDetails}>Nº: {proformaNumber}</Text>
             <Text style={styles.proformaDetails}>Date: {dateFormatted}</Text>
-            <Text style={styles.proformaDetails}>Valid until: {validUntilFormatted}</Text>
           </View>
         </View>
 
@@ -242,10 +240,10 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
         {/* Totals & Signature */}
         <View style={styles.totalsContainer} wrap={false}>
           {/* Signature Box (Left) */}
-          <View style={{ width: '45%', marginTop: 20 }}>
+          <View style={{ width: '55%', marginTop: 20 }}>
             {proforma.status === 'approved' && (proforma.client_signature_data || proforma.client_signed_name) ? (
               <View style={styles.signatureBox}>
-                <Text style={{ fontSize: 8, fontWeight: 700, color: '#6e7a7e', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}>Firma Autorizada</Text>
+                <Text style={{ fontSize: 8, fontWeight: 700, color: '#6e7a7e', marginBottom: 10 }}>Authorized Signature</Text>
                 {proforma.client_signature_data ? (
                   <Image src={proforma.client_signature_data} style={{ width: 140, height: 60, objectFit: 'contain' }} />
                 ) : (
@@ -277,30 +275,28 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
               }, 0);
               const taxableAmount = subtotal - totalDiscount;
 
-              if (adjustments.length > 0) {
+              if (adjustments.length > 0 && totalDiscount > 0) {
                 return adjustments.map((adj: any, idx: number) => {
                   const amount = adj.type === 'discount'
                     ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
-                    : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
+                    : 0;
                   return (
                     <View key={idx} style={styles.totalsRow}>
                       <Text style={styles.totalLabel}>
-                        {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
+                        Discount {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
                       </Text>
                       <Text>{adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
                     </View>
                   );
                 });
-              } else {
-                return (
-                  <View style={styles.totalsRow}>
-                    <Text style={styles.totalLabel}>Tax (0%)</Text>
-                    <Text>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-                  </View>
-                );
               }
             })()}
-
+            {proforma.tax > 0 && (
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalLabel}>Tax</Text>
+                <Text>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+              </View>
+            )}
             <View style={styles.totalsRowMain}>
               <Text style={[styles.totalLabel, { color: '#0D3B47' }]}>Estimated Total</Text>
               <Text style={styles.mainTotalValue}>${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
@@ -308,7 +304,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
 
             {proforma.required_deposit > 0 && (
               <View style={[styles.totalsRow, { marginTop: 10, borderTop: '1px dashed #e2e0d8', paddingTop: 8 }]}>
-                <Text style={[styles.totalLabel, { color: '#0D3B47', fontSize: 10 }]}>Depósito Requerido</Text>
+                <Text style={[styles.totalLabel, { color: '#0D3B47', fontSize: 10 }]}>Required Deposit</Text>
                 <Text style={{ color: '#0D3B47', fontWeight: 'bold' }}>
                   ${proforma.required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </Text>
@@ -339,7 +335,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
             This quote represents an initial estimate and is subject to change following final on-site measurements.
           </Text>
           <Text style={styles.footerText}>
-            Prices valid until the specified date. A 60% advance payment is required to start the project.
+            This quote is valid for the next 30 days, after which values may be subject to change.
           </Text>
         </View>
 

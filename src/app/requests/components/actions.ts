@@ -14,10 +14,12 @@ export async function updateRequestStatus(requestId: string, newStatus: string) 
   // Admin access to service_requests is handled via RLS policies 
   // (admins only see and update requests for their proformas).
   // But we still explicitly do an update here.
-  const { error } = await supabase
+  const { data: request, error } = await supabase
     .from('service_requests')
     .update({ status: newStatus })
     .eq('id', requestId);
+
+  console.log(error);
 
   if (error) {
     console.error('Error updating status:', error);
