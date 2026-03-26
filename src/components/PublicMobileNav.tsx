@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ListTodo, FileText, MessageSquare, Plus, Phone } from 'lucide-react';
+import { ListTodo, FileText, MessageSquare, Plus, Phone, DollarSign } from 'lucide-react';
 import ContactUsModal from '@/components/ContactUsModal';
 
 type Props = {
@@ -17,6 +17,7 @@ export default function PublicMobileNav({ id, unreadCount, phoneNumber, companyN
 
   const links = [
     { href: `/p/${id}`, icon: FileText, label: 'Quotes' },
+    { href: `/p/${id}/invoices`, icon: DollarSign, label: 'Invoices' },
     { href: `/p/${id}/requests`, icon: ListTodo, label: 'Requests' },
     { href: `/p/${id}/messages`, icon: MessageSquare, label: 'Messages', badge: unreadCount },
   ];

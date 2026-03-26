@@ -15,7 +15,8 @@ import { LineItemImage } from '@/components/LineItemImage';
 export const revalidate = 0;
 
 type Props = {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>,
+  searchParams: Promise<{ type?: string }>
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -26,25 +27,31 @@ function StatusBadge({ status }: { status: string }) {
       return <Badge variant="destructive" className="bg-red-500/10 text-red-700 hover:bg-red-500/20 border-red-500/20 text-sm py-1 px-3">Rejected</Badge>;
     case 'sent':
       return <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 border-blue-500/20 text-sm py-1 px-3">Sent</Badge>;
+    case 'paid':
+      return <Badge className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 border-emerald-500/20 text-sm py-1 px-3">Paid</Badge>;
+    case 'invoice':
+      return <Badge className="bg-orange-500/10 text-orange-700 hover:bg-orange-500/20 border-orange-500/20 text-sm py-1 px-3">Invoice</Badge>;
     default:
       return <Badge variant="outline" className="text-sm py-1 px-3">Draft</Badge>;
   }
 }
 
-export default async function PublicProformaView({ params }: Props) {
+export default async function PublicProformaView({ params, searchParams }: Props) {
   const { id } = await params;
+  const { type } = await searchParams;
 
   // Use admin client because the user is not authenticated on this public link
   const supabase = createAdminClient();
 
-  // Fetch proforma and its client
+  // Fetch proforma and its client, and check for associated invoice
   const { data: proforma, error: proformaError } = await supabase
     .from('proformas')
     .select(`
       *,
       clients (*),
       applied_taxes:users (taxes (*)),
-      users (display_name)
+      users (display_name, terms_conditions),
+      invoices (*)
     `)
     .eq('id', id)
     .single();
@@ -53,6 +60,19 @@ export default async function PublicProformaView({ params }: Props) {
     console.error("Proforma error:", proformaError);
     notFound();
   }
+
+  // Determine if we should show this as an invoice
+  // We show as invoice if type=invoice is passed AND an invoice exists, 
+  // or if the proforma status is 'invoice' (legacy)
+  const associatedInvoice = proforma.invoices && proforma.invoices.length > 0 
+    ? proforma.invoices[0] 
+    : null;
+  
+  const isInvoiceView = type === 'invoice' && associatedInvoice;
+  const displayStatus = isInvoiceView ? associatedInvoice.status : (proforma.status || 'draft');
+  const displayTitle = isInvoiceView ? 'Invoice' : 'Quote';
+  const displayNumber = isInvoiceView ? associatedInvoice.invoice_number : (proforma.number || proforma.id.split('-')[0].toUpperCase());
+  const displayDate = isInvoiceView ? associatedInvoice.issue_date : proforma.created_at;
 
   // Fetch line items
   const { data: items, error: itemsError } = await supabase
@@ -87,10 +107,10 @@ export default async function PublicProformaView({ params }: Props) {
           <span className="text-xs font-semibold text-muted-foreground tracking-wide">
             Status
           </span>
-          <StatusBadge status={proforma.status || 'draft'} />
+          <StatusBadge status={displayStatus} />
         </div>
         <div className="flex gap-2 items-center flex-wrap">
-          <PublicProformaActions proformaId={proforma.id} status={proforma.status || 'draft'} />
+          <PublicProformaActions proformaId={proforma.id} status={displayStatus} />
           <PrintButton proforma={proforma} items={items || []} />
         </div>
       </div>
@@ -111,9 +131,9 @@ export default async function PublicProformaView({ params }: Props) {
             <h1 className="font-serif text-4xl font-bold tracking-tight text-primary">{proforma.users.display_name}</h1>
           </div>
           <div className="mt-6 sm:mt-0 text-right">
-            <h2 className="text-2xl font-bold text-foreground font-serif uppercase tracking-widest text-muted-foreground/40 print:text-muted-foreground/80">Quote</h2>
-            <p className="text-sm font-medium mt-2">Nº: <span className="font-mono">{proforma.number || proforma.id.split('-')[0].toUpperCase()}</span></p>
-            <p className="text-sm">Date: {new Date(proforma.created_at).toLocaleDateString('en-US')}</p>
+            <h2 className="text-2xl font-bold text-foreground font-serif uppercase tracking-widest text-muted-foreground/40 print:text-muted-foreground/80">{displayTitle}</h2>
+            <p className="text-sm font-medium mt-2">Nº: <span className="font-mono">{displayNumber}</span></p>
+            <p className="text-sm">Date: {new Date(displayDate).toLocaleDateString('en-US')}</p>
           </div>
         </div>
 

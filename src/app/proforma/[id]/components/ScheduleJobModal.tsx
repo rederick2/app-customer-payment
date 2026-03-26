@@ -20,6 +20,7 @@ interface ScheduleJobModalProps {
   proformaId: string;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
   projectName: string;
 }
 
@@ -27,6 +28,7 @@ export default function ScheduleJobModal({
   proformaId,
   isOpen,
   onClose,
+  onSuccess,
   projectName,
 }: ScheduleJobModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,12 +38,12 @@ export default function ScheduleJobModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!startAt || !endAt) {
-      toast.error('Error', { description: 'Por favor selecciona fecha y hora de inicio y fin.' });
+      toast.error('Error', { description: 'Please select start and end dates and times.' });
       return;
     }
 
     if (new Date(startAt) >= new Date(endAt)) {
-      toast.error('Error', { description: 'La fecha de fin debe ser posterior a la de inicio.' });
+      toast.error('Error', { description: 'End date must be after start date.' });
       return;
     }
 
@@ -52,8 +54,8 @@ export default function ScheduleJobModal({
     if (result.error) {
       toast.error('Error', { description: result.error });
     } else {
-      toast.success('¡Job programado!', { description: 'La proforma ha sido convertida en un Job y programada.' });
-      onClose();
+      toast.success('¡Job scheduled!', { description: 'The quote has been converted to a Job and scheduled.' });
+      onSuccess();
     }
   };
 
@@ -67,12 +69,12 @@ export default function ScheduleJobModal({
               Programar Job
             </DialogTitle>
             <DialogDescription>
-              Define las fechas y horas para el proyecto: <strong>{projectName}</strong>
+              Define dates and times for the project: <strong>{projectName}</strong>
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="start">Fecha y Hora de Inicio</Label>
+              <Label htmlFor="start">Start Date and Time</Label>
               <Input
                 id="start"
                 type="datetime-local"
@@ -82,7 +84,7 @@ export default function ScheduleJobModal({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="end">Fecha y Hora de Término</Label>
+              <Label htmlFor="end">End Date and Time</Label>
               <Input
                 id="end"
                 type="datetime-local"
@@ -98,7 +100,7 @@ export default function ScheduleJobModal({
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Convertir en Job
+              Convert to Job
             </Button>
           </DialogFooter>
         </form>
@@ -106,3 +108,7 @@ export default function ScheduleJobModal({
     </Dialog>
   );
 }
+function onSuccess() {
+  throw new Error('Function not implemented.');
+}
+

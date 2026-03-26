@@ -16,6 +16,7 @@ import ScheduleJobModal from './ScheduleJobModal';
 import QuotePreviewModal from './QuotePreviewModal';
 import EmailQuoteModal from './EmailQuoteModal';
 import React from 'react';
+import router from 'next/router';
 
 export default function ProformaDropdownActions({
   proformaId,
@@ -111,6 +112,10 @@ export default function ProformaDropdownActions({
         projectName={projectName}
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
+        onSuccess={() => {
+          setIsScheduleModalOpen(false);
+          router.push(`/proforma/${proformaId}`);
+        }}
       />
 
       <QuotePreviewModal

@@ -18,7 +18,7 @@ export default function PublicProformaActions({
   const [isRejecting, setIsRejecting] = useState(false);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
 
-  if (status === 'approved' || status === 'rejected') {
+  if (status === 'approved' || status === 'rejected' || status === 'invoice' || status === 'paid' || status === 'job') {
     return null;
   }
 
