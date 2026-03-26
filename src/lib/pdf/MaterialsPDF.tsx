@@ -10,7 +10,15 @@ Font.register({
 });
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Inter', fontSize: 10, color: '#0D3B47', backgroundColor: '#ffffff' },
+  page: { 
+    paddingTop: 40,
+    paddingHorizontal: 40,
+    paddingBottom: 80,
+    fontFamily: 'Inter', 
+    fontSize: 10, 
+    color: '#0D3B47', 
+    backgroundColor: '#ffffff' 
+  },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#E2E0D8', paddingBottom: 20, marginBottom: 20 },
   companyName: { fontSize: 24, fontWeight: 700, color: '#306C3E' },
   companySub: { fontSize: 10, color: '#6e7a7e', marginTop: 4 },

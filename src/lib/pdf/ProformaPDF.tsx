@@ -12,7 +12,9 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingTop: 40,
+    paddingHorizontal: 40,
+    paddingBottom: 110,
     fontFamily: 'Inter',
     fontSize: 10,
     color: '#0D3B47',
