@@ -233,51 +233,95 @@ export default async function PublicProformaView({ params }: Props) {
         </div>
 
         {/* Totals Box */}
-        {(() => {
-          const calculatedSubtotal = (items || []).reduce((acc, item) => {
-            if (item.is_excluded) return acc;
-            return acc + (item.total_price || 0);
-          }, 0);
+        <div className="flex justify-end mb-20 print:break-inside-avoid relative z-10">
+          <div className="w-full sm:w-1/2 p-8 bg-[#F4F2EC] print:bg-transparent print:border print:border-border/50 rounded-2xl border border-primary/5 space-y-4 text-[#0D3B47] shadow-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium tracking-wide uppercase opacity-70">Subtotal</span>
+              <span className="font-mono font-bold">${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </div>
 
-          const taxAmount = Array.isArray(proforma.applied_taxes?.taxes)
-            ? proforma.applied_taxes.taxes.reduce((acc: number, tax: any) => acc + (tax.percentage * calculatedSubtotal) / 100, 0)
-            : 0;
-          const discountAmount = proforma.adjustments.find((adjustment: any) => adjustment.type === 'discount')?.value || 0;
-          const calculatedTotal = calculatedSubtotal + taxAmount - discountAmount;
+            <div className="space-y-3 py-2">
+              {(() => {
+                const adjustments = (proforma.adjustments || []) as any[];
+                if (adjustments.length > 0) {
+                  const subtotal = proforma.subtotal;
+                  const discountAdjustments = adjustments.filter(a => a.type === 'discount');
+                  const taxAdjustments = adjustments.filter(a => a.type === 'tax');
 
-          return (
-            <div className="flex justify-end mb-16 print:break-inside-avoid relative z-20">
-              <div className="w-full sm:w-1/2 p-6 bg-muted/20 print:bg-transparent print:border print:border-border/50 space-y-3 rounded-lg">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground font-medium">Subtotal</span>
-                  <span>${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                </div>
-                {proforma.tax > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground font-medium">Tax</span>
-                    <span>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  const totalDiscount = discountAdjustments.reduce((acc, adj) => {
+                    return acc + (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value);
+                  }, 0);
+
+                  const taxableAmount = subtotal - totalDiscount;
+
+                  return adjustments.map((adj, idx) => {
+                    const amount = adj.type === 'discount'
+                      ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
+                      : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
+
+                    return (
+                      <div key={idx} className="flex justify-between items-center text-sm opacity-80 group/adj">
+                        <span className="font-medium">
+                          {adj.label}
+                          {adj.valueType === 'percentage' && (
+                            <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{adj.value}%</span>
+                          )}
+                        </span>
+                        <span className={cn("font-mono font-bold", adj.type === 'discount' ? "text-red-600" : "")}>
+                          {adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    );
+                  });
+                } else if (Array.isArray(proforma.applied_taxes?.taxes) && proforma.applied_taxes.taxes.length > 0) {
+                  return proforma.applied_taxes.taxes.map((tax: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center text-sm opacity-80">
+                      <span className="font-medium">{tax.name} <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 rounded">{tax.percentage}%</span></span>
+                      <span className="font-mono">${((tax.percentage * proforma.subtotal) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ));
+                } else {
+                  return (
+                    <div className="flex justify-between items-center text-sm opacity-80">
+                      <span className="font-medium">Tax (0%)</span>
+                      <span className="font-mono">${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+
+            {((proforma as any).deposit_amount > 0 || (proforma as any).required_deposit > 0) && (
+              <div className="pt-4 border-t border-dashed border-[#0D3B47]/20 mt-2 space-y-2">
+                {(proforma as any).required_deposit > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Required Deposit</span>
+                    <span className="font-mono font-bold text-primary text-lg">
+                      ${(proforma as any).required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
                 )}
-                {discountAmount > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground font-medium">Discount</span>
-                    <span>${discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                {(proforma as any).deposit_amount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Amount Collected</span>
+                    <span className="font-mono font-bold text-[#306C3E] text-lg">
+                      ${(proforma as any).deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
                 )}
-                <div className="flex justify-between items-end pt-2 border-t border-border/50">
-                  <span className="text-lg font-serif font-bold text-foreground">Total Estimated</span>
-                  <span className="text-xl font-bold text-primary">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                </div>
-                {proforma.required_deposit > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground font-medium">Deposit required</span>
-                    <span>${proforma.required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                  </div>
+                {(proforma as any).payment_terms && (
+                  <p className="text-[10px] text-muted-foreground/80 mt-1 text-right italic leading-snug">
+                    {(proforma as any).payment_terms}
+                  </p>
                 )}
               </div>
+            )}
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium tracking-wide uppercase opacity-70">Total</span>
+              <span className="font-mono font-bold">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
-          );
-        })()}
+          </div>
+        </div>
 
         {/* Signature Section */}
         {proforma.status === 'approved' && proforma.approved_at && (
@@ -334,10 +378,14 @@ export default async function PublicProformaView({ params }: Props) {
         {/* Footer Notes */}
         <div className="border-t border-border/50 pt-8 mt-auto print:fixed print:bottom-8 print:w-full print:border-t-2 relative z-20">
           <p className="text-xs text-muted-foreground mb-1 text-center font-medium">Terms and Conditions</p>
-          <p className="text-xs text-muted-foreground text-center">
-            This quote represents an initial estimate and is subject to change after final measurement on site.
-            This quote is valid for the next 30 days, after which values may be subject to change.
-          </p>
+          <div className="text-xs text-muted-foreground text-center whitespace-pre-wrap">
+            {proforma.users.terms_conditions || (
+              <>
+                This quote represents an initial estimate and is subject to change after final measurement on site.{"\n"}
+                This quote is valid for the next 30 days, after which values may be subject to change.
+              </>
+            )}
+          </div>
         </div>
 
         {/* Work Progress Gallery */}

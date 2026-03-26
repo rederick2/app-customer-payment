@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { updateProfile } from '../actions';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -75,6 +76,16 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
             <p className="text-xs text-muted-foreground">
               Your next proforma will use this number if it's higher than your current highest number.
             </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="termsConditions">Default Terms & Conditions (Proforma Footer)</Label>
+            <Textarea
+              id="termsConditions"
+              name="termsConditions"
+              defaultValue={initialData?.terms_conditions || ''}
+              placeholder="e.g. This quote is valid for 30 days..."
+              className="min-h-[100px]"
+            />
           </div>
         </CardContent>
         <CardFooter>

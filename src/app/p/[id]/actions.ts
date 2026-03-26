@@ -37,7 +37,7 @@ export async function approveProforma(proformaId: string, signatureData?: string
   // Actualizar la vista pública y la del administrador
   revalidatePath(`/p/${proformaId}`);
   revalidatePath(`/proforma/${proformaId}`);
-  
+
   return { success: true };
 }
 
@@ -51,18 +51,18 @@ export async function rejectProforma(proformaId: string) {
 
   if (error) {
     console.error('Error rejecting proforma:', error);
-    return { success: false, error: 'No se pudo rechazar la proforma' };
+    return { success: false, error: 'Could not reject the quote' };
   }
 
   // Actualizar la vista pública y la del administrador
   revalidatePath(`/p/${proformaId}`);
   revalidatePath(`/proforma/${proformaId}`);
-  
+
   return { success: true };
 }
 
 export async function submitClientMessage(proformaId: string, message: string) {
-  if (!message.trim()) return { success: false, error: 'El mensaje no puede estar vacío.' };
+  if (!message.trim()) return { success: false, error: 'The message cannot be empty.' };
 
   const supabase = createAdminClient();
 
@@ -76,17 +76,17 @@ export async function submitClientMessage(proformaId: string, message: string) {
 
   if (error) {
     console.error('Error submitting message:', error);
-    return { success: false, error: 'No se pudo enviar el mensaje' };
+    return { success: false, error: 'Could not send the message' };
   }
 
   revalidatePath(`/p/${proformaId}`);
   revalidatePath(`/proforma/${proformaId}`);
-  
+
   return { success: true };
 }
 
 export async function submitCompanyMessage(proformaId: string, message: string) {
-  if (!message.trim()) return { success: false, error: 'El mensaje no puede estar vacío.' };
+  if (!message.trim()) return { success: false, error: 'The message cannot be empty.' };
 
   const supabase = createAdminClient();
 
@@ -101,12 +101,12 @@ export async function submitCompanyMessage(proformaId: string, message: string) 
 
   if (error) {
     console.error('Error submitting message:', error);
-    return { success: false, error: 'No se pudo enviar el mensaje' };
+    return { success: false, error: 'Could not send the message' };
   }
 
   revalidatePath(`/proforma/${proformaId}`);
   revalidatePath(`/p/${proformaId}`);
-  
+
   return { success: true };
 }
 
@@ -121,7 +121,7 @@ export async function markProformaAsSent(proformaId: string) {
 
   if (error) {
     console.error('Error marking proforma as sent:', error);
-    return { success: false, error: 'No se pudo marcar la proforma como enviada' };
+    return { success: false, error: 'Could not mark the quote as sent' };
   }
 
   revalidatePath(`/proforma/${proformaId}`);

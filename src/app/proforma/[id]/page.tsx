@@ -20,6 +20,7 @@ export default async function ProformaView({ params, searchParams }: Props) {
     .from('proformas')
     .select(`
       *,
+      users(display_name, terms_conditions),
       clients (*),
       applied_taxes:users (
       taxes (*)

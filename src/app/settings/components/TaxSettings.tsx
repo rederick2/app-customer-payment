@@ -6,15 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { addTax, deleteTax } from '../actions';
+import { addTax, deleteTax, updateTax } from '../actions';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2, Pencil, X, Check } from 'lucide-react';
 
 export default function TaxSettings({ initialTaxes }: { initialTaxes: any[] }) {
   const [taxes, setTaxes] = useState(initialTaxes);
   const [loading, setLoading] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPercentage, setNewPercentage] = useState('');
+  const [editingTax, setEditingTax] = useState<string | null>(null);
 
   async function handleAddTax(e: React.FormEvent) {
     e.preventDefault();
@@ -26,21 +27,36 @@ export default function TaxSettings({ initialTaxes }: { initialTaxes: any[] }) {
     formData.append('percentage', newPercentage);
 
     try {
-      await addTax(formData);
-      // Optimistic update or just refresh since it's a small app
-      // For now, let's just show a toast. The server component will refresh on revalidatePath.
-      // But since we want immediate feedback, we'd need to fetch or use refresh().
-      // For simplicity in this demo, let's just reload the page to get the new data.
+      if (editingTax) {
+        await updateTax(editingTax, formData);
+        toast.success('Tax updated successfully');
+      } else {
+        await addTax(formData);
+        toast.success('Tax added successfully');
+      }
+      
       window.location.reload();
-      toast.success('Tax added successfully');
       setNewName('');
       setNewPercentage('');
+      setEditingTax(null);
     } catch (error) {
-      toast.error('Failed to add tax');
+      toast.error(editingTax ? 'Failed to update tax' : 'Failed to add tax');
       console.error(error);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleStartEditing(tax: any) {
+    setEditingTax(tax.id);
+    setNewName(tax.name);
+    setNewPercentage(tax.percentage.toString());
+  }
+
+  function handleCancelEdit() {
+    setEditingTax(null);
+    setNewName('');
+    setNewPercentage('');
   }
 
   async function handleDeleteTax(id: string) {
@@ -59,9 +75,9 @@ export default function TaxSettings({ initialTaxes }: { initialTaxes: any[] }) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Add New Tax</CardTitle>
+          <CardTitle>{editingTax ? 'Edit Tax' : 'Add New Tax'}</CardTitle>
           <CardDescription>
-            These taxes will be available to include in your proformas.
+            {editingTax ? 'Update the details for this tax.' : 'These taxes will be available to include in your proformas.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,9 +105,26 @@ export default function TaxSettings({ initialTaxes }: { initialTaxes: any[] }) {
               />
             </div>
             <Button type="submit" disabled={loading} className="w-full md:w-auto">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-              Add Tax
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : editingTax ? (
+                <Check className="h-4 w-4 mr-2" />
+              ) : (
+                <Plus className="h-4 w-4 mr-2" />
+              )}
+              {editingTax ? 'Update Tax' : 'Add Tax'}
             </Button>
+            {editingTax && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={handleCancelEdit} 
+                className="w-full md:w-auto"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
@@ -117,7 +150,15 @@ export default function TaxSettings({ initialTaxes }: { initialTaxes: any[] }) {
                   <TableRow key={tax.id}>
                     <TableCell className="font-medium">{tax.name}</TableCell>
                     <TableCell>{tax.percentage}%</TableCell>
-                    <TableCell>
+                    <TableCell className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleStartEditing(tax)}
+                        className="text-primary hover:text-primary hover:bg-primary/10"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"

@@ -360,7 +360,7 @@ function SortableRow({
         </td>
       </tr>
       {item.details && (
-        <tr 
+        <tr
           style={style}
           className={cn(
             "group transition-all hover:bg-muted/30 cursor-pointer border-b border-primary/5",
@@ -766,10 +766,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         <div className="border-t border-border/30 pt-10 relative z-10 text-center">
           <h4 className="text-xs font-bold uppercase tracking-[0.3em] text-primary/40 mb-4">Terms & Service</h4>
           <p className="text-[11px] text-muted-foreground/60 max-w-2xl mx-auto leading-loose italic">
-            This professional estimate is non-binding until project commencement.
-            Final dimensions and on-site specifications may adjust final billing.
-            A 60% commencement deposit is standard policy.
-            Thank you for choosing EstudioPro for your design vision.
+            {proforma.users.terms_conditions}
           </p>
         </div>
 

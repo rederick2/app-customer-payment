@@ -13,6 +13,7 @@ export async function updateProfile(formData: FormData) {
   const phone = formData.get('phone') as string
   const address = formData.get('address') as string
   const proformaSequenceStart = parseInt(formData.get('proformaSequenceStart') as string) || 1
+  const termsConditions = formData.get('termsConditions') as string
 
   const { error } = await supabase
     .from('users')
@@ -20,7 +21,8 @@ export async function updateProfile(formData: FormData) {
       display_name: displayName,
       phone: phone,
       address: address,
-      proforma_sequence_start: proformaSequenceStart
+      proforma_sequence_start: proformaSequenceStart,
+      terms_conditions: termsConditions
     })
     .eq('id', user.id)
 
@@ -85,6 +87,30 @@ export async function deleteTax(id: string) {
   const { error } = await supabase
     .from('taxes')
     .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) throw error
+
+  revalidatePath('/settings')
+  return { success: true }
+}
+
+export async function updateTax(id: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Unauthorized')
+
+  const name = formData.get('name') as string
+  const percentage = parseFloat(formData.get('percentage') as string)
+
+  const { error } = await supabase
+    .from('taxes')
+    .update({
+      name,
+      percentage
+    })
     .eq('id', id)
     .eq('user_id', user.id)
 

@@ -5,6 +5,7 @@ Font.register({
   family: 'Inter',
   fonts: [
     { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff' },
+    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff', fontStyle: 'italic' },
     { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuI6fAZ9hjp-Ek-_EeA.woff', fontWeight: 600 },
     { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hjp-Ek-_EeA.woff', fontWeight: 700 }
   ]
@@ -249,7 +250,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
                 {proforma.client_signature_data ? (
                   <Image src={proforma.client_signature_data} style={{ width: 140, height: 60, objectFit: 'contain' }} />
                 ) : (
-                  <Text style={{ fontFamily: 'Times-Italic', fontSize: 20, color: '#0f172a', paddingVertical: 15 }}>{proforma.client_signed_name}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', paddingVertical: 15 }}>{proforma.client_signed_name}</Text>
                 )}
                 <Text style={{ fontSize: 9, color: '#6e7a7e', marginTop: 10 }}>{clientNameDisplay}</Text>
                 {proforma.approved_at && (
@@ -281,11 +282,11 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
                 return adjustments.map((adj: any, idx: number) => {
                   const amount = adj.type === 'discount'
                     ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
-                    : 0;
+                    : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
                   return (
                     <View key={idx} style={styles.totalsRow}>
                       <Text style={styles.totalLabel}>
-                        Discount {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
+                        {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
                       </Text>
                       <Text>{adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
                     </View>
@@ -293,12 +294,6 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
                 });
               }
             })()}
-            {proforma.tax > 0 && (
-              <View style={styles.totalsRow}>
-                <Text style={styles.totalLabel}>Tax</Text>
-                <Text>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-              </View>
-            )}
             <View style={styles.totalsRowMain}>
               <Text style={[styles.totalLabel, { color: '#0D3B47' }]}>Estimated Total</Text>
               <Text style={styles.mainTotalValue}>${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
@@ -322,7 +317,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
             )}
             {proforma.payment_terms && (
               <View style={{ marginTop: 4 }}>
-                <Text style={{ fontSize: 9, color: '#666', fontStyle: 'italic', textAlign: 'right' }}>
+                <Text style={{ fontSize: 9, color: '#666', textAlign: 'right' }}>
                   {proforma.payment_terms}
                 </Text>
               </View>
@@ -333,12 +328,18 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
         {/* Footer */}
         <View style={styles.footer} fixed>
           <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>Terms and Conditions</Text>
-          <Text style={styles.footerText}>
-            This quote represents an initial estimate and is subject to change following final on-site measurements.
-          </Text>
-          <Text style={styles.footerText}>
-            This quote is valid for the next 30 days, after which values may be subject to change.
-          </Text>
+          {proforma.users.terms_conditions ? (
+            <Text style={styles.footerText}>{proforma.users.terms_conditions}</Text>
+          ) : (
+            <>
+              <Text style={styles.footerText}>
+                This quote represents an initial estimate and is subject to change following final on-site measurements.
+              </Text>
+              <Text style={styles.footerText}>
+                This quote is valid for the next 30 days, after which values may be subject to change.
+              </Text>
+            </>
+          )}
         </View>
 
       </Page>

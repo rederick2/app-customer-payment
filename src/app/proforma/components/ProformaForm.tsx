@@ -688,8 +688,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
     setAdjustments(adjustments.filter(a => a.id !== id));
   };
 
-  const updateAdjustment = (id: string, field: keyof Adjustment, value: any) => {
-    setAdjustments(adjustments.map(a => a.id === id ? { ...a, [field]: value } : a));
+  const updateAdjustment = (id: string, updates: Partial<Adjustment>) => {
+    setAdjustments(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
   };
 
   const subtotal = calculateSubtotal();
@@ -1110,12 +1110,12 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
         <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
           {/* Subtotal */}
-          <div className="flex justify-between w-full sm:w-80 text-sm font-bold pt-2 border-b border-border/10 pb-4">
+          <div className="flex justify-between w-full sm:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4">
             <span className="text-muted-foreground uppercase text-[10px] tracking-widest self-center">Subtotal:</span>
             <span className="font-bold text-lg">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
 
-          <div className="w-full sm:w-80 space-y-4">
+          <div className="w-full sm:w-96 space-y-4">
             {/* Discount Row */}
             {discountAdjustment ? (
               <div className="flex justify-between items-center group/adj py-1">
@@ -1126,13 +1126,13 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                       type="number"
                       value={discountAdjustment.value || ''}
                       className="w-16 h-full text-center border-none focus-visible:ring-0 text-sm font-bold placeholder:text-muted-foreground/30"
-                      onChange={(e) => updateAdjustment(discountAdjustment.id, 'value', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => updateAdjustment(discountAdjustment.id, { value: parseFloat(e.target.value) || 0 })}
                       placeholder="0"
                     />
                     <div className="h-5 w-px bg-border/20" />
                     <select
                       value={discountAdjustment.valueType}
-                      onChange={(e) => updateAdjustment(discountAdjustment.id, 'valueType', e.target.value)}
+                      onChange={(e) => updateAdjustment(discountAdjustment.id, { valueType: e.target.value as any })}
                       className="pl-2 pr-3 h-full bg-transparent border-none text-[11px] font-bold uppercase text-muted-foreground focus:outline-none cursor-pointer hover:text-primary transition-colors appearance-none"
                     >
                       <option value="percentage">%</option>
@@ -1162,7 +1162,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             {taxAdjustment ? (
               <div className="flex justify-between items-center group/adj py-1">
                 <span className="text-sm font-medium text-foreground min-w-[100px]">Tax</span>
-                <div className="flex items-center gap-2 flex-1 justify-center max-w-[200px]">
+                <div className="flex items-center gap-2 flex-1 justify-center max-w-[280px]">
                   <div className="relative w-full">
                     <select
                       onChange={(e) => {
@@ -1173,8 +1173,10 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                         }
                         const tax = availableTaxes.find(t => t.id === val);
                         if (tax) {
-                          updateAdjustment(taxAdjustment.id, 'value', tax.percentage);
-                          updateAdjustment(taxAdjustment.id, 'label', tax.name);
+                          updateAdjustment(taxAdjustment.id, { 
+                            value: tax.percentage,
+                            label: tax.name
+                          });
                         }
                       }}
                       className="h-11 w-full pl-4 pr-10 border border-border/60 rounded-xl bg-white shadow-sm text-sm font-bold text-[#0D3B47] focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none transition-all cursor-pointer hover:border-primary/40"
@@ -1231,9 +1233,9 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             )}
           </div>
 
-          <div className="flex justify-between w-full sm:w-80 text-3xl font-serif font-black text-primary pt-6 border-t-2 border-primary/10 mt-6 pb-2">
-            <span className="uppercase text-[12px] tracking-[0.3em] self-center">Total:</span>
-            <span className="tabular-nums tracking-tighter">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          <div className="flex justify-between items-center w-full sm:w-96 pt-6 border-t-2 border-primary/10 mt-6 pb-2">
+            <span className="uppercase text-[12px] tracking-[0.3em] font-black text-primary/40">Total</span>
+            <span className="text-3xl font-serif font-black text-primary tabular-nums tracking-tight whitespace-nowrap ml-4">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
           <button 
             type="button" 
@@ -1295,8 +1297,10 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                         // Auto-apply if there's an active tax row
                         const taxAdj = adjustments.find(a => a.type === 'tax');
                         if (taxAdj) {
-                          updateAdjustment(taxAdj.id, 'label', data.name);
-                          updateAdjustment(taxAdj.id, 'value', data.percentage);
+                          updateAdjustment(taxAdj.id, {
+                            label: data.name,
+                            value: data.percentage
+                          });
                         }
                         setNewTaxName("");
                         setNewTaxPercent("");
