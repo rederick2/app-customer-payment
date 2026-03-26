@@ -139,6 +139,7 @@ export default function ProformaDropdownActions({
           clientEmail={proforma.clients?.email || ''}
           projectName={proforma.project_name}
           total={proforma.total}
+          displayName={proforma.users?.display_name}
           openOverride={isEmailModalOpen}
           setOpenOverride={setIsEmailModalOpen}
         />

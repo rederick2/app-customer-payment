@@ -9,12 +9,14 @@ const smtpPassword = process.env.SMTP_PASSWORD;
  * Sends an email using SMTP.
  */
 export async function sendEmail({
+  displayName,
   to,
   subject,
   text,
   html,
   attachments,
 }: {
+  displayName: string;
   to: string[];
   subject: string;
   text?: string;
@@ -39,7 +41,7 @@ export async function sendEmail({
   });
 
   const mailOptions = {
-    from: `"EstudioPro" <${smtpUser}>`,
+    from: `"${displayName}" <${smtpUser}>`,
     to: to.join(', '),
     subject,
     text,

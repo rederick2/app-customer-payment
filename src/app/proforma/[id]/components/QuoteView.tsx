@@ -558,6 +558,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
               clientEmail={proforma.clients?.email || ''}
               projectName={proforma.project_name}
               total={proforma.total}
+              displayName={proforma.users?.display_name}
             />
           </div>
         </div>
@@ -574,8 +575,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-border/50 pb-10 mb-10 relative z-10">
           <div>
-            <h1 className="font-serif text-5xl font-bold tracking-tight text-primary">EstudioPro</h1>
-            <p className="text-md text-muted-foreground mt-2 font-medium tracking-wide">Interior Design & Remodeling</p>
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-primary">{proforma.users?.display_name}</h1>
           </div>
           <div className="mt-8 sm:mt-0 text-right space-y-2">
             <h2 className="text-3xl font-bold text-foreground font-serif uppercase tracking-[0.2em] text-muted-foreground/30 print:text-muted-foreground/80">Quote</h2>

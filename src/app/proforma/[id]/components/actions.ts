@@ -27,7 +27,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
   // 1. Fetch full proforma data for the PDF
   const { data: proforma, error: pError } = await supabase
     .from('proformas')
-    .select('*, clients(*), applied_taxes:users (taxes (*))')
+    .select('*,users(display_name,terms_conditions), clients(*), applied_taxes:users (taxes (*))')
     .eq('id', proformaId)
     .single();
 
@@ -52,6 +52,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
 
     // 3. Send via SMTP
     const { success } = await sendEmail({
+      displayName: proforma.users?.display_name,
       to: [to],
       subject: subject,
       text: message,
@@ -325,10 +326,10 @@ async function recalculateProformaTotals(proformaId: string) {
 
   if (adjustments.length > 0) {
     adjustments.forEach(adj => {
-      const amount = adj.valueType === 'percentage' 
-        ? (newSubtotal * adj.value) / 100 
+      const amount = adj.valueType === 'percentage'
+        ? (newSubtotal * adj.value) / 100
         : adj.value;
-      
+
       if (adj.type === 'tax') {
         newTotalTax += amount;
       } else if (adj.type === 'discount') {
@@ -412,6 +413,7 @@ export async function sendMaterialsEmail(proformaId: string, formData: FormData)
     );
 
     const { success } = await sendEmail({
+      displayName: proforma.users?.display_name,
       to: [to],
       subject: subject,
       text: message,

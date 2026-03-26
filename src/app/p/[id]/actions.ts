@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { sendEmail } from '@/lib/mail';
 
 export async function markMessagesAsRead(proformaId: string, readerRole: 'client' | 'company') {
   // Mark all messages sent by the OTHER party as read
@@ -20,18 +21,85 @@ export async function markMessagesAsRead(proformaId: string, readerRole: 'client
 export async function approveProforma(proformaId: string, signatureData?: string, signatureName?: string) {
   const supabase = createAdminClient();
 
+  // 1. Fetch proforma details and user email
+  const { data: proforma, error: fetchError } = await supabase
+    .from('proformas')
+    .select('project_name, user_id, number, users(display_name)')
+    .eq('id', proformaId)
+    .single();
+
+  if (fetchError || !proforma) {
+    console.error('Error fetching proforma for approval notification:', fetchError);
+    return { success: false, error: 'Proforma not found' };
+  }
+
+  // Fetch the user's email from auth/profiles
+  const { data: userData, error: userError } = await supabase.auth.admin.getUserById(proforma.user_id);
+  const userEmail = userData?.user?.email;
+
+  if (userError || !userEmail) {
+    console.error('Error fetching user email for notification:', userError);
+    // Continue anyway, but log the error
+  }
+
+  // 2. Perform the update
   const updatePayload: any = { status: 'approved', approved_at: new Date().toISOString() };
   if (signatureData) updatePayload.client_signature_data = signatureData;
   if (signatureName) updatePayload.client_signed_name = signatureName;
 
-  const { error } = await supabase
+  const { error: updateError } = await supabase
     .from('proformas')
     .update(updatePayload)
     .eq('id', proformaId);
 
-  if (error) {
-    console.error('Error approving proforma:', error);
+  if (updateError) {
+    console.error('Error approving proforma:', updateError);
     return { success: false, error: 'No se pudo aprobar la proforma' };
+  }
+
+  // 3. Send notification email if user email is available
+  if (userEmail) {
+    try {
+      const proformaNumber = proforma.number || proformaId.split('-')[0].toUpperCase();
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const jobLink = `${baseUrl}/proforma/${proformaId}`;
+
+      await sendEmail({
+        displayName: 'Notify',
+        to: [userEmail],
+        subject: `Job Approved: ${proforma.project_name} (#${proformaNumber})`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; rounded: 12px;">
+            <h1 style="color: #059669; font-size: 24px; margin-bottom: 16px;">Good news! 🎉</h1>
+            <p style="font-size: 16px; color: #374151; line-height: 1.5;">
+              The client has just approved and signed the quote for <strong>${proforma.project_name}</strong>.
+            </p>
+            <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 24px 0;">
+              <p style="margin: 0; font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; font-weight: bold;">Project</p>
+              <p style="margin: 4px 0 16px 0; font-size: 18px; font-weight: bold; color: #111827;">${proforma.project_name}</p>
+              
+              ${signatureName ? `
+                <p style="margin: 0; font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; font-weight: bold;">Approved by</p>
+                <p style="margin: 4px 0 16px 0; font-size: 18px; font-weight: bold; color: #111827;">${signatureName}</p>
+              ` : ''}
+
+              <p style="margin: 0; font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; font-weight: bold;">Quote Number</p>
+              <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: bold; color: #111827;">#${proformaNumber}</p>
+            </div>
+            <a href="${jobLink}" style="display: inline-block; background-color: #059669; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">
+              View Job Details
+            </a>
+            <hr style="margin: 32px 0; border: 0; border-top: 1px solid #e5e7eb;" />
+            <p style="font-size: 12px; color: #9ca3af; text-align: center;">
+              This is an automatic notification from EstudioPro.
+            </p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error('Error sending approval notification email:', emailErr);
+      // Don't fail the whole action if only email fails
+    }
   }
 
   // Actualizar la vista pública y la del administrador
