@@ -12,6 +12,7 @@ export async function updateProfile(formData: FormData) {
   const displayName = formData.get('displayName') as string
   const phone = formData.get('phone') as string
   const address = formData.get('address') as string
+  const proformaSequenceStart = parseInt(formData.get('proformaSequenceStart') as string) || 1
 
   const { error } = await supabase
     .from('users')
@@ -19,6 +20,7 @@ export async function updateProfile(formData: FormData) {
       display_name: displayName,
       phone: phone,
       address: address,
+      proforma_sequence_start: proformaSequenceStart
     })
     .eq('id', user.id)
 

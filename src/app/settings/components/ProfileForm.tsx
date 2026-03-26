@@ -62,6 +62,20 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
               placeholder="123 Design St, City, Country"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="proformaSequenceStart">Next Proforma Number (Starting Sequence)</Label>
+            <Input
+              id="proformaSequenceStart"
+              name="proformaSequenceStart"
+              type="number"
+              min="1"
+              defaultValue={initialData?.proforma_sequence_start || 1}
+              placeholder="e.g. 100"
+            />
+            <p className="text-xs text-muted-foreground">
+              Your next proforma will use this number if it's higher than your current highest number.
+            </p>
+          </div>
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={loading}>

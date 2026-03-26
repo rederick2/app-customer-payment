@@ -58,7 +58,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
       html: buildEmailHtml(message, proformaId),
       attachments: [
         {
-          filename: `cotizacion_${proformaNumber(proformaId)}.pdf`,
+          filename: `cotizacion_${proforma.number || proforma.id.split('-')[0].toUpperCase()}.pdf`,
           content: pdfBuffer,
         },
       ],
@@ -87,9 +87,8 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
   }
 }
 
-function proformaNumber(id: string) {
-  return id.split('-')[0].toUpperCase();
-}
+// Helper removed as we now handle it inline or could use a better one if needed elsewhere.
+// But for now, inline is fine to avoid confusion with types.
 
 function buildEmailHtml(message: string, proformaId: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -419,7 +418,7 @@ export async function sendMaterialsEmail(proformaId: string, formData: FormData)
       html: buildEmailHtml(message, proformaId),
       attachments: [
         {
-          filename: `materiales_${proformaNumber(proformaId)}.pdf`,
+          filename: `materiales_${proforma.number || proforma.id.split('-')[0].toUpperCase()}.pdf`,
           content: pdfBuffer,
         },
       ],

@@ -18,7 +18,7 @@ export default async function Dashboard() {
 
   // ── Counts ──────────────────────────────────────────────────
   const { count: proformasCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true });
+    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'approved');
 
   const { count: clientsCount } = await supabase
     .from('clients').select('*', { count: 'exact', head: true });

@@ -722,6 +722,24 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
     setIsSubmitting(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      let nextNumber: number | undefined;
+      if (mode !== 'edit') {
+        const { data: userData } = await supabase.from('users').select('proforma_sequence_start').eq('id', user.id).single();
+        const startSequence = userData?.proforma_sequence_start || 1;
+
+        const { data: maxProforma } = await supabase
+          .from('proformas')
+          .select('number')
+          .order('number', { ascending: false })
+          .limit(1);
+        
+        const currentMax = maxProforma?.[0]?.number || 0;
+        nextNumber = Math.max(currentMax + 1, startSequence);
+      }
+
       let finalClientId = selectedClientId;
       const clientPayload = {
         title,
@@ -760,7 +778,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         adjustments: calculatedAdjustments,
         payment_terms: paymentTerms,
         deposit_amount: depositAmount,
-        required_deposit: requiredDeposit
+        required_deposit: requiredDeposit,
+        ...(nextNumber !== undefined && { number: nextNumber })
       };
 
       let proformaData;

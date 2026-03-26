@@ -112,7 +112,7 @@ export default async function PublicProformaView({ params }: Props) {
           </div>
           <div className="mt-6 sm:mt-0 text-right">
             <h2 className="text-2xl font-bold text-foreground font-serif uppercase tracking-widest text-muted-foreground/40 print:text-muted-foreground/80">Quote</h2>
-            <p className="text-sm font-medium mt-2">Nº: <span className="font-mono">{proforma.id.split('-')[0].toUpperCase()}</span></p>
+            <p className="text-sm font-medium mt-2">Nº: <span className="font-mono">{proforma.number || proforma.id.split('-')[0].toUpperCase()}</span></p>
             <p className="text-sm">Date: {new Date(proforma.created_at).toLocaleDateString('es-ES')}</p>
           </div>
         </div>
