@@ -566,88 +566,161 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
 
 
       {/* Printable Document Area */}
-      <div className="bg-card print:bg-transparent shadow-2xl print:shadow-none border border-border/50 print:border-none p-10 md:p-16 mb-8 rounded-2xl relative overflow-hidden">
+      <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] print:shadow-none border border-border/40 print:border-none p-12 md:p-20 mb-8 rounded-[2.5rem] relative overflow-hidden">
+        
+        {/* Jobber Green Accent Bar */}
+        <div className="absolute top-0 left-0 right-0 h-2 bg-[#ac8e68]" />
 
-        {/* Design Accents */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-bl-full -mr-32 -mt-32 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-tr-full -ml-16 -mb-16 pointer-events-none" />
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start border-b border-border/50 pb-10 mb-10 relative z-10">
-          <div>
-            <h1 className="font-serif text-4xl font-bold tracking-tight text-primary">{proforma.users?.display_name}</h1>
-          </div>
-          <div className="mt-8 sm:mt-0 text-right space-y-2">
-            <h2 className="text-3xl font-bold text-foreground font-serif uppercase tracking-[0.2em] text-muted-foreground/30 print:text-muted-foreground/80">Quote</h2>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold">REF No: <span className="font-mono text-primary">{proforma.id.split('-')[0].toUpperCase()}</span></p>
-              <p className="text-sm text-muted-foreground">Issued: {new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              <p className="text-sm text-muted-foreground">Valid for 30 days</p>
+        {/* Company Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16 relative z-10">
+          <div className="flex-1 space-y-4">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-foreground leading-tight uppercase">
+                {proforma.users?.display_name}
+              </h1>
+              {proforma.users?.business_license && (
+                <p className="text-xs font-bold text-[#ac8e68] mt-1 tracking-widest uppercase">
+                  {proforma.users.business_license}
+                </p>
+              )}
             </div>
+            
+            <div className="space-y-1 text-sm text-muted-foreground/80 font-medium">
+              <p className="flex items-center gap-2">{proforma.users?.address}</p>
+              {proforma.users?.phone && <p>{proforma.users.phone}</p>}
+              {proforma.users?.email && <p className="text-primary/70">{proforma.users.email}</p>}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end gap-6 w-full md:w-auto">
+            {proforma.users?.logo_url ? (
+              <img 
+                src={proforma.users.logo_url} 
+                alt="Company Logo" 
+                className="h-24 w-auto object-contain max-w-[240px]" 
+              />
+            ) : (
+              <div className="h-24 w-48 rounded-2xl bg-muted/20 border-2 border-dashed border-border/40 flex items-center justify-center">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30">Logo Placeholder</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Client & Project Info */}
-        <div className="grid sm:grid-cols-2 gap-12 mb-16 relative z-10">
-          <div className="p-6 rounded-xl bg-muted/5 border border-border/30">
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-4">Client Information</h3>
-            <p className="font-bold text-xl text-foreground mb-1">
-              {(() => {
-                const c = proforma.clients as any;
-                const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
-                return c.company_name || nameDisplay;
-              })()}
-            </p>
-            {(() => {
-              const c = proforma.clients as any;
-              const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
-              if (c.company_name && nameDisplay) {
-                return <p className="text-sm font-medium text-muted-foreground mb-3">Atte: {nameDisplay}</p>;
-              }
-              return null;
-            })()}
+        {/* Main Info Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20 relative z-10">
+          {/* Recipient */}
+          <div className="lg:col-span-7">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 flex items-center gap-3">
+              <span className="h-px flex-1 bg-border/40" />
+              Prepared For
+            </h3>
+            <div className="space-y-4">
+              <p className="text-3xl font-black text-foreground">
+                {(() => {
+                  const c = proforma.clients as any;
+                  const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
+                  return c.company_name || nameDisplay;
+                })()}
+              </p>
+              
+              <div className="text-lg text-muted-foreground/80 leading-relaxed font-medium">
+                {(() => {
+                  const c = proforma.clients as any;
+                  const items = [c.street_1, c.street_2, c.city, c.province, c.postal_code].filter(Boolean);
+                  return items.length > 0 ? (
+                    <div className="space-y-0.5">
+                      <p>{c.street_1}</p>
+                      {c.street_2 && <p>{c.street_2}</p>}
+                      <p>{[c.city, c.province, c.postal_code].filter(Boolean).join(', ')}</p>
+                    </div>
+                  ) : (c.address && <p>{c.address}</p>);
+                })()}
+              </div>
 
-            <div className="text-sm space-y-1 text-muted-foreground/80">
-              {(() => {
-                const c = proforma.clients as any;
-                const items = [c.street_1, c.street_2, c.city, c.province, c.country].filter(Boolean);
-                return items.length > 0 ? labelsFromAddress(c) : (c.address && <p>{c.address}</p>);
-              })()}
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-border/20 space-y-1">
-              {(proforma.clients as any).email && <p className="text-sm font-medium text-primary/70">{(proforma.clients as any).email}</p>}
-              {(proforma.clients as any).phone && <p className="text-sm text-muted-foreground">{(proforma.clients as any).phone}</p>}
+              <div className="pt-4 flex flex-wrap gap-6 text-sm">
+                {(proforma.clients as any).email && (
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">Email</span>
+                    <span className="font-bold text-primary/80">{(proforma.clients as any).email}</span>
+                  </div>
+                )}
+                {(proforma.clients as any).phone && (
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">Phone</span>
+                    <span className="font-bold text-foreground">{(proforma.clients as any).phone}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center">
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-2">Project Quote</h3>
-            <p className="font-serif text-3xl font-bold text-foreground italic leading-tight">"{proforma.project_name}"</p>
+          {/* Project & Summary Box */}
+          <div className="lg:col-span-5 space-y-8">
+             <div className="rounded-3xl border border-border/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500 bg-background">
+                <div className="bg-[#ac8e68] p-6 text-white">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Estimate Number</span>
+                    <Badge variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm">
+                      {proforma.id.split('-')[0].toUpperCase()}
+                    </Badge>
+                  </div>
+                  <h2 className="text-4xl font-black tracking-tighter">
+                    Estimate
+                  </h2>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground font-bold">Sent on</span>
+                    <span className="font-bold">{new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm border-t border-border/10 pt-4">
+                    <span className="text-muted-foreground font-bold">Email Sent</span>
+                    <span className="font-bold">{(proforma.clients as any).email ? 'Yes' : 'No'}</span>
+                  </div>
+                  
+                  <div className="mt-6 pt-6 border-t font-black flex justify-between items-end">
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground/60">Total Amount</span>
+                    <span className="text-4xl text-[#ac8e68] tracking-tighter">
+                      ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+             </div>
+
+             <div className="px-6">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-3 flex items-center gap-3">
+                  Project
+                </h3>
+                <p className="text-2xl font-black text-foreground italic leading-tight">
+                  "{proforma.project_name}"
+                </p>
+             </div>
           </div>
         </div>
 
-        {/* Items Context */}
+        {/* Items Table */}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
           modifiers={[restrictToVerticalAxis]}
         >
-          <div className="mb-12 relative z-10">
+          <div className="mb-20 relative z-10 overflow-hidden rounded-[2rem] border border-border/40 shadow-sm">
             <table className="w-full text-sm text-left border-collapse">
-              <thead className="bg-[#F4F2EC]/80 backdrop-blur-sm print:bg-transparent text-[#0D3B47] border-y border-primary/10">
+              <thead className="bg-[#ac8e68] text-white">
                 <tr>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider w-10"></th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider w-10 text-center text-[10px]">Include</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider">Product / Service</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-center w-24">Media</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-24">Qty</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-32">Unit Price</th>
-                  <th className="px-4 py-4 font-bold uppercase tracking-wider text-right w-32">Total</th>
+                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] w-12 text-center"></th>
+                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] w-16 text-center">Include</th>
+                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px]">Product / Service</th>
+                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-center w-24">Media</th>
+                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-center w-24">Qty</th>
+                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-right w-36">Unit Price</th>
+                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-right w-36">Total</th>
                 </tr>
               </thead>
-              <tbody className="relative">
+              <tbody className="bg-white divide-y divide-border/20">
                 <SortableContext
                   items={items.map(i => i.id)}
                   strategy={verticalListSortingStrategy}
@@ -671,103 +744,105 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
           </div>
         </DndContext>
 
-        {/* Totals Box */}
-        <div className="flex justify-end mb-20 print:break-inside-avoid relative z-10">
-          <div className="w-full sm:w-1/2 p-8 bg-[#F4F2EC] print:bg-transparent print:border print:border-border/50 rounded-2xl border border-primary/5 space-y-4 text-[#0D3B47] shadow-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium tracking-wide uppercase opacity-70">Subtotal</span>
-              <span className="font-mono font-bold">${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-            </div>
-
-            <div className="space-y-3 py-2">
-              {(() => {
-                const adjustments = (proforma.adjustments || []) as any[];
-                if (adjustments.length > 0) {
-                  const subtotal = proforma.subtotal;
-                  const discountAdjustments = adjustments.filter(a => a.type === 'discount');
-                  const taxAdjustments = adjustments.filter(a => a.type === 'tax');
-
-                  const totalDiscount = discountAdjustments.reduce((acc, adj) => {
-                    return acc + (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value);
-                  }, 0);
-
-                  const taxableAmount = subtotal - totalDiscount;
-
-                  return adjustments.map((adj, idx) => {
-                    const amount = adj.type === 'discount'
-                      ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
-                      : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
-
-                    return (
-                      <div key={idx} className="flex justify-between items-center text-sm opacity-80 group/adj">
-                        <span className="font-medium">
-                          {adj.label}
-                          {adj.valueType === 'percentage' && (
-                            <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{adj.value}%</span>
-                          )}
-                        </span>
-                        <span className={cn("font-mono font-bold", adj.type === 'discount' ? "text-red-600" : "")}>
-                          {adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
-                    );
-                  });
-                } else if (Array.isArray(proforma.applied_taxes?.taxes) && proforma.applied_taxes.taxes.length > 0) {
-                  return proforma.applied_taxes.taxes.map((tax: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center text-sm opacity-80">
-                      <span className="font-medium">{tax.name} <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 rounded">{tax.percentage}%</span></span>
-                      <span className="font-mono">${((tax.percentage * proforma.subtotal) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  ));
-                } else {
-                  return (
-                    <div className="flex justify-between items-center text-sm opacity-80">
-                      <span className="font-medium">Tax (0%)</span>
-                      <span className="font-mono">${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  );
-                }
-              })()}
-            </div>
-
-            {((proforma as any).deposit_amount > 0 || (proforma as any).required_deposit > 0) && (
-              <div className="pt-4 border-t border-dashed border-[#0D3B47]/20 mt-2 space-y-2">
-                {(proforma as any).required_deposit > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Required Deposit</span>
-                    <span className="font-mono font-bold text-primary text-lg">
-                      ${(proforma as any).required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                )}
-                {(proforma as any).deposit_amount > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Amount Collected</span>
-                    <span className="font-mono font-bold text-[#306C3E] text-lg">
-                      ${(proforma as any).deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                )}
-                {(proforma as any).payment_terms && (
-                  <p className="text-[10px] text-muted-foreground/80 mt-1 text-right italic leading-snug">
-                    {(proforma as any).payment_terms}
+        {/* Deposit & Totals Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-24 relative z-10">
+          <div className="lg:col-span-7">
+            {proforma.required_deposit > 0 && (
+              <div className="p-8 rounded-[2rem] bg-[#ac8e68]/5 border-2 border-dashed border-[#ac8e68]/20 flex items-center gap-8">
+                <div className="h-16 w-16 rounded-2xl bg-[#ac8e68] flex items-center justify-center text-white shadow-lg shadow-[#ac8e68]/20">
+                  <Check className="h-8 w-8 stroke-[3px]" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ac8e68] mb-1">Required Deposit</h4>
+                  <p className="text-xl font-black text-foreground">
+                    A deposit of <span className="text-[#ac8e68]">${proforma.required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span> will be required to begin.
                   </p>
-                )}
+                </div>
               </div>
             )}
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium tracking-wide uppercase opacity-70">Total</span>
-              <span className="font-mono font-bold">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          </div>
+
+          <div className="lg:col-span-5">
+            <div className="space-y-4 px-6">
+              <div className="flex justify-between items-center text-sm font-bold text-muted-foreground">
+                <span className="uppercase tracking-widest text-[10px]">Subtotal</span>
+                <span className="text-foreground">${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              </div>
+
+              <div className="space-y-4 py-4 border-y border-border/10">
+                {(() => {
+                  const adjustments = (proforma.adjustments || []) as any[];
+                  if (adjustments.length > 0) {
+                    const subtotal = proforma.subtotal;
+                    const discountAdjustments = adjustments.filter(a => a.type === 'discount');
+                    const totalDiscount = discountAdjustments.reduce((acc, adj) => {
+                      return acc + (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value);
+                    }, 0);
+                    const taxableAmount = subtotal - totalDiscount;
+
+                    return adjustments.map((adj, idx) => {
+                      const amount = adj.type === 'discount'
+                        ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
+                        : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
+
+                      return (
+                        <div key={idx} className="flex justify-between items-center text-sm font-bold">
+                          <span className="text-muted-foreground uppercase tracking-widest text-[10px]">
+                            {adj.label}
+                            {adj.valueType === 'percentage' && (
+                              <span className="ml-2 py-0.5 px-2 bg-muted rounded-full text-[9px]">{adj.value}%</span>
+                            )}
+                          </span>
+                          <span className={cn(adj.type === 'discount' ? "text-red-500" : "text-foreground")}>
+                            {adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      );
+                    });
+                  }
+                  return (
+                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground">
+                      <span className="uppercase tracking-widest text-[10px]">Tax (0.0%)</span>
+                      <span>$0.00</span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex justify-between items-center pt-4">
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/60">Total</span>
+                <span className="text-5xl font-black text-foreground tracking-tighter">
+                  ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer Notes */}
-        <div className="border-t border-border/30 pt-10 relative z-10 text-center">
-          <h4 className="text-xs font-bold uppercase tracking-[0.3em] text-primary/40 mb-4">Terms & Service</h4>
-          <p className="text-[11px] text-muted-foreground/60 max-w-2xl mx-auto leading-loose italic">
-            {proforma.users.terms_conditions}
-          </p>
+        <div className="border-t border-border/10 pt-16 relative z-10 text-center space-y-8">
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ac8e68]">Thank You</h4>
+            <p className="text-muted-foreground text-sm font-medium">Please contact us with any questions regarding this estimate.</p>
+          </div>
+          
+          <div className="bg-muted/30 rounded-[2.5rem] p-10 max-w-3xl mx-auto">
+            <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-4">Terms & Service</h5>
+            <p className="text-xs text-muted-foreground/80 leading-relaxed italic font-medium">
+              {proforma.users.terms_conditions || "This quote represents an initial estimate and is subject to change following final on-site measurements."}
+            </p>
+          </div>
+
+          <div className="pt-12 grid grid-cols-1 md:grid-cols-2 gap-16 max-w-4xl mx-auto">
+            <div className="space-y-4">
+              <div className="h-px bg-foreground/20 w-full" />
+              <p className="text-[10px] font-black uppercase tracking-widest">Client Signature</p>
+            </div>
+            <div className="space-y-4">
+              <div className="h-px bg-foreground/20 w-full" />
+              <p className="text-[10px] font-black uppercase tracking-widest">Date</p>
+            </div>
+          </div>
         </div>
 
       </div>

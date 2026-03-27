@@ -30,7 +30,8 @@ export default async function PublicProformaLayout({
       ),
       users (
         phone,
-        display_name
+        display_name,
+        logo_url
       )
     `)
     .eq('id', id)
@@ -48,7 +49,10 @@ export default async function PublicProformaLayout({
     .eq('sender_type', 'company')
     .is('read_at', null);
 
-  const clientData = proforma.clients as any;
+  // Normalize joined data which might come back as arrays from Supabase
+  const userData = (Array.isArray(proforma.users) ? proforma.users[0] : proforma.users) as any;
+  const clientData = (Array.isArray(proforma.clients) ? proforma.clients[0] : proforma.clients) as any;
+
   const clientName = clientData?.company_name ||
     [clientData?.first_name, clientData?.last_name].filter(Boolean).join(' ') ||
     clientData?.name ||
@@ -62,7 +66,11 @@ export default async function PublicProformaLayout({
 
         {/* Client Branding */}
         <div className="mb-8 px-2">
-          <h2 className="text-xl font-bold text-[#0D3B47]">{clientName}</h2>
+          {userData?.logo_url ? (
+            <img src={userData.logo_url} alt="Logo" className="h-12 w-auto" />
+          ) : (
+            <h1 className="font-serif text-3xl font-bold tracking-tight uppercase text-primary">{userData?.display_name}</h1>
+          )}
         </div>
 
         {/* New Request Button */}
@@ -102,7 +110,7 @@ export default async function PublicProformaLayout({
 
         {/* Bottom Links */}
         <div className="pt-4 space-y-1 border-t border-[#E2E0D8]">
-          <ContactUsModal phoneNumber={(proforma.users as any)?.phone} />
+          <ContactUsModal phoneNumber={userData?.phone} />
           {/*<div className="flex items-center px-3 py-3 text-sm font-semibold text-[#0D3B47] rounded-md hover:bg-black/5 transition-colors cursor-pointer">
             <LogOut className="mr-3 h-5 w-5 text-[#0D3B47]" />
             Log Out
@@ -130,7 +138,7 @@ export default async function PublicProformaLayout({
       </main>
 
       {/* Mobile Navigation (bottom tab bar + top header) */}
-      <PublicMobileNav id={id} unreadCount={unreadCount ?? 0} phoneNumber={(proforma.users as any)?.phone} companyName={(proforma.users as any)?.display_name} />
+      <PublicMobileNav id={id} unreadCount={unreadCount ?? 0} phoneNumber={userData?.phone} companyName={userData?.display_name} />
 
       {/* Invisible realtime listener — keeps the badge count live for the client */}
       <RealtimeNotifier proformaIds={[id]} watchSenderType="company" />

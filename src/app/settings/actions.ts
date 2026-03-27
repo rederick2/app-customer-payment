@@ -12,18 +12,55 @@ export async function updateProfile(formData: FormData) {
   const displayName = formData.get('displayName') as string
   const phone = formData.get('phone') as string
   const address = formData.get('address') as string
+  const businessLicense = formData.get('businessLicense') as string
   const proformaSequenceStart = parseInt(formData.get('proformaSequenceStart') as string) || 1
   const termsConditions = formData.get('termsConditions') as string
+  const logoFile = formData.get('logoFile') as File | null
+  const removeLogo = formData.get('removeLogo') === 'true'
+
+  let logoUrl = undefined
+
+  if (removeLogo) {
+    logoUrl = null
+  }
+
+  if (logoFile && logoFile.size > 0) {
+    const fileExt = logoFile.name.split('.').pop()
+    const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
+    const filePath = `logos/${fileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('company-logos')
+      .upload(filePath, logoFile, {
+        cacheControl: '3600',
+        upsert: true
+      })
+
+    if (uploadError) throw uploadError
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('company-logos')
+      .getPublicUrl(filePath)
+
+    logoUrl = publicUrl
+  }
+
+  const updateData: any = {
+    display_name: displayName,
+    phone: phone,
+    address: address,
+    business_license: businessLicense,
+    proforma_sequence_start: proformaSequenceStart,
+    terms_conditions: termsConditions
+  }
+
+  if (logoUrl !== undefined) {
+    updateData.logo_url = logoUrl
+  }
 
   const { error } = await supabase
     .from('users')
-    .update({
-      display_name: displayName,
-      phone: phone,
-      address: address,
-      proforma_sequence_start: proformaSequenceStart,
-      terms_conditions: termsConditions
-    })
+    .update(updateData)
     .eq('id', user.id)
 
   if (error) throw error

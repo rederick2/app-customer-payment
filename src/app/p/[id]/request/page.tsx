@@ -34,10 +34,11 @@ export default async function PublicNewServiceRequest({ params }: Props) {
     notFound();
   }
 
-  const clientData = proforma.clients as any;
-  const clientName = clientData.company_name ||
-    [clientData.first_name, clientData.last_name].filter(Boolean).join(' ') ||
-    clientData.name ||
+  // Normalize joined client data
+  const clientData = (Array.isArray(proforma.clients) ? proforma.clients[0] : proforma.clients) as any;
+  const clientName = clientData?.company_name ||
+    [clientData?.first_name, clientData?.last_name].filter(Boolean).join(' ') ||
+    clientData?.name ||
     'Cliente';
 
   return (

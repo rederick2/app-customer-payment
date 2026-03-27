@@ -50,7 +50,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
       *,
       clients (*),
       applied_taxes:users (taxes (*)),
-      users (display_name, terms_conditions),
+      users (display_name, terms_conditions, logo_url, business_license, address, phone, email),
       invoices (*)
     `)
     .eq('id', id)
@@ -61,13 +61,17 @@ export default async function PublicProformaView({ params, searchParams }: Props
     notFound();
   }
 
+  // Normalize joined data
+  const userData = (Array.isArray(proforma.users) ? proforma.users[0] : proforma.users) as any;
+  const clientData = (Array.isArray(proforma.clients) ? proforma.clients[0] : proforma.clients) as any;
+
   // Determine if we should show this as an invoice
   // We show as invoice if type=invoice is passed AND an invoice exists, 
   // or if the proforma status is 'invoice' (legacy)
-  const associatedInvoice = proforma.invoices && proforma.invoices.length > 0 
-    ? proforma.invoices[0] 
+  const associatedInvoice = proforma.invoices && proforma.invoices.length > 0
+    ? proforma.invoices[0]
     : null;
-  
+
   const isInvoiceView = type === 'invoice' && associatedInvoice;
   const displayStatus = isInvoiceView ? associatedInvoice.status : (proforma.status || 'draft');
   const displayTitle = isInvoiceView ? 'Invoice' : 'Quote';
@@ -128,7 +132,27 @@ export default async function PublicProformaView({ params, searchParams }: Props
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-border pb-8 mb-8 relative z-20">
           <div>
-            <h1 className="font-serif text-4xl font-bold tracking-tight text-primary">{proforma.users.display_name}</h1>
+            <h1 className="font-serif text-3xl font-bold tracking-tight uppercase text-primary">{userData?.display_name}</h1>
+            {userData?.business_license && (
+              <p className="text-sm font-medium mt-0.5 mb-1">
+                {userData.business_license}
+              </p>
+            )}
+            {userData?.address && (
+              <p className="text-sm font-medium mt-0.5 mb-1">
+                {userData.address}
+              </p>
+            )}
+            {userData?.phone && (
+              <p className="text-sm font-medium mt-0.5 mb-1">
+                {userData.phone}
+              </p>
+            )}
+            {userData?.email && (
+              <p className="text-sm font-medium mt-0.5 mb-1">
+                {userData.email}
+              </p>
+            )}
           </div>
           <div className="mt-6 sm:mt-0 text-right">
             <h2 className="text-2xl font-bold text-foreground font-serif uppercase tracking-widest text-muted-foreground/40 print:text-muted-foreground/80">{displayTitle}</h2>
@@ -143,13 +167,13 @@ export default async function PublicProformaView({ params, searchParams }: Props
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Prepared For:</h3>
             <p className="font-medium text-lg text-foreground">
               {(() => {
-                const c = proforma.clients as any;
+                const c = clientData;
                 const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
                 return c.company_name || nameDisplay;
               })()}
             </p>
             {(() => {
-              const c = proforma.clients as any;
+              const c = clientData;
               const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
               if (c.company_name && nameDisplay) {
                 return (
@@ -164,7 +188,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
             {/* Address block */}
             <div className="text-sm mt-1 space-y-0.5">
               {(() => {
-                const c = proforma.clients as any;
+                const c = clientData;
                 const hasDetailedAddress = c.street_1 || c.city;
 
                 if (hasDetailedAddress) {
@@ -186,8 +210,8 @@ export default async function PublicProformaView({ params, searchParams }: Props
             </div>
 
             <div className="mt-1.5 space-y-0.5">
-              {(proforma.clients as any).email && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Mail className="w-4 h-4 text-green-500" />{(proforma.clients as any).email}</p>}
-              {(proforma.clients as any).phone && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="w-4 h-4 text-green-500" />{(proforma.clients as any).phone}</p>}
+              {clientData?.email && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Mail className="w-4 h-4 text-green-500" />{clientData.email}</p>}
+              {clientData?.phone && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="w-4 h-4 text-green-500" />{clientData.phone}</p>}
             </div>
           </div>
           <div>
@@ -375,7 +399,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
                 <div className="mt-2 text-center sm:text-left space-y-1">
                   <p className="text-sm font-bold text-foreground">
                     {(() => {
-                      const c = proforma.clients as any;
+                      const c = clientData;
                       const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
                       return c.company_name || nameDisplay;
                     })()}
@@ -399,7 +423,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
         <div className="border-t border-border/50 pt-8 mt-auto print:fixed print:bottom-8 print:w-full print:border-t-2 relative z-20">
           <p className="text-xs text-muted-foreground mb-1 text-center font-medium">Terms and Conditions</p>
           <div className="text-xs text-muted-foreground text-center whitespace-pre-wrap">
-            {proforma.users.terms_conditions || (
+            {userData?.terms_conditions || (
               <>
                 This quote represents an initial estimate and is subject to change after final measurement on site.{"\n"}
                 This quote is valid for the next 30 days, after which values may be subject to change.

@@ -11,160 +11,207 @@ Font.register({
   ]
 });
 
+const BRAND_BROWN = '#ac8e68';
+const DARK_NAVY = '#303030';
+const LIGHT_GREY = '#f0f4f7';
+
 const styles = StyleSheet.create({
   page: {
     paddingTop: 40,
     paddingHorizontal: 40,
-    paddingBottom: 110,
+    paddingBottom: 50, // Reduced to reclaim space since Terms are now only at the end
     fontFamily: 'Inter',
     fontSize: 10,
-    color: '#0D3B47',
+    color: DARK_NAVY,
     backgroundColor: '#ffffff'
   },
-  headerRow: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E0D8',
-    paddingBottom: 20,
-    marginBottom: 20
+    marginBottom: 40,
+    alignItems: 'flex-start'
+  },
+  companyInfo: {
+    width: '60%',
   },
   companyName: {
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: 700,
-    color: '#306C3E'
+    marginBottom: 4,
+    color: '#000000'
   },
-  companySub: {
-    fontSize: 10,
-    color: '#6e7a7e',
-    marginTop: 4
-  },
-  proformaTitle: {
-    fontSize: 18,
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    color: '#6e7a7e',
-    letterSpacing: 2
-  },
-  proformaDetails: {
-    fontSize: 10,
-    textAlign: 'right',
-    marginTop: 8,
-    color: '#3d4b4f'
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    marginBottom: 30
-  },
-  infoCol: {
-    flex: 1
-  },
-  sectionTitle: {
+  companyDetail: {
     fontSize: 9,
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    color: '#6e7a7e',
-    letterSpacing: 1,
-    marginBottom: 6
+    color: '#666666'
   },
-  clientName: {
+  logo: {
+    width: 120,
+    height: 60,
+    objectFit: 'contain'
+  },
+  mainContentGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20
+  },
+  recipientBox: {
+    width: '50%'
+  },
+  label: {
+    fontSize: 8,
+    fontWeight: 700,
+    color: '#999999',
+    textTransform: 'uppercase',
+    marginBottom: 8
+  },
+  recipientName: {
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 700,
     marginBottom: 4
   },
-  textRow: {
-    marginBottom: 2,
-    color: '#3d4b4f'
+  recipientDetail: {
+    fontSize: 10,
+    color: '#444444',
+    marginBottom: 2
+  },
+  summaryBox: {
+    width: '40%',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 4,
+    overflow: 'hidden'
+  },
+  summaryHeader: {
+    backgroundColor: BRAND_BROWN,
+    paddingVertical: 8,
+    paddingHorizontal: 15
+  },
+  summaryHeaderText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 700
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9'
+  },
+  summaryTotalRow: {
+    backgroundColor: BRAND_BROWN,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 15
+  },
+  summaryTotalLabel: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase'
+  },
+  summaryTotalValue: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: 700
   },
   table: {
-    width: '100%',
+    marginTop: 20,
     marginBottom: 30
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#F4F2EC',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E0D8',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E0D8',
-    paddingVertical: 8,
-    paddingHorizontal: 4
+    backgroundColor: BRAND_BROWN,
+    color: '#ffffff',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    fontWeight: 700
   },
-  colDesc: { flex: 4, fontWeight: 600 },
-  colQty: { flex: 1, textAlign: 'right', fontWeight: 600 },
-  colPrice: { flex: 2, textAlign: 'right', fontWeight: 600 },
-  colTotal: { flex: 2, textAlign: 'right', fontWeight: 600 },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 4
   },
-  itemDesc: {
-    fontWeight: 600,
-    marginBottom: 2
+  colService: { flex: 2 },
+  colDesc: { flex: 3 },
+  colQty: { width: 40, textAlign: 'center' },
+  colPrice: { width: 80, textAlign: 'right' },
+  colTotal: { width: 90, textAlign: 'right' },
+  tableHeaderText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: 700,
+    textTransform: 'uppercase'
+  },
+  itemTitle: {
+    fontSize: 10,
+    fontWeight: 700,
+    marginBottom: 4
   },
   itemDetails: {
     fontSize: 9,
-    color: '#6e7a7e',
-    paddingRight: 10
+    color: '#666666',
+    lineHeight: 1.4
+  },
+  depositMessage: {
+    fontSize: 11,
+    fontWeight: 700,
+    marginVertical: 20,
+    color: DARK_NAVY
   },
   totalsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 40
-  },
-  signatureBox: {
-    width: '40%',
-    paddingTop: 10,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E0D8'
+    justifyContent: 'flex-end',
+    marginBottom: 10
   },
   totalsBox: {
-    width: '50%',
-    backgroundColor: '#F4F2EC',
-    padding: 15,
-    borderRadius: 4
+    width: '40%'
   },
   totalsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9'
   },
-  totalsRowMain: {
+  totalsRowFinal: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E0D8'
-  },
-  totalLabel: {
-    fontWeight: 600,
-    color: '#6e7a7e'
-  },
-  mainTotalValue: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: '#306C3E'
+    paddingVertical: 10,
+    marginTop: 5,
+    borderTopWidth: 2,
+    borderTopColor: DARK_NAVY
   },
   footer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 40,
-    right: 40,
+    paddingTop: 40,
     borderTopWidth: 1,
-    borderTopColor: '#E2E0D8',
-    paddingTop: 10,
-    textAlign: 'center'
+    borderTopColor: '#eeeeee'
   },
-  footerText: {
-    fontSize: 8,
-    color: '#6e7a7e',
-    marginBottom: 2
+  thankYou: {
+    fontSize: 9,
+    color: '#666666',
+    marginBottom: 40
+  },
+  signatureSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  signatureLineBox: {
+    width: '45%'
+  },
+  signatureLine: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#000000',
+    height: 40,
+    marginBottom: 8
+  },
+  signatureLabel: {
+    fontSize: 9,
+    fontWeight: 700
   }
 });
 
@@ -181,92 +228,115 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
     'Cliente';
 
   const proformaNumber = proforma.id.split('-')[0].toUpperCase();
-  const dateFormatted = new Date(proforma.created_at).toLocaleDateString('es-ES');
-  const validUntilFormatted = new Date(proforma.valid_until).toLocaleDateString('es-ES');
+  const dateFormatted = new Date(proforma.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const user = proforma.users || {};
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
 
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.companyName}>{proforma.users.display_name}</Text>
+        {/* Header: Company Info and Logo */}
+        <View style={styles.headerContainer}>
+          <View style={styles.companyInfo}>
+            <Text style={[styles.companyName, { color: BRAND_BROWN }]}>{user.display_name?.toUpperCase()}</Text>
+            {user.business_license && (
+              <Text style={[styles.companyDetail, { color: BRAND_BROWN, fontSize: 8 }]}>
+                {user.business_license}
+              </Text>
+            )}
+            <Text style={styles.companyDetail}>{user.address}</Text>
+            {user.phone && (
+              <Text style={styles.companyDetail}>{user.phone}</Text>
+            )}
+            {user.email && (
+              <Text style={styles.companyDetail}>{user.email}</Text>
+            )}
           </View>
           <View>
-            <Text style={styles.proformaTitle}>Quote</Text>
-            <Text style={styles.proformaDetails}>Nº: {proformaNumber}</Text>
-            <Text style={styles.proformaDetails}>Date: {dateFormatted}</Text>
+            {user.logo_url ? (
+              <Image src={user.logo_url} style={styles.logo} />
+            ) : (
+              <View style={[styles.logo, { backgroundColor: '#f9fafb', justifyContent: 'center', alignItems: 'center', borderColor: '#e5e7eb', borderWidth: 1, borderRadius: 8 }]}>
+                <Text style={{ fontSize: 8, color: '#9ca3af' }}>Logo Placeholder</Text>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* Client & Project */}
-        <View style={styles.infoGrid}>
-          <View style={styles.infoCol}>
-            <Text style={styles.sectionTitle}>Prepared For:</Text>
-            <Text style={styles.clientName}>{clientNameDisplay}</Text>
-            {client?.email && <Text style={styles.textRow}>{client.email}</Text>}
-            {client?.phone && <Text style={styles.textRow}>{client.phone}</Text>}
+        {/* Content Grid: Recipient and Summary Box */}
+        <View style={styles.mainContentGrid}>
+          <View style={styles.recipientBox}>
+            <Text style={styles.label}>Recipient:</Text>
+            <Text style={styles.recipientName}>{clientNameDisplay}</Text>
+            {client?.street_1 && <Text style={styles.recipientDetail}>{client.street_1}</Text>}
+            {client?.street_2 && <Text style={styles.recipientDetail}>{client.street_2}</Text>}
+            <Text style={styles.recipientDetail}>
+              {[client?.city, client?.province, client?.postal_code].filter(Boolean).join(', ')}
+            </Text>
+            {client?.phone && <Text style={[styles.recipientDetail, { marginTop: 10 }]}>Phone: {client.phone}</Text>}
           </View>
-          <View style={styles.infoCol}>
-            <Text style={styles.sectionTitle}>Project Details:</Text>
-            <Text style={styles.clientName}>{proforma.project_name}</Text>
+
+          <View style={styles.summaryBox}>
+            <View style={styles.summaryHeader}>
+              <Text style={styles.summaryHeaderText}>Estimate #{proformaNumber}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={{ color: '#666' }}>Sent on</Text>
+              <Text>{dateFormatted}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={{ color: '#666' }}>email</Text>
+              <Text>{client?.email ? 'Yes' : 'No'}</Text>
+            </View>
+            <View style={styles.summaryTotalRow}>
+              <Text style={styles.summaryTotalLabel}>Total</Text>
+              <Text style={styles.summaryTotalValue}>
+                ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Items Table */}
+        {/* Line Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={styles.colDesc}>Description</Text>
-            <Text style={styles.colQty}>Qty.</Text>
-            <Text style={styles.colPrice}>Unit Price</Text>
-            <Text style={styles.colTotal}>Total</Text>
+            <Text style={[styles.tableHeaderText, { flex: 8 }]}>Product/Service</Text>
+            <Text style={[styles.tableHeaderText, styles.colQty]}>Qty.</Text>
+            <Text style={[styles.tableHeaderText, styles.colPrice]}>Unit Price</Text>
+            <Text style={[styles.tableHeaderText, styles.colTotal]}>Total</Text>
           </View>
 
           {items && items.map((item, i) => (
             <View wrap={false} key={i} style={styles.tableRow}>
-              <View style={styles.colDesc}>
-                <Text style={styles.itemDesc}>{item.description}</Text>
+              <View style={{ flex: 8 }}>
+                <Text style={styles.itemTitle}>{item.description}</Text>
                 {item.details && <Text style={styles.itemDetails}>{item.details}</Text>}
               </View>
-              <Text style={styles.colQty}>{item.quantity}</Text>
-              <Text style={styles.colPrice}>
+              <Text style={[styles.recipientDetail, styles.colQty]}>{item.quantity}</Text>
+              <Text style={[styles.recipientDetail, styles.colPrice]}>
                 ${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </Text>
-              <Text style={styles.colTotal}>
+              <Text style={[styles.recipientDetail, styles.colTotal, { fontWeight: 700 }]}>
                 ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </Text>
             </View>
           ))}
         </View>
 
-        {/* Totals & Signature */}
-        <View style={styles.totalsContainer} wrap={false}>
-          {/* Signature Box (Left) */}
-          <View style={{ width: '55%', marginTop: 20 }}>
-            {proforma.status === 'approved' && (proforma.client_signature_data || proforma.client_signed_name) ? (
-              <View style={styles.signatureBox}>
-                <Text style={{ fontSize: 8, fontWeight: 700, color: '#6e7a7e', marginBottom: 10 }}>Authorized Signature</Text>
-                {proforma.client_signature_data ? (
-                  <Image src={proforma.client_signature_data} style={{ width: 140, height: 60, objectFit: 'contain' }} />
-                ) : (
-                  <Text style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', paddingVertical: 15 }}>{proforma.client_signed_name}</Text>
-                )}
-                <Text style={{ fontSize: 9, color: '#6e7a7e', marginTop: 10 }}>{clientNameDisplay}</Text>
-                {proforma.approved_at && (
-                  <Text style={{ fontSize: 7, color: '#6e7a7e', marginTop: 4 }}>
-                    {new Date(proforma.approved_at).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}
-                  </Text>
-                )}
-              </View>
-            ) : null}
-          </View>
+        {/* Deposit Note */}
+        {proforma.required_deposit > 0 && (
+          <Text style={[styles.depositMessage, { color: BRAND_BROWN }]}>
+            A deposit of ${proforma.required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })} will be required to begin.
+          </Text>
+        )}
 
-          {/* Totals Box (Right) */}
+        {/* Totals Section */}
+        <View style={styles.totalsContainer} wrap={false}>
           <View style={styles.totalsBox}>
             <View style={styles.totalsRow}>
-              <Text style={styles.totalLabel}>Subtotal</Text>
-              <Text>${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+              <Text style={{ color: '#666' }}>Subtotal</Text>
+              <Text style={{ fontWeight: 700 }}>${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
             </View>
 
             {(() => {
@@ -278,68 +348,114 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
               }, 0);
               const taxableAmount = subtotal - totalDiscount;
 
-              if (adjustments.length > 0 && totalDiscount > 0) {
-                return adjustments.map((adj: any, idx: number) => {
-                  const amount = adj.type === 'discount'
-                    ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
-                    : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
-                  return (
-                    <View key={idx} style={styles.totalsRow}>
-                      <Text style={styles.totalLabel}>
-                        {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
-                      </Text>
-                      <Text>{adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-                    </View>
-                  );
-                });
-              }
-            })()}
-            <View style={styles.totalsRowMain}>
-              <Text style={[styles.totalLabel, { color: '#0D3B47' }]}>Estimated Total</Text>
-              <Text style={styles.mainTotalValue}>${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
-            </View>
+              let hasAdjustments = false;
+              const rows = adjustments.map((adj: any, idx: number) => {
+                hasAdjustments = true;
+                const amount = adj.type === 'discount'
+                  ? (adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value)
+                  : (adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value);
+                return (
+                  <View key={idx} style={styles.totalsRow}>
+                    <Text style={{ color: '#666' }}>
+                      {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
+                    </Text>
+                    <Text>{adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+                  </View>
+                );
+              });
 
-            {proforma.required_deposit > 0 && (
-              <View style={[styles.totalsRow, { marginTop: 10, borderTop: '1px dashed #e2e0d8', paddingTop: 8 }]}>
-                <Text style={[styles.totalLabel, { color: '#0D3B47', fontSize: 10 }]}>Required Deposit</Text>
-                <Text style={{ color: '#0D3B47', fontWeight: 'bold' }}>
-                  ${proforma.required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </Text>
-              </View>
-            )}
-            {proforma.deposit_amount > 0 && (
-              <View style={[styles.totalsRow, { marginTop: proforma.required_deposit > 0 ? 4 : 10, borderTop: proforma.required_deposit > 0 ? 'none' : '1px dashed #e2e0d8', paddingTop: proforma.required_deposit > 0 ? 0 : 8 }]}>
-                <Text style={[styles.totalLabel, { color: '#306C3E', fontSize: 10 }]}>Monto Depositado</Text>
-                <Text style={{ color: '#306C3E', fontWeight: 'bold' }}>
-                  ${proforma.deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </Text>
-              </View>
-            )}
-            {proforma.payment_terms && (
-              <View style={{ marginTop: 4 }}>
-                <Text style={{ fontSize: 9, color: '#666', textAlign: 'right' }}>
-                  {proforma.payment_terms}
-                </Text>
-              </View>
-            )}
+              if (!hasAdjustments) {
+                return (
+                  <View style={styles.totalsRow}>
+                    <Text style={{ color: '#666' }}>Tax (0.0%)</Text>
+                    <Text>$0.00</Text>
+                  </View>
+                );
+              }
+              return rows;
+            })()}
+
+            <View style={styles.totalsRowFinal}>
+              <Text style={{ fontWeight: 700, fontSize: 12 }}>Total</Text>
+              <Text style={{ fontWeight: 700, fontSize: 14 }}>
+                ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer} fixed>
-          <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>Terms and Conditions</Text>
-          {proforma.users.terms_conditions ? (
-            <Text style={styles.footerText}>{proforma.users.terms_conditions}</Text>
+        {/* Signature & Footer Section */}
+        <View style={styles.footer} wrap={false}>
+          <View style={{ borderTopWidth: 2, borderTopColor: BRAND_BROWN, marginBottom: 20, width: 40 }} />
+          {proforma.status === 'approved' && (proforma.client_signature_data || proforma.client_signed_name) ? (
+            <View style={{ marginBottom: 30 }}>
+              <Text style={[styles.label, { color: BRAND_BROWN }]}>Accepted & Signed By:</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 20, marginTop: 10 }}>
+                <View style={{ width: '45%' }}>
+                  {proforma.client_signature_data ? (
+                    <Image src={proforma.client_signature_data} style={{ width: 140, height: 60, objectFit: 'contain' }} />
+                  ) : (
+                    <Text style={{ fontSize: 18, fontWeight: 700, paddingBottom: 10 }}>{proforma.client_signed_name}</Text>
+                  )}
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#000000', marginTop: 5 }} />
+                  <Text style={{ fontSize: 9, marginTop: 5 }}>{clientNameDisplay}</Text>
+                </View>
+                <View style={{ width: '35%' }}>
+                  <Text style={{ fontSize: 10, fontWeight: 700, paddingBottom: 10 }}>
+                    {proforma.approved_at ? new Date(proforma.approved_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}
+                  </Text>
+                  <View style={{ borderBottomWidth: 1, borderBottomColor: '#000000', marginTop: 5 }} />
+                  <Text style={{ fontSize: 9, marginTop: 5 }}>Date</Text>
+                </View>
+              </View>
+            </View>
           ) : (
-            <>
-              <Text style={styles.footerText}>
-                This quote represents an initial estimate and is subject to change following final on-site measurements.
-              </Text>
-              <Text style={styles.footerText}>
-                This quote is valid for the next 30 days, after which values may be subject to change.
-              </Text>
-            </>
+            <View style={styles.signatureSection}>
+              <View style={styles.signatureLineBox}>
+                <View style={styles.signatureLine} />
+                <Text style={styles.signatureLabel}>Signature:</Text>
+              </View>
+              <View style={styles.signatureLineBox}>
+                <View style={styles.signatureLine} />
+                <Text style={styles.signatureLabel}>Date:</Text>
+              </View>
+            </View>
           )}
+
+          <Text style={[styles.thankYou, { marginTop: 20 }]}>
+            Thank you for your business. Please contact us with any questions regarding this estimate {user.phone ? user.phone : ''}
+            {proforma.id ? ` #${proforma.id.split('-')[0].toUpperCase()}` : ''} {user.display_name ? user.display_name : ''}
+          </Text>
+        </View>
+
+        {/* Terms and Conditions (Only at the end) */}
+        <View style={{ marginTop: 30, borderTopWidth: 1, borderTopColor: '#eeeeee', paddingTop: 15 }}>
+          <Text style={{ fontSize: 9, fontWeight: 700, color: BRAND_BROWN, textTransform: 'uppercase', marginBottom: 6 }}>
+            Terms and Conditions
+          </Text>
+          <Text style={{ fontSize: 8, color: '#666666', lineHeight: 1.4, textAlign: 'justify' }}>
+            {proforma.users?.terms_conditions || "This quote represents an initial estimate and is subject to change following final on-site measurements. This quote is valid for the next 30 days, after which values may be subject to change. Sign must be requested to validate this Contract/Notice. Thank you for your business."}
+          </Text>
+        </View>
+
+        {/* Minimal Fixed Footer for Page Numbering (Every Page) */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 20,
+            left: 40,
+            right: 40,
+            paddingTop: 10,
+            textAlign: 'right'
+          }}
+          fixed
+        >
+          <Text 
+            style={{ fontSize: 8, color: '#666666', textAlign: 'right' }} 
+            render={({ pageNumber, totalPages }) => (
+              `Page ${pageNumber} / ${totalPages}`
+            )} 
+          />
         </View>
 
       </Page>
