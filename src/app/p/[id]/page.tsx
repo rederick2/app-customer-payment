@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { ZoomIn } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LineItemImage } from '@/components/LineItemImage';
+import { ExpandableText } from '@/components/ExpandableText';
 
 export const revalidate = 0;
 
@@ -225,17 +226,17 @@ export default async function PublicProformaView({ params, searchParams }: Props
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/30 print:bg-transparent print:border-b-2 print:border-foreground/20 text-muted-foreground border-y border-border/50">
               <tr>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider w-10 text-center">Optional</th>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider">Concept</th>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-center w-24">Image</th>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-24">Qty</th>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-32">Unit Price</th>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-32">Total</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider w-12 text-center text-[10px]">Incl.</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider min-w-[250px] text-[10px]">Concept / Scope of Work</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-center w-24 text-[10px]">Media</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-20 text-[10px]">Qty</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-28 text-[10px]">Rate</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-28 text-[10px]">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
-              {items && items.map((item, index) => (
-                <tr key={item.id} className={cn("print:break-inside-avoid align-top", item.is_optional && "opacity-60 bg-muted/5")}>
+              {items && items.flatMap((item, index) => [
+                <tr key={item.id} className={cn("print:break-inside-avoid align-top border-t border-border/10", item.is_optional && "bg-muted/5", item.is_excluded && "opacity-60")}>
                   <td className="px-4 py-5 text-center">
                     {item.is_optional ? (
                       <Checkbox checked={!item.is_excluded} className="opacity-100 cursor-default" />
@@ -243,11 +244,8 @@ export default async function PublicProformaView({ params, searchParams }: Props
                       <span className="text-muted-foreground/20 text-[10px] font-black uppercase tracking-widest">Fixed</span>
                     )}
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="font-bold text-foreground text-md">{item.description}</div>
-                    {item.details && (
-                      <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed">{item.details}</div>
-                    )}
+                  <td className="px-4 py-5">
+                    <div className="font-bold text-foreground text-md tracking-tight">{item.description}</div>
                   </td>
                   <td className="px-4 py-4 text-center">
                     {item.photo_url ? (
@@ -270,8 +268,20 @@ export default async function PublicProformaView({ params, searchParams }: Props
                   )}>
                     ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
-                </tr>
-              ))}
+                </tr>,
+                item.details && (
+                  <tr key={`${item.id}-details`} className={cn("print:break-inside-avoid", item.is_excluded && "opacity-60")}>
+                    <td />
+                    <td colSpan={5} className="px-4 pb-6 pt-0">
+                      <ExpandableText 
+                        text={item.details} 
+                        initialLines={3} 
+                        className="text-muted-foreground max-w-4xl"
+                      />
+                    </td>
+                  </tr>
+                )
+              ])}
             </tbody>
           </table>
         </div>

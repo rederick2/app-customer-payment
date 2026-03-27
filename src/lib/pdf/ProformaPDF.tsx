@@ -17,9 +17,9 @@ const LIGHT_GREY = '#f0f4f7';
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 40,
+    paddingTop: 30, // Reduced from 40
     paddingHorizontal: 40,
-    paddingBottom: 50, // Reduced to reclaim space since Terms are now only at the end
+    paddingBottom: 40, // Reduced from 50
     fontFamily: 'Inter',
     fontSize: 10,
     color: DARK_NAVY,
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    marginBottom: 25, // Reduced from 40
     alignItems: 'flex-start'
   },
   companyInfo: {
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   mainContentGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20
+    marginBottom: 10 // Reduced from 20
   },
   recipientBox: {
     width: '50%'
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 8, // Reduced from 10
     paddingHorizontal: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9'
@@ -118,8 +118,8 @@ const styles = StyleSheet.create({
     fontWeight: 700
   },
   table: {
-    marginTop: 20,
-    marginBottom: 30
+    marginTop: 15, // Reduced from 20
+    marginBottom: 20  // Reduced from 30
   },
   tableHeader: {
     flexDirection: 'row',
@@ -133,14 +133,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    paddingVertical: 12,
-    paddingHorizontal: 4
+    paddingVertical: 10,
+    paddingHorizontal: 4,
   },
-  colService: { flex: 2 },
-  colDesc: { flex: 3 },
-  colQty: { width: 40, textAlign: 'center' },
-  colPrice: { width: 80, textAlign: 'right' },
-  colTotal: { width: 90, textAlign: 'right' },
+  colDesc: { width: '55%', paddingRight: 10 },
+  colQty: { width: '10%', textAlign: 'center' },
+  colPrice: { width: '15%', textAlign: 'right' },
+  colTotal: { width: '20%', textAlign: 'right' },
   tableHeaderText: {
     color: '#ffffff',
     fontSize: 9,
@@ -301,15 +300,15 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
         {/* Line Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderText, { flex: 8 }]}>Product/Service</Text>
+            <Text style={[styles.tableHeaderText, styles.colDesc]}>Product/Service</Text>
             <Text style={[styles.tableHeaderText, styles.colQty]}>Qty.</Text>
             <Text style={[styles.tableHeaderText, styles.colPrice]}>Unit Price</Text>
             <Text style={[styles.tableHeaderText, styles.colTotal]}>Total</Text>
           </View>
 
           {items && items.map((item, i) => (
-            <View wrap={false} key={i} style={styles.tableRow}>
-              <View style={{ flex: 8 }}>
+            <View key={i} style={styles.tableRow} wrap={true}>
+              <View style={styles.colDesc}>
                 <Text style={styles.itemTitle}>{item.description}</Text>
                 {item.details && <Text style={styles.itemDetails}>{item.details}</Text>}
               </View>

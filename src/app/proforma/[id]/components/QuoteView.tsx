@@ -9,6 +9,7 @@ import ProformaDropdownActions from './ProformaDropdownActions';
 import EmailQuoteModal from './EmailQuoteModal';
 import { cn } from '@/lib/utils';
 import { LineItemImage } from '@/components/LineItemImage';
+import { ExpandableText } from '@/components/ExpandableText';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toggleItemOptional, updateItemsOrder, updateProformaItem } from './actions';
 import { toast } from 'sonner';
@@ -79,6 +80,7 @@ function ItemEditor({ item, onSave, onCancel, isReadOnly }: ItemEditorProps) {
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const total = formData.quantity * formData.unit_price;
+
 
   if (isReadOnly) return null;
 
@@ -372,8 +374,12 @@ function SortableRow({
           <td />
           <td />
           <td colSpan={5} className="px-4 pb-6 pt-0">
-            <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap border-l-2 border-primary/10 pl-4 py-1 italic">
-              {item.details}
+            <div className="border-l-2 border-primary/10 pl-4 py-1 italic">
+              <ExpandableText 
+                text={item.details} 
+                initialLines={3} 
+                className="text-muted-foreground"
+              />
             </div>
           </td>
         </tr>
@@ -389,6 +395,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
 
   const [isMounted, setIsMounted] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const clientData = (Array.isArray(proforma.clients) ? proforma.clients[0] : proforma.clients) as any;
 
   const handleDownloadPDF = async () => {
     setIsGenerating(true);
@@ -567,7 +574,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
 
       {/* Printable Document Area */}
       <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] print:shadow-none border border-border/40 print:border-none p-12 md:p-20 mb-8 rounded-[2.5rem] relative overflow-hidden">
-        
+
         {/* Jobber Green Accent Bar */}
         <div className="absolute top-0 left-0 right-0 h-2 bg-[#ac8e68]" />
 
@@ -584,7 +591,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 </p>
               )}
             </div>
-            
+
             <div className="space-y-1 text-sm text-muted-foreground/80 font-medium">
               <p className="flex items-center gap-2">{proforma.users?.address}</p>
               {proforma.users?.phone && <p>{proforma.users.phone}</p>}
@@ -594,10 +601,10 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
 
           <div className="flex flex-col items-end gap-6 w-full md:w-auto">
             {proforma.users?.logo_url ? (
-              <img 
-                src={proforma.users.logo_url} 
-                alt="Company Logo" 
-                className="h-24 w-auto object-contain max-w-[240px]" 
+              <img
+                src={proforma.users.logo_url}
+                alt="Company Logo"
+                className="h-24 w-auto object-contain max-w-[240px]"
               />
             ) : (
               <div className="h-24 w-48 rounded-2xl bg-muted/20 border-2 border-dashed border-border/40 flex items-center justify-center">
@@ -623,7 +630,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                   return c.company_name || nameDisplay;
                 })()}
               </p>
-              
+
               <div className="text-lg text-muted-foreground/80 leading-relaxed font-medium">
                 {(() => {
                   const c = proforma.clients as any;
@@ -657,46 +664,46 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
 
           {/* Project & Summary Box */}
           <div className="lg:col-span-5 space-y-8">
-             <div className="rounded-3xl border border-border/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500 bg-background">
-                <div className="bg-[#ac8e68] p-6 text-white">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Estimate Number</span>
-                    <Badge variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm">
-                      {proforma.id.split('-')[0].toUpperCase()}
-                    </Badge>
-                  </div>
-                  <h2 className="text-4xl font-black tracking-tighter">
-                    Estimate
-                  </h2>
+            <div className="rounded-3xl border border-border/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500 bg-background">
+              <div className="bg-[#ac8e68] p-6 text-white">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Estimate Number</span>
+                  <Badge variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm">
+                    {proforma.id.split('-')[0].toUpperCase()}
+                  </Badge>
                 </div>
-                
-                <div className="p-6 space-y-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground font-bold">Sent on</span>
-                    <span className="font-bold">{new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm border-t border-border/10 pt-4">
-                    <span className="text-muted-foreground font-bold">Email Sent</span>
-                    <span className="font-bold">{(proforma.clients as any).email ? 'Yes' : 'No'}</span>
-                  </div>
-                  
-                  <div className="mt-6 pt-6 border-t font-black flex justify-between items-end">
-                    <span className="text-xs uppercase tracking-widest text-muted-foreground/60">Total Amount</span>
-                    <span className="text-4xl text-[#ac8e68] tracking-tighter">
-                      ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-             </div>
+                <h2 className="text-4xl font-black tracking-tighter">
+                  Estimate
+                </h2>
+              </div>
 
-             <div className="px-6">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-3 flex items-center gap-3">
-                  Project
-                </h3>
-                <p className="text-2xl font-black text-foreground italic leading-tight">
-                  "{proforma.project_name}"
-                </p>
-             </div>
+              <div className="p-6 space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-bold">Sent on</span>
+                  <span className="font-bold">{new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm border-t border-border/10 pt-4">
+                  <span className="text-muted-foreground font-bold">Email Sent</span>
+                  <span className="font-bold">{(proforma.clients as any).email ? 'Yes' : 'No'}</span>
+                </div>
+
+                <div className="mt-6 pt-6 border-t font-black flex justify-between items-end">
+                  <span className="text-xs uppercase tracking-widest text-muted-foreground/60">Total Amount</span>
+                  <span className="text-4xl text-[#ac8e68] tracking-tighter">
+                    ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-3 flex items-center gap-3">
+                Project
+              </h3>
+              <p className="text-2xl font-black text-foreground italic leading-tight">
+                "{proforma.project_name}"
+              </p>
+            </div>
           </div>
         </div>
 
@@ -825,7 +832,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#ac8e68]">Thank You</h4>
             <p className="text-muted-foreground text-sm font-medium">Please contact us with any questions regarding this estimate.</p>
           </div>
-          
+
           <div className="bg-muted/30 rounded-[2.5rem] p-10 max-w-3xl mx-auto">
             <h5 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 mb-4">Terms & Service</h5>
             <p className="text-xs text-muted-foreground/80 leading-relaxed italic font-medium">
@@ -833,16 +840,56 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             </p>
           </div>
 
-          <div className="pt-12 grid grid-cols-1 md:grid-cols-2 gap-16 max-w-4xl mx-auto">
-            <div className="space-y-4">
-              <div className="h-px bg-foreground/20 w-full" />
-              <p className="text-[10px] font-black uppercase tracking-widest">Client Signature</p>
+          {proforma.status === 'approved' && proforma.approved_at && (
+            <div className="mt-12 pt-8 border-t border-border/50 relative z-20 print:break-inside-avoid">
+              <div className="flex flex-col items-center sm:items-start">
+                <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-6 flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
+                  Accepted & Signed By
+                </h3>
+                <div className="flex flex-col items-center sm:items-start gap-4">
+                  {proforma.client_signature_data ? (
+                    <div className="bg-white p-4 rounded-xl border border-border/40 shadow-sm transition-all hover:shadow-md max-w-[320px]">
+                      <img
+                        src={proforma.client_signature_data}
+                        alt="Customer Signature"
+                        className="h-24 w-auto object-contain mix-blend-multiply"
+                      />
+                    </div>
+                  ) : proforma.client_signed_name ? (
+                    <div className="px-6 py-4 bg-primary/5 rounded-xl border-b-2 border-primary/20">
+                      <p className="font-serif text-3xl italic text-foreground tracking-tight">
+                        {proforma.client_signed_name}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic bg-muted/20 px-4 py-2 rounded-lg">
+                      Approved (Digitally Verified)
+                    </p>
+                  )}
+
+                  <div className="mt-2 text-center sm:text-left space-y-1">
+                    <p className="text-sm font-bold text-foreground">
+                      {(() => {
+                        const c = clientData;
+                        const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
+                        return c.company_name || nameDisplay;
+                      })()}
+                    </p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest bg-muted/30 px-2 py-1 rounded inline-block">
+                      Signed on: {new Date(proforma.approved_at).toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="space-y-4">
-              <div className="h-px bg-foreground/20 w-full" />
-              <p className="text-[10px] font-black uppercase tracking-widest">Date</p>
-            </div>
-          </div>
+          )}
         </div>
 
       </div>
