@@ -227,7 +227,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
             <thead className="bg-muted/30 print:bg-transparent print:border-b-2 print:border-foreground/20 text-muted-foreground border-y border-border/50">
               <tr>
                 <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider w-12 text-center text-[10px]">Incl.</th>
-                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider min-w-[250px] text-[10px]">Concept / Scope of Work</th>
+                <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider min-w-[250px] text-[10px]">Product/Service</th>
                 <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-center w-24 text-[10px]">Media</th>
                 <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-20 text-[10px]">Qty</th>
                 <th scope="col" className="px-4 py-3 font-semibold uppercase tracking-wider text-right w-28 text-[10px]">Rate</th>
@@ -273,9 +273,9 @@ export default async function PublicProformaView({ params, searchParams }: Props
                   <tr key={`${item.id}-details`} className={cn("print:break-inside-avoid", item.is_excluded && "opacity-60")}>
                     <td />
                     <td colSpan={5} className="px-4 pb-6 pt-0">
-                      <ExpandableText 
-                        text={item.details} 
-                        initialLines={3} 
+                      <ExpandableText
+                        text={item.details}
+                        initialLines={3}
                         className="text-muted-foreground max-w-4xl"
                       />
                     </td>
