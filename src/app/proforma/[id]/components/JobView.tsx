@@ -1239,6 +1239,17 @@ export function JobView({
                         </td>
                       </tr>
                     ))}
+                    {proforma.notes && (
+                      <tr className="bg-amber-50/20 border-t border-border/40">
+                        <td colSpan={2} className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-[#0D3B47]/60 align-top">
+                          Notes / Terms
+                        </td>
+                        <td colSpan={5} className="px-6 py-4 text-sm text-[#0D3B47] italic whitespace-pre-wrap">
+                          {proforma.notes}
+                        </td>
+                        <td />
+                      </tr>
+                    )}
                     <tr className="bg-muted/5 font-bold border-t border-border/40">
                       <td colSpan={3} className="px-6 py-4 text-left">
                         <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingLineItem(true)}>
@@ -1358,9 +1369,17 @@ export function JobView({
               </div>
 
               {/* Footer de Totales resumido para mobile */}
-              <div className="p-4 bg-muted/5 border-t border-border/40 flex justify-between items-center md:hidden">
-                <span className="text-[10px] font-black uppercase text-muted-foreground">Total Invoiced</span>
-                <span className="text-lg font-bold text-emerald-600">${totalInvoiced.toLocaleString('en-US')}</span>
+              <div className="p-4 bg-muted/5 border-t border-border/40 space-y-4 md:hidden">
+                {proforma.notes && (
+                  <div className="p-3 bg-amber-50/30 rounded-lg border border-amber-200/50">
+                    <p className="text-[10px] font-black uppercase text-[#0D3B47]/60 tracking-widest mb-1">Notes</p>
+                    <p className="text-xs text-[#0D3B47] italic whitespace-pre-wrap">{proforma.notes}</p>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-muted-foreground">Total Invoiced</span>
+                  <span className="text-lg font-bold text-emerald-600">${totalInvoiced.toLocaleString('en-US')}</span>
+                </div>
               </div>
             </CardContent>
           </Card>

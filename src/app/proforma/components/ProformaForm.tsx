@@ -408,6 +408,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   // Project Details
   const [projectName, setProjectName] = useState(initialData?.proforma?.project_name || '');
   const [validUntil, setValidUntil] = useState(initialData?.proforma?.valid_until || new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = useState(initialData?.proforma?.notes || '');
 
   // Line Items
   const [items, setItems] = useState<LineItem[]>(
@@ -779,6 +780,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         payment_terms: paymentTerms,
         deposit_amount: depositAmount,
         required_deposit: requiredDeposit,
+        notes: notes,
         ...(nextNumber !== undefined && { number: nextNumber })
       };
 
@@ -1051,6 +1053,16 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
               <div className="space-y-2">
                 <Label htmlFor="validUntil">Valid Until *</Label>
                 <Input id="validUntil" type="date" required value={validUntil} onChange={e => setValidUntil(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes (Visible to Customer)</Label>
+                <Textarea 
+                  id="notes" 
+                  placeholder="Additional information, special conditions, or thank you note..." 
+                  value={notes} 
+                  onChange={e => setNotes(e.target.value)} 
+                  className="min-h-[80px] rounded-xl"
+                />
               </div>
             </CardContent>
           </Card>

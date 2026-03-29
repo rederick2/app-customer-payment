@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { FileText, Receipt, DollarSign, Info } from 'lucide-react';
 import InvoiceCard from './InvoiceCard';
-import PaymentCard from '@/app/p/[id]/invoices/components/PaymentCard';
+import PaymentReceiptCard from './PaymentReceiptCard';
 import { pdf } from '@react-pdf/renderer';
 import InvoicePDF from '@/lib/pdf/InvoicePDF';
 import PaymentPDF from '@/lib/pdf/PaymentPDF';
@@ -107,7 +107,7 @@ export default function InvoicesPaymentsView({
           <div className="space-y-6">
             {payments && payments.length > 0 ? (
               payments.map((payment) => (
-                <PaymentCard
+                <PaymentReceiptCard
                   key={payment.id}
                   payment={payment}
                   onViewPDF={() => handleViewReceiptPDF(payment)}

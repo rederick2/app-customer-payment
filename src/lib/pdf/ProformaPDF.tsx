@@ -211,6 +211,28 @@ const styles = StyleSheet.create({
   signatureLabel: {
     fontSize: 9,
     fontWeight: 700
+  },
+  notesBox: {
+    marginTop: 15,
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: '#fcfaf5',
+    borderLeftWidth: 2,
+    borderLeftColor: BRAND_BROWN,
+    borderRadius: 2
+  },
+  notesLabel: {
+    fontSize: 8,
+    fontWeight: 700,
+    color: BRAND_BROWN,
+    textTransform: 'uppercase',
+    marginBottom: 4
+  },
+  notesText: {
+    fontSize: 9,
+    color: DARK_NAVY,
+    fontStyle: 'italic',
+    lineHeight: 1.4
   }
 });
 
@@ -328,6 +350,14 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
           <Text style={[styles.depositMessage, { color: BRAND_BROWN }]}>
             A deposit of ${proforma.required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })} will be required to begin.
           </Text>
+        )}
+
+        {/* Notes Section */}
+        {proforma.notes && (
+          <View style={styles.notesBox} wrap={true}>
+            <Text style={styles.notesLabel}>Notes & Special Conditions</Text>
+            <Text style={styles.notesText}>{proforma.notes}</Text>
+          </View>
         )}
 
         {/* Totals Section */}

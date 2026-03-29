@@ -286,6 +286,14 @@ export default async function PublicProformaView({ params, searchParams }: Props
           </table>
         </div>
 
+        {/* Notes Section */}
+        {proforma.notes && (
+          <div className="mb-12 p-6 bg-amber-50/20 border border-amber-200/30 rounded-2xl relative z-20">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#0D3B47]/60 mb-3">Notes & Special Conditions</h3>
+            <p className="text-sm text-[#0D3B47] leading-relaxed italic whitespace-pre-wrap">{proforma.notes}</p>
+          </div>
+        )}
+
         {/* Totals Box */}
         <div className="flex justify-end mb-20 print:break-inside-avoid relative z-10">
           <div className="w-full sm:w-1/2 p-8 bg-[#F4F2EC] print:bg-transparent print:border print:border-border/50 rounded-2xl border border-primary/5 space-y-4 text-[#0D3B47] shadow-sm">
