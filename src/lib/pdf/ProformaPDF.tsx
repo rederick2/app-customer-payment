@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   mainContentGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10 // Reduced from 20
+    marginBottom: 30 // Reduced from 20
   },
   recipientBox: {
     width: '50%'
@@ -421,10 +421,10 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
             </View>
           )}
 
-          <Text style={[styles.thankYou, { marginTop: 20 }]}>
+          {/*<Text style={[styles.thankYou, { marginTop: 20 }]}>
             Thank you for your business. Please contact us with any questions regarding this estimate {user.phone ? user.phone : ''}
             {proforma.id ? ` #${proforma.id.split('-')[0].toUpperCase()}` : ''} {user.display_name ? user.display_name : ''}
-          </Text>
+          </Text>*/}
         </View>
 
         {/* Terms and Conditions (Only at the end) */}
@@ -449,11 +449,11 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
           }}
           fixed
         >
-          <Text 
-            style={{ fontSize: 8, color: '#666666', textAlign: 'right' }} 
+          <Text
+            style={{ fontSize: 8, color: '#666666', textAlign: 'right' }}
             render={({ pageNumber, totalPages }) => (
               `Page ${pageNumber} / ${totalPages}`
-            )} 
+            )}
           />
         </View>
 

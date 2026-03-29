@@ -17,6 +17,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { StatusHistory } from './StatusHistory';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { History } from 'lucide-react';
 
 // DND Kit Imports
 import {
@@ -55,6 +65,8 @@ function StatusBadge({ status }: { status: string }) {
       return <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 hover:bg-blue-500/20 border-blue-500/20 text-sm py-1 px-3">Sent</Badge>;
     case 'job':
       return <Badge className="bg-purple-500/10 text-purple-700 hover:bg-purple-500/20 border-purple-500/20 text-sm py-1 px-3">Job</Badge>;
+    case 'job_terminated':
+      return <Badge className="bg-slate-500/10 text-slate-700 hover:bg-slate-500/20 border-slate-500/20 text-sm py-1 px-3">Terminado</Badge>;
     default:
       return <Badge variant="outline" className="text-sm py-1 px-3">Draft</Badge>;
   }
@@ -522,6 +534,26 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Status:</span>
               <StatusBadge status={proforma.status || 'draft'} />
+              
+              <Dialog>
+                <DialogTrigger render={
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted ml-1">
+                    <History className="h-4 w-4 text-muted-foreground" />
+                    <span className="sr-only">Ver historial</span>
+                  </Button>
+                } />
+                <DialogContent className="sm:max-w-[540px]">
+                  <DialogHeader className="mb-4">
+                    <DialogTitle>Historial de la Proforma</DialogTitle>
+                    <DialogDescription>
+                      Seguimiento de todos los cambios de estado realizados.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
+                    <StatusHistory proformaId={id} />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
           <div className="flex gap-2 items-center flex-wrap">

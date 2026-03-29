@@ -17,9 +17,13 @@ import {
   Quote,
   Search,
   ChevronLeft,
-  ChevronRight,
+  ChevronUp,
+  Eye,
+  Pencil,
+  Trash2,
+  FileDown,
   ChevronDown,
-  ChevronUp
+  ChevronRight
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,7 +32,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -36,6 +41,20 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { BillingModals } from './BillingModals';
 import { JobDetailModal } from './JobDetailModal';
+import { InvoiceFormModal } from '@/app/proforma/[id]/components/InvoiceFormModal';
+import { EmailBillingModal } from '@/app/proforma/[id]/components/EmailBillingModal';
+import { deleteInvoice, deletePayment } from '../actions';
+import { toast } from 'sonner';
+import { pdf } from '@react-pdf/renderer';
+import InvoicePDF from '@/lib/pdf/InvoicePDF';
+import PaymentPDF from '@/lib/pdf/PaymentPDF';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -54,6 +73,68 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
   const [currentPage, setCurrentPage] = React.useState(1);
   const [selectedJobDetail, setSelectedJobDetail] = React.useState<any | null>(null);
   const [showMoreDetails, setShowMoreDetails] = React.useState(false);
+
+  // New States for Actions
+  const [editingInvoice, setEditingInvoice] = React.useState<any | null>(null);
+  const [invoiceToDelete, setInvoiceToDelete] = React.useState<any | null>(null);
+  const [paymentToDelete, setPaymentToDelete] = React.useState<any | null>(null);
+  const [billingEmailModal, setBillingEmailModal] = React.useState<{ type: 'invoice' | 'payment', data: any } | null>(null);
+
+  // Helper for PDF viewing
+  const handleViewInvoicePDF = async (invoice: any) => {
+    try {
+      const proforma = proformas.find(p => p.id === invoice.proforma_id);
+      const user = proformas[0]?.users;
+      const blob = await pdf(<InvoicePDF invoice={invoice} proforma={proforma} client={client} user={user} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error al generar el PDF de la factura.');
+    }
+  };
+
+  const handleViewReceiptPDF = async (payment: any) => {
+    try {
+      const proforma = proformas.find(p => p.id === payment.proforma_id);
+      const user = proformas[0]?.users;
+      const blob = await pdf(<PaymentPDF payment={payment} proforma={proforma} client={client} user={user} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error al generar el recibo de pago.');
+    }
+  };
+
+  const handleDeleteInvoice = async (id: string) => {
+    try {
+      const result = await deleteInvoice(id, client.id);
+      if (result.success) {
+        toast.success('Factura eliminada.');
+        setInvoiceToDelete(null);
+      } else {
+        toast.error(result.error || 'Error al eliminar.');
+      }
+    } catch (error) {
+      toast.error('Error inesperado.');
+    }
+  };
+
+  const handleDeletePayment = async (id: string) => {
+    try {
+      const result = await deletePayment(id, client.id);
+      if (result.success) {
+        toast.success('Pago eliminado.');
+        setPaymentToDelete(null);
+      } else {
+        toast.error(result.error || 'Error al eliminar.');
+      }
+    } catch (error) {
+      toast.error('Error inesperado.');
+    }
+  };
+
 
   // Reset pagination when tab or search changes
   React.useEffect(() => {
@@ -170,11 +251,11 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
               {!client.phone && !client.email && (
                 <div className="py-8 text-center text-muted-foreground">No hay información de contacto adicional.</div>
               )}
-              
+
               <div className="p-3 border-t border-border/40 bg-muted/5 flex justify-center">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => setShowMoreDetails(!showMoreDetails)}
                 >
@@ -185,7 +266,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                   )}
                 </Button>
               </div>
-              
+
               {showMoreDetails && (
                 <div className="p-6 border-t border-border/40 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 bg-muted/10 rounded-b-lg">
                   <div className="space-y-4">
@@ -222,7 +303,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                       {client.tags && <p className="text-sm flex flex-col"><span className="text-muted-foreground text-xs mb-1">Tags:</span> <span className="font-medium">{client.tags}</span></p>}
                       {client.lead_source && <p className="text-sm flex justify-between"><span className="text-muted-foreground">Lead Source:</span> <span className="font-medium">{client.lead_source}</span></p>}
                       {client.import_id && <p className="text-sm flex justify-between"><span className="text-muted-foreground">ID Externo:</span> <span className="font-medium">{client.import_id}</span></p>}
-                      
+
                       <div className="pt-2">
                         <p className="text-sm font-medium text-muted-foreground mb-2">Preferencias Automáticas:</p>
                         <ul className="text-xs space-y-1.5 list-disc pl-4 font-medium">
@@ -282,6 +363,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                           <th className="px-6 py-3 font-bold">Fecha</th>
                           <th className="px-6 py-3 font-bold">Estado</th>
                           <th className="px-6 py-3 font-bold text-right">Total</th>
+                          <th className="px-6 py-3 font-bold text-right w-[80px]">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/40">
@@ -309,6 +391,31 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                                     </td>
                                     <td className="px-6 py-4 text-right font-bold">
                                       ${inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
+                                          <MoreVertical className="h-4 w-4" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-48">
+                                          <DropdownMenuItem onClick={() => handleViewInvoicePDF(inv)}>
+                                            <Eye className="mr-2 h-4 w-4" /> Ver PDF
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
+                                            <Mail className="mr-2 h-4 w-4" /> Enviar por Email
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem onClick={() => setEditingInvoice(inv)}>
+                                            <Pencil className="mr-2 h-4 w-4" /> Editar
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() => setInvoiceToDelete(inv)}
+                                            className="text-destructive focus:text-destructive"
+                                          >
+                                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
                                     </td>
                                   </tr>
                                 ))}
@@ -480,10 +587,8 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <CardTitle className="text-lg font-serif">Facturación & Pagos</CardTitle>
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button variant="outline" size="sm" className="h-8 shadow-sm gap-1 font-bold">
-                    Nuevo <ArrowLeft className="h-3 w-3 rotate-[270deg]" />
-                  </Button>
+                <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="h-8 shadow-sm gap-1 font-bold" />}>
+                  Nuevo <ArrowLeft className="h-3 w-3 rotate-[270deg]" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 p-1">
                   <DropdownMenuItem onClick={() => setOpenModal('payment')} className="cursor-pointer gap-2 py-2 font-medium">
@@ -512,7 +617,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
               ) : (
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
                   {payments.map(payment => (
-                    <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg bg-card border border-border/40 shadow-sm hover:shadow-md transition-shadow">
+                    <div key={payment.id} className="group flex items-center justify-between p-3 rounded-lg bg-card border border-border/40 shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "h-9 w-9 rounded-full flex items-center justify-center",
@@ -525,11 +630,34 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                           <p className="text-[10px] font-medium text-muted-foreground">{format(new Date(payment.payment_date), 'MMM d, yyyy')}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-foreground">${payment.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                        <Badge variant="outline" className="text-[8px] font-extrabold h-4 leading-none py-0 uppercase">
-                          {payment.status}
-                        </Badge>
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-foreground">${payment.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                          <Badge variant="outline" className="text-[8px] font-extrabold h-4 leading-none py-0 uppercase">
+                            {payment.status}
+                          </Badge>
+                        </div>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" />}>
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={() => handleViewReceiptPDF(payment)} className="text-xs">
+                              <FileDown className="mr-2 h-3.5 w-3.5" /> Recibo PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setBillingEmailModal({ type: 'payment', data: payment })} className="text-xs">
+                              <Mail className="mr-2 h-3.5 w-3.5" /> Enviar Email
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => setPaymentToDelete(payment)}
+                              className="text-xs text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   ))}
@@ -596,6 +724,62 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
         payments={payments}
         expenses={expenses}
       />
+
+      {/* Action Modals */}
+      {editingInvoice && (
+        <InvoiceFormModal
+          clientId={client.id}
+          proformaId={editingInvoice.proforma_id}
+          initialData={editingInvoice}
+          onClose={() => setEditingInvoice(null)}
+          onSuccess={() => {
+            setEditingInvoice(null);
+            toast.success('Factura actualizada');
+          }}
+        />
+      )}
+
+      {billingEmailModal && (
+        <EmailBillingModal
+          type={billingEmailModal.type}
+          id={billingEmailModal.data.id}
+          clientEmail={client.email}
+          clientName={clientName}
+          referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : billingEmailModal.data.id.split('-')[0].toUpperCase()}
+          onClose={() => setBillingEmailModal(null)}
+        />
+      )}
+
+      {/* Delete Confirmations */}
+      <Dialog open={!!invoiceToDelete} onOpenChange={(isOpen) => !isOpen && setInvoiceToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Factura</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar la factura #{invoiceToDelete?.invoice_number}? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setInvoiceToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => invoiceToDelete && handleDeleteInvoice(invoiceToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!paymentToDelete} onOpenChange={(isOpen) => !isOpen && setPaymentToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Pago</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar este registro de pago? Esta acción no se puede deshacer y afectará el balance del cliente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setPaymentToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => paymentToDelete && handleDeletePayment(paymentToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

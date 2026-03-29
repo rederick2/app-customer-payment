@@ -4,6 +4,18 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { sendEmail } from '@/lib/mail';
 
+async function logStatusChange(proformaId: string, newStatus: string, oldStatus?: string, userId?: string) {
+  const supabase = createAdminClient();
+  await supabase
+    .from('proforma_status_history')
+    .insert({
+      proforma_id: proformaId,
+      old_status: oldStatus,
+      new_status: newStatus,
+      changed_by: userId
+    });
+}
+
 export async function markMessagesAsRead(proformaId: string, readerRole: 'client' | 'company') {
   // Mark all messages sent by the OTHER party as read
   const senderType = readerRole === 'client' ? 'company' : 'client';
@@ -24,7 +36,7 @@ export async function approveProforma(proformaId: string, signatureData?: string
   // 1. Fetch proforma details and user email
   const { data: proforma, error: fetchError } = await supabase
     .from('proformas')
-    .select('project_name, user_id, number, users(display_name)')
+    .select('project_name, user_id, number, status, users(display_name)')
     .eq('id', proformaId)
     .single();
 
@@ -56,6 +68,8 @@ export async function approveProforma(proformaId: string, signatureData?: string
     console.error('Error approving proforma:', updateError);
     return { success: false, error: 'No se pudo aprobar la proforma' };
   }
+
+  await logStatusChange(proformaId, 'approved', proforma.status);
 
   // 3. Send notification email if user email is available
   if (userEmail) {
@@ -112,6 +126,12 @@ export async function approveProforma(proformaId: string, signatureData?: string
 export async function rejectProforma(proformaId: string) {
   const supabase = createAdminClient();
 
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('status')
+    .eq('id', proformaId)
+    .single();
+
   const { error } = await supabase
     .from('proformas')
     .update({ status: 'rejected' })
@@ -121,6 +141,8 @@ export async function rejectProforma(proformaId: string) {
     console.error('Error rejecting proforma:', error);
     return { success: false, error: 'Could not reject the quote' };
   }
+
+  await logStatusChange(proformaId, 'rejected', proforma?.status);
 
   // Actualizar la vista pública y la del administrador
   revalidatePath(`/p/${proformaId}`);
@@ -191,6 +213,8 @@ export async function markProformaAsSent(proformaId: string) {
     console.error('Error marking proforma as sent:', error);
     return { success: false, error: 'Could not mark the quote as sent' };
   }
+
+  await logStatusChange(proformaId, 'sent', 'draft');
 
   revalidatePath(`/proforma/${proformaId}`);
   return { success: true };

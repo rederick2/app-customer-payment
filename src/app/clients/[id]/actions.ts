@@ -82,3 +82,47 @@ export async function createInvoice(clientId: string, proformaId: string, formDa
   revalidatePath(`/clients/${clientId}`);
   return { success: true };
 }
+
+export async function deleteInvoice(id: string, clientId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const { error } = await supabase
+    .from('invoices')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting invoice:', error);
+    return { error: 'Error al eliminar la factura.' };
+  }
+
+  revalidatePath(`/clients/${clientId}`);
+  return { success: true };
+}
+
+export async function deletePayment(id: string, clientId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const { error } = await supabase
+    .from('payments')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting payment:', error);
+    return { error: 'Error al eliminar el registro.' };
+  }
+
+  revalidatePath(`/clients/${clientId}`);
+  return { success: true };
+}

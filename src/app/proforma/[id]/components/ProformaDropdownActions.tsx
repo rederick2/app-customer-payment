@@ -90,6 +90,13 @@ export default function ProformaDropdownActions({
           </DropdownMenuItem>
         )}
 
+        {currentStatus === 'job' && (
+          <DropdownMenuItem onClick={() => handleStatusUpdate('job_terminated')} className="cursor-pointer text-slate-700 focus:text-slate-800">
+            <Check className="mr-2 h-4 w-4" />
+            Job Terminated
+          </DropdownMenuItem>
+        )}
+
         <DropdownMenuSeparator />
 
         {/* General Actions */}
@@ -114,7 +121,7 @@ export default function ProformaDropdownActions({
         onClose={() => setIsScheduleModalOpen(false)}
         onSuccess={() => {
           setIsScheduleModalOpen(false);
-          router.push(`/proforma/${proformaId}`);
+          //router.push(`/proforma/${proformaId}`);
         }}
       />
 

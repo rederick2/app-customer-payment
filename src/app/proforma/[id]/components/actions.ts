@@ -5,8 +5,24 @@ import { revalidatePath } from 'next/cache';
 import { renderToBuffer, DocumentProps } from '@react-pdf/renderer';
 import ProformaPDF from '@/lib/pdf/ProformaPDF';
 import MaterialsPDF from '@/lib/pdf/MaterialsPDF';
+import InvoicePDF from '@/lib/pdf/InvoicePDF';
+import PaymentPDF from '@/lib/pdf/PaymentPDF';
 import { sendEmail } from '@/lib/mail';
 import React from 'react';
+
+async function logStatusChange(proformaId: string, newStatus: string, oldStatus?: string, userId?: string) {
+  const supabase = await createClient(); // This is fine for internal server-side calls if authenticated
+  // Or use admin client if we want to ensure it works even for complex flows
+  
+  await supabase
+    .from('proforma_status_history')
+    .insert({
+      proforma_id: proformaId,
+      old_status: oldStatus,
+      new_status: newStatus,
+      changed_by: userId
+    });
+}
 
 export async function sendProformaEmail(proformaId: string, formData: FormData) {
   const supabase = await createClient();
@@ -75,6 +91,8 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
         .from('proformas')
         .update({ status: 'sent' })
         .eq('id', proformaId);
+      
+      await logStatusChange(proformaId, 'sent', 'draft', user.id);
     }
 
     revalidatePath(`/proforma/${proformaId}`);
@@ -165,6 +183,12 @@ export async function updateProformaStatus(proformaId: string, newStatus: string
     updatePayload.approved_at = new Date().toISOString();
   }
 
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('status')
+    .eq('id', proformaId)
+    .single();
+
   const { error } = await supabase
     .from('proformas')
     .update(updatePayload)
@@ -175,9 +199,29 @@ export async function updateProformaStatus(proformaId: string, newStatus: string
     return { error: 'Error al actualizar el estado.' };
   }
 
+  await logStatusChange(proformaId, newStatus, proforma?.status, user.id);
+
   revalidatePath(`/proforma/${proformaId}`);
   revalidatePath('/page');
   return { success: true };
+}
+
+export async function getProformaStatusHistory(proformaId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('proforma_status_history')
+    .select(`
+      *,
+      changed_by_user:users!proforma_status_history_changed_by_fkey (display_name)
+    `)
+    .eq('proforma_id', proformaId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching history:', error);
+    return [];
+  }
+  return data;
 }
 
 export async function scheduleJob(proformaId: string, startAt: string, endAt: string) {
@@ -187,6 +231,12 @@ export async function scheduleJob(proformaId: string, startAt: string, endAt: st
   if (!user) {
     return { error: 'No autorizado' };
   }
+
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('status')
+    .eq('id', proformaId)
+    .single();
 
   const { error } = await supabase
     .from('proformas')
@@ -202,6 +252,8 @@ export async function scheduleJob(proformaId: string, startAt: string, endAt: st
     console.error('Error scheduling job:', error);
     return { error: 'Error al programar el job.' };
   }
+
+  await logStatusChange(proformaId, 'job', proforma?.status, user.id);
 
   revalidatePath(`/proforma/${proformaId}`);
   revalidatePath('/page');
@@ -435,5 +487,182 @@ export async function sendMaterialsEmail(proformaId: string, formData: FormData)
   } catch (err: any) {
     console.error('Materials PDF Generation or SMTP Email Error:', err);
     return { error: `Error al enviar el correo: ${err.message}` };
+  }
+}
+
+export async function getNextInvoiceNumber() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('invoice_number')
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error('Error fetching next invoice number:', error);
+    return 'INV-001';
+  }
+
+  if (data && data.length > 0) {
+    const lastNumber = data[0].invoice_number;
+    const match = lastNumber.match(/(\d+)$/);
+    if (match) {
+      const nextNum = parseInt(match[1]) + 1;
+      return lastNumber.replace(/\d+$/, nextNum.toString().padStart(match[1].length, '0'));
+    }
+  }
+
+  return 'INV-001';
+}
+
+export async function upsertInvoice(data: any) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'No autorizado' };
+
+  if (data.id) {
+    const { error } = await supabase
+      .from('invoices')
+      .update({
+        invoice_number: data.invoice_number,
+        issue_date: data.issue_date,
+        due_date: data.due_date,
+        total_amount: data.total_amount,
+        status: data.status,
+        notes: data.notes
+      })
+      .eq('id', data.id);
+    
+    if (error) return { error: error.message };
+  } else {
+    const { error } = await supabase
+      .from('invoices')
+      .insert({
+        proforma_id: data.proforma_id,
+        client_id: data.client_id,
+        invoice_number: data.invoice_number,
+        issue_date: data.issue_date,
+        due_date: data.due_date,
+        total_amount: data.total_amount,
+        status: data.status,
+        notes: data.notes
+      });
+    
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath(`/proforma/${data.proforma_id}`);
+  return { success: true };
+}
+
+export async function deleteInvoice(invoiceId: string, proformaId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autorizado' };
+
+  const { error } = await supabase
+    .from('invoices')
+    .delete()
+    .eq('id', invoiceId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/proforma/${proformaId}`);
+  return { success: true };
+}
+
+export async function sendInvoiceEmail(invoiceId: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autorizado' };
+
+  const to = formData.get('to') as string;
+  const subject = formData.get('subject') as string;
+  const message = formData.get('message') as string;
+
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select('*, proformas(*, users(*)), clients(*)')
+    .eq('id', invoiceId)
+    .single();
+
+  if (!invoice) return { error: 'Factura no encontrada' };
+
+  try {
+    const pdfBuffer = await renderToBuffer(
+      React.createElement(InvoicePDF, {
+        invoice,
+        proforma: invoice.proformas,
+        client: invoice.clients,
+        user: invoice.proformas.users
+      }) as React.ReactElement<DocumentProps>
+    );
+
+    await sendEmail({
+      displayName: invoice.proformas.users.display_name,
+      to: [to],
+      subject,
+      text: message,
+      html: buildEmailHtml(message, invoice.proforma_id),
+      attachments: [{
+        filename: `factura_${invoice.invoice_number}.pdf`,
+        content: pdfBuffer
+      }]
+    });
+
+    if (invoice.status === 'draft') {
+      await supabase.from('invoices').update({ status: 'sent' }).eq('id', invoiceId);
+    }
+
+    revalidatePath(`/proforma/${invoice.proforma_id}`);
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function sendPaymentEmail(paymentId: string, formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autorizado' };
+
+  const to = formData.get('to') as string;
+  const subject = formData.get('subject') as string;
+  const message = formData.get('message') as string;
+
+  const { data: payment } = await supabase
+    .from('payments')
+    .select('*, proformas(*, users(*)), clients(*)')
+    .eq('id', paymentId)
+    .single();
+
+  if (!payment) return { error: 'Pago no encontrado' };
+
+  try {
+    const pdfBuffer = await renderToBuffer(
+      React.createElement(PaymentPDF, {
+        payment,
+        proforma: payment.proformas,
+        client: payment.clients,
+        user: payment.proformas.users
+      }) as React.ReactElement<DocumentProps>
+    );
+
+    await sendEmail({
+      displayName: payment.proformas.users.display_name,
+      to: [to],
+      subject,
+      text: message,
+      html: buildEmailHtml(message, payment.proforma_id),
+      attachments: [{
+        filename: `recibo_${payment.id.split('-')[0].toUpperCase()}.pdf`,
+        content: pdfBuffer
+      }]
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
   }
 }

@@ -25,7 +25,18 @@ import {
   ListTodo,
   CheckCircle,
   CalendarDays,
-  User as UserIcon
+  User as UserIcon,
+  Tag,
+  Trash2,
+  Camera,
+  Loader2,
+  Eye,
+  Pencil,
+  ChevronLeft,
+  ChevronRight,
+  FileDown,
+  ZoomIn,
+  History as HistoryIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +52,6 @@ import { toast } from 'sonner';
 import ReceiptScanner from '@/components/ReceiptScanner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tag, Trash2, Camera, Loader2, Eye, Pencil, ChevronLeft, ChevronRight, FileDown, ZoomIn } from 'lucide-react';
 import { LineItemImage } from '@/components/LineItemImage';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -57,6 +67,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Popover,
@@ -71,6 +82,13 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { StatusHistory } from './StatusHistory';
+import { InvoiceFormModal } from './InvoiceFormModal';
+import { EmailBillingModal } from './EmailBillingModal';
+import { pdf } from '@react-pdf/renderer';
+import InvoicePDF from '@/lib/pdf/InvoicePDF';
+import PaymentPDF from '@/lib/pdf/PaymentPDF';
+import { deleteInvoice } from './actions';
 
 interface JobViewProps {
   proforma: any;
@@ -93,7 +111,7 @@ export function JobView({
   expenses: initialExpenses,
   visits: initialVisits,
   timeEntries: initialTimeEntries,
-  invoices,
+  invoices: initialInvoices,
   payments: initialPayments,
   tasks: initialTasks,
   teamMembers: initialTeamMembers,
@@ -111,6 +129,7 @@ export function JobView({
   const [tasks, setTasks] = React.useState(initialTasks);
   const [teamMembers, setTeamMembers] = React.useState(initialTeamMembers);
   const [materials, setMaterials] = React.useState(initialMaterials);
+  const [invoices, setInvoices] = React.useState(initialInvoices);
 
   // Materials local state
   const [editingMaterialId, setEditingMaterialId] = React.useState<string | null>(null);
@@ -148,6 +167,10 @@ export function JobView({
   const [editingLabor, setEditingLabor] = React.useState<any | null>(null);
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
   const [adjustments, setAdjustments] = React.useState((proforma.adjustments || []) as any[]);
+  const [isAddingInvoice, setIsAddingInvoice] = React.useState(false);
+  const [editingInvoice, setEditingInvoice] = React.useState<any>(null);
+  const [invoiceToDelete, setInvoiceToDelete] = React.useState<any>(null);
+  const [billingEmailModal, setBillingEmailModal] = React.useState<{ type: 'invoice' | 'payment', data: any } | null>(null);
   const [isEditingAdjustments, setIsEditingAdjustments] = React.useState(false);
 
   const toggleItemExpansion = (itemId: string) => {
@@ -239,6 +262,18 @@ export function JobView({
 
     if (!error) {
       setPayments(data || []);
+    }
+  };
+
+  const fetchInvoices = async () => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('proforma_id', id)
+      .order('created_at', { ascending: false });
+
+    if (!error) {
+      setInvoices(data || []);
     }
   };
 
@@ -372,6 +407,7 @@ export function JobView({
 
   React.useEffect(() => {
     fetchItemPresets();
+    fetchInvoices();
 
     // Track recently visited job
     try {
@@ -808,6 +844,57 @@ export function JobView({
   const totalProfit = totalInvoiced - totalCost - totalLaborCost - totalExpenses;
   const profitMargin = totalInvoiced > 0 ? (totalProfit / totalInvoiced) * 100 : 0;
 
+  const handleViewInvoicePDF = async (invoice: any) => {
+    try {
+      const blob = await pdf(
+        <InvoicePDF
+          invoice={invoice}
+          proforma={proforma}
+          client={proforma.clients}
+          user={proforma.users}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error generating Invoice PDF:', error);
+      toast.error('Error al generar el PDF de la factura');
+    }
+  };
+
+  const handleViewPaymentPDF = async (payment: any) => {
+    try {
+      const blob = await pdf(
+        <PaymentPDF
+          payment={payment}
+          proforma={proforma}
+          client={proforma.clients}
+          user={proforma.users}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error generating Payment PDF:', error);
+      toast.error('Error al generar el recibo de pago');
+    }
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    try {
+      const result = await deleteInvoice(invoiceId, id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Factura eliminada');
+        setInvoiceToDelete(null);
+        fetchInvoices();
+      }
+    } catch (error) {
+      toast.error('Error al eliminar la factura');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl animate-in fade-in duration-500">
 
@@ -834,6 +921,26 @@ export function JobView({
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Search</span>
           </Button>
+
+          <Dialog>
+            <DialogTrigger render={
+              <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm">
+                <HistoryIcon className="h-4 w-4 text-muted-foreground" />
+                <span className="hidden sm:inline">Historial</span>
+              </Button>
+            } />
+            <DialogContent className="sm:max-w-[540px]">
+              <DialogHeader className="mb-4">
+                <DialogTitle>Historial del Trabajo</DialogTitle>
+                <DialogDescription>
+                  Seguimiento de todos los cambios de estado realizados.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
+                <StatusHistory proformaId={id} />
+              </div>
+            </DialogContent>
+          </Dialog>
           <ProformaDropdownActions
             proformaId={id}
             currentStatus={proforma.status || 'draft'}
@@ -855,8 +962,13 @@ export function JobView({
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px] font-black tracking-widest uppercase">
-                  {proforma.status.toUpperCase()}
+                <Badge className={cn(
+                  "text-[10px] font-black tracking-widest uppercase",
+                  proforma.status === 'job_terminated' 
+                    ? "bg-slate-500/10 text-slate-700 border-slate-500/20" 
+                    : "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                )}>
+                  {proforma.status === 'job_terminated' ? 'TERMINADO' : proforma.status.toUpperCase()}
                 </Badge>
                 <span className="text-muted-foreground text-xs font-medium">Job #{proforma.id.split('-')[0].toUpperCase()}</span>
               </div>
@@ -1630,6 +1742,18 @@ export function JobView({
                                   <MoreVertical className="h-4 w-4" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
+                                    <Eye className="h-3.5 w-3.5" /> View Receipt
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
+                                    <Mail className="h-3.5 w-3.5" /> Send by Email
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
+                                    <Eye className="h-3.5 w-3.5" /> View Receipt
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
+                                    <Mail className="h-3.5 w-3.5" /> Send by Email
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
                                     <Pencil className="h-3.5 w-3.5" /> Edit
                                   </DropdownMenuItem>
@@ -1949,34 +2073,65 @@ export function JobView({
                         <th className="px-4 py-3 text-left">Subject</th>
                         <th className="px-4 py-3 text-right">Balance</th>
                         <th className="px-4 py-3 text-right">Total</th>
+                        <th className="px-4 py-3 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/30">
                       {invoices.map(inv => (
-                        <tr key={inv.id} className="hover:bg-muted/5 transition-colors">
+                        <tr key={inv.id} className="hover:bg-muted/5 transition-colors group">
                           <td className="px-4 py-4 font-bold text-emerald-600">#{inv.invoice_number}</td>
                           <td className="px-4 py-4 text-muted-foreground">{format(new Date(inv.due_date || inv.issue_date), 'd MMM. yyyy', { locale: es })}</td>
                           <td className="px-4 py-4">
                             <Badge variant="outline" className={cn(
                               "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-black uppercase tracking-widest",
-                              inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
+                              inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : 
+                              inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                              "bg-muted text-muted-foreground border-border"
                             )}>
-                              <span className={cn("w-2 h-2 rounded-full", inv.status === 'paid' ? "bg-emerald-500" : "bg-blue-500")} />
+                              <span className={cn("w-2 h-2 rounded-full", 
+                                inv.status === 'paid' ? "bg-emerald-500" : 
+                                inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")} 
+                              />
                               {inv.status.toUpperCase()}
                             </Badge>
                           </td>
-                          <td className="px-4 py-4 text-muted-foreground">{proforma.project_name}</td>
-                          <td className="px-4 py-4 text-right tabular-nums font-bold">${inv.status === 'paid' ? '0.00' : inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td className="px-4 py-4 text-right tabular-nums font-bold text-lg">${inv.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-muted-foreground text-xs">{proforma.project_name}</td>
+                          <td className="px-4 py-4 text-right tabular-nums font-bold">${inv.status === 'paid' ? '0.00' : Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-right tabular-nums font-bold text-lg">${Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                <MoreVertical className="h-4 w-4" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewInvoicePDF(inv)}>
+                                  <Eye className="h-3.5 w-3.5" /> View PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
+                                  <Mail className="h-3.5 w-3.5" /> Send by Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingInvoice(inv)}>
+                                  <Pencil className="h-3.5 w-3.5" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
+                                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
 
-                <Button variant="ghost" className="text-primary font-bold px-0 h-auto hover:bg-transparent">
-                  Create Invoice
-                </Button>
+                <Button 
+                   variant="ghost" 
+                   className="text-primary font-bold px-0 h-auto hover:bg-transparent"
+                   onClick={() => setIsAddingInvoice(true)}
+                 >
+                   Create Invoice
+                 </Button>
               </div>
             </CardContent>
           </Card>
@@ -1998,10 +2153,8 @@ export function JobView({
               </div>
             </CardContent>
           </Card>
-
         </div>
       </div>
-      {/* Modals */}
 
       <Dialog open={isAddingMaterial} onOpenChange={setIsAddingMaterial}>
         <DialogContent className="sm:max-w-[425px]">
@@ -2337,8 +2490,7 @@ export function JobView({
         />
       )}
 
-      {/* Deletion Confirmation Dialogs */}
-      <Dialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
+      <Dialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Eliminar Item</DialogTitle>
@@ -2348,27 +2500,70 @@ export function JobView({
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" onClick={() => setItemToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => handleDeleteItem(itemToDelete.id)}>Eliminar</Button>
+            <Button variant="destructive" onClick={() => itemToDelete && handleDeleteItem(itemToDelete.id)}>Eliminar</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!paymentToDelete} onOpenChange={(open) => !open && setPaymentToDelete(null)}>
+      <Dialog open={!!invoiceToDelete} onOpenChange={(isOpen) => !isOpen && setInvoiceToDelete(null)}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Factura</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar la factura #{invoiceToDelete?.invoice_number}? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setInvoiceToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => invoiceToDelete && handleDeleteInvoice(invoiceToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {(isAddingInvoice || editingInvoice) && (
+        <InvoiceFormModal
+          proformaId={id}
+          clientId={proforma.client_id}
+          initialData={editingInvoice}
+          onClose={() => {
+            setIsAddingInvoice(false);
+            setEditingInvoice(null);
+          }}
+          onSuccess={() => {
+            setIsAddingInvoice(false);
+            setEditingInvoice(null);
+            fetchInvoices();
+          }}
+        />
+      )}
+
+      {billingEmailModal && (
+        <EmailBillingModal
+          type={billingEmailModal.type}
+          id={billingEmailModal.data.id}
+          clientEmail={proforma.clients?.email || ''}
+          clientName={proforma.clients?.first_name || proforma.clients?.name || 'Cliente'}
+          referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : billingEmailModal.data.id.split('-')[0].toUpperCase()}
+          onClose={() => setBillingEmailModal(null)}
+        />
+      )}
+
+      <Dialog open={!!paymentToDelete} onOpenChange={(isOpen) => !isOpen && setPaymentToDelete(null)}>
+        <DialogContent className="border-slate-200">
           <DialogHeader>
             <DialogTitle>Eliminar Pago</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar este pago de ${Number(paymentToDelete?.amount).toLocaleString()}? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar este pago de ${Number(paymentToDelete?.amount || 0).toLocaleString()}? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" onClick={() => setPaymentToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => handleDeletePayment(paymentToDelete.id)}>Eliminar</Button>
+            <Button variant="destructive" onClick={() => paymentToDelete && handleDeletePayment(paymentToDelete.id)}>Eliminar</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!expenseToDelete} onOpenChange={(open) => !open && setExpenseToDelete(null)}>
+      <Dialog open={!!expenseToDelete} onOpenChange={(isOpen) => !isOpen && setExpenseToDelete(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Eliminar Gasto</DialogTitle>
@@ -2378,12 +2573,12 @@ export function JobView({
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" onClick={() => setExpenseToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => handleDeleteExpense(expenseToDelete.id)}>Eliminar</Button>
+            <Button variant="destructive" onClick={() => expenseToDelete && handleDeleteExpense(expenseToDelete.id)}>Eliminar</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!laborToDelete} onOpenChange={(open) => !open && setLaborToDelete(null)}>
+      <Dialog open={!!laborToDelete} onOpenChange={(isOpen) => !isOpen && setLaborToDelete(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Eliminar Labor</DialogTitle>
@@ -2393,12 +2588,12 @@ export function JobView({
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" onClick={() => setLaborToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => handeDeleteLabor(laborToDelete.id)}>Eliminar</Button>
+            <Button variant="destructive" onClick={() => laborToDelete && handeDeleteLabor(laborToDelete.id)}>Eliminar</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
+      <Dialog open={!!taskToDelete} onOpenChange={(isOpen) => !isOpen && setTaskToDelete(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Eliminar Tarea</DialogTitle>
@@ -2408,7 +2603,7 @@ export function JobView({
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" onClick={() => setTaskToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => handleDeleteTask(taskToDelete.id)}>Eliminar</Button>
+            <Button variant="destructive" onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id)}>Eliminar</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -2454,19 +2649,6 @@ export function JobView({
         />
       )}
 
-      {isAddingLineItem && (
-        <LineItemFormModal
-          proformaId={id}
-          itemsCount={items.length}
-          itemPresets={itemPresets}
-          onClose={() => setIsAddingLineItem(false)}
-          onSuccess={() => {
-            fetchItems();
-            setIsAddingLineItem(false);
-          }}
-        />
-      )}
-
       {isEditingAdjustments && (
         <AdjustmentsModal
           initialAdjustments={adjustments}
@@ -2475,10 +2657,11 @@ export function JobView({
             setAdjustments(newAdjustments);
             await syncTotalsToDatabase(items, newAdjustments);
             setIsEditingAdjustments(false);
-            toast.success('Adjustments updated successfully');
+            toast.success('Adjustments updated');
           }}
         />
       )}
+
     </div>
   );
 }
@@ -3629,3 +3812,9 @@ function ManualMaterialFormModal({ proformaId, onClose, onSuccess }: {
     </Dialog>
   );
 }
+
+// Billing Modals Integration at the end of the main component logic
+// Note: These are actually rendered inside the JobView component's return.
+// But we need to make sure the component definitions are available.
+// Actually, since I'm importing them from './modals', I don't need to define them here.
+// I just need to RENDER them inside the main JobView component.

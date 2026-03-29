@@ -11,14 +11,14 @@ interface ExpandableTextProps {
 }
 
 export function ExpandableText({ text, initialLines = 4, className }: ExpandableTextProps) {
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(true);
   const [shouldTruncate, setShouldTruncate] = React.useState(false);
   const textRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (textRef.current) {
       // If height is more than 5 lines (approx 24px per line), then allow truncation
-      const lineHeight = 20; 
+      const lineHeight = 20;
       const maxHeight = initialLines * lineHeight;
       if (textRef.current.scrollHeight > maxHeight + 10) {
         setShouldTruncate(true);
@@ -30,7 +30,7 @@ export function ExpandableText({ text, initialLines = 4, className }: Expandable
 
   return (
     <div className={cn("group relative", className)}>
-      <div 
+      <div
         ref={textRef}
         className={cn(
           "whitespace-pre-wrap text-sm leading-relaxed transition-all duration-500 ease-in-out",
@@ -39,7 +39,7 @@ export function ExpandableText({ text, initialLines = 4, className }: Expandable
       >
         {text}
       </div>
-      
+
       {shouldTruncate && (
         <button
           onClick={(e) => {
