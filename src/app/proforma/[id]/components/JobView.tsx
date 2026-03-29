@@ -970,7 +970,7 @@ export function JobView({
                 )}>
                   {proforma.status === 'job_terminated' ? 'TERMINADO' : proforma.status.toUpperCase()}
                 </Badge>
-                <span className="text-muted-foreground text-xs font-medium">Job #{proforma.id.split('-')[0].toUpperCase()}</span>
+                <span className="text-muted-foreground text-xs font-medium">Job #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
               </div>
               <h1 className="text-3xl font-serif font-bold text-foreground mb-1">{proforma.project_name}</h1>
               <div className="flex flex-col gap-1 text-sm text-muted-foreground">
@@ -1007,7 +1007,7 @@ export function JobView({
             </div>
             <div>
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">From quote</p>
-              <p className="text-sm font-bold text-emerald-600">Quote #{proforma.id.split('-')[0].toUpperCase()}</p>
+              <p className="text-sm font-bold text-emerald-600">Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</p>
             </div>
           </div>
         </div>
@@ -2341,6 +2341,7 @@ export function JobView({
       {isEmailingMaterials && (
         <EmailMaterialsModal
           proformaId={id}
+          proformaNumber={proforma.number}
           projectName={proforma.project_name}
           teamMembers={teamMembers}
           openOverride={isEmailingMaterials}
@@ -2562,7 +2563,7 @@ export function JobView({
           id={billingEmailModal.data.id}
           clientEmail={proforma.clients?.email || ''}
           clientName={proforma.clients?.first_name || proforma.clients?.name || 'Cliente'}
-          referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : billingEmailModal.data.id.split('-')[0].toUpperCase()}
+          referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : String(proforma.number || billingEmailModal.data.id.split('-')[0]).toUpperCase()}
           onClose={() => setBillingEmailModal(null)}
         />
       )}

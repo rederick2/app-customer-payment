@@ -15,6 +15,7 @@ import { Mail, Loader2, X, FileText, Check, ChevronsUpDown } from 'lucide-react'
 
 interface EmailMaterialsModalProps {
   proformaId: string;
+  proformaNumber?: string;
   projectName: string;
   teamMembers?: any[];
   openOverride?: boolean;
@@ -23,6 +24,7 @@ interface EmailMaterialsModalProps {
 
 export default function EmailMaterialsModal({ 
   proformaId, 
+  proformaNumber,
   projectName, 
   teamMembers = [],
   openOverride,
@@ -208,7 +210,7 @@ export default function EmailMaterialsModal({
                      <FileText className="h-5 w-5 text-[#8D4A3A]" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">materials_{proformaId.split('-')[0]}.pdf</p>
+                    <p className="text-sm font-medium text-foreground">materials_{String(proformaNumber || proformaId.split('-')[0]).toLowerCase()}.pdf</p>
                     <p className="text-xs text-muted-foreground">Automatically Generated</p>
                   </div>
                 </div>

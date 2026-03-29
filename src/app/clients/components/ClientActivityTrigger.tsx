@@ -48,7 +48,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
         if (p.created_at) {
           activities.push({
             date: new Date(p.created_at),
-            label: `Cotización Creada: ${p.id.split('-')[0].toUpperCase()}`,
+            label: `Cotización Creada: ${p.number || p.id.split('-')[0].toUpperCase()}`,
             icon: FileText,
             color: 'bg-slate-500/10 text-slate-600 border-slate-200'
           });
@@ -57,7 +57,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
         if (p.approved_at) {
           activities.push({
             date: new Date(p.approved_at),
-            label: `Cotización Aprobada: ${p.id.split('-')[0].toUpperCase()}`,
+            label: `Cotización Aprobada: ${p.number || p.id.split('-')[0].toUpperCase()}`,
             icon: CheckCircle,
             color: 'bg-emerald-500/10 text-emerald-600 border-emerald-200'
           });
@@ -66,7 +66,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
         if (p.job_converted_at) {
           activities.push({
             date: new Date(p.job_converted_at),
-            label: `Convertido a Trabajo (Job): ${p.id.split('-')[0].toUpperCase()}`,
+            label: `Convertido a Trabajo (Job): ${p.number || p.id.split('-')[0].toUpperCase()}`,
             icon: Briefcase,
             color: 'bg-indigo-500/10 text-indigo-600 border-indigo-200'
           });

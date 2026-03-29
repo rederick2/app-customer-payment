@@ -44,6 +44,7 @@ function ClientPortalCopyButton({ proformaId }: { proformaId: string }) {
 
 interface EmailQuoteModalProps {
   proformaId: string;
+  proformaNumber?: string;
   clientName: string;
   clientEmail: string;
   projectName: string;
@@ -55,6 +56,7 @@ interface EmailQuoteModalProps {
 
 export default function EmailQuoteModal({
   proformaId,
+  proformaNumber,
   clientName,
   clientEmail,
   projectName,
@@ -103,7 +105,7 @@ export default function EmailQuoteModal({
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
         <DialogHeader className="p-6 pb-2 border-b bg-white border-border/50">
           <DialogTitle className="text-xl font-bold text-[#0D3B47]">
-            Email quote #{proformaId.split('-')[0].toUpperCase()} to {clientName}
+            Email quote #{String(proformaNumber || proformaId.split('-')[0]).toUpperCase()} to {clientName}
           </DialogTitle>
         </DialogHeader>
 
@@ -197,7 +199,7 @@ export default function EmailQuoteModal({
                   <FileText className="h-5 w-5 text-[#8D4A3A]" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">quote_{proformaId.split('-')[0]}.pdf</p>
+                  <p className="text-sm font-medium text-foreground">quote_{String(proformaNumber || proformaId.split('-')[0]).toLowerCase()}.pdf</p>
                   <p className="text-xs text-muted-foreground">Automatically Generated</p>
                 </div>
               </div>

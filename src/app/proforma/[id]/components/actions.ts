@@ -75,7 +75,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
       html: buildEmailHtml(message, proformaId),
       attachments: [
         {
-          filename: `cotizacion_${proforma.number || proforma.id.split('-')[0].toUpperCase()}.pdf`,
+          filename: `cotizacion_${String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}.pdf`,
           content: pdfBuffer,
         },
       ],
@@ -472,7 +472,7 @@ export async function sendMaterialsEmail(proformaId: string, formData: FormData)
       html: buildEmailHtml(message, proformaId),
       attachments: [
         {
-          filename: `materiales_${proforma.number || proforma.id.split('-')[0].toUpperCase()}.pdf`,
+          filename: `materiales_${String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}.pdf`,
           content: pdfBuffer,
         },
       ],

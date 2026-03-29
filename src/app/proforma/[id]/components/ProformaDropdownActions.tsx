@@ -139,6 +139,7 @@ export default function ProformaDropdownActions({
       {isEmailModalOpen && (
         <EmailQuoteModal
           proformaId={proformaId}
+          proformaNumber={proforma.number}
           clientName={(() => {
             const c = proforma.clients;
             return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Cliente';

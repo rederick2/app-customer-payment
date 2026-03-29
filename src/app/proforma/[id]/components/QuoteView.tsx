@@ -436,7 +436,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
   };
 
   const proformaName = proforma.project_name || 'Quotations';
-  const fileName = `quote_${proforma.id.split('-')[0].toUpperCase()}.pdf`;
+  const fileName = `quote_${String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}.pdf`;
 
   //console.log(proforma)
   //console.log(1)
@@ -590,6 +590,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             </Button>
             <EmailQuoteModal
               proformaId={id}
+              proformaNumber={proforma.number}
               clientName={(() => {
                 const c = proforma.clients;
                 return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Client';
@@ -701,7 +702,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Estimate Number</span>
                   <Badge variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm">
-                    {proforma.id.split('-')[0].toUpperCase()}
+                    {String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}
                   </Badge>
                 </div>
                 <h2 className="text-4xl font-black tracking-tighter">

@@ -19,7 +19,7 @@ export default async function AdminProformaMessagesPage({ params }: Props) {
 
   const { data: proforma, error } = await supabase
     .from('proformas')
-    .select('id, project_name, clients(name, company_name, first_name, last_name)')
+    .select('id, number, project_name, clients(name, company_name, first_name, last_name)')
     .eq('id', id)
     .eq('user_id', user.id)
     .single();
@@ -45,7 +45,7 @@ export default async function AdminProformaMessagesPage({ params }: Props) {
         <div>
           <h1 className="text-xl font-bold font-serif text-foreground">{clientName}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Quote #{proforma.id.split('-')[0].toUpperCase()} · {proforma.project_name}
+            Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()} · {proforma.project_name}
           </p>
         </div>
       </div>

@@ -9,7 +9,7 @@ export const revalidate = 0;
 
 export default async function QuotesPage() {
   const supabase = await createClient();
-  
+
   const { data: proformas, error } = await supabase
     .from('proformas')
     .select(`
@@ -18,6 +18,7 @@ export default async function QuotesPage() {
       total,
       created_at,
       status,
+      number,
       clients ( name )
     `)
     .order('created_at', { ascending: false });

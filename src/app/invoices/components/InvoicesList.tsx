@@ -73,7 +73,7 @@ export function InvoicesList({ initialProformas }: InvoicesListProps) {
                   >
                     <td className="px-6 py-4">
                       <p className="font-bold text-foreground">{proforma.project_name}</p>
-                      <p className="text-[10px] font-mono text-muted-foreground/60 uppercase">REF: {proforma.id.split('-')[0]}</p>
+                      <p className="text-[10px] font-mono text-muted-foreground/60 uppercase">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                     </td>
                     <td className="px-6 py-4">{(proforma.clients as any)?.name || 'Sin Cliente'}</td>
                     <td className="px-6 py-4 text-muted-foreground">

@@ -493,7 +493,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                                           </div>
                                           <div>
                                             <div className="font-bold text-foreground group-hover:text-primary transition-colors">
-                                              {item.status === 'job' ? 'Job #' : 'Quote #'}{item.id.split('-')[0].toUpperCase()} - {item.project_name}
+                                              {item.status === 'job' ? 'Job #' : 'Quote #'} {String(item.number || item.id.split('-')[0]).toUpperCase()} - {item.project_name}
                                             </div>
                                             <Badge variant="outline" className={cn(
                                               "mt-1 text-[10px] font-extrabold py-0 h-5 px-1.5",
@@ -745,7 +745,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
           id={billingEmailModal.data.id}
           clientEmail={client.email}
           clientName={clientName}
-          referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : billingEmailModal.data.id.split('-')[0].toUpperCase()}
+          referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : String(billingEmailModal.data.number || billingEmailModal.data.id.split('-')[0]).toUpperCase()}
           onClose={() => setBillingEmailModal(null)}
         />
       )}

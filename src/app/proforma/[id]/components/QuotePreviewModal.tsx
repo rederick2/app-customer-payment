@@ -66,7 +66,7 @@ export default function QuotePreviewModal({
   };
 
   const proformaName = proforma.project_name || 'Quotations';
-  const fileName = `quote_${proforma.id.split('-')[0].toUpperCase()}.pdf`;
+  const fileName = `quote_${String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}.pdf`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

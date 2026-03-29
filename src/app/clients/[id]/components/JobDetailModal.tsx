@@ -40,7 +40,7 @@ export function JobDetailModal({ isOpen, onClose, proforma, payments, expenses }
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase text-[10px]">
               {proforma.status === 'job' ? 'Trabajo' : 'Cotización'}
             </Badge>
-            <span className="text-muted-foreground text-sm font-medium">#{proforma.id.split('-')[0].toUpperCase()}</span>
+            <span className="text-muted-foreground text-sm font-medium">#{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
           </div>
           <DialogTitle className="font-serif text-2xl">{proforma.project_name}</DialogTitle>
           <DialogDescription>

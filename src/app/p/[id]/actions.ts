@@ -74,7 +74,7 @@ export async function approveProforma(proformaId: string, signatureData?: string
   // 3. Send notification email if user email is available
   if (userEmail) {
     try {
-      const proformaNumber = proforma.number || proformaId.split('-')[0].toUpperCase();
+      const proformaNumber = String(proforma.number || proformaId.split('-')[0]).toUpperCase();
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       const jobLink = `${baseUrl}/proforma/${proformaId}`;
 

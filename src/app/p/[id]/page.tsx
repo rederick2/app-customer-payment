@@ -76,7 +76,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
   const isInvoiceView = type === 'invoice' && associatedInvoice;
   const displayStatus = isInvoiceView ? associatedInvoice.status : (proforma.status || 'draft');
   const displayTitle = isInvoiceView ? 'Invoice' : 'Quote';
-  const displayNumber = isInvoiceView ? associatedInvoice.invoice_number : (proforma.number || proforma.id.split('-')[0].toUpperCase());
+  const displayNumber = isInvoiceView ? associatedInvoice.invoice_number : String(proforma.number || proforma.id.split('-')[0]).toUpperCase();
   const displayDate = isInvoiceView ? associatedInvoice.issue_date : proforma.created_at;
 
   // Fetch line items

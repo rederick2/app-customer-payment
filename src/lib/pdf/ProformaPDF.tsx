@@ -248,7 +248,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
     client?.name ||
     'Cliente';
 
-  const proformaNumber = proforma.id.split('-')[0].toUpperCase();
+  const proformaNumber = String(proforma.number || proforma.id.split('-')[0]).toUpperCase();
   const dateFormatted = new Date(proforma.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   const user = proforma.users || {};

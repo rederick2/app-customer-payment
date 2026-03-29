@@ -17,9 +17,10 @@ export default async function JobsPage() {
       total,
       created_at,
       status,
+      number,
       clients ( id, name, street_1, city, province, postal_code )
     `)
-    .eq('status', 'job')
+    .in('status', ['job', 'job_terminated'])
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -42,7 +43,7 @@ export default async function JobsPage() {
           <Link href="/proforma/new">
             <Button className="bg-[#306C3E] hover:bg-[#265832] text-white shadow-md">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Nuevo Job
+              New Quote
             </Button>
           </Link>
         </div>

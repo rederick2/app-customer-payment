@@ -17,6 +17,7 @@ export default async function AdminMessagesPage() {
     .from('proformas')
     .select(`
       id,
+      number,
       project_name,
       status,
       clients (name, company_name, first_name, last_name),
@@ -117,7 +118,7 @@ export default async function AdminMessagesPage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                    Quote #{proforma.id.split('-')[0].toUpperCase()} · {proforma.project_name}
+                    Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()} · {proforma.project_name}
                   </p>
                   <p className={`text-sm mt-1.5 truncate ${hasUnread && isLastFromClient ? 'font-semibold text-foreground' : 'text-foreground/70'}`}>
                     <span className="text-muted-foreground text-xs mr-1 font-normal">

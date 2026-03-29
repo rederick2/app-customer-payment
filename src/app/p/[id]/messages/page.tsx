@@ -15,7 +15,7 @@ export default async function PublicMessagesView({ params }: Props) {
 
   const { data: proforma, error: proformaError } = await supabase
     .from('proformas')
-    .select('id')
+    .select('id, number')
     .eq('id', id)
     .single();
 
@@ -34,7 +34,7 @@ export default async function PublicMessagesView({ params }: Props) {
       <div className="mb-4 md:mb-8">
         <h1 className="text-xl md:text-2xl font-bold text-foreground font-serif tracking-tight">Comentarios y Consultas</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Proforma {id.split('-')[0].toUpperCase()}
+          Proforma {String(proforma.number || id.split('-')[0]).toUpperCase()}
         </p>
       </div>
 
