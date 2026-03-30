@@ -86,23 +86,6 @@ export default async function PublicProformaView({ params, searchParams }: Props
     .eq('proforma_id', id)
     .order('sort_order', { ascending: true });
 
-  // Fetch task media for Work Progress gallery
-  const { data: taskMediaRows } = await supabase
-    .from('task_media')
-    .select('*, job_tasks(title)')
-    .eq('proforma_id', id)
-    .order('created_at', { ascending: true });
-
-  // Group media by task
-  const mediaByTask: Record<string, { taskTitle: string; items: any[] }> = {};
-  for (const row of taskMediaRows || []) {
-    const taskTitle = row.job_tasks?.title || 'Task';
-    if (!mediaByTask[row.task_id]) {
-      mediaByTask[row.task_id] = { taskTitle, items: [] };
-    }
-    mediaByTask[row.task_id].items.push(row);
-  }
-
   return (
     <div className="px-6 py-8 md:p-12 max-w-5xl mx-auto animate-in fade-in duration-500">
 
@@ -220,9 +203,8 @@ export default async function PublicProformaView({ params, searchParams }: Props
             <p className="font-medium text-lg text-foreground">{proforma.project_name}</p>
           </div>
         </div>
-
-        {/* Items Table */}
-        <div className="mb-12 relative z-20">
+        {/* Items View - Desktop (Table) */}
+        <div className="mb-12 relative z-20 hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/30 print:bg-transparent print:border-b-2 print:border-foreground/20 text-muted-foreground border-y border-border/50">
               <tr>
@@ -245,7 +227,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
                     )}
                   </td>
                   <td className="px-4 py-5">
-                    <div className="font-bold text-foreground text-md tracking-tight">{item.description}</div>
+                    <div className="font-bold text-foreground text-md tracking-tight break-words">{item.description}</div>
                   </td>
                   <td className="px-4 py-4 text-center">
                     {item.photo_url ? (
@@ -284,6 +266,81 @@ export default async function PublicProformaView({ params, searchParams }: Props
               ])}
             </tbody>
           </table>
+        </div>
+
+        {/* Items View - Mobile (Cards) */}
+        <div className="mb-12 space-y-4 md:hidden relative z-20">
+          <div className="border-b border-border/50 pb-2 mb-4">
+             <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Items & Scope</h3>
+          </div>
+          {items && items.map((item) => (
+            <div key={item.id} className={cn(
+              "p-4 rounded-2xl border transition-all bg-card",
+              item.is_optional ? "border-primary/20 shadow-sm" : "border-border/40",
+              item.is_excluded && "opacity-60 grayscale-[0.5]"
+            )}>
+              {/* Header: Incl. status and Total */}
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  {item.is_optional ? (
+                    <div className="flex items-center gap-2">
+                       <Checkbox checked={!item.is_excluded} className="h-5 w-5" />
+                       <span className="text-[10px] font-black uppercase tracking-tighter text-primary">Optional</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 bg-muted/10 px-2 py-1 rounded-md">Fixed</span>
+                  )}
+                </div>
+                <div className={cn(
+                  "font-mono font-bold text-lg",
+                  item.is_excluded ? "text-muted-foreground line-through italic" : "text-foreground"
+                )}>
+                  ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+
+              {/* Main Info: Image + Title */}
+              <div className="flex gap-4 items-start mb-4">
+                {item.photo_url ? (
+                  <LineItemImage
+                    src={item.photo_url}
+                    alt={item.description}
+                    className="h-16 w-16 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-16 w-16 flex-shrink-0 bg-muted/10 rounded-xl border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/20">
+                    <ZoomIn className="h-4 w-4" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                   <h4 className="font-bold text-foreground text-base leading-tight tracking-tight break-words">{item.description}</h4>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4 py-3 border-y border-border/10 mb-4 bg-muted/5 rounded-lg px-3">
+                 <div>
+                    <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Quantity</p>
+                    <p className="font-mono text-sm font-bold">{item.quantity}</p>
+                 </div>
+                 <div className="text-right">
+                    <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Rate</p>
+                    <p className="font-mono text-sm font-bold">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                 </div>
+              </div>
+
+              {/* Details */}
+              {item.details && (
+                <div className="mt-2">
+                   <ExpandableText
+                    text={item.details}
+                    initialLines={2}
+                    className="text-sm text-muted-foreground"
+                  />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Notes Section */}
@@ -450,60 +507,6 @@ export default async function PublicProformaView({ params, searchParams }: Props
           </div>
         </div>
 
-        {/* Work Progress Gallery */}
-        {Object.keys(mediaByTask).length > 0 && (
-          <div className="mt-8 border-t border-border/50 pt-8 relative z-20 print:hidden">
-            <h2 className="text-xl font-serif font-bold text-foreground mb-1">Work Progress</h2>
-            <p className="text-sm text-muted-foreground mb-6">Photos and videos from completed tasks</p>
-            <div className="space-y-8">
-              {Object.values(mediaByTask).map((group) => (
-                <div key={group.taskTitle}>
-                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3 flex items-center gap-2">
-                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-                    {group.taskTitle}
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {group.items.map((m: any) => (
-                      <a
-                        key={m.id}
-                        href={m.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block group relative aspect-square rounded-xl overflow-hidden border border-border/50 bg-muted/10 hover:shadow-md transition-all"
-                      >
-                        {m.type === 'video' ? (
-                          <>
-                            <video
-                              src={m.url}
-                              className="w-full h-full object-cover"
-                              muted
-                            />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                              <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
-                            </div>
-                          </>
-                        ) : (
-                          <img
-                            src={m.url}
-                            alt={m.caption || group.taskTitle}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        )}
-                        {m.caption && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
-                            <p className="text-white text-[10px] truncate">{m.caption}</p>
-                          </div>
-                        )}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
       </div>
     </div>

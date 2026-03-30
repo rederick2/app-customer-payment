@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Plus, ListTodo, FileText, Phone, LogOut, ThumbsUp, MessageSquare, DollarSign } from 'lucide-react';
+import { Plus, ListTodo, FileText, Phone, LogOut, ThumbsUp, MessageSquare, DollarSign, Camera } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 import PublicMobileNav from '@/components/PublicMobileNav';
 import ContactUsModal from '@/components/ContactUsModal';
@@ -105,6 +105,10 @@ export default async function PublicProformaLayout({
           <Link href={`/p/${id}/invoices`} className="flex items-center px-3 py-3 text-sm font-semibold text-[#0D3B47] rounded-md hover:bg-black/5 transition-colors">
             <DollarSign className="mr-3 h-5 w-5 text-[#0D3B47]" />
             Invoices
+          </Link>
+          <Link href={`/p/${id}/work-progress`} className="flex items-center px-3 py-3 text-sm font-semibold text-[#0D3B47] rounded-md hover:bg-black/5 transition-colors">
+            <Camera className="mr-3 h-5 w-5 text-[#0D3B47]" />
+            Work Progress
           </Link>
         </nav>
 

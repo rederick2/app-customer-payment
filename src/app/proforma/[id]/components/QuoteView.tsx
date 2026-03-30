@@ -292,111 +292,194 @@ function SortableRow({
 
   if (isEditing) {
     return (
-      <tr ref={setNodeRef} style={style} className="print:hidden">
-        <td colSpan={7} className="p-0 border-none">
-          <ItemEditor
-            item={item}
-            onSave={onSaveEdit}
-            onCancel={onCancelEdit}
-            isReadOnly={isReadOnly}
-          />
-        </td>
-      </tr>
+      <div ref={setNodeRef} style={style} className="print:hidden">
+        <ItemEditor
+          item={item}
+          onSave={onSaveEdit}
+          onCancel={onCancelEdit}
+          isReadOnly={isReadOnly}
+        />
+      </div>
     );
   }
 
   return (
-    <React.Fragment>
-      <tr
-        ref={setNodeRef}
-        style={style}
+    <div ref={setNodeRef} style={style} className="group">
+      {/* Desktop Table Row */}
+      <table className="w-full hidden md:table border-collapse">
+        <tbody className="divide-y divide-border/20">
+          <tr
+            className={cn(
+              "transition-all hover:bg-muted/30 cursor-pointer align-top",
+              isDragging && "bg-accent shadow-lg ring-1 ring-primary/20",
+              item.is_excluded && "opacity-60 grayscale-[0.3]"
+            )}
+            onClick={onEdit}
+          >
+            <td className="px-4 py-5 text-center w-12">
+              {!isReadOnly && !isEditing && (
+                <div
+                  {...attributes}
+                  {...listeners}
+                  className="p-1.5 rounded hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground/50 group-hover:text-muted-foreground transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical className="h-4 w-4" />
+                </div>
+              )}
+            </td>
+            <td className="px-4 py-5 text-center w-16">
+              {item.is_optional && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={!item.is_excluded}
+                    disabled={isReadOnly}
+                    onCheckedChange={(checked) => {
+                      onToggleExcluded(item.id, !checked);
+                    }}
+                    className={cn(
+                      "opacity-100",
+                      !isReadOnly ? "cursor-pointer" : "cursor-default"
+                    )}
+                  />
+                </div>
+              )}
+            </td>
+            <td className="px-4 py-5">
+              <div className="font-bold text-[#0D3B47] text-base flex items-center gap-2">
+                {item.description}
+                {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
+              </div>
+            </td>
+            <td className="px-4 py-4 text-center w-24">
+              <div onClick={(e) => e.stopPropagation()}>
+                {item.photo_url ? (
+                  <LineItemImage
+                    src={item.photo_url}
+                    alt={item.description}
+                    className="h-14 w-14 mx-auto rounded-lg shadow-sm group-hover:shadow transition-shadow"
+                  />
+                ) : (
+                  <div className="h-14 w-14 mx-auto bg-muted/10 rounded-lg border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors">
+                    <ZoomIn className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+            </td>
+            <td className="px-4 py-5 text-right tabular-nums w-24">{item.quantity}</td>
+            <td className="px-4 py-5 text-right tabular-nums w-36">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <td className={cn("px-4 py-5 text-right font-bold tabular-nums w-36", item.is_excluded ? "text-muted-foreground line-through decoration-primary/40" : "text-[#0D3B47]")}>
+              ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </td>
+          </tr>
+          {item.details && (
+            <tr
+              className={cn(
+                "transition-all hover:bg-muted/30 cursor-pointer border-b border-primary/5",
+                isDragging && "opacity-0",
+                item.is_excluded && "opacity-60 grayscale-[0.3]"
+              )}
+              onClick={onEdit}
+            >
+              <td />
+              <td />
+              <td colSpan={5} className="px-4 pb-6 pt-0">
+                <div className="border-l-2 border-primary/10 pl-4 py-1 italic">
+                  <ExpandableText 
+                    text={item.details} 
+                    initialLines={3} 
+                    className="text-muted-foreground"
+                  />
+                </div>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      {/* Mobile Card View */}
+      <div 
         className={cn(
-          "group transition-all hover:bg-muted/30 cursor-pointer align-top",
-          isDragging && "bg-accent shadow-lg ring-1 ring-primary/20",
-          item.is_excluded && "opacity-60 grayscale-[0.3]"
+          "md:hidden p-4 rounded-2xl border transition-all bg-card mb-4",
+          item.is_optional ? "border-primary/20 shadow-sm" : "border-border/40",
+          item.is_excluded && "opacity-60 grayscale-[0.5]",
+          isDragging && "scale-[1.02] shadow-xl z-50 border-primary"
         )}
         onClick={onEdit}
       >
-        <td className="px-4 py-5 text-center">
-          {!isReadOnly && !isEditing && (
-            <div
-              {...attributes}
-              {...listeners}
-              className="p-1.5 rounded hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground/50 group-hover:text-muted-foreground transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <GripVertical className="h-4 w-4" />
-            </div>
-          )}
-        </td>
-        <td className="px-4 py-5 text-center">
-          {item.is_optional && (
-            <div onClick={(e) => e.stopPropagation()}>
-              <Checkbox
-                checked={!item.is_excluded}
-                disabled={isReadOnly}
-                onCheckedChange={(checked) => {
-                  onToggleExcluded(item.id, !checked);
-                }}
-                className={cn(
-                  "opacity-100",
-                  !isReadOnly ? "cursor-pointer" : "cursor-default"
-                )}
-              />
-            </div>
-          )}
-        </td>
-        <td className="px-4 py-5">
-          <div className="font-bold text-[#0D3B47] text-base flex items-center gap-2">
-            {item.description}
-            {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
-          </div>
-        </td>
-        <td className="px-4 py-4 text-center">
-          <div onClick={(e) => e.stopPropagation()}>
-            {item.photo_url ? (
-              <LineItemImage
-                src={item.photo_url}
-                alt={item.description}
-                className="h-14 w-14 mx-auto rounded-lg shadow-sm group-hover:shadow transition-shadow"
-              />
-            ) : (
-              <div className="h-14 w-14 mx-auto bg-muted/10 rounded-lg border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors">
-                <ZoomIn className="h-4 w-4" />
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-3">
+            {!isReadOnly && !isEditing && (
+              <div
+                {...attributes}
+                {...listeners}
+                className="p-2 -ml-2 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground/30"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripVertical className="h-5 w-5" />
               </div>
             )}
+            {item.is_optional ? (
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={!item.is_excluded}
+                  disabled={isReadOnly}
+                  onCheckedChange={(checked) => onToggleExcluded(item.id, !checked)}
+                  className="h-5 w-5"
+                />
+                <span className="text-[10px] font-black uppercase tracking-tighter text-primary">Optional</span>
+              </div>
+            ) : (
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 bg-muted/10 px-2 py-1 rounded-md">Fixed</span>
+            )}
           </div>
-        </td>
-        <td className="px-4 py-5 text-right tabular-nums">{item.quantity}</td>
-        <td className="px-4 py-5 text-right tabular-nums">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-        <td className={cn("px-4 py-5 text-right font-bold tabular-nums", item.is_excluded ? "text-muted-foreground line-through decoration-primary/40" : "text-[#0D3B47]")}>
-          ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-        </td>
-      </tr>
-      {item.details && (
-        <tr
-          style={style}
-          className={cn(
-            "group transition-all hover:bg-muted/30 cursor-pointer border-b border-primary/5",
-            isDragging && "opacity-0", // Hide during drag to avoid clutter
-            item.is_excluded && "opacity-60 grayscale-[0.3]"
-          )}
-          onClick={onEdit}
-        >
-          <td />
-          <td />
-          <td colSpan={5} className="px-4 pb-6 pt-0">
-            <div className="border-l-2 border-primary/10 pl-4 py-1 italic">
-              <ExpandableText 
-                text={item.details} 
-                initialLines={3} 
-                className="text-muted-foreground"
-              />
+          <div className={cn(
+            "font-mono font-bold text-lg",
+            item.is_excluded ? "text-muted-foreground line-through italic" : "text-[#0D3B47]"
+          )}>
+            ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          </div>
+        </div>
+
+        <div className="flex gap-4 items-start mb-4">
+          {item.photo_url ? (
+            <LineItemImage
+              src={item.photo_url}
+              alt={item.description}
+              className="h-16 w-16 flex-shrink-0 rounded-xl"
+            />
+          ) : (
+            <div className="h-16 w-16 flex-shrink-0 bg-muted/10 rounded-xl border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/20">
+              <ZoomIn className="h-4 w-4" />
             </div>
-          </td>
-        </tr>
-      )}
-    </React.Fragment>
+          )}
+          <div className="flex-1 min-w-0">
+            <h4 className="font-bold text-[#0D3B47] text-base leading-tight tracking-tight break-words">{item.description}</h4>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 py-3 border-y border-border/10 mb-4 bg-muted/5 rounded-lg px-3">
+          <div>
+            <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Quantity</p>
+            <p className="font-mono text-sm font-bold">{item.quantity}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Rate</p>
+            <p className="font-mono text-sm font-bold">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+          </div>
+        </div>
+
+        {item.details && (
+          <div className="mt-2">
+            <ExpandableText
+              text={item.details}
+              initialLines={2}
+              className="text-sm text-muted-foreground"
+            />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -740,47 +823,55 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
           </div>
         </div>
 
-        {/* Items Table */}
+        {/* Items View */}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
           modifiers={[restrictToVerticalAxis]}
         >
-          <div className="mb-20 relative z-10 overflow-hidden rounded-[2rem] border border-border/40 shadow-sm">
-            <table className="w-full text-sm text-left border-collapse">
-              <thead className="bg-[#ac8e68] text-white">
-                <tr>
-                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] w-12 text-center"></th>
-                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] w-16 text-center">Include</th>
-                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px]">Product / Service</th>
-                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-center w-24">Media</th>
-                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-center w-24">Qty</th>
-                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-right w-36">Unit Price</th>
-                  <th className="px-6 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-right w-36">Total</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-border/20">
-                <SortableContext
-                  items={items.map(i => i.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {items.map((item, index) => (
-                    <SortableRow
-                      key={item.id}
-                      item={item}
-                      index={index}
-                      isReadOnly={isReadOnly}
-                      isEditing={editingId === item.id}
-                      onEdit={() => !isReadOnly && setEditingId(item.id)}
-                      onCancelEdit={() => setEditingId(null)}
-                      onSaveEdit={handleSaveItem}
-                      onToggleExcluded={handleToggleExcludedAction}
-                    />
-                  ))}
-                </SortableContext>
-              </tbody>
-            </table>
+          <div className="mb-20 relative z-10">
+            {/* Desktop Table Header */}
+            <div className="hidden md:block overflow-hidden rounded-t-[2rem] border-x border-t border-border/40 shadow-sm">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-[#ac8e68] text-white">
+                  <tr>
+                    <th className="px-4 py-6 font-black uppercase tracking-[0.2em] text-[10px] w-12 text-center"></th>
+                    <th className="px-4 py-6 font-black uppercase tracking-[0.2em] text-[10px] w-16 text-center">Include</th>
+                    <th className="px-4 py-6 font-black uppercase tracking-[0.2em] text-[10px]">Product / Service</th>
+                    <th className="px-4 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-center w-24">Media</th>
+                    <th className="px-4 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-center w-24">Qty</th>
+                    <th className="px-4 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-right w-36">Unit Price</th>
+                    <th className="px-4 py-6 font-black uppercase tracking-[0.2em] text-[10px] text-right w-36">Total</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+
+            {/* Sortable Items Container */}
+            <div className={cn(
+              "space-y-0",
+              "md:border-x md:border-b md:border-border/40 md:rounded-b-[2rem] md:overflow-hidden md:bg-white"
+            )}>
+              <SortableContext
+                items={items.map(i => i.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {items.map((item, index) => (
+                  <SortableRow
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    isReadOnly={isReadOnly}
+                    isEditing={editingId === item.id}
+                    onEdit={() => !isReadOnly && setEditingId(item.id)}
+                    onCancelEdit={() => setEditingId(null)}
+                    onSaveEdit={handleSaveItem}
+                    onToggleExcluded={handleToggleExcludedAction}
+                  />
+                ))}
+              </SortableContext>
+            </div>
           </div>
         </DndContext>
 
