@@ -37,14 +37,14 @@ export default async function QuotesPage() {
             </Link>
             <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Quotes</h1>
           </div>
-          <p className="text-muted-foreground">Listado completo de todas las cotizaciones y proformas.</p>
+          <p className="text-muted-foreground">List of all quotes and proformas.</p>
         </div>
         <div className="flex items-center gap-2">
-          <ImportQuotesModal />
+          {/*<ImportQuotesModal />*/}
           <Link href="/proforma/new">
             <Button className="bg-[#306C3E] hover:bg-[#265832] text-white shadow-md">
               <PlusCircle className="mr-2 h-4 w-4" />
-              Nueva Proforma
+              New Quote
             </Button>
           </Link>
         </div>

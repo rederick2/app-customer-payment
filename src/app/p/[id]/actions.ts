@@ -16,6 +16,59 @@ async function logStatusChange(proformaId: string, newStatus: string, oldStatus?
     });
 }
 
+async function insertNotification(proformaId: string, type: string, message: string) {
+  const supabase = createAdminClient();
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('user_id, client_id')
+    .eq('id', proformaId)
+    .single();
+
+  if (proforma?.user_id) {
+    await supabase.from('notifications').insert({
+      user_id: proforma.user_id,
+      proforma_id: proformaId,
+      client_id: proforma.client_id,
+      type,
+      message,
+    });
+  }
+}
+
+export async function trackProformaView(proformaId: string) {
+  const supabase = createAdminClient();
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('user_id, client_id, project_name')
+    .eq('id', proformaId)
+    .single();
+
+  if (!proforma || !proforma.user_id) return { success: false };
+
+  // Only track the very first time the client views this quote
+  const { data: existingView } = await supabase
+    .from('notifications')
+    .select('id')
+    .eq('proforma_id', proformaId)
+    .eq('type', 'viewed')
+    .limit(1)
+    .single();
+
+  if (existingView) {
+    return { success: true };
+  }
+
+  await supabase.from('notifications').insert({
+    user_id: proforma.user_id,
+    proforma_id: proformaId,
+    client_id: proforma.client_id,
+    type: 'viewed',
+    message: `Client viewed the quote: ${proforma.project_name}.`
+  });
+
+  return { success: true };
+}
+
 export async function markMessagesAsRead(proformaId: string, readerRole: 'client' | 'company') {
   // Mark all messages sent by the OTHER party as read
   const senderType = readerRole === 'client' ? 'company' : 'client';
@@ -70,6 +123,10 @@ export async function approveProforma(proformaId: string, signatureData?: string
   }
 
   await logStatusChange(proformaId, 'approved', proforma.status);
+
+  // Insert notification
+  await insertNotification(proformaId, 'approved', `Client approved the quote: ${proforma.project_name}.`);
+
 
   // 3. Send notification email if user email is available
   if (userEmail) {
@@ -144,6 +201,10 @@ export async function rejectProforma(proformaId: string) {
 
   await logStatusChange(proformaId, 'rejected', proforma?.status);
 
+  // Insert notification
+  await insertNotification(proformaId, 'rejected', `Client rejected the quote.`);
+
+
   // Actualizar la vista pública y la del administrador
   revalidatePath(`/p/${proformaId}`);
   revalidatePath(`/proforma/${proformaId}`);
@@ -168,6 +229,9 @@ export async function submitClientMessage(proformaId: string, message: string) {
     console.error('Error submitting message:', error);
     return { success: false, error: 'Could not send the message' };
   }
+
+  // Insert notification
+  await insertNotification(proformaId, 'request', `Client sent a new message regarding the quote.`);
 
   revalidatePath(`/p/${proformaId}`);
   revalidatePath(`/proforma/${proformaId}`);

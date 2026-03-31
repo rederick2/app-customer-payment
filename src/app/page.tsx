@@ -10,6 +10,7 @@ import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { StatusDonutChart } from '@/components/dashboard/StatusDonutChart';
 import { MonthlyBarChart } from '@/components/dashboard/MonthlyBarChart';
 import { RecentlyVisitedJobs } from '@/components/dashboard/RecentlyVisitedJobs';
+import { DashboardNotifications } from '@/components/dashboard/DashboardNotifications';
 
 export const revalidate = 0;
 
@@ -129,13 +130,17 @@ export default async function Dashboard() {
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Dashboard</h1>
           <p className="text-muted-foreground text-sm">Overview of your business performance.</p>
         </div>
-        <Link href="/proforma/new">
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            New Quote
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <DashboardNotifications />
+          <Link href="/proforma/new">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Quote
+            </Button>
+          </Link>
+        </div>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-3 space-y-8">
           {/* Stat Cards */}

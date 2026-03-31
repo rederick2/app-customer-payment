@@ -12,6 +12,7 @@ import { ZoomIn } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LineItemImage } from '@/components/LineItemImage';
 import { ExpandableText } from '@/components/ExpandableText';
+import { ViewTracker } from './components/ViewTracker';
 
 export const revalidate = 0;
 
@@ -88,6 +89,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
 
   return (
     <div className="px-6 py-8 md:p-12 max-w-5xl mx-auto animate-in fade-in duration-500">
+      <ViewTracker proformaId={proforma.id} />
 
       {/* Action Bar */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
