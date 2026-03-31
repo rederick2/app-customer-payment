@@ -147,6 +147,20 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-2">
             <div className="space-y-2">
+              <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Main Contact Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                defaultValue={initialData?.email || ''}
+                placeholder="billing@yourcompany.com"
+                className="h-12 border-border/60 focus:border-primary/40 bg-background font-medium px-4"
+              />
+              <p className="text-[10px] text-muted-foreground italic font-medium">
+                This email replaces your login email on estimates and invoices.
+              </p>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Phone Number</Label>
               <Input
                 id="phone"
@@ -156,6 +170,9 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                 className="h-12 border-border/60 focus:border-primary/40 bg-background font-medium px-4"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 pb-2">
             <div className="space-y-2">
               <Label htmlFor="address" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Company Address (Google Search)</Label>
               <Autocomplete

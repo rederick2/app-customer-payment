@@ -10,6 +10,7 @@ export async function updateProfile(formData: FormData) {
   if (!user) throw new Error('Unauthorized')
 
   const displayName = formData.get('displayName') as string
+  const email = formData.get('email') as string
   const phone = formData.get('phone') as string
   const address = formData.get('address') as string
   const businessLicense = formData.get('businessLicense') as string
@@ -47,6 +48,7 @@ export async function updateProfile(formData: FormData) {
 
   const updateData: any = {
     display_name: displayName,
+    email: email,
     phone: phone,
     address: address,
     business_license: businessLicense,
