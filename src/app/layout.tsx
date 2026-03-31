@@ -11,6 +11,7 @@ import RealtimeNotifier from '@/components/RealtimeNotifier';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { TopBar } from '@/components/TopBar';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -34,6 +35,11 @@ export default async function RootLayout({
 }>) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  let displayName: string | null = null;
+  if (user) {
+    const { data: profile } = await supabase.from('users').select('display_name').eq('id', user.id).single();
+    displayName = profile?.display_name || user.email?.split('@')[0] || null;
+  }
 
   // Count unread messages from clients across all proformas
   let unreadCount = 0;
@@ -128,6 +134,7 @@ export default async function RootLayout({
             </aside>
             <DashboardMobileNav unreadCount={unreadCount} />
             <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden pt-16 md:pt-0">
+              <TopBar userName={displayName} unreadCount={unreadCount} />
               {children}
             </main>
             {/* Invisible realtime listener — keeps the badge count live */}

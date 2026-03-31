@@ -26,69 +26,41 @@ export default function SettingsClient({
         <p className="text-muted-foreground mt-2">Manage your profile, payment details, and default taxes.</p>
       </div>
 
-      <Tabs className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger 
-            value="profile" 
-            data-state={activeTab === 'profile' ? 'active' : 'inactive'}
-            onClick={() => setActiveTab('profile')}
-            className="flex items-center space-x-2"
-          >
+          <TabsTrigger value="profile" className="flex items-center space-x-2">
             <User className="h-4 w-4" />
             <span>Profile</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="payment" 
-            data-state={activeTab === 'payment' ? 'active' : 'inactive'}
-            onClick={() => setActiveTab('payment')}
-            className="flex items-center space-x-2"
-          >
+          <TabsTrigger value="payment" className="flex items-center space-x-2">
             <CreditCard className="h-4 w-4" />
             <span>Payment</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="taxes" 
-            data-state={activeTab === 'taxes' ? 'active' : 'inactive'}
-            onClick={() => setActiveTab('taxes')}
-            className="flex items-center space-x-2"
-          >
+          <TabsTrigger value="taxes" className="flex items-center space-x-2">
             <Percent className="h-4 w-4" />
             <span>Taxes</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="team" 
-            data-state={activeTab === 'team' ? 'active' : 'inactive'}
-            onClick={() => setActiveTab('team')}
-            className="flex items-center space-x-2"
-          >
+          <TabsTrigger value="team" className="flex items-center space-x-2">
             <Users className="h-4 w-4" />
             <span>Team Members</span>
           </TabsTrigger>
         </TabsList>
 
-        {activeTab === 'profile' && (
-          <TabsContent value="profile">
-            <ProfileForm initialData={initialProfile} />
-          </TabsContent>
-        )}
+        <TabsContent value="profile">
+          <ProfileForm initialData={initialProfile} />
+        </TabsContent>
 
-        {activeTab === 'payment' && (
-          <TabsContent value="payment">
-            <PaymentForm initialData={initialProfile} />
-          </TabsContent>
-        )}
+        <TabsContent value="payment">
+          <PaymentForm initialData={initialProfile} />
+        </TabsContent>
 
-        {activeTab === 'taxes' && (
-          <TabsContent value="taxes">
-            <TaxSettings initialTaxes={initialTaxes} />
-          </TabsContent>
-        )}
+        <TabsContent value="taxes">
+          <TaxSettings initialTaxes={initialTaxes} />
+        </TabsContent>
 
-        {activeTab === 'team' && (
-          <TabsContent value="team">
-            <TeamSettings initialTeamMembers={initialTeamMembers} />
-          </TabsContent>
-        )}
+        <TabsContent value="team">
+          <TeamSettings initialTeamMembers={initialTeamMembers} />
+        </TabsContent>
       </Tabs>
     </div>
   );

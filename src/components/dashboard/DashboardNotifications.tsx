@@ -86,10 +86,10 @@ export function DashboardNotifications() {
 
   const markAsRead = async (id: string, isRead: boolean) => {
     if (isRead) return;
-    
+
     // Optimistic update
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-    
+
     // DB update
     try {
       await supabase.from('notifications').update({ is_read: true }).eq('id', id);
@@ -137,8 +137,8 @@ export function DashboardNotifications() {
 
   return (
     <Popover>
-      <PopoverTrigger className="flex items-center justify-center relative h-10 w-10 p-0 rounded-full border border-border/50 bg-background hover:bg-muted/50 transition-colors cursor-pointer outline-none">
-        <Bell className="h-5 w-5 text-muted-foreground cursor-pointer" />
+      <PopoverTrigger className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+        <Bell className="h-4.5 w-4.5 cursor-pointer" />
         {unreadCount > 0 && (
           <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-2 border-background animate-in zoom-in duration-300">
             {unreadCount}
@@ -151,7 +151,7 @@ export function DashboardNotifications() {
           <div className="flex items-center gap-3">
             {unreadCount > 0 && (
               <>
-                <button 
+                <button
                   onClick={markAllAsRead}
                   className="text-xs text-primary hover:underline font-medium"
                 >
@@ -164,7 +164,7 @@ export function DashboardNotifications() {
             )}
           </div>
         </div>
-        
+
         <div className="max-h-[350px] overflow-y-auto">
           {isLoading ? (
             <div className="flex justify-center items-center py-8">
@@ -177,8 +177,8 @@ export function DashboardNotifications() {
           ) : (
             <div className="flex flex-col">
               {notifications.map((notif) => (
-                <Link 
-                  key={notif.id} 
+                <Link
+                  key={notif.id}
                   href={notif.proforma_id ? `/proforma/${notif.proforma_id}` : '#'}
                   onClick={() => markAsRead(notif.id, notif.is_read)}
                 >

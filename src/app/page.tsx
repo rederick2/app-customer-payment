@@ -136,7 +136,7 @@ export default async function Dashboard() {
           <p className="text-muted-foreground text-sm">Overview of your business performance.</p>
         </div>
         <div className="flex items-center gap-3">
-          <DashboardNotifications />
+
           <Link href="/proforma/new">
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5">
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -171,7 +171,7 @@ export default async function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-4 space-y-8">
               <RecentlyVisitedJobs />
-              
+
               <div>
                 <h2 className="font-serif text-xl font-semibold tracking-tight mb-3">Quick Actions</h2>
                 <Card className="shadow-sm border-border/40">
