@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LineItemImage } from '@/components/LineItemImage';
 import { ExpandableText } from '@/components/ExpandableText';
 import { ViewTracker } from './components/ViewTracker';
+import PublicWorkProgress from './components/PublicWorkProgress';
 
 export const revalidate = 0;
 
@@ -344,6 +345,9 @@ export default async function PublicProformaView({ params, searchParams }: Props
             </div>
           ))}
         </div>
+        
+        {/* Work Progress Photos (Public Only) */}
+        <PublicWorkProgress proformaId={proforma.id} />
 
         {/* Notes Section */}
         {proforma.notes && (

@@ -69,3 +69,38 @@ export async function uploadToFtp(fileBuffer: Buffer, fileName: string, subDir?:
     client.close();
   }
 }
+
+/**
+ * Deletes a file from the FTP server.
+ * @param fileName  - The filename to delete.
+ * @param subDir    - Optional subdirectory relative to FTP_ROOT_PATH.
+ */
+export async function deleteFromFtp(fileName: string, subDir?: string): Promise<void> {
+  const config = getFtpConfig();
+  const client = new ftp.Client();
+  client.ftp.verbose = false;
+
+  try {
+    await client.access({
+      host: config.host,
+      user: config.user,
+      password: config.password,
+      port: config.port,
+      secure: false,
+    });
+
+    // Navigate to root path
+    if (config.rootPath && config.rootPath !== '/') {
+      await client.cd(config.rootPath);
+    }
+
+    const pathToDelete = subDir ? `${subDir}/${fileName}` : fileName;
+    await client.remove(pathToDelete);
+
+  } catch (err: any) {
+    console.error(`[FTP] DELETE ERROR: ${err.message}`);
+    // We don't necessarily want to throw if the file is already gone
+  } finally {
+    client.close();
+  }
+}

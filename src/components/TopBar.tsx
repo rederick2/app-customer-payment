@@ -5,10 +5,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Search, Bell, Settings, HelpCircle, X,
-  User, MapPin, FileText, CreditCard, Building2, ChevronRight
+  User, MapPin, FileText, CreditCard, Building2, ChevronRight,
+  LogOut, Phone, Mail, Moon, Sun,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DashboardNotifications } from './dashboard/DashboardNotifications';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useTheme } from "next-themes";
+import { logout } from '@/app/login/actions';
 
 interface SearchResult {
   id: string;
@@ -37,11 +46,16 @@ interface SearchResult {
 }
 
 interface TopBarProps {
-  userName?: string | null;
+  userProfile?: {
+    displayName: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
   unreadCount?: number;
 }
 
-export function TopBar({ userName, unreadCount = 0 }: TopBarProps) {
+export function TopBar({ userProfile, unreadCount = 0 }: TopBarProps) {
+  const { theme, setTheme } = useTheme();
   const [query, setQuery] = React.useState('');
   const [results, setResults] = React.useState<SearchResult[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -260,11 +274,83 @@ export function TopBar({ userName, unreadCount = 0 }: TopBarProps) {
           <Settings className="h-4.5 w-4.5" />
         </Link>
 
-        {/* Avatar */}
-        {userName && (
-          <div className="ml-2 h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold select-none shrink-0">
-            {userName.charAt(0).toUpperCase()}
-          </div>
+        {/* Avatar & Profile Dropdown */}
+        {userProfile && (
+          <Popover>
+            <PopoverTrigger render={
+              <button className="ml-2 h-8.5 w-8.5 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold select-none shrink-0 transition-transform hover:scale-105 active:scale-95">
+                {userProfile.displayName?.charAt(0).toUpperCase()}
+              </button>
+            }>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0 overflow-hidden rounded-2xl shadow-2xl border-border/40" align="end">
+              {/* Header Profile Section */}
+              <div className="bg-muted/30 p-6 flex flex-col items-center text-center gap-2 border-b border-border/40">
+                <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold mb-1 shadow-inner">
+                  {userProfile.displayName?.charAt(0).toUpperCase()}
+                </div>
+                <div className="space-y-0.5">
+                  <p className="font-bold text-foreground leading-none">{userProfile.displayName}</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">{userProfile.email || 'No email'}</p>
+                  </div>
+                  {userProfile.phone && (
+                    <div className="flex items-center justify-center gap-2 mt-1">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">{userProfile.phone}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Menu Options */}
+              <div className="p-2 space-y-1">
+                <Link
+                  href="/messages"
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-xl transition-all group"
+                >
+                  <MessageSquare className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  Messages
+                  {unreadCount > 0 && (
+                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-xl transition-all group"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      Switch to Light Mode
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      Switch to Dark Mode
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Logout Footer */}
+              <div className="p-2 pt-0">
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-500/10 rounded-xl transition-all group"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Log Out
+                  </button>
+                </form>
+              </div>
+            </PopoverContent>
+          </Popover>
         )}
       </div>
     </header>

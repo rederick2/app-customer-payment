@@ -50,6 +50,7 @@ import EmailMaterialsModal from './EmailMaterialsModal';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import ReceiptScanner from '@/components/ReceiptScanner';
+import WorkProgressSection from './WorkProgressSection';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LineItemImage } from '@/components/LineItemImage';
@@ -1595,6 +1596,9 @@ export function JobView({
               )}
             </CardContent>
           </Card>
+
+          {/* Work Progress Photos Section */}
+          <WorkProgressSection proformaId={proforma.id} proformaName={proforma.project_name} />
 
           {/* Tasks Section */}
           <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
