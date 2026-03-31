@@ -17,8 +17,7 @@ import {
   GanttChart,
   FileText,
   Briefcase,
-  Receipt,
-  LayoutGrid
+  Receipt
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -49,7 +48,6 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
       badge: unreadCount 
     },
     { href: '/settings', icon: Settings, label: 'Settings' },
-    { href: '/apps', icon: LayoutGrid, label: 'Apps' },
   ];
 
   // Close menu when route changes

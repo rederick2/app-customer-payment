@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { logout } from '@/app/login/actions';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar, Settings, GanttChart, FileText, Briefcase, Receipt, LayoutGrid } from 'lucide-react';
+import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar, Settings, GanttChart, FileText, Briefcase, Receipt } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
 
@@ -111,15 +111,6 @@ export default async function RootLayout({
                   <Settings className="mr-3 h-4 w-4" />
                   Settings
                 </Link>
-
-                {/* Apps Section */}
-                <div className="pt-3 mt-1">
-                  <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Apps</p>
-                  <Link href="/apps" className="flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-md transition-colors">
-                    <LayoutGrid className="mr-3 h-4 w-4" />
-                    App Store
-                  </Link>
-                </div>
               </nav>
 
               <div className="pt-4 border-t border-border/40">
