@@ -102,7 +102,7 @@ export default function EmailQuoteModal({
           Send Email
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
+      <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-card">
         <DialogHeader className="p-6 pb-2 border-b bg-card border-border/50">
           <DialogTitle className="text-xl font-bold text-primary">
             Email quote #{String(proformaNumber || proformaId.split('-')[0]).toUpperCase()} to {clientName}
@@ -181,7 +181,7 @@ export default function EmailQuoteModal({
           </div>
 
           {/* Right Attachments Area */}
-          <div className="w-full md:w-[300px] border-l border-border/50 bg-[#F8F9FA] p-6 flex flex-col">
+          <div className="w-full md:w-[300px] border-l border-border/50 bg-card p-6 flex flex-col">
             <h3 className="text-sm font-bold text-primary mb-4">Attachments</h3>
 
             <div className="border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center bg-card hover:bg-muted/10 transition-colors cursor-pointer mb-6">
