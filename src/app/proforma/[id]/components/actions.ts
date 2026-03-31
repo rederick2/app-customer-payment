@@ -206,6 +206,47 @@ export async function updateProformaStatus(proformaId: string, newStatus: string
   return { success: true };
 }
 
+export async function unlockApprovedProforma(proformaId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const { data: proforma } = await supabase
+    .from('proformas')
+    .select('status')
+    .eq('id', proformaId)
+    .single();
+
+  if (proforma?.status === 'job') {
+    return { error: 'No se puede desbloquear una proforma que ya es un trabajo.' };
+  }
+
+  const { error } = await supabase
+    .from('proformas')
+    .update({
+      status: 'sent',
+      client_signature_data: null,
+      client_signed_name: null,
+      approved_at: null,
+    })
+    .eq('id', proformaId);
+
+  if (error) {
+    console.error('Error unlocking proforma:', error);
+    return { error: 'Error al desbloquear la proforma.' };
+  }
+
+  await logStatusChange(proformaId, 'sent', proforma?.status, user.id);
+
+  revalidatePath(`/proforma/${proformaId}`);
+  revalidatePath(`/p/${proformaId}`);
+  revalidatePath('/page');
+  return { success: true };
+}
+
 export async function getProformaStatusHistory(proformaId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -276,8 +317,8 @@ export async function toggleItemOptional(itemId: string, proformaId: string, isE
     .eq('id', proformaId)
     .single();
 
-  if (proforma?.status === 'approved' || proforma?.status === 'job') {
-    return { error: 'No se puede editar una proforma aprobada o en proceso.' };
+  if (proforma?.status === 'job') {
+    return { error: 'No se puede editar una proforma que ya es un trabajo en proceso.' };
   }
 
   // 2. Update the specific item (using is_excluded for calculation state)

@@ -92,7 +92,7 @@ export default async function ProformaView({ params, searchParams }: Props) {
     .eq('proforma_id', id)
     .order('created_at', { ascending: true });
 
-  if (proforma.status === 'job' && view !== 'quote') {
+  if ((proforma.status === 'job' || proforma.status === 'job_terminated') && view !== 'quote') {
     return (
       <JobView
         proforma={proforma}

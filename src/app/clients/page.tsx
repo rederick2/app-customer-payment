@@ -43,7 +43,7 @@ export default async function ClientsPage(
     `);
 
   if (q) {
-    query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,company_name.ilike.%${q}%,email.ilike.%${q}%`);
+    query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,company_name.ilike.%${q}%,email.ilike.%${q}%,street_1.ilike.%${q}%,city.ilike.%${q}%,province.ilike.%${q}%,phone.ilike.%${q}%`);
   }
 
   const { data: allClients, error } = await query;
@@ -58,7 +58,8 @@ export default async function ClientsPage(
   clients_data.sort((a, b) => {
     const getLatestDate = (client: any) => {
       const dates = [new Date(client.created_at).getTime()];
-      
+      if (client.updated_at) dates.push(new Date(client.updated_at).getTime());
+
       if (client.proformas) {
         client.proformas.forEach((p: any) => {
           if (p.created_at) dates.push(new Date(p.created_at).getTime());
@@ -78,7 +79,7 @@ export default async function ClientsPage(
       if (client.invoices) {
         client.invoices.forEach((i: any) => dates.push(new Date(i.created_at).getTime()));
       }
-      
+
       return Math.max(...dates);
     };
 
@@ -90,7 +91,7 @@ export default async function ClientsPage(
 
   const count = clients_data.length;
   const totalPages = Math.ceil(count / PAGE_SIZE);
-  
+
   // Apply pagination
   const clients = clients_data.slice(from, to + 1);
 
@@ -108,7 +109,7 @@ export default async function ClientsPage(
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Client Directory</h1>
           <p className="text-muted-foreground">Manage your contacts and their information.</p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <ClientSearchInput />
           <ImportClientsModal />
@@ -154,13 +155,13 @@ export default async function ClientsPage(
                     </td>
                     <td className="p-0">
                       <Link href={`/clients/${client.id}`} className="block px-6 py-4 text-muted-foreground">
-                        {client.city ? `${client.city}, ${client.province}` : (client.street_1 || '-')}
+                        {client.street_1 ? `${client.street_1}, ${client.city}, ${client.province}` : (client.street_1 || '-')}
                       </Link>
                     </td>
                     <td className="p-0">
-                      <ClientActivityTrigger 
-                        client={client} 
-                        latestActivity={client._latestActivity ? new Date(client._latestActivity) : null} 
+                      <ClientActivityTrigger
+                        client={client}
+                        latestActivity={client._latestActivity ? new Date(client._latestActivity) : null}
                       />
                     </td>
 

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download, AlertTriangle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import ProformaDropdownActions from './ProformaDropdownActions';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { LineItemImage } from '@/components/LineItemImage';
 import { ExpandableText } from '@/components/ExpandableText';
 import { Checkbox } from '@/components/ui/checkbox';
-import { toggleItemOptional, updateItemsOrder, updateProformaItem } from './actions';
+import { toggleItemOptional, updateItemsOrder, updateProformaItem, unlockApprovedProforma } from './actions';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,12 +47,74 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { useRouter } from 'next/navigation';
 
 interface QuoteViewProps {
   proforma: any;
   items: any[];
   id: string;
   hideActionBar?: boolean;
+}
+
+function RemoveSignatureModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isPending
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isPending: boolean;
+}) {
+  const [understood, setUnderstood] = React.useState(false);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+        <div className="p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">Signature will be removed</h2>
+          </div>
+
+          <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <p>Editing an approved quote will remove the client's signature.</p>
+            <p>To request a new signature, mark the quote as Awaiting Response, and re-send.</p>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Checkbox
+              id="understand"
+              checked={understood}
+              onCheckedChange={(checked) => setUnderstood(!!checked)}
+              className="h-5 w-5 rounded border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            />
+            <Label htmlFor="understand" className="text-sm font-medium cursor-pointer select-none">
+              I understand
+            </Label>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4">
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              className="px-6 h-11 rounded-xl font-bold text-sm text-muted-foreground hover:bg-muted"
+            >
+              Cancel
+            </Button>
+            <Button
+              disabled={!understood || isPending}
+              onClick={onConfirm}
+              className="px-8 h-11 rounded-xl font-bold text-sm bg-muted/10 text-muted-foreground hover:bg-destructive hover:text-white transition-all disabled:opacity-50"
+            >
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Remove Signature
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -309,12 +371,12 @@ function SortableRow({
       <table className="w-full hidden md:table border-collapse">
         <tbody className="divide-y divide-border/20">
           <tr
+            onClick={onEdit}
             className={cn(
               "transition-all hover:bg-muted/30 cursor-pointer align-top",
               isDragging && "bg-accent shadow-lg ring-1 ring-primary/20",
               item.is_excluded && "opacity-60 grayscale-[0.3]"
             )}
-            onClick={onEdit}
           >
             <td className="px-4 py-5 text-center w-12">
               {!isReadOnly && !isEditing && (
@@ -385,9 +447,9 @@ function SortableRow({
               <td />
               <td colSpan={5} className="px-4 pb-6 pt-0">
                 <div className="border-l-2 border-primary/10 pl-4 py-1 italic">
-                  <ExpandableText 
-                    text={item.details} 
-                    initialLines={3} 
+                  <ExpandableText
+                    text={item.details}
+                    initialLines={3}
                     className="text-muted-foreground"
                   />
                 </div>
@@ -398,7 +460,7 @@ function SortableRow({
       </table>
 
       {/* Mobile Card View */}
-      <div 
+      <div
         className={cn(
           "md:hidden p-4 rounded-2xl border transition-all bg-card mb-4",
           item.is_optional ? "border-primary/20 shadow-sm" : "border-border/40",
@@ -486,7 +548,19 @@ function SortableRow({
 export function QuoteView({ proforma, items: initialItems, id, hideActionBar = false }: QuoteViewProps) {
   const [items, setItems] = React.useState(initialItems);
   const [editingId, setEditingId] = React.useState<string | null>(null);
-  const isReadOnly = proforma.status === 'approved' || proforma.status === 'job';
+  const [proformaStatus, setProformaStatus] = React.useState(proforma.status);
+  const isReadOnly = proformaStatus === 'job';
+  const isApproved = proformaStatus === 'approved';
+
+  const [isUnlocking, setIsUnlocking] = React.useState(false);
+  const [showUnlockModal, setShowUnlockModal] = React.useState(false);
+  const [postUnlockAction, setPostUnlockAction] = React.useState<{
+    type: 'full-editor' | 'edit-item' | 'reorder',
+    itemId?: string,
+    reorderEvent?: any
+  } | null>(null);
+
+  const router = useRouter();
 
   const [isMounted, setIsMounted] = React.useState(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
@@ -539,6 +613,12 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id || isReadOnly) return;
+
+    if (isApproved) {
+      setPostUnlockAction({ type: 'reorder', reorderEvent: event });
+      setShowUnlockModal(true);
+      return;
+    }
 
     const oldIndex = items.findIndex(item => item.id === active.id);
     const newIndex = items.findIndex(item => item.id === over.id);
@@ -603,6 +683,67 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
     }
   };
 
+  const handleUnlockAndProceed = async () => {
+    setIsUnlocking(true);
+    try {
+      const res = await unlockApprovedProforma(id);
+      if (res.error) {
+        toast.error(res.error);
+        setIsUnlocking(false);
+        return;
+      }
+
+      toast.success('Signature removed. Quote is now editable.');
+      setProformaStatus('sent');
+      setShowUnlockModal(false);
+
+      if (postUnlockAction) {
+        if (postUnlockAction.type === 'full-editor') {
+          router.push(`/proforma/${id}/edit`);
+        } else if (postUnlockAction.type === 'edit-item' && postUnlockAction.itemId) {
+          setEditingId(postUnlockAction.itemId);
+        } else if (postUnlockAction.type === 'reorder' && postUnlockAction.reorderEvent) {
+          // Manually call the drag end logic if they were reordering
+          const { active, over } = postUnlockAction.reorderEvent;
+          const oldIndex = items.findIndex((i) => i.id === active.id);
+          const newIndex = items.findIndex((i) => i.id === over.id);
+          const updatedItems = arrayMove(items, oldIndex, newIndex).map((item, idx) => ({
+            ...item,
+            sort_order: idx + 1
+          }));
+          setItems(updatedItems);
+          await updateItemsOrder(id, updatedItems);
+        }
+      }
+    } catch (err) {
+      console.error('Error unlocking proforma:', err);
+      toast.error('Failed to remove signature');
+    } finally {
+      setIsUnlocking(false);
+      setPostUnlockAction(null);
+    }
+  };
+
+  const attemptEditItem = (itemId: string) => {
+    if (isReadOnly) return;
+    if (isApproved) {
+      setPostUnlockAction({ type: 'edit-item', itemId });
+      setShowUnlockModal(true);
+      return;
+    }
+    setEditingId(itemId);
+  };
+
+  const attemptFullEditor = (e: React.MouseEvent) => {
+    if (isReadOnly) return;
+    if (isApproved) {
+      e.preventDefault();
+      setPostUnlockAction({ type: 'full-editor' });
+      setShowUnlockModal(true);
+      return;
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
       {/* Action Bar */}
@@ -616,8 +757,8 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             <span className="text-muted-foreground/40">·</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Status:</span>
-              <StatusBadge status={proforma.status || 'draft'} />
-              
+              <StatusBadge status={proformaStatus || 'draft'} />
+
               <Dialog>
                 <DialogTrigger render={
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted ml-1">
@@ -643,6 +784,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             {!isReadOnly && (
               <Link
                 href={`/proforma/${id}/edit`}
+                onClick={attemptFullEditor}
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-all"
               >
                 <Pencil className="h-4 w-4" />
@@ -651,7 +793,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             )}
             <ProformaDropdownActions
               proformaId={id}
-              currentStatus={proforma.status || 'draft'}
+              currentStatus={proformaStatus || 'draft'}
               projectName={proforma.project_name}
               proforma={proforma}
               items={items}
@@ -686,6 +828,16 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
           </div>
         </div>
       )}
+
+      <RemoveSignatureModal
+        isOpen={showUnlockModal}
+        onClose={() => {
+          setShowUnlockModal(false);
+          setPostUnlockAction(null);
+        }}
+        onConfirm={handleUnlockAndProceed}
+        isPending={isUnlocking}
+      />
 
 
       {/* Printable Document Area */}
@@ -864,7 +1016,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                     index={index}
                     isReadOnly={isReadOnly}
                     isEditing={editingId === item.id}
-                    onEdit={() => !isReadOnly && setEditingId(item.id)}
+                    onEdit={() => attemptEditItem(item.id)}
                     onCancelEdit={() => setEditingId(null)}
                     onSaveEdit={handleSaveItem}
                     onToggleExcluded={handleToggleExcludedAction}
@@ -1016,27 +1168,26 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
           )}
         </div>
 
-      </div>
-
-      {/* Communication */}
-      <div className="grid grid-cols-1 gap-8 print:hidden">
-        <Link
-          href={`/proforma/${id}/messages`}
-          className="flex items-center justify-between p-4 rounded-xl border border-primary/10 bg-card hover:border-primary/30 transition-all group shadow-sm"
-        >
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <MessageSquare className="h-5 w-5" />
+        {/* Communication */}
+        <div className="grid grid-cols-1 gap-8 mt-12 print:hidden">
+          <Link
+            href={`/proforma/${id}/messages`}
+            className="flex items-center justify-between p-4 rounded-xl border border-primary/10 bg-card hover:border-primary/30 transition-all group shadow-sm"
+          >
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold">Project Discussion</p>
+                <p className="text-xs text-muted-foreground">Collaborate with the studio team in real time</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold">Project Discussion</p>
-              <p className="text-xs text-muted-foreground">Collaborate with the studio team in real time</p>
-            </div>
-          </div>
-          <Badge className="bg-emerald-500/10 text-emerald-600 border-none animate-pulse">Live Link</Badge>
-        </Link>
-      </div>
+            <Badge className="bg-emerald-500/10 text-emerald-600 border-none animate-pulse">Live Link</Badge>
+          </Link>
+        </div>
 
+      </div>
     </div>
   );
 }
