@@ -29,21 +29,16 @@ export default async function QuotesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
+    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Link href="/" className="text-muted-foreground hover:text-primary transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-            <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Quotes</h1>
-          </div>
-          <p className="text-muted-foreground">List of all quotes.</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Quotes</h1>
+          <p className="text-muted-foreground text-sm">List of all quotes.</p>
         </div>
         <div className="flex items-center gap-2">
           {/*<ImportQuotesModal />*/}
           <Link href="/proforma/new">
-            <Button className="bg-[#306C3E] hover:bg-[#265832] text-white shadow-md">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5">
               <PlusCircle className="mr-2 h-4 w-4" />
               New Quote
             </Button>

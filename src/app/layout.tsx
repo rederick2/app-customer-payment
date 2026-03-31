@@ -9,6 +9,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar, Settings, GanttChart, FileText, Briefcase, Receipt } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
+import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -54,6 +56,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen bg-background text-foreground flex`}
       >
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         {user ? (
           <>
             <aside className="hidden md:flex flex-col w-64 border-r border-border/40 bg-muted/20 h-screen sticky top-0 px-4 py-8 print:hidden">
@@ -113,7 +116,8 @@ export default async function RootLayout({
                 </Link>
               </nav>
 
-              <div className="pt-4 border-t border-border/40">
+              <div className="pt-4 border-t border-border/40 space-y-2">
+                <ThemeToggle />
                 <form action={logout}>
                   <button type="submit" className="w-full flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors">
                     <LogOut className="mr-3 h-4 w-4" />
@@ -135,6 +139,7 @@ export default async function RootLayout({
           </main>
         )}
         <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

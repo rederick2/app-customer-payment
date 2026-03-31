@@ -104,10 +104,10 @@ export default async function ClientsPage(
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Client Directory</h1>
-          <p className="text-muted-foreground">Manage your contacts and their information.</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Client Directory</h1>
+          <p className="text-muted-foreground text-sm">Manage your contacts and their information.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">

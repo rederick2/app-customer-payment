@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/app/login/actions';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface DashboardMobileNavProps {
   unreadCount: number;
@@ -74,7 +75,7 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
 
       {/* Mobile Menu Overlay */}
       {isOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-white pt-16 flex flex-col animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="md:hidden fixed inset-0 z-40 bg-background pt-16 flex flex-col animate-in fade-in slide-in-from-top-4 duration-300">
           <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
             {links.map((link) => {
               const Icon = link.icon;
@@ -102,7 +103,8 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
             })}
           </nav>
 
-          <div className="p-4 border-t border-border/40 mb-4">
+          <div className="p-4 border-t border-border/40 mb-4 space-y-2">
+            <ThemeToggle />
             <form action={logout}>
               <button 
                 type="submit" 

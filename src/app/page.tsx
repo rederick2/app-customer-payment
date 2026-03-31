@@ -118,12 +118,12 @@ export default async function Dashboard() {
   };
 
   const stats = [
-    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`, sub: 'Active & completed jobs', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Total Quotes', value: proformasCount ?? 0, sub: 'All time', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Jobs', value: jobsCount ?? 0, sub: 'In progress', icon: Briefcase, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Clients', value: clientsCount ?? 0, sub: 'In your portfolio', icon: Users, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Pending Quotes', value: pendingCount ?? 0, sub: 'Awaiting approval', icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    { label: 'Completed Jobs', value: completedCount ?? 0, sub: 'Delivered to clients', icon: CheckCircle2, color: 'text-teal-600', bg: 'bg-teal-50' },
+    { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}`, sub: 'Active & completed jobs', icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'Total Quotes', value: proformasCount ?? 0, sub: 'All time', icon: FileText, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Active Jobs', value: jobsCount ?? 0, sub: 'In progress', icon: Briefcase, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+    { label: 'Clients', value: clientsCount ?? 0, sub: 'In your portfolio', icon: Users, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { label: 'Pending Quotes', value: pendingCount ?? 0, sub: 'Awaiting approval', icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+    { label: 'Completed Jobs', value: completedCount ?? 0, sub: 'Delivered to clients', icon: CheckCircle2, color: 'text-teal-500', bg: 'bg-teal-500/10' },
   ];
 
   return (
@@ -148,20 +148,20 @@ export default async function Dashboard() {
 
       <Tabs defaultValue="overview" className="w-full space-y-8">
         <TabsList className="bg-muted p-1 border border-border/40 rounded-xl h-auto flex flex-wrap gap-1 justify-start">
-          <TabsTrigger value="overview" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md text-sm font-medium transition-all">
+          <TabsTrigger value="overview" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-sm font-medium transition-all">
             <Activity className="h-4 w-4 mr-2" />
             Summary
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md text-sm font-medium transition-all">
+          <TabsTrigger value="analytics" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-sm font-medium transition-all">
             <TrendingUp className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
-          <TabsTrigger value="activity" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md text-sm font-medium transition-all">
+          <TabsTrigger value="activity" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-sm font-medium transition-all">
             <Clock className="h-4 w-4 mr-2" />
             Recent Activity
           </TabsTrigger>
-          <TabsTrigger value="ai" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 data-[state=active]:shadow-md transition-all group text-sm font-medium">
-            <Sparkles className="h-4 w-4 mr-2 text-purple-600 group-data-[state=active]:animate-pulse" />
+          <TabsTrigger value="ai" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-500 data-[state=active]:shadow-md transition-all group text-sm font-medium">
+            <Sparkles className="h-4 w-4 mr-2 text-purple-500 group-data-[state=active]:animate-pulse" />
             AI Analytical Assistant
           </TabsTrigger>
         </TabsList>
@@ -177,10 +177,10 @@ export default async function Dashboard() {
                 <Card className="shadow-sm border-border/40">
                   <CardContent className="p-3 space-y-1">
                     {[
-                      { href: '/proforma/new', label: 'New Quote', icon: FileText, color: 'text-blue-600' },
-                      { href: '/clients', label: 'Manage Clients', icon: Users, color: 'text-orange-600' },
-                      { href: '/jobs', label: 'View Jobs', icon: Briefcase, color: 'text-violet-600' },
-                      { href: '/quotes', label: 'All Quotes', icon: TrendingUp, color: 'text-emerald-600' },
+                      { href: '/proforma/new', label: 'New Quote', icon: FileText, color: 'text-blue-500' },
+                      { href: '/clients', label: 'Manage Clients', icon: Users, color: 'text-orange-500' },
+                      { href: '/jobs', label: 'View Jobs', icon: Briefcase, color: 'text-violet-500' },
+                      { href: '/quotes', label: 'All Quotes', icon: TrendingUp, color: 'text-emerald-500' },
                     ].map(({ href, label, icon: Icon, color }) => (
                       <Link key={href} href={href}>
                         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors cursor-pointer group">
