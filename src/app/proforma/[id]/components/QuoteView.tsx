@@ -750,34 +750,37 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
       {!hideActionBar && (
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-3">
-            <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/quotes" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
+              Back to Quotes
             </Link>
             <span className="text-muted-foreground/40">·</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Status:</span>
-              <StatusBadge status={proformaStatus || 'draft'} />
-
-              <Dialog>
-                <DialogTrigger render={
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted ml-1">
-                    <History className="h-4 w-4 text-muted-foreground" />
-                    <span className="sr-only">Ver historial</span>
-                  </Button>
-                } />
-                <DialogContent className="sm:max-w-[540px]">
-                  <DialogHeader className="mb-4">
-                    <DialogTitle>Historial de la Proforma</DialogTitle>
-                    <DialogDescription>
-                      Seguimiento de todos los cambios de estado realizados.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
-                    <StatusHistory proformaId={id} />
-                  </div>
-                </DialogContent>
-              </Dialog>
+              {!proforma.is_template && (
+                <>
+                  <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                  <StatusBadge status={proformaStatus || 'draft'} />
+                  <Dialog>
+                    <DialogTrigger render={
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted ml-1">
+                        <History className="h-4 w-4 text-muted-foreground" />
+                        <span className="sr-only">Ver historial</span>
+                      </Button>
+                    } />
+                    <DialogContent className="sm:max-w-[540px]">
+                      <DialogHeader className="mb-4">
+                        <DialogTitle>Historial de la Proforma</DialogTitle>
+                        <DialogDescription>
+                          Seguimiento de todos los cambios de estado realizados.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
+                        <StatusHistory proformaId={id} />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
             </div>
           </div>
           <div className="flex gap-2 items-center flex-wrap">
@@ -791,40 +794,43 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 Full Editor
               </Link>
             )}
-            <ProformaDropdownActions
-              proformaId={id}
-              currentStatus={proformaStatus || 'draft'}
-              projectName={proforma.project_name}
-              proforma={proforma}
-              items={items}
-            />
-            {/* Download PDF Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!isMounted || isGenerating}
-              onClick={handleDownloadPDF}
-              className="h-10 gap-2 border-border/60 hover:bg-muted/50 font-bold px-4"
-            >
-              {isGenerating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              {isGenerating ? 'Preparing...' : 'Download PDF'}
-            </Button>
-            <EmailQuoteModal
-              proformaId={id}
-              proformaNumber={proforma.number}
-              clientName={(() => {
-                const c = proforma.clients;
-                return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Client';
-              })()}
-              clientEmail={proforma.clients?.email || ''}
-              projectName={proforma.project_name}
-              total={proforma.total}
-              displayName={proforma.users?.display_name}
-            />
+            {!proforma.is_template && (
+              <>
+                <ProformaDropdownActions
+                  proformaId={id}
+                  currentStatus={proformaStatus || 'draft'}
+                  projectName={proforma.project_name}
+                  proforma={proforma}
+                  items={items}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!isMounted || isGenerating}
+                  onClick={handleDownloadPDF}
+                  className="h-10 gap-2 border-border/60 hover:bg-muted/50 font-bold px-4"
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  {isGenerating ? 'Preparing...' : 'Download PDF'}
+                </Button>
+                <EmailQuoteModal
+                  proformaId={id}
+                  proformaNumber={proforma.number}
+                  clientName={(() => {
+                    const c = proforma.clients;
+                    return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || 'Client';
+                  })()}
+                  clientEmail={proforma.clients?.email || ''}
+                  projectName={proforma.project_name}
+                  total={proforma.total}
+                  displayName={proforma.users?.display_name}
+                />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -886,83 +892,103 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20 relative z-10">
           {/* Recipient */}
           <div className="lg:col-span-7">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 flex items-center gap-3">
-              <span className="h-px flex-1 bg-border/40" />
-              Prepared For
-            </h3>
-            <div className="space-y-4">
-              <p className="text-3xl font-black text-foreground">
-                {(() => {
-                  const c = proforma.clients as any;
-                  const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
-                  return c.company_name || nameDisplay;
-                })()}
-              </p>
+            {proforma.is_template ? (
+              <div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-border/40" />
+                  Template
+                </h3>
+                <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
+                  This is a reusable template. It does not have an assigned client.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-6 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-border/40" />
+                  Prepared For
+                </h3>
+                <div className="space-y-4">
+                  <p className="text-3xl font-black text-foreground">
+                    {(() => {
+                      const c = proforma.clients as any;
+                      if (!c) return 'No Client';
+                      const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
+                      return c.company_name || nameDisplay;
+                    })()}
+                  </p>
 
-              <div className="text-lg text-muted-foreground/80 leading-relaxed font-medium">
-                {(() => {
-                  const c = proforma.clients as any;
-                  const items = [c.street_1, c.street_2, c.city, c.province, c.postal_code].filter(Boolean);
-                  return items.length > 0 ? (
-                    <div className="space-y-0.5">
-                      <p>{c.street_1}</p>
-                      {c.street_2 && <p>{c.street_2}</p>}
-                      <p>{[c.city, c.province, c.postal_code].filter(Boolean).join(', ')}</p>
+                  <div className="text-lg text-muted-foreground/80 leading-relaxed font-medium">
+                    {(() => {
+                      const c = proforma.clients as any;
+                      if (!c) return null;
+                      const items = [c.street_1, c.street_2, c.city, c.province, c.postal_code].filter(Boolean);
+                      return items.length > 0 ? (
+                        <div className="space-y-0.5">
+                          <p>{c.street_1}</p>
+                          {c.street_2 && <p>{c.street_2}</p>}
+                          <p>{[c.city, c.province, c.postal_code].filter(Boolean).join(', ')}</p>
+                        </div>
+                      ) : (c.address && <p>{c.address}</p>);
+                    })()}
+                  </div>
+
+                  {proforma.clients && (
+                    <div className="pt-4 flex flex-wrap gap-6 text-sm">
+                      {(proforma.clients as any).email && (
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">Email</span>
+                          <span className="font-bold text-primary/80">{(proforma.clients as any).email}</span>
+                        </div>
+                      )}
+                      {(proforma.clients as any).phone && (
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">Phone</span>
+                          <span className="font-bold text-foreground">{(proforma.clients as any).phone}</span>
+                        </div>
+                      )}
                     </div>
-                  ) : (c.address && <p>{c.address}</p>);
-                })()}
+                  )}
+                </div>
               </div>
-
-              <div className="pt-4 flex flex-wrap gap-6 text-sm">
-                {(proforma.clients as any).email && (
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">Email</span>
-                    <span className="font-bold text-primary/80">{(proforma.clients as any).email}</span>
-                  </div>
-                )}
-                {(proforma.clients as any).phone && (
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-1">Phone</span>
-                    <span className="font-bold text-foreground">{(proforma.clients as any).phone}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Project & Summary Box */}
           <div className="lg:col-span-5 space-y-8">
-            <div className="rounded-3xl border border-border/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500 bg-background">
-              <div className="bg-[#ac8e68] p-6 text-white">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Estimate Number</span>
-                  <Badge variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm">
-                    {String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}
-                  </Badge>
-                </div>
-                <h2 className="text-4xl font-black tracking-tighter">
-                  Estimate
-                </h2>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground font-bold">Sent on</span>
-                  <span className="font-bold">{new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm border-t border-border/10 pt-4">
-                  <span className="text-muted-foreground font-bold">Email Sent</span>
-                  <span className="font-bold">{(proforma.clients as any).email ? 'Yes' : 'No'}</span>
+            {!proforma.is_template && (
+              <div className="rounded-3xl border border-border/40 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-500 bg-background">
+                <div className="bg-[#ac8e68] p-6 text-white">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Estimate Number</span>
+                    <Badge variant="outline" className="text-white border-white/30 bg-white/10 backdrop-blur-sm">
+                      {String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}
+                    </Badge>
+                  </div>
+                  <h2 className="text-4xl font-black tracking-tighter">
+                    Estimate
+                  </h2>
                 </div>
 
-                <div className="mt-6 pt-6 border-t font-black flex justify-between items-end">
-                  <span className="text-xs uppercase tracking-widest text-muted-foreground/60">Total Amount</span>
-                  <span className="text-4xl text-[#ac8e68] tracking-tighter">
-                    ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
+                <div className="p-6 space-y-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground font-bold">Sent on</span>
+                    <span className="font-bold">{new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm border-t border-border/10 pt-4">
+                    <span className="text-muted-foreground font-bold">Email Sent</span>
+                    <span className="font-bold">{(proforma.clients as any).email ? 'Yes' : 'No'}</span>
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t font-black flex justify-between items-end">
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground/60">Total Amount</span>
+                    <span className="text-4xl text-[#ac8e68] tracking-tighter">
+                      ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="px-6">
               <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground/40 mb-3 flex items-center gap-3">
@@ -1169,23 +1195,25 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         </div>
 
         {/* Communication */}
-        <div className="grid grid-cols-1 gap-8 mt-12 print:hidden">
-          <Link
-            href={`/proforma/${id}/messages`}
-            className="flex items-center justify-between p-4 rounded-xl border border-primary/10 bg-card hover:border-primary/30 transition-all group shadow-sm"
-          >
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <MessageSquare className="h-5 w-5" />
+        {!proforma.is_template && (
+          <div className="grid grid-cols-1 gap-8 mt-12 print:hidden">
+            <Link
+              href={`/proforma/${id}/messages`}
+              className="flex items-center justify-between p-4 rounded-xl border border-primary/10 bg-card hover:border-primary/30 transition-all group shadow-sm"
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Project Discussion</p>
+                  <p className="text-xs text-muted-foreground">Collaborate with the studio team in real time</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold">Project Discussion</p>
-                <p className="text-xs text-muted-foreground">Collaborate with the studio team in real time</p>
-              </div>
-            </div>
-            <Badge className="bg-emerald-500/10 text-emerald-600 border-none animate-pulse">Live Link</Badge>
-          </Link>
-        </div>
+              <Badge className="bg-emerald-500/10 text-emerald-600 border-none animate-pulse">Live Link</Badge>
+            </Link>
+          </div>
+        )}
 
       </div>
     </div>

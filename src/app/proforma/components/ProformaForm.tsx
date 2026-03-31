@@ -106,6 +106,7 @@ interface ProformaFormProps {
     client: any;
   };
   mode: 'create' | 'edit';
+  onBack?: () => void;
 }
 
 interface SortableItemProps {
@@ -219,7 +220,7 @@ function SortableItem({
                   className="text-right font-bold pr-10 cursor-pointer peer"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">USD</span>
-                
+
                 <div className="absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
                   <div className="space-y-2 text-left">
                     <Label className="text-xs font-bold text-muted-foreground">Unit Cost</Label>
@@ -379,7 +380,7 @@ function SortableItem({
   );
 }
 
-export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
+export default function ProformaForm({ initialData, mode, onBack }: ProformaFormProps) {
   const router = useRouter();
   const supabase = createClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -409,6 +410,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   const [projectName, setProjectName] = useState(initialData?.proforma?.project_name || '');
   const [validUntil, setValidUntil] = useState(initialData?.proforma?.valid_until || new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState(initialData?.proforma?.notes || '');
+  const [isTemplate, setIsTemplate] = useState(initialData?.proforma?.is_template || false);
 
   // Line Items
   const [items, setItems] = useState<LineItem[]>(
@@ -444,7 +446,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   const [requiredDeposit, setRequiredDeposit] = useState<number>(initialData?.proforma?.required_deposit || 0);
   const [paymentTerms, setPaymentTerms] = useState<string>(initialData?.proforma?.payment_terms || "");
   const [isSavingTax, setIsSavingTax] = useState(false);
-  
+
   // AI Generation States
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [aiProjectDescription, setAIProjectDescription] = useState("");
@@ -639,7 +641,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
       if (!response.ok) throw new Error("Error generating proforma");
 
       const data = await response.json();
-      
+
       const newItems = data.items.map((item: any) => ({
         id: crypto.randomUUID(),
         description: item.description,
@@ -696,18 +698,18 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
   const subtotal = calculateSubtotal();
 
   const discountAdjustment = adjustments.find(a => a.type === 'discount');
-  const totalDiscount = discountAdjustment 
-    ? (discountAdjustment.valueType === 'percentage' 
-        ? (subtotal * discountAdjustment.value) / 100 
-        : discountAdjustment.value)
+  const totalDiscount = discountAdjustment
+    ? (discountAdjustment.valueType === 'percentage'
+      ? (subtotal * discountAdjustment.value) / 100
+      : discountAdjustment.value)
     : 0;
 
   const taxableAmount = subtotal - totalDiscount;
   const taxAdjustment = adjustments.find(a => a.type === 'tax');
-  const totalTax = taxAdjustment 
+  const totalTax = taxAdjustment
     ? (taxAdjustment.valueType === 'percentage'
-        ? (taxableAmount * taxAdjustment.value) / 100 
-        : taxAdjustment.value)
+      ? (taxableAmount * taxAdjustment.value) / 100
+      : taxAdjustment.value)
     : 0;
 
   const total = taxableAmount + totalTax;
@@ -736,37 +738,40 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
           .select('number')
           .order('number', { ascending: false })
           .limit(1);
-        
+
         const currentMax = maxProforma?.[0]?.number || 0;
         nextNumber = Math.max(currentMax + 1, startSequence);
       }
 
-      let finalClientId = selectedClientId;
-      const clientPayload = {
-        title,
-        first_name: firstName,
-        last_name: lastName,
-        company_name: companyName || null,
-        email: clientEmail || null,
-        phone: clientPhone || null,
-        street_1: street1 || null,
-        street_2: street2 || null,
-        city: city || null,
-        province: province || null,
-        postal_code: postalCode || null,
-        country: country || null
-      };
+      let finalClientId = null;
+      if (!isTemplate) {
+        finalClientId = selectedClientId;
+        const clientPayload = {
+          title,
+          first_name: firstName,
+          last_name: lastName,
+          company_name: companyName || null,
+          email: clientEmail || null,
+          phone: clientPhone || null,
+          street_1: street1 || null,
+          street_2: street2 || null,
+          city: city || null,
+          province: province || null,
+          postal_code: postalCode || null,
+          country: country || null
+        };
 
-      if (selectedClientId === 'new') {
-        const { data: clientData, error: clientError } = await supabase
-          .from('clients')
-          .insert([clientPayload])
-          .select()
-          .single();
-        if (clientError) throw clientError;
-        finalClientId = clientData.id;
-      } else {
-        await supabase.from('clients').update(clientPayload).eq('id', selectedClientId);
+        if (selectedClientId === 'new') {
+          const { data: clientData, error: clientError } = await supabase
+            .from('clients')
+            .insert([clientPayload])
+            .select()
+            .single();
+          if (clientError) throw clientError;
+          finalClientId = clientData.id;
+        } else if (selectedClientId) {
+          await supabase.from('clients').update(clientPayload).eq('id', selectedClientId);
+        }
       }
 
       const proformaPayload = {
@@ -781,6 +786,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
         deposit_amount: depositAmount,
         required_deposit: requiredDeposit,
         notes: notes,
+        is_template: isTemplate,
         ...(nextNumber !== undefined && { number: nextNumber })
       };
 
@@ -860,17 +866,28 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
     <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Link href={mode === 'edit' ? `/proforma/${initialData?.proforma?.id}` : "/"} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {mode === 'edit' ? 'Back to Proforma' : 'Back to Dashboard'}
-          </Link>
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Change Start Option
+            </button>
+          ) : (
+            <Link href={mode === 'edit' ? `/proforma/${initialData?.proforma?.id}` : "/quotes"} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {mode === 'edit' ? 'Back to Quote' : 'Back to Quotes'}
+            </Link>
+          )}
           <h1 className="font-serif text-3xl font-bold tracking-tight">
-            {mode === 'edit' ? 'Edit Proforma' : 'New Proforma'}
+            {mode === 'edit' ? 'Edit Quote' : 'New Quote'}
           </h1>
         </div>
 
         {mode === 'create' && (
-          <Button 
+          <Button
             type="button"
             onClick={() => setIsAIModalOpen(true)}
             className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center gap-2 h-12 px-6 rounded-2xl"
@@ -882,164 +899,183 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="shadow-sm border-border/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-serif">Client Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mode === 'create' && (
-                <div className="space-y-2">
-                  <Label>Select Client</Label>
-                  <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-                    <PopoverTrigger
-                      role="combobox"
-                      aria-expanded={comboboxOpen}
-                      className="w-full justify-between h-auto py-3 font-normal bg-background inline-flex items-center px-4 rounded-md border border-input ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      {selectedClientId === 'new' ? (
-                        <span className="text-muted-foreground text-left flex-1">Select a client...</span>
-                      ) : (() => {
-                        const selectedClient = clients.find(c => c.id === selectedClientId);
-                        return selectedClient ? (
-                          <div className="text-left flex-1 min-w-0">
-                            <div className="font-bold text-foreground truncate">
-                              {selectedClient.company_name || selectedClient.first_name || selectedClient.name}
-                            </div>
-                            <div className="text-sm text-muted-foreground truncate">
-                              {selectedClient.first_name && selectedClient.company_name && <span>Attn: {selectedClient.first_name} {selectedClient.last_name} &bull; </span>}
-                              {selectedClient.street_1 || selectedClient.email || 'No additional details'}
-                            </div>
-                          </div>
-                        ) : (
+        {mode === 'create' && (
+          <div className="flex items-center space-x-3 bg-muted/40 p-4 rounded-xl border border-border/50 shadow-sm max-w-max">
+            <Checkbox
+              id="saveAsTemplateTop"
+              checked={isTemplate}
+              onCheckedChange={(checked) => setIsTemplate(!!checked)}
+              className="h-5 w-5 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+            />
+            <div className="space-y-1 leading-none">
+              <Label htmlFor="saveAsTemplateTop" className="text-base font-semibold cursor-pointer">
+                Save as a Reusable Template
+              </Label>
+              <p className="text-sm text-muted-foreground">Templates don't require clients and won't affect revenue metrics.</p>
+            </div>
+          </div>
+        )}
+
+        <div className={cn("grid gap-6", isTemplate ? "md:grid-cols-1" : "md:grid-cols-2")}>
+          {!isTemplate && (
+            <Card className="shadow-sm border-border/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-serif">Client Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {mode === 'create' && (
+                  <div className="space-y-2">
+                    <Label>Select Client</Label>
+                    <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                      <PopoverTrigger
+                        role="combobox"
+                        aria-expanded={comboboxOpen}
+                        className="w-full justify-between h-auto py-3 font-normal bg-background inline-flex items-center px-4 rounded-md border border-input ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        {selectedClientId === 'new' ? (
                           <span className="text-muted-foreground text-left flex-1">Select a client...</span>
-                        );
-                      })()}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search clients..." />
-                        <CommandList>
-                          <CommandEmpty>No clients found.</CommandEmpty>
-                          <CommandGroup>
-                            {clients.map((client) => {
-                              const nameDisplay = [client.title, client.first_name, client.last_name].filter(Boolean).join(' ') || client.name;
-                              return (
-                                <CommandItem
-                                  key={client.id}
-                                  value={`${client.company_name} ${nameDisplay} ${client.email}`}
-                                  onSelect={() => handleClientSelect(client.id)}
-                                  className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
-                                >
-                                  <div className="flex w-full items-center justify-between">
-                                    <span className="font-bold">{client.company_name || nameDisplay}</span>
-                                    {selectedClientId === client.id && <Check className="h-4 w-4 text-primary" />}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground w-full truncate space-x-1">
-                                    {client.company_name && <span>Attn: {nameDisplay}</span>}
-                                    {client.company_name && client.street_1 && <span>&bull;</span>}
-                                    {client.street_1 && <span>{client.street_1}</span>}
-                                    {client.street_1 && client.email && <span>&bull;</span>}
-                                    {client.email && <span>{client.email}</span>}
-                                  </div>
-                                </CommandItem>
-                              )
-                            })}
-                          </CommandGroup>
-                        </CommandList>
-                        <div className="border-t p-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="w-full justify-start text-primary font-medium hover:text-primary hover:bg-primary/10"
-                            onClick={() => handleClientSelect('new')}
-                          >
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Create new client
-                          </Button>
-                        </div>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
+                        ) : (() => {
+                          const selectedClient = clients.find(c => c.id === selectedClientId);
+                          return selectedClient ? (
+                            <div className="text-left flex-1 min-w-0">
+                              <div className="font-bold text-foreground truncate">
+                                {selectedClient.company_name || selectedClient.first_name || selectedClient.name}
+                              </div>
+                              <div className="text-sm text-muted-foreground truncate">
+                                {selectedClient.first_name && selectedClient.company_name && <span>Attn: {selectedClient.first_name} {selectedClient.last_name} &bull; </span>}
+                                {selectedClient.street_1 || selectedClient.email || 'No additional details'}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-left flex-1">Select a client...</span>
+                          );
+                        })()}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search clients..." />
+                          <CommandList>
+                            <CommandEmpty>No clients found.</CommandEmpty>
+                            <CommandGroup>
+                              {clients.map((client) => {
+                                const nameDisplay = [client.title, client.first_name, client.last_name].filter(Boolean).join(' ') || client.name;
+                                return (
+                                  <CommandItem
+                                    key={client.id}
+                                    value={`${client.company_name} ${nameDisplay} ${client.email}`}
+                                    onSelect={() => handleClientSelect(client.id)}
+                                    className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
+                                  >
+                                    <div className="flex w-full items-center justify-between">
+                                      <span className="font-bold">{client.company_name || nameDisplay}</span>
+                                      {selectedClientId === client.id && <Check className="h-4 w-4 text-primary" />}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground w-full truncate space-x-1">
+                                      {client.company_name && <span>Attn: {nameDisplay}</span>}
+                                      {client.company_name && client.street_1 && <span>&bull;</span>}
+                                      {client.street_1 && <span>{client.street_1}</span>}
+                                      {client.street_1 && client.email && <span>&bull;</span>}
+                                      {client.email && <span>{client.email}</span>}
+                                    </div>
+                                  </CommandItem>
+                                )
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                          <div className="border-t p-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="w-full justify-start text-primary font-medium hover:text-primary hover:bg-primary/10"
+                              onClick={() => handleClientSelect('new')}
+                            >
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              Create new client
+                            </Button>
+                          </div>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
 
-              {(selectedClientId === 'new' || mode === 'edit') && (
-                <div className={cn("space-y-4 pt-4 border-t mt-4 border-border/50", mode === 'edit' && "border-t-0 pt-0 mt-0")}>
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Company Name (Optional)</Label>
-                    <Input id="companyName" placeholder="e.g. Acme Corp" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(selectedClientId === 'new' || mode === 'edit') && (
+                  <div className={cn("space-y-4 pt-4 border-t mt-4 border-border/50", mode === 'edit' && "border-t-0 pt-0 mt-0")}>
                     <div className="space-y-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input id="title" placeholder="Mr., Mrs., Dr." value={title} onChange={e => setTitle(e.target.value)} />
+                      <Label htmlFor="companyName">Company Name (Optional)</Label>
+                      <Input id="companyName" placeholder="e.g. Acme Corp" value={companyName} onChange={e => setCompanyName(e.target.value)} />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name *</Label>
-                      <Input id="firstName" required placeholder="e.g. John" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" placeholder="Mr., Mrs., Dr." value={title} onChange={e => setTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name *</Label>
+                        <Input id="firstName" required placeholder="e.g. John" value={firstName} onChange={e => setFirstName(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name *</Label>
+                        <Input id="lastName" required placeholder="e.g. Doe" value={lastName} onChange={e => setLastName(e.target.value)} />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name *</Label>
-                      <Input id="lastName" required placeholder="e.g. Doe" value={lastName} onChange={e => setLastName(e.target.value)} />
-                    </div>
-                  </div>
 
-                  <div className="space-y-2 pt-2 border-t border-border/10">
-                    <Label htmlFor="street1">Address Line 1 (Search with Google) *</Label>
-                    <Autocomplete
-                      apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-                      onPlaceSelected={handlePlaceSelected}
-                      options={{ types: ["address"] }}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Start typing an address..."
-                      defaultValue={street1}
-                      onChange={(e: any) => setStreet1(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="street2">Address Line 2 (Optional)</Label>
-                    <Input id="street2" placeholder="Apt, Suite, Floor..." value={street2} onChange={e => setStreet2(e.target.value)} />
-                  </div>
+                    <div className="space-y-2 pt-2 border-t border-border/10">
+                      <Label htmlFor="street1">Address Line 1 (Search with Google) *</Label>
+                      <Autocomplete
+                        apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+                        onPlaceSelected={handlePlaceSelected}
+                        options={{ types: ["address"] }}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder="Start typing an address..."
+                        defaultValue={street1}
+                        onChange={(e: any) => setStreet1(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="street2">Address Line 2 (Optional)</Label>
+                      <Input id="street2" placeholder="Apt, Suite, Floor..." value={street2} onChange={e => setStreet2(e.target.value)} />
+                    </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
-                      <Input id="city" placeholder="e.g. New York" value={city} onChange={e => setCity(e.target.value)} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="city">City</Label>
+                        <Input id="city" placeholder="e.g. New York" value={city} onChange={e => setCity(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="province">State / Province</Label>
+                        <Input id="province" placeholder="e.g. NY" value={province} onChange={e => setProvince(e.target.value)} />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="province">State / Province</Label>
-                      <Input id="province" placeholder="e.g. NY" value={province} onChange={e => setProvince(e.target.value)} />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="postalCode">Postal Code</Label>
-                      <Input id="postalCode" placeholder="10001" value={postalCode} onChange={e => setPostalCode(e.target.value)} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="postalCode">Postal Code</Label>
+                        <Input id="postalCode" placeholder="10001" value={postalCode} onChange={e => setPostalCode(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="country">Country</Label>
+                        <Input id="country" placeholder="USA" value={country} onChange={e => setCountry(e.target.value)} />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="country">Country</Label>
-                      <Input id="country" placeholder="USA" value={country} onChange={e => setCountry(e.target.value)} />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/10">
-                    <div className="space-y-2">
-                      <Label htmlFor="clientEmail">Email (Optional)</Label>
-                      <Input id="clientEmail" type="email" placeholder="email@example.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="clientPhone">Phone (Optional)</Label>
-                      <Input id="clientPhone" placeholder="+123456789" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/10">
+                      <div className="space-y-2">
+                        <Label htmlFor="clientEmail">Email (Optional)</Label>
+                        <Input id="clientEmail" type="email" placeholder="email@example.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="clientPhone">Phone (Optional)</Label>
+                        <Input id="clientPhone" placeholder="+123456789" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="shadow-sm border-border/50">
             <CardHeader className="pb-4">
@@ -1047,20 +1083,22 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="projectName">Project Name *</Label>
-                <Input id="projectName" required placeholder="e.g. Living Room Remodel" value={projectName} onChange={e => setProjectName(e.target.value)} />
+                <Label htmlFor="projectName">{isTemplate ? 'Template Name *' : 'Project Name *'}</Label>
+                <Input id="projectName" required placeholder={isTemplate ? 'e.g. Standard Bathroom Remodel' : 'e.g. Living Room Remodel'} value={projectName} onChange={e => setProjectName(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="validUntil">Valid Until *</Label>
-                <Input id="validUntil" type="date" required value={validUntil} onChange={e => setValidUntil(e.target.value)} />
-              </div>
+              {!isTemplate && (
+                <div className="space-y-2">
+                  <Label htmlFor="validUntil">Valid Until *</Label>
+                  <Input id="validUntil" type="date" required value={validUntil} onChange={e => setValidUntil(e.target.value)} />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes (Visible to Customer)</Label>
-                <Textarea 
-                  id="notes" 
-                  placeholder="Additional information, special conditions, or thank you note..." 
-                  value={notes} 
-                  onChange={e => setNotes(e.target.value)} 
+                <Textarea
+                  id="notes"
+                  placeholder="Additional information, special conditions, or thank you note..."
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
                   className="min-h-[80px] rounded-xl"
                 />
               </div>
@@ -1185,7 +1223,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                         }
                         const tax = availableTaxes.find(t => t.id === val);
                         if (tax) {
-                          updateAdjustment(taxAdjustment.id, { 
+                          updateAdjustment(taxAdjustment.id, {
                             value: tax.percentage,
                             label: tax.name
                           });
@@ -1249,8 +1287,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             <span className="uppercase text-[12px] tracking-[0.3em] font-black text-primary/40">Total</span>
             <span className="text-3xl font-serif font-black text-primary tabular-nums tracking-tight whitespace-nowrap ml-4">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={() => setIsDepositDialogOpen(true)}
             className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest hover:underline pt-2"
           >
@@ -1268,8 +1306,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>Tax Name</Label>
-                <Input 
-                  placeholder="e.g. Sales Tax, IGV" 
+                <Input
+                  placeholder="e.g. Sales Tax, IGV"
                   value={newTaxName}
                   onChange={(e) => setNewTaxName(e.target.value)}
                   className="rounded-xl"
@@ -1278,9 +1316,9 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
               <div className="space-y-2">
                 <Label>Percentage (%)</Label>
                 <div className="relative">
-                  <Input 
-                    type="number" 
-                    placeholder="0.00" 
+                  <Input
+                    type="number"
+                    placeholder="0.00"
                     value={newTaxPercent}
                     onChange={(e) => setNewTaxPercent(e.target.value)}
                     className="rounded-xl"
@@ -1291,7 +1329,7 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
             </div>
             <DialogFooter className="bg-transparent border-none p-0">
               <Button variant="ghost" onClick={() => setIsTaxDialogOpen(false)}>Cancel</Button>
-              <Button 
+              <Button
                 className="bg-[#0D3B47] hover:bg-[#0D3B47]/90 text-white rounded-xl px-6"
                 onClick={async () => {
                   if (!newTaxName || !newTaxPercent) return;
@@ -1347,9 +1385,9 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                 <div className="space-y-2">
                   <Label>Required Deposit ($)</Label>
                   <div className="relative">
-                    <Input 
-                      type="number" 
-                      placeholder="0.00" 
+                    <Input
+                      type="number"
+                      placeholder="0.00"
                       value={requiredDeposit || ""}
                       onChange={(e) => setRequiredDeposit(parseFloat(e.target.value) || 0)}
                       className="rounded-xl pl-8"
@@ -1360,13 +1398,13 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                 <div className="space-y-2">
                   <Label>Required Deposit (%)</Label>
                   <div className="relative">
-                    <Input 
-                      type="number" 
-                      placeholder="0" 
+                    <Input
+                      type="number"
+                      placeholder="0"
                       value={requiredDeposit ? (isNaN(total) || total <= 0 ? 0 : Number(((requiredDeposit / total) * 100).toFixed(2))) : ""}
                       onChange={(e) => {
-                         const pct = parseFloat(e.target.value) || 0;
-                         setRequiredDeposit(Number((total * pct / 100).toFixed(2)));
+                        const pct = parseFloat(e.target.value) || 0;
+                        setRequiredDeposit(Number((total * pct / 100).toFixed(2)));
                       }}
                       className="rounded-xl pr-8"
                     />
@@ -1377,9 +1415,9 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
               <div className="space-y-2">
                 <Label>Collected Amount ($)</Label>
                 <div className="relative">
-                  <Input 
-                    type="number" 
-                    placeholder="0.00" 
+                  <Input
+                    type="number"
+                    placeholder="0.00"
                     value={depositAmount || ""}
                     onChange={(e) => setDepositAmount(parseFloat(e.target.value) || 0)}
                     className="rounded-xl pl-8"
@@ -1389,8 +1427,8 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
               </div>
               <div className="space-y-2">
                 <Label>Payment Terms / Details</Label>
-                <Textarea 
-                  placeholder="e.g. 50% upfront, balance upon completion..." 
+                <Textarea
+                  placeholder="e.g. 50% upfront, balance upon completion..."
                   value={paymentTerms}
                   onChange={(e) => setPaymentTerms(e.target.value)}
                   className="min-h-[100px] rounded-xl"
@@ -1418,16 +1456,16 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
                 Tell me a little more about the project and I'll generate a complete quote proposal for you.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-5 py-2">
               <div className="space-y-2">
                 <Label htmlFor="aiProjectName" className="text-sm font-semibold flex items-center gap-1">
                   Project Name
                   <span className="text-destructive">*</span>
                 </Label>
-                <Input 
+                <Input
                   id="aiProjectName"
-                  placeholder="e.g. Colonial Kitchen Remodel" 
+                  placeholder="e.g. Colonial Kitchen Remodel"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   className="h-10"
@@ -1437,9 +1475,9 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="aiDesc" className="text-sm font-semibold">What is the project about?</Label>
-                <Textarea 
+                <Textarea
                   id="aiDesc"
-                  placeholder="Describe the scope... e.g. Floor replacement, painting, LED lighting, built-in cabinets." 
+                  placeholder="Describe the scope... e.g. Floor replacement, painting, LED lighting, built-in cabinets."
                   value={aiProjectDescription}
                   onChange={(e) => setAIProjectDescription(e.target.value)}
                   className="min-h-[130px] resize-none"
@@ -1447,15 +1485,15 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button 
+                <Button
                   type="button"
-                  variant="ghost" 
+                  variant="ghost"
                   onClick={() => setIsAIModalOpen(false)}
                   className="flex-1"
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   type="button"
                   onClick={handleAIGenerate}
                   disabled={isGeneratingAI || !projectName}
@@ -1478,10 +1516,10 @@ export default function ProformaForm({ initialData, mode }: ProformaFormProps) {
           </DialogContent>
         </Dialog>
 
-        <div className="flex justify-end pt-4 pb-12">
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-6 pt-4 pb-12">
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:-translate-y-1">
             <Save className="mr-2 h-5 w-5" />
-            {isSubmitting ? 'Saving Proforma...' : mode === 'edit' ? 'Update Proforma' : 'Generate and Save Proforma'}
+            {isSubmitting ? 'Saving Proforma...' : isTemplate ? 'Save Template' : mode === 'edit' ? 'Update Proforma' : 'Generate and Save Proforma'}
           </Button>
         </div>
       </form>

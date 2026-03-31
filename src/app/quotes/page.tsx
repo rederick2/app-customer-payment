@@ -19,6 +19,7 @@ export default async function QuotesPage() {
       created_at,
       status,
       number,
+      is_template,
       clients ( name )
     `)
     .order('created_at', { ascending: false });
@@ -37,7 +38,7 @@ export default async function QuotesPage() {
             </Link>
             <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Quotes</h1>
           </div>
-          <p className="text-muted-foreground">List of all quotes and proformas.</p>
+          <p className="text-muted-foreground">List of all quotes.</p>
         </div>
         <div className="flex items-center gap-2">
           {/*<ImportQuotesModal />*/}

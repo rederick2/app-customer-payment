@@ -32,7 +32,7 @@ export default async function EditProforma({ params }: Props) {
       <div className="container mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold text-destructive mb-4">No se puede editar esta proforma</h1>
         <p className="text-muted-foreground mb-6">Las proformas aprobadas o convertidas en trabajos no pueden modificarse.</p>
-        <a href={`/proforma/${id}`} className="text-primary hover:underline font-medium">Volver a la Proforma</a>
+        <a href={`/proforma/${id}`} className="text-primary hover:underline font-medium">Return to Quote</a>
       </div>
     );
   }
@@ -43,19 +43,19 @@ export default async function EditProforma({ params }: Props) {
     .select('*')
     .eq('proforma_id', id)
     .order('sort_order', { ascending: true, nullsFirst: false });
-    
+
   if (itemsError) {
     console.error("Error fetching items:", itemsError);
   }
 
   return (
-    <ProformaForm 
-      initialData={{ 
-        proforma, 
-        items: items || [], 
-        client: proforma.clients 
-      }} 
-      mode="edit" 
+    <ProformaForm
+      initialData={{
+        proforma,
+        items: items || [],
+        client: proforma.clients
+      }}
+      mode="edit"
     />
   );
 }

@@ -19,29 +19,30 @@ export default async function Dashboard() {
 
   // ── Counts ──────────────────────────────────────────────────
   const { count: proformasCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'approved');
+    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'approved').eq('is_template', false);
 
   const { count: clientsCount } = await supabase
     .from('clients').select('*', { count: 'exact', head: true });
 
   const { count: jobsCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'job');
+    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'job').eq('is_template', false);
 
   const { count: pendingCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'quote');
+    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'quote').eq('is_template', false);
 
   const { count: completedCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'completed');
+    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'completed').eq('is_template', false);
 
   // ── Revenue ──────────────────────────────────────────────────
   const { data: revenueData } = await supabase
-    .from('proformas').select('total').in('status', ['job', 'completed']);
+    .from('proformas').select('total').in('status', ['job', 'completed']).eq('is_template', false);
   const totalRevenue = (revenueData || []).reduce((s, p) => s + (p.total || 0), 0);
 
   // ── Chart data: all proformas with date + total + status ─────
   const { data: allProformas } = await supabase
     .from('proformas')
     .select('created_at, total, status')
+    .eq('is_template', false)
     .order('created_at', { ascending: true });
 
   // Build last 12 months map
@@ -87,6 +88,7 @@ export default async function Dashboard() {
   const { data: recentProformas } = await supabase
     .from('proformas')
     .select('id, project_name, total, created_at, status, clients ( name )')
+    .eq('is_template', false)
     .order('created_at', { ascending: false })
     .limit(7);
 

@@ -84,6 +84,35 @@ export function DashboardNotifications() {
     };
   }, [supabase]);
 
+  const markAsRead = async (id: string, isRead: boolean) => {
+    if (isRead) return;
+    
+    // Optimistic update
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    
+    // DB update
+    try {
+      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+
+    // Optimistic update
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+
+    // DB update
+    try {
+      await supabase.from('notifications').update({ is_read: true }).in('id', unreadIds);
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
   const getIconForType = (type: string) => {
     switch (type) {
       case 'viewed': return <Eye className="h-4 w-4 text-blue-600" />;
@@ -119,11 +148,21 @@ export function DashboardNotifications() {
       <PopoverContent className="w-80 p-0 mr-4 mt-2 shadow-xl border-border/50 rounded-xl" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-muted/20 rounded-t-xl">
           <h3 className="font-semibold text-sm">Notifications</h3>
-          {unreadCount > 0 && (
-            <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              {unreadCount} unread
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <>
+                <button 
+                  onClick={markAllAsRead}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Mark all as read
+                </button>
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {unreadCount} unread
+                </span>
+              </>
+            )}
+          </div>
         </div>
         
         <div className="max-h-[350px] overflow-y-auto">
@@ -138,7 +177,11 @@ export function DashboardNotifications() {
           ) : (
             <div className="flex flex-col">
               {notifications.map((notif) => (
-                <Link key={notif.id} href={notif.proforma_id ? `/proforma/${notif.proforma_id}` : '#'}>
+                <Link 
+                  key={notif.id} 
+                  href={notif.proforma_id ? `/proforma/${notif.proforma_id}` : '#'}
+                  onClick={() => markAsRead(notif.id, notif.is_read)}
+                >
                   <div className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer group border-b border-border/20 last:border-0 ${!notif.is_read ? 'bg-primary/5' : ''}`}>
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${getBgForType(notif.type)}`}>
                       {getIconForType(notif.type)}
