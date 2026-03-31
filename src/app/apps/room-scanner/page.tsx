@@ -6,10 +6,10 @@ import {
   ScanLine, ArrowLeft, Download, CheckCircle2,
   AlertCircle, Loader2, RotateCcw, Pencil, FileImage,
   FileText as FilePdf, Save, X, Plus, Minus, Trash2,
-  ArrowRight, Camera, MapPin
+  ArrowRight, Camera, MapPin, Upload
 } from 'lucide-react';
 
-type Phase = 'idle' | 'permission' | 'preview' | 'marking' | 'measuring' | 'processing' | 'complete' | 'error';
+type Phase = 'idle' | 'permission' | 'preview' | 'detecting' | 'marking' | 'measuring' | 'processing' | 'complete' | 'error';
 interface Point { x: number; y: number } // normalized 0..1
 interface RoomData { points: Point[]; walls: number[]; width: number; height: number }
 
@@ -274,12 +274,18 @@ export default function RoomScannerPage() {
   const [refWallIdx, setRefWallIdx] = React.useState(0);
   const [refLength, setRefLength] = React.useState('');
   const [showDownloadMenu, setShowDownloadMenu] = React.useState(false);
+  const [zoom, setZoom] = React.useState(1);
+  const [aiDetecting, setAiDetecting] = React.useState(false);
+  const [aiError, setAiError] = React.useState<string | null>(null);
+  const [aiDetectedCount, setAiDetectedCount] = React.useState<number | null>(null);
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
-  const photoCanvasRef = React.useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = React.useRef<HTMLCanvasElement>(null);
-  const imgContainerRef = React.useRef<HTMLDivElement>(null);
+  const imgContainerRef = React.useRef<HTMLDivElement>(null);  // clipping wrapper
+  const contentRef = React.useRef<HTMLDivElement>(null);       // scaled content
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const lastPointerRef = React.useRef(0);
 
   const stopCamera = React.useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
@@ -316,6 +322,30 @@ export default function RoomScannerPage() {
     }
   };
 
+  /* ---- AI corner detection ---- */
+  const aiDetectCorners = React.useCallback(async (imageBase64: string) => {
+    setAiDetecting(true);
+    setAiError(null);
+    setAiDetectedCount(null);
+    try {
+      const res = await fetch('/api/room-scanner/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error del servidor');
+      const corners: Point[] = (data.corners as number[][]).map(([x, y]) => ({ x, y }));
+      if (corners.length < 3) throw new Error('OpenAI no detectó suficientes esquinas. Marca manualmente.');
+      setPoints(corners);
+      setAiDetectedCount(corners.length);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'Error al detectar esquinas');
+    } finally {
+      setAiDetecting(false);
+    }
+  }, []);
+
   /* ---- Capture photo from video frame ---- */
   const takePhoto = () => {
     const video = videoRef.current;
@@ -329,21 +359,64 @@ export default function RoomScannerPage() {
     setPhotoUrl(dataUrl);
     stopCamera();
     setPoints([]);
+    setZoom(1);
     setPhase('marking');
+    // Auto-detect after photo is taken
+    aiDetectCorners(dataUrl);
   };
 
-  /* ---- Handle tap on photo to add point ---- */
-  const handlePhotoTap = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+  /* ---- Handle tap on photo (pointer-based, debounced to prevent double) ---- */
+  const handlePhotoTap = (e: React.PointerEvent<HTMLDivElement>) => {
     if (phase !== 'marking') return;
     if (points.length >= MAX_PTS) return;
-    const container = imgContainerRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const raw = 'touches' in e ? e.touches[0] : (e as React.MouseEvent);
-    const x = (raw.clientX - rect.left) / rect.width;
-    const y = (raw.clientY - rect.top) / rect.height;
+    // Prevent double-fire (touchstart fires pointerdown AND then a synthetic click on mobile)
+    const now = Date.now();
+    if (now - lastPointerRef.current < 300) return;
+    lastPointerRef.current = now;
+
+    // Use the CONTENT div (the scaled one) for accurate coords at any zoom level
+    const content = contentRef.current;
+    if (!content) return;
+    const rect = content.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
     if (x < 0 || x > 1 || y < 0 || y > 1) return;
     setPoints(prev => [...prev, { x, y }]);
+  };
+
+  /* ---- Upload image from file ---- */
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string;
+      if (!url) return;
+      setPhotoUrl(url);
+      stopCamera();
+      setPoints([]);
+      setZoom(1);
+      setPhase('marking');
+      // Auto-detect after upload
+      aiDetectCorners(url);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const reset = () => {
+    stopCamera();
+    setPhase('idle');
+    setPoints([]);
+    setRoom(null);
+    setPhotoUrl(null);
+    setRefLength('');
+    setRefWallIdx(0);
+    setShowDownloadMenu(false);
+    setZoom(1);
+    setAiDetecting(false);
+    setAiError(null);
+    setAiDetectedCount(null);
   };
 
   /* ---- Resize overlay canvas to match container ---- */
@@ -375,16 +448,7 @@ export default function RoomScannerPage() {
     }, 1500);
   };
 
-  const reset = () => {
-    stopCamera();
-    setPhase('idle');
-    setPoints([]);
-    setRoom(null);
-    setPhotoUrl(null);
-    setRefLength('');
-    setRefWallIdx(0);
-    setShowDownloadMenu(false);
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
@@ -435,10 +499,25 @@ export default function RoomScannerPage() {
               ))}
             </div>
 
-            <button onClick={openCamera}
-              className="flex items-center gap-3 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 font-bold px-8 py-4 rounded-2xl shadow-xl hover:-translate-y-0.5 transition-all text-base">
-              <Camera className="h-5 w-5" /> Abrir Cámara
-            </button>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileUpload}
+            />
+
+            <div className="flex gap-3">
+              <button onClick={openCamera}
+                className="flex-1 flex items-center justify-center gap-3 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 font-bold px-6 py-4 rounded-2xl shadow-xl hover:-translate-y-0.5 transition-all text-base">
+                <Camera className="h-5 w-5" /> Abrir Cámara
+              </button>
+              <button onClick={() => fileInputRef.current?.click()}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 font-semibold px-5 py-4 rounded-2xl transition-all text-sm border border-white/10">
+                <Upload className="h-5 w-5" /> Subir Foto
+              </button>
+            </div>
           </div>
         )}
 
@@ -450,90 +529,151 @@ export default function RoomScannerPage() {
           </div>
         )}
 
-        {/* ── CAMERA PREVIEW (take photo) ─────────────────────────────── */}
+        {/* CAMERA PREVIEW */}
         {phase === 'preview' && (
           <div className="flex flex-col gap-4">
             <div className="bg-indigo-900/50 border border-indigo-500/30 rounded-xl px-4 py-3 text-sm text-indigo-200">
               📸 Encuadra bien la habitación e incluye el piso y las esquinas visibles, luego toma la foto.
             </div>
-
             <div className="relative rounded-2xl overflow-hidden bg-black border border-white/10 shadow-2xl" style={{ aspectRatio: '4/3' }}>
               <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted playsInline autoPlay />
-
-              {/* Corner guides overlay */}
               <div className="absolute inset-0 pointer-events-none">
-                {[['top-3 left-3', 'border-t-2 border-l-2'], ['top-3 right-3', 'border-t-2 border-r-2'],
-                  ['bottom-12 left-3', 'border-b-2 border-l-2'], ['bottom-12 right-3', 'border-b-2 border-r-2']
-                ].map(([pos, border], i) => (
+                {[['top-3 left-3','border-t-2 border-l-2'],['top-3 right-3','border-t-2 border-r-2'],
+                  ['bottom-12 left-3','border-b-2 border-l-2'],['bottom-12 right-3','border-b-2 border-r-2']
+                ].map(([pos,border],i) => (
                   <div key={i} className={`absolute ${pos} ${border} border-white/50 w-6 h-6 rounded-sm`} />
                 ))}
               </div>
-
-              {/* Shutter button */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                <button
-                  onClick={takePhoto}
-                  className="h-16 w-16 rounded-full bg-white border-4 border-white/30 shadow-2xl hover:scale-95 active:scale-90 transition-transform flex items-center justify-center"
-                >
-                  <div className="h-12 w-12 rounded-full bg-white" />
+                <button onClick={takePhoto}
+                  className="h-16 w-16 rounded-full bg-white border-4 border-white/30 shadow-2xl hover:scale-95 active:scale-90 transition-transform">
+                  <div className="h-12 w-12 mx-auto rounded-full bg-white" />
                 </button>
               </div>
             </div>
-
-            <button onClick={reset} className="text-sm text-white/40 hover:text-white/70 text-center transition-colors">
-              Cancelar
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => fileInputRef.current?.click()}
+                className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-sm font-medium py-2.5 rounded-xl transition-colors">
+                <Upload className="h-4 w-4" /> Subir imagen en su lugar
+              </button>
+              <button onClick={reset} className="text-sm text-white/40 hover:text-white/70 transition-colors px-3">
+                Cancelar
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ── MARKING (photo + tap to mark corners) ──────────────────── */}
+        {/* MARKING PHASE */}
         {phase === 'marking' && photoUrl && (
           <div className="flex flex-col gap-4">
-            {/* Instruction */}
-            <div className="bg-indigo-900/50 border border-indigo-500/30 rounded-xl px-4 py-3 flex items-start gap-3 text-sm">
-              <MapPin className="h-4 w-4 text-indigo-300 shrink-0 mt-0.5" />
-              <span className="text-indigo-200">
-                {points.length === 0
-                  ? 'Toca la primera esquina del piso en la foto'
-                  : points.length < MIN_PTS
-                    ? `Toca la siguiente esquina — ${MIN_PTS - points.length} mínimo más`
-                    : `${points.length} esquinas marcadas. Agrega más o presiona "Continuar"`}
-              </span>
+            {/* AI Detection status */}
+            {aiDetecting && (
+              <div className="bg-violet-900/60 border border-violet-500/40 rounded-xl px-4 py-3 flex items-center gap-3 text-sm">
+                <Loader2 className="h-4 w-4 text-violet-300 animate-spin shrink-0" />
+                <div>
+                  <p className="text-violet-200 font-semibold">OpenAI analizando la foto…</p>
+                  <p className="text-violet-400 text-xs">Detectando esquinas del piso automáticamente</p>
+                </div>
+              </div>
+            )}
+
+            {!aiDetecting && aiDetectedCount !== null && aiDetectedCount > 0 && !aiError && (
+              <div className="bg-emerald-900/50 border border-emerald-500/30 rounded-xl px-4 py-3 flex items-center gap-3 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-emerald-300 font-semibold">¡OpenAI detectó {aiDetectedCount} esquinas!</p>
+                  <p className="text-emerald-500 text-xs">Revisa los puntos y corrige si es necesario</p>
+                </div>
+                <button
+                  onClick={() => photoUrl && aiDetectCorners(photoUrl)}
+                  className="text-xs text-emerald-400 hover:text-white bg-emerald-500/20 hover:bg-emerald-500/40 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {!aiDetecting && aiError && (
+              <div className="bg-red-900/50 border border-red-500/30 rounded-xl px-4 py-3 flex items-center gap-3 text-sm">
+                <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-red-300 font-semibold">Error de detección</p>
+                  <p className="text-red-400 text-xs">{aiError}</p>
+                </div>
+                <button
+                  onClick={() => photoUrl && aiDetectCorners(photoUrl)}
+                  className="text-xs text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500/40 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {/* Instruction (only shown when not detecting) */}
+            {!aiDetecting && (
+              <div className="bg-indigo-900/50 border border-indigo-500/30 rounded-xl px-4 py-3 flex items-start gap-3 text-sm">
+                <MapPin className="h-4 w-4 text-indigo-300 shrink-0 mt-0.5" />
+                <span className="text-indigo-200">
+                  {points.length === 0
+                    ? 'Toca manualmente las esquinas del piso en la foto'
+                    : points.length < MIN_PTS
+                      ? `${points.length} esquina(s). Agrega ${MIN_PTS - points.length} más mínimo`
+                      : `${points.length} esquinas. Acepta o edita, luego presiona "Continuar"`}
+                </span>
+              </div>
+            )}
+
+            {/* Zoom controls */}
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
+              <span className="text-xs text-white/50 font-medium shrink-0">Zoom</span>
+              <input
+                type="range" min={1} max={4} step={0.25} value={zoom}
+                onChange={e => setZoom(parseFloat(e.target.value))}
+                className="flex-1 accent-indigo-500"
+              />
+              <span className="text-xs font-bold text-indigo-300 w-10 text-right">{zoom.toFixed(2)}x</span>
+              <button onClick={() => setZoom(1)}
+                className="text-xs text-white/40 hover:text-white px-2 py-1 rounded-lg bg-white/10 transition-colors">
+                Reset
+              </button>
             </div>
 
-            {/* Photo + Canvas overlay */}
+            {/* Clipping viewport + zoomable content */}
             <div
               ref={imgContainerRef}
-              className="relative rounded-2xl overflow-hidden border border-white/20 shadow-2xl cursor-crosshair select-none"
-              style={{ aspectRatio: '4/3' }}
-              onClick={handlePhotoTap}
-              onTouchStart={handlePhotoTap}
+              className="relative rounded-2xl overflow-hidden border border-white/20 shadow-2xl select-none"
+              style={{ aspectRatio: '4/3', cursor: zoom > 1 ? 'crosshair' : 'crosshair' }}
             >
-              {/* The captured photo */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={photoUrl}
-                alt="Room photo"
-                className="absolute inset-0 w-full h-full object-cover"
-                draggable={false}
-              />
+              {/* This div is scaled — getBoundingClientRect() on it gives exact image bounds at any zoom */}
+              <div
+                ref={contentRef}
+                className="absolute inset-0"
+                style={{
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'center center',
+                  touchAction: 'none',
+                }}
+                onPointerDown={handlePhotoTap}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photoUrl ?? ''} alt="Room photo" className="w-full h-full object-cover" draggable={false} />
+                <canvas
+                  ref={overlayCanvasRef}
+                  className="absolute inset-0 pointer-events-none"
+                  width={960}
+                  height={720}
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </div>
 
-              {/* Canvas for drawing points */}
-              <canvas
-                ref={overlayCanvasRef}
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                style={{ width: '100%', height: '100%' }}
-              />
-
-              {/* Corner counter */}
-              <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-xl px-3 py-2 text-xs font-semibold">
+              {/* Corner counter — outside the transformed div so it stays fixed */}
+              <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm rounded-xl px-3 py-2 text-xs font-semibold pointer-events-none z-10">
                 <span className="text-emerald-400">{points.length}</span>
                 <span className="text-white/60"> / {MAX_PTS} esquinas</span>
               </div>
 
-              {/* Tip for first point */}
               {points.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                   <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-4 py-3 text-center max-w-[200px]">
                     <MapPin className="h-6 w-6 text-emerald-400 mx-auto mb-1" />
                     <p className="text-xs text-white/80">Toca una esquina del piso para empezar</p>
@@ -544,11 +684,11 @@ export default function RoomScannerPage() {
 
             {/* Controls */}
             <div className="flex gap-2">
-              <button onClick={undoLast} disabled={points.length === 0}
+              <button onClick={() => setPoints(prev => prev.slice(0, -1))} disabled={points.length === 0}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 transition-all text-sm">
                 <Trash2 className="h-4 w-4" /> Deshacer
               </button>
-              <button onClick={() => { setPoints([]); }}
+              <button onClick={() => setPoints([])}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-sm">
                 <RotateCcw className="h-4 w-4" /> Limpiar
               </button>
