@@ -903,7 +903,7 @@ export function JobView({
         <div className="flex items-center gap-3">
           <Link href="/clients" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Directorio
+            Directory
           </Link>
           <span className="text-muted-foreground/40">·</span>
           <div className="flex items-center gap-2">
@@ -924,16 +924,16 @@ export function JobView({
 
           <Dialog>
             <DialogTrigger render={
-              <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm">
+              <Button variant="outline" size="sm" className="h-9 gap-2">
                 <HistoryIcon className="h-4 w-4 text-muted-foreground" />
-                <span className="hidden sm:inline">Historial</span>
+                <span className="hidden sm:inline">History</span>
               </Button>
             } />
             <DialogContent className="sm:max-w-[540px]">
               <DialogHeader className="mb-4">
-                <DialogTitle>Historial del Trabajo</DialogTitle>
+                <DialogTitle>Job History</DialogTitle>
                 <DialogDescription>
-                  Seguimiento de todos los cambios de estado realizados.
+                  Track all status changes made to this job.
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
@@ -955,24 +955,24 @@ export function JobView({
       <div className="space-y-6">
 
         {/* Header Summary */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-8 bg-white p-6 rounded-xl border border-border/40 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 bg-white p-6 border border-border/40">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+            <div className="p-3 bg-primary/10 text-primary">
               <Briefcase className="h-8 w-8" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Badge className={cn(
-                  "text-[10px] font-black tracking-widest uppercase",
+                  "text-[10px] font-bold tracking-tight uppercase rounded-sm",
                   proforma.status === 'job_terminated' 
                     ? "bg-slate-500/10 text-slate-700 border-slate-500/20" 
-                    : "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                    : "bg-primary/10 text-primary border-primary/20"
                 )}>
-                  {proforma.status === 'job_terminated' ? 'TERMINADO' : proforma.status.toUpperCase()}
+                  {proforma.status === 'job_terminated' ? 'TERMINATED' : proforma.status.toUpperCase()}
                 </Badge>
-                <span className="text-muted-foreground text-xs font-medium">Job #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
+                <span className="text-muted-foreground text-xs font-semibold">Job #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
               </div>
-              <h1 className="text-3xl font-serif font-bold text-foreground mb-1">{proforma.project_name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">{proforma.project_name}</h1>
               <div className="flex flex-col gap-1 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <UserIcon className="h-3.5 w-3.5" />
@@ -1013,7 +1013,7 @@ export function JobView({
         </div>
 
         {/* Profitability Panel */}
-        <div className="bg-[#F8F7F2] rounded-xl border border-border/40 overflow-hidden">
+        <div className="bg-muted/10 border border-border/40 overflow-hidden">
           <div className="p-4 border-b border-border/40 flex items-center justify-between">
             <button
               onClick={() => setShowProfitability(!showProfitability)}
@@ -1043,7 +1043,7 @@ export function JobView({
                         cy="48"
                         r="40"
                         fill="transparent"
-                        stroke="#306C3E"
+                        stroke="hsl(var(--primary))"
                         strokeWidth="10"
                         strokeDasharray={`${(profitMargin / 100) * 251.2} 251.2`}
                       />
@@ -1053,14 +1053,14 @@ export function JobView({
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold font-serif">{profitMargin.toFixed(2)}%</h2>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Profit margin</p>
+                    <h2 className="text-2xl font-bold">{profitMargin.toFixed(2)}%</h2>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Profit margin</p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
                   <div className="text-center md:text-left">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total price</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total price</p>
                     <p className="text-xl font-bold font-serif">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                   <div className="text-center md:text-left">
@@ -1098,10 +1098,10 @@ export function JobView({
         <div className="grid grid-cols-1 gap-6">
 
           {/* Line Items Section */}
-          <Card className="border-border/40 shadow-sm overflow-hidden">
+          <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
             <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
-              <CardTitle className="text-xl font-serif">Line Items</CardTitle>
-              <Button size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingLineItem(true)}>
+              <CardTitle className="text-lg font-bold">Line Items</CardTitle>
+              <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLineItem(true)}>
                 <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New Line Item</span>
               </Button>
             </CardHeader>
@@ -1110,7 +1110,7 @@ export function JobView({
               {/* VISTA DESKTOP: Se mantiene la tabla pero se oculta en mobile */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-black uppercase tracking-widest">
+                  <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-bold uppercase tracking-widest">
                     <tr>
                       <th className="px-4 py-3 text-left w-10"></th>
                       <th className="px-6 py-3 text-left">Product / Service</th>
@@ -1119,7 +1119,7 @@ export function JobView({
                       <th className="px-6 py-3 text-right">Cost</th>
                       <th className="px-6 py-3 text-right">Price</th>
                       <th className="px-6 py-3 text-right">Total</th>
-                      <th className="px-4 py-3 text-center w-10">Acciones</th>
+                      <th className="px-4 py-3 text-center w-10">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
@@ -1137,7 +1137,7 @@ export function JobView({
                           <Checkbox checked={!item.is_optional} className="opacity-100 cursor-default" />
                         </td>
                         <td className="px-6 py-4 max-w-md">
-                          <p className="font-bold text-[#0D3B47] text-base leading-tight">{item.description}</p>
+                          <p className="font-bold text-foreground text-base leading-tight">{item.description}</p>
                           {item.details && (
                             <div className="mt-1.5">
                               <p className={cn(
@@ -1152,7 +1152,7 @@ export function JobView({
                                     e.stopPropagation();
                                     toggleItemExpansion(item.id);
                                   }}
-                                  className="text-[10px] font-black uppercase tracking-widest text-[#306C3E] hover:text-[#265832] mt-1 flex items-center gap-1 group"
+                                  className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 mt-1 flex items-center gap-1 group"
                                 >
                                   {expandedItems.has(item.id) ? (
                                     <>view less <ChevronUp className="h-3 w-3 transition-transform group-hover:-translate-y-0.5" /></>
@@ -1241,10 +1241,10 @@ export function JobView({
                     ))}
                     {proforma.notes && (
                       <tr className="bg-amber-50/20 border-t border-border/40">
-                        <td colSpan={2} className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-[#0D3B47]/60 align-top">
+                        <td colSpan={2} className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest text-muted-foreground align-top">
                           Notes / Terms
                         </td>
-                        <td colSpan={5} className="px-6 py-4 text-sm text-[#0D3B47] italic whitespace-pre-wrap">
+                        <td colSpan={5} className="px-6 py-4 text-sm text-foreground italic whitespace-pre-wrap">
                           {proforma.notes}
                         </td>
                         <td />
@@ -1318,7 +1318,7 @@ export function JobView({
                       <div className="flex gap-3">
                         <Checkbox checked={!item.is_optional} className="mt-1" />
                         <div>
-                          <p className="font-bold text-[#0D3B47] leading-tight">{item.description}</p>
+                          <p className="font-bold text-foreground leading-tight">{item.description}</p>
                           {item.details && (
                             <div className="mt-1">
                               <p className={cn(
@@ -1333,9 +1333,9 @@ export function JobView({
                                     e.stopPropagation();
                                     toggleItemExpansion(item.id);
                                   }}
-                                  className="text-[9px] font-black uppercase tracking-widest text-[#306C3E] mt-1"
+                                  className="text-[9px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 mt-1"
                                 >
-                                  {expandedItems.has(item.id) ? 'Ver menos' : 'Leer más'}
+                                  {expandedItems.has(item.id) ? 'View less' : 'View more'}
                                 </button>
                               )}
                             </div>
@@ -1372,8 +1372,8 @@ export function JobView({
               <div className="p-4 bg-muted/5 border-t border-border/40 space-y-4 md:hidden">
                 {proforma.notes && (
                   <div className="p-3 bg-amber-50/30 rounded-lg border border-amber-200/50">
-                    <p className="text-[10px] font-black uppercase text-[#0D3B47]/60 tracking-widest mb-1">Notes</p>
-                    <p className="text-xs text-[#0D3B47] italic whitespace-pre-wrap">{proforma.notes}</p>
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-1">Notes</p>
+                    <p className="text-xs text-foreground italic whitespace-pre-wrap">{proforma.notes}</p>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
@@ -1385,15 +1385,15 @@ export function JobView({
           </Card>
 
           {/* Materials Section */}
-          <Card className="border-border/40 shadow-sm overflow-hidden flex flex-col">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between py-4 bg-muted/5 gap-4">
+          <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between py-4 bg-muted/5 gap-4 border-b border-border/40">
               <div className="flex items-center gap-2">
-                <ListTodo className="h-5 w-5 text-emerald-700" />
-                <CardTitle className="text-xl font-serif">Materials</CardTitle>
+                <ListTodo className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-bold">Materials</CardTitle>
               </div>
               <div className="flex gap-2 w-full sm:w-auto overflow-x-auto">
                 <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button size="sm" className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]" />}>
+                  <DropdownMenuTrigger render={<Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" />}>
                     <Plus className="h-4 w-4" /> Add Materials
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -1401,13 +1401,13 @@ export function JobView({
                       <Mail className="h-4 w-4 text-blue-600" /> Send Email List
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsSearchingSodimac(true)}>
-                      <Search className="h-4 w-4 text-[#306C3E]" /> Search Products
+                      <Search className="h-4 w-4 text-primary" /> Search Products
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterial(true)}>
-                      <TrendingUp className="h-4 w-4 text-[#306C3E]" /> AI Auto-Gen
+                      <TrendingUp className="h-4 w-4 text-primary" /> AI Auto-Gen
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterialManually(true)}>
-                      <Pencil className="h-4 w-4 text-[#306C3E]" /> Manual Add
+                      <Pencil className="h-4 w-4 text-primary" /> Manual Add
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1597,13 +1597,13 @@ export function JobView({
           </Card>
 
           {/* Tasks Section */}
-          <Card className="border-border/40 shadow-sm overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
+          <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+            <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
               <div className="flex items-center gap-2">
-                <ListTodo className="h-5 w-5 text-[#0D3B47]" />
-                <CardTitle className="text-xl font-serif">Tasks</CardTitle>
+                <ListTodo className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-bold">Tasks</CardTitle>
               </div>
-              <Button size="sm" className="h-8 gap-1 font-bold bg-[#0D3B47] hover:bg-[#072a33]" onClick={() => setIsAddingTask(true)}>
+              <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingTask(true)}>
                 <Plus className="h-4 w-4" /> New Task
               </Button>
             </CardHeader>
@@ -1613,12 +1613,12 @@ export function JobView({
                   <table className="w-full text-sm">
                     <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                       <tr>
-                        <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left w-10">Done</th>
-                        <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Task Description</th>
-                        <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Associate</th>
-                        <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Due Date</th>
-                        <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Assigned To</th>
-                        <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Actions</th>
+                        <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left w-10">Done</th>
+                        <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Task Description</th>
+                        <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Associate</th>
+                        <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Due Date</th>
+                        <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Assigned To</th>
+                        <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/30">
@@ -1726,12 +1726,12 @@ export function JobView({
           {/* Payments Row */}
           <div className="grid grid-cols-1 gap-6">
             {/* Payments */}
-            <Card className="border-border/40 shadow-sm overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
-                <CardTitle className="text-xl font-serif">Payments</CardTitle>
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Payments</CardTitle>
                 <Button
                   size="sm"
-                  className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]"
+                  className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
                   onClick={() => setIsRecordingPayment(true)}
                 >
                   <Plus className="h-4 w-4" /> Record Payment
@@ -1743,10 +1743,10 @@ export function JobView({
                     <table className="w-full text-sm">
                       <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                         <tr>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Date</th>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Method</th>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Amount</th>
-                          <th className="px-6 py-3 w-10 text-center font-black text-[10px] uppercase tracking-widest">Actions</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                          <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/30">
@@ -1797,21 +1797,21 @@ export function JobView({
             </Card>
 
             {/* Expenses */}
-            <Card className="border-border/40 shadow-sm overflow-hidden flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
-                <CardTitle className="text-xl font-serif">Expenses</CardTitle>
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Expenses</CardTitle>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 gap-1.5 font-bold border-primary/20 hover:bg-primary/5"
+                    className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5"
                     onClick={() => setIsScanningExpense(true)}
                   >
                     <Camera className="h-4 w-4" /> Scanner AI
                   </Button>
                   <Button
                     size="sm"
-                    className="h-8 gap-1 font-bold bg-[#306C3E] hover:bg-[#265832]"
+                    className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
                     onClick={() => setIsAddingExpense(true)}
                   >
                     <Plus className="h-4 w-4" /> New Expense
@@ -1838,12 +1838,12 @@ export function JobView({
                       <table className="w-full text-sm">
                         <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                           <tr>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Date</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Place</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Description</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Category</th>
-                            <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Amount</th>
-                            <th className="px-6 py-3 w-10 text-center">Actions</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Place</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                            <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border/30">
@@ -1930,10 +1930,10 @@ export function JobView({
             </Card>
 
             {/* Labor */}
-            <Card className="border-border/40 shadow-sm overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
-                <CardTitle className="text-xl font-serif">Labor</CardTitle>
-                <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingLabor(true)}>
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Labor</CardTitle>
+                <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
                   <Plus className="h-4 w-4" /> New Time Entry
                 </Button>
               </CardHeader>
@@ -1943,12 +1943,12 @@ export function JobView({
                     <table className="w-full text-sm">
                       <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                         <tr>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Date</th>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-left">Employee</th>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-center">Duration</th>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Rate</th>
-                          <th className="px-6 py-3 font-black text-[10px] uppercase tracking-widest text-right">Total</th>
-                          <th className="px-6 py-3 w-10 text-center">Action</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
+                          <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/30">
@@ -2001,9 +2001,9 @@ export function JobView({
             </Card>
 
             {/* Visits */}
-            <Card className="border-border/40 shadow-sm overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
-                <CardTitle className="text-xl font-serif">Visits</CardTitle>
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Visits</CardTitle>
                 <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
                   <Plus className="h-4 w-4" /> New Visit
                 </Button>
@@ -2024,10 +2024,10 @@ export function JobView({
                             <div className="flex items-center gap-2">
                               <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
                               {visit.status === 'overdue' && (
-                                <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-black uppercase tracking-widest">Overdue</Badge>
+                                <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Overdue</Badge>
                               )}
                               {visit.status === 'completed' && (
-                                <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-black uppercase tracking-widest">Completed</Badge>
+                                <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Completed</Badge>
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5">Assigned to: {visit.assigned_name || 'Unassigned'}</p>
@@ -2064,9 +2064,9 @@ export function JobView({
           </div>
 
           {/* Invoices */}
-          <Card className="border-border/40 shadow-sm overflow-hidden">
+          <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
             <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-              <CardTitle className="text-xl font-serif">Invoices</CardTitle>
+              <CardTitle className="text-lg font-bold">Invoices</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="border-b border-border/40">
@@ -2084,7 +2084,7 @@ export function JobView({
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border/40">
+                    <thead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40">
                       <tr>
                         <th className="px-4 py-3 text-left">Invoice</th>
                         <th className="px-4 py-3 text-left">Due Date</th>
@@ -2102,7 +2102,7 @@ export function JobView({
                           <td className="px-4 py-4 text-muted-foreground">{format(new Date(inv.due_date || inv.issue_date), 'd MMM. yyyy', { locale: es })}</td>
                           <td className="px-4 py-4">
                             <Badge variant="outline" className={cn(
-                              "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-black uppercase tracking-widest",
+                              "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest",
                               inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : 
                               inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
                               "bg-muted text-muted-foreground border-border"
@@ -2156,14 +2156,14 @@ export function JobView({
           </Card>
 
           {/* Internal Notes */}
-          <Card className="border-border/40 shadow-sm overflow-hidden">
+          <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
             <CardHeader className="py-4 bg-muted/5 border-b border-border/40">
-              <CardTitle className="text-xl font-serif">Internal notes</CardTitle>
-              <p className="text-[10px] font-medium text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
+              <CardTitle className="text-lg font-bold">Internal notes</CardTitle>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
             </CardHeader>
             <CardContent className="p-6">
               <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 font-serif">Note details</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 font-serif">Note details</p>
                 <textarea
                   className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none"
                   placeholder="Click here to add a note..."
@@ -2200,7 +2200,7 @@ export function JobView({
             <Button variant="outline" onClick={() => setIsAddingMaterial(false)} disabled={isGeneratingMaterials}>
               Cancel
             </Button>
-            <Button onClick={handleGenerateMaterials} disabled={isGeneratingMaterials} className="bg-[#306C3E] hover:bg-[#265832]">
+            <Button onClick={handleGenerateMaterials} disabled={isGeneratingMaterials} className="font-bold">
               {isGeneratingMaterials ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -2239,7 +2239,7 @@ export function JobView({
                 <option value="homedepot">Home Depot</option>
                 <option value="ace">Ace Hardware</option>
               </select>
-              <Button type="submit" disabled={isSodimacLoading} className="bg-[#306C3E] hover:bg-[#265832]">
+              <Button type="submit" disabled={isSodimacLoading} className="font-bold">
                 {isSodimacLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
                 Search
               </Button>
@@ -2248,7 +2248,7 @@ export function JobView({
             <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: '50vh' }}>
               {isSodimacLoading ? (
                 <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
-                  <Loader2 className="h-8 w-8 animate-spin mb-4 text-[#306C3E]" />
+                  <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
                   <p>Searching {searchStore === 'ace' ? 'Ace Hardware' : 'Home Depot'}...</p>
                 </div>
               ) : sodimacResults.length > 0 ? (
@@ -2942,7 +2942,7 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess, payment 
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : payment ? 'Update Payment' : 'Record Payment'}
             </Button>
           </div>
@@ -3026,7 +3026,7 @@ function ExpenseFormModal({ proformaId, onClose, onSuccess }: { proformaId: stri
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 text-primary-foreground font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Expense'}
             </Button>
           </div>
@@ -3110,7 +3110,7 @@ function EditExpenseModal({ expense, onClose, onSuccess }: { expense: any, onClo
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Expense'}
             </Button>
           </div>
@@ -3321,7 +3321,7 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: 
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : entry ? 'Update Labor' : 'Log Time Entry'}
             </Button>
           </div>
@@ -3404,7 +3404,7 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Schedule Visit'}
             </Button>
           </div>
@@ -3533,7 +3533,7 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess, tas
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : task ? 'Update Task' : 'Create Task'}
             </Button>
           </div>
@@ -3730,7 +3730,7 @@ function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, 
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item'}
             </Button>
           </div>
@@ -3782,9 +3782,9 @@ function ManualMaterialFormModal({ proformaId, onClose, onSuccess }: {
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Pencil className="h-5 w-5 text-[#306C3E]" />
+        <DialogHeader className="border-b border-border/40 pb-4">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-primary">
+            <Pencil className="h-5 w-5 text-primary" />
             New Manual Material
           </DialogTitle>
           <DialogDescription>Add a material manually without searching online.</DialogDescription>
@@ -3823,7 +3823,7 @@ function ManualMaterialFormModal({ proformaId, onClose, onSuccess }: {
             <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Material'}
             </Button>
           </div>

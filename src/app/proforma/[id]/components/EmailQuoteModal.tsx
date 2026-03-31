@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Loader2, X, FileText, Upload } from 'lucide-react';
+import { Mail, Loader2, X, FileText, Upload, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
 import { sendProformaEmail } from './actions';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -97,14 +97,14 @@ export default function EmailQuoteModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {!openOverride && (
-        <DialogTrigger render={<Button variant="default" className="bg-[#306C3E] hover:bg-[#306C3E]/90 text-white" />}>
+        <DialogTrigger render={<Button variant="default" className="font-bold text-primary-foreground" />}>
           <Mail className="mr-2 h-4 w-4" />
           Send Email
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
         <DialogHeader className="p-6 pb-2 border-b bg-white border-border/50">
-          <DialogTitle className="text-xl font-bold text-[#0D3B47]">
+          <DialogTitle className="text-xl font-bold text-primary">
             Email quote #{String(proformaNumber || proformaId.split('-')[0]).toUpperCase()} to {clientName}
           </DialogTitle>
         </DialogHeader>
@@ -182,11 +182,11 @@ export default function EmailQuoteModal({
 
           {/* Right Attachments Area */}
           <div className="w-full md:w-[300px] border-l border-border/50 bg-[#F8F9FA] p-6 flex flex-col">
-            <h3 className="text-sm font-bold text-[#0D3B47] mb-4">Attachments</h3>
+            <h3 className="text-sm font-bold text-primary mb-4">Attachments</h3>
 
             <div className="border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center bg-white hover:bg-muted/10 transition-colors cursor-pointer mb-6">
-              <Button type="button" variant="outline" size="sm" className="mb-3 rounded-full font-semibold border-[#306C3E] text-[#306C3E] hover:bg-[#306C3E]/10">
-                Upload Files
+              <Button type="button" variant="outline" size="sm" className="mb-3 rounded-full font-semibold border-primary text-primary hover:bg-primary/10">
+                <Upload className="h-3 w-3 mr-2" /> Upload Files
               </Button>
               <p className="text-xs text-muted-foreground text-center">Select or drag files here to upload</p>
             </div>
@@ -195,8 +195,8 @@ export default function EmailQuoteModal({
             <div className="flex items-start gap-3 p-3 bg-white border border-border/50 rounded-lg shadow-sm">
               <Checkbox id="attachPdf" defaultChecked className="mt-1" />
               <div className="flex gap-3 items-center">
-                <div className="bg-[#E7D6CB]/30 p-2 rounded flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-[#8D4A3A]" />
+                <div className="bg-primary/10 p-2 rounded flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">quote_{String(proformaNumber || proformaId.split('-')[0]).toLowerCase()}.pdf</p>
@@ -207,7 +207,7 @@ export default function EmailQuoteModal({
 
             {/* Client Portal Link */}
             <div className="mt-4">
-              <h3 className="text-sm font-bold text-[#0D3B47] mb-2">Client Portal Link</h3>
+              <h3 className="text-sm font-bold text-primary mb-2">Client Portal Link</h3>
               <div className="flex flex-col gap-2 p-3 bg-white border border-border/50 rounded-lg">
                 <p className="text-xs text-muted-foreground break-all font-mono leading-relaxed">
                   /p/{proformaId}
@@ -229,7 +229,7 @@ export default function EmailQuoteModal({
             e.preventDefault();
             const form = (e.target as HTMLElement).closest('.p-0')?.querySelector('form');
             if (form) form.requestSubmit();
-          }} className="bg-[#306C3E] hover:bg-[#306C3E]/90 text-white min-w-[120px]" disabled={isSubmitting}>
+          }} className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[120px]" disabled={isSubmitting}>
             {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</> : 'Send Email'}
           </Button>
         </div>

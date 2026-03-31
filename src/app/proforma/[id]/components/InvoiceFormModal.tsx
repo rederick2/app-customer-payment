@@ -166,7 +166,7 @@ export function InvoiceFormModal({
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-[#306C3E] hover:bg-[#265832]">
+            <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {initialData ? 'Guardar Cambios' : 'Crear Factura'}
             </Button>

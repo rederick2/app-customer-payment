@@ -76,7 +76,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
         result = await recordPayment(clientId, proformaId || null, formData);
       } else if (openType === 'invoice') {
         if (!proformaId) {
-          toast.error('Se requiere seleccionar un proyecto/proforma.');
+          toast.error('Selecting a project/proforma is required.');
           setIsSubmitting(false);
           return;
         }
@@ -88,13 +88,13 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
       } else {
         toast.success(
           openType === 'invoice'
-            ? 'Factura creada exitosamente'
-            : `Registro de ${openType === 'deposit' ? 'depósito' : 'pago'} exitoso`
+            ? 'Invoice created successfully'
+            : `${openType === 'deposit' ? 'Deposit' : 'Payment'} registered successfully`
         );
         onClose();
       }
     } catch (error) {
-      toast.error('Ocurrió un error inesperado.');
+      toast.error('An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }
@@ -102,30 +102,30 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
 
   return (
     <Dialog open={openType !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] rounded-none shadow-lg border-border/40">
         <DialogHeader>
-          <DialogTitle className="font-serif text-xl">
-            {openType === 'payment' && 'Registrar Pago'}
-            {openType === 'deposit' && 'Registrar Depósito de Adelanto'}
-            {openType === 'invoice' && 'Crear Nueva Factura'}
+          <DialogTitle className="font-bold text-xl">
+            {openType === 'payment' && 'Register Payment'}
+            {openType === 'deposit' && 'Register Advance Deposit'}
+            {openType === 'invoice' && 'Create New Invoice'}
           </DialogTitle>
           <DialogDescription>
-            Completa los detalles a continuación.
+            Fill out the details below.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           {/* Project Selection */}
           <div className="space-y-2">
-            <Label htmlFor="proforma_id">Proyecto / Proforma {openType === 'invoice' && '*'}</Label>
+            <Label htmlFor="proforma_id">Project / Proforma {openType === 'invoice' && '*'}</Label>
             <Select
               name="proforma_id"
               required={openType === 'invoice'}
               onValueChange={handleProformaChange}
               value={selectedProformaId || undefined}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona un proyecto...">
+              <SelectTrigger className="rounded-none">
+                <SelectValue placeholder="Select a project...">
                   {selectedProforma ? selectedProforma.project_name : undefined}
                 </SelectValue>
               </SelectTrigger>
@@ -142,14 +142,15 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
           {openType === 'invoice' ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="invoice_number">Número de Factura *</Label>
-                <Input id="invoice_number" name="invoice_number" placeholder="Ej. INV-001" required />
+                <Label htmlFor="invoice_number">Invoice Number *</Label>
+                <Input id="invoice_number" className="rounded-none" name="invoice_number" placeholder="Ex. INV-001" required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="total_amount">Monto Total *</Label>
+                  <Label htmlFor="total_amount">Total Amount *</Label>
                   <Input
                     id="total_amount"
+                    className="rounded-none"
                     name="total_amount"
                     type="number"
                     step="0.01"
@@ -158,22 +159,23 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="issue_date">Fecha de Emisión</Label>
-                  <Input id="issue_date" name="issue_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                  <Label htmlFor="issue_date">Issue Date</Label>
+                  <Input id="issue_date" className="rounded-none" name="issue_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="due_date">Fecha de Vencimiento</Label>
-                <Input id="due_date" name="due_date" type="date" />
+                <Label htmlFor="due_date">Due Date</Label>
+                <Input id="due_date" className="rounded-none" name="due_date" type="date" />
               </div>
             </>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Monto *</Label>
+                  <Label htmlFor="amount">Amount *</Label>
                   <Input
                     id="amount"
+                    className="rounded-none"
                     name="amount"
                     type="number"
                     step="0.01"
@@ -186,22 +188,22 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="payment_date">Fecha</Label>
-                  <Input id="payment_date" name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                  <Label htmlFor="payment_date">Date</Label>
+                  <Input id="payment_date" className="rounded-none" name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment_method">Método de Pago</Label>
+                <Label htmlFor="payment_method">Payment Method</Label>
                 <Select name="payment_method" defaultValue="transfer">
-                  <SelectTrigger drop-shadow-sm>
-                    <SelectValue placeholder="Selecciona método..." />
+                  <SelectTrigger className="rounded-none">
+                    <SelectValue placeholder="Select method..." />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="transfer">Transferencia Bancaria</SelectItem>
-                    <SelectItem value="cash">Efectivo</SelectItem>
-                    <SelectItem value="card">Tarjeta de Crédito/Débito</SelectItem>
-                    <SelectItem value="check">Cheque</SelectItem>
-                    <SelectItem value="other">Otro</SelectItem>
+                  <SelectContent className="rounded-none">
+                    <SelectItem value="transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Credit/Debit Card</SelectItem>
+                    <SelectItem value="check">Check</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -209,16 +211,16 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notas (Opcional)</Label>
-            <Textarea id="notes" name="notes" placeholder="Detalles adicionales..." />
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea id="notes" name="notes" placeholder="Additional details..." className="rounded-none" />
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
-              Cancelar
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="rounded-none">
+              Cancel
             </Button>
-            <Button type="submit" className="bg-[#306C3E] hover:bg-[#265832]" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : 'Confirmar Registro'}
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-none" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Confirm Record'}
             </Button>
           </DialogFooter>
         </form>

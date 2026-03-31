@@ -75,7 +75,7 @@ export default function EmailMaterialsModal({
       )}
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
         <DialogHeader className="p-6 pb-2 border-b bg-white border-border/50">
-          <DialogTitle className="text-xl font-bold text-[#0D3B47]">
+          <DialogTitle className="text-xl font-bold text-primary">
             Email Materials List for {projectName}
           </DialogTitle>
         </DialogHeader>
@@ -200,7 +200,7 @@ export default function EmailMaterialsModal({
 
            {/* Right Attachments Area */}
            <div className="w-full md:w-[300px] border-l border-border/50 bg-[#F8F9FA] p-6 flex flex-col">
-              <h3 className="text-sm font-bold text-[#0D3B47] mb-4">Attachments</h3>
+            <h3 className="text-sm font-bold text-primary mb-4">Attachments</h3>
               
               {/* Automatic Materials PDF Attachment */}
               <div className="flex items-start gap-3 p-3 bg-white border border-border/50 rounded-lg shadow-sm">
@@ -229,7 +229,7 @@ export default function EmailMaterialsModal({
               e.preventDefault();
               const form = (e.target as HTMLElement).closest('.p-0')?.querySelector('form');
               if (form) form.requestSubmit();
-           }} className="bg-[#306C3E] hover:bg-[#306C3E]/90 text-white min-w-[120px]" disabled={isSubmitting}>
+          }} className="font-bold text-primary-foreground min-w-[120px]" disabled={isSubmitting}>
              {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</> : 'Send Email'}
            </Button>
         </div>

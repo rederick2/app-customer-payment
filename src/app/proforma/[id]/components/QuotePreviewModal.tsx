@@ -73,7 +73,7 @@ export default function QuotePreviewModal({
       <DialogContent className="sm:max-w-none max-w-[1300px] w-[95vw] h-[92vh] p-0 overflow-hidden flex flex-col bg-[#F8F9FA] rounded-2xl border-none shadow-3xl">
         <DialogHeader className="p-6 px-8 border-b bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            <DialogTitle className="text-2xl font-serif font-black text-[#0D3B47] tracking-tight">
+            <DialogTitle className="text-2xl font-bold text-primary tracking-tight">
               Vista Previa para Cliente
             </DialogTitle>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100/50">
@@ -113,7 +113,7 @@ export default function QuotePreviewModal({
               variant="default" 
               size="sm" 
               onClick={onSendEmail}
-              className="h-10 gap-2 bg-[#306C3E] hover:bg-[#306C3E]/90 text-white font-bold px-6 shadow-lg shadow-emerald-900/10"
+              className="h-10 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 shadow-lg shadow-primary/10"
             >
               <Mail className="h-4 w-4" />
               Enviar por Email
