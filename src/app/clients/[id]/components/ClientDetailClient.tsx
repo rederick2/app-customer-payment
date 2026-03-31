@@ -64,9 +64,10 @@ interface ClientDetailClientProps {
   payments: any[];
   invoices: any[];
   expenses: any[];
+  labor: any[];
 }
 
-export function ClientDetailClient({ client, proformas, payments, invoices, expenses }: ClientDetailClientProps) {
+export function ClientDetailClient({ client, proformas, payments, invoices, expenses, labor }: ClientDetailClientProps) {
   const [activeTab, setActiveTab] = React.useState('active-work');
   const [openModal, setOpenModal] = React.useState<'payment' | 'deposit' | 'invoice' | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -723,6 +724,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
         proforma={selectedJobDetail}
         payments={payments}
         expenses={expenses}
+        labor={labor}
       />
 
       {/* Action Modals */}

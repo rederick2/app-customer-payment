@@ -50,13 +50,20 @@ export default async function ClientDetailPage({ params }: Props) {
     .select('*')
     .in('proforma_id', proformas?.map(p => p.id) || []);
 
+  // Fetch labor for these proformas
+  const { data: labor } = await supabase
+    .from('job_labor')
+    .select('*')
+    .in('proforma_id', proformas?.map(p => p.id) || []);
+
   return (
-    <ClientDetailClient 
+    <ClientDetailClient
       client={client}
       proformas={proformas || []}
       payments={payments || []}
       invoices={invoices || []}
       expenses={expenses || []}
+      labor={labor || []}
     />
   );
 }
