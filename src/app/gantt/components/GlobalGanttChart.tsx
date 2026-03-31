@@ -228,7 +228,7 @@ export default function GlobalGanttChart({
   return (
     <div className="w-full flex flex-col h-[70vh] bg-[#fafafa]">
       {/* Header Controls */}
-      <div className="bg-white px-6 py-4 border-b border-border/40 flex items-center justify-between">
+      <div className="bg-card px-6 py-4 border-b border-border/40 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
             {tasks.length} Tareas Totales
@@ -283,8 +283,8 @@ export default function GlobalGanttChart({
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar (Names and Info) */}
-        <div className="w-[380px] shrink-0 border-r border-border/40 bg-white flex flex-col overflow-y-auto no-scrollbar z-10 shadow-[4px_0_12px_-6px_rgba(0,0,0,0.1)] relative">
-          <div className="h-14 border-b border-border/40 bg-white sticky top-0 px-4 flex items-center shadow-sm z-20">
+        <div className="w-[380px] shrink-0 border-r border-border/40 bg-card flex flex-col overflow-y-auto no-scrollbar z-10 shadow-[4px_0_12px_-6px_rgba(0,0,0,0.1)] relative">
+          <div className="h-14 border-b border-border/40 bg-card sticky top-0 px-4 flex items-center shadow-sm z-20">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proyecto / Tarea</span>
           </div>
 
@@ -373,7 +373,7 @@ export default function GlobalGanttChart({
         <div className="flex-1 overflow-auto bg-muted/5 relative">
           <div style={{ width: `${timelineWidthPx}px`, minWidth: '100%' }}>
             {/* Timeline Header */}
-            <div className="h-14 border-b border-border/40 bg-white sticky top-0 flex items-end relative z-10">
+            <div className="h-14 border-b border-border/40 bg-card sticky top-0 flex items-end relative z-10">
               <div className="absolute inset-0 flex">
                 {daysArr.map((day, i) => {
                   const isToday = isSameDay(day, new Date());
@@ -621,7 +621,7 @@ function TaskFormModal({
         <CardHeader className="bg-[#0D3B47] text-white rounded-t-xl sticky top-0 z-10">
           <CardTitle className="text-lg">{isEdit ? 'Editar Tarea' : 'Nueva Tarea Programada'}</CardTitle>
         </CardHeader>
-        <CardContent className="p-6 bg-white rounded-b-xl border border-t-0 border-border/40">
+        <CardContent className="p-6 bg-card rounded-b-xl border border-t-0 border-border/40">
           <form onSubmit={handleSubmit} className="space-y-4">
             
             <div className="space-y-2">
@@ -802,7 +802,7 @@ function AiTaskGeneratorModal({
             OpenAI analizará tu proyecto y armará un cronograma.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-6 bg-white">
+        <CardContent className="p-6 bg-card">
           <form onSubmit={handleGenerate} className="space-y-4">
             
             <div className="space-y-2">

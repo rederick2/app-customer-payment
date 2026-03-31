@@ -98,7 +98,7 @@ export function TopBar({ userName, unreadCount = 0 }: TopBarProps) {
   };
 
   return (
-    <header className="hidden md:flex h-14 items-center bg-background/80 backdrop-blur-sm border-b border-border/40 px-6 gap-4 sticky top-0 z-50 print:hidden">
+    <header className="hidden md:flex h-14 items-center bg-background/95 backdrop-blur-sm border-b border-border/40 px-6 gap-4 print:hidden">
 
       {/* Search */}
       <div ref={containerRef} className="relative flex-1 max-w-xl">

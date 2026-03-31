@@ -71,7 +71,7 @@ export default function QuotePreviewModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-none max-w-[1300px] w-[95vw] h-[92vh] p-0 overflow-hidden flex flex-col bg-[#F8F9FA] rounded-2xl border-none shadow-3xl">
-        <DialogHeader className="p-6 px-8 border-b bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0">
+        <DialogHeader className="p-6 px-8 border-b bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             <DialogTitle className="text-2xl font-bold text-primary tracking-tight">
               Vista Previa para Cliente
@@ -122,7 +122,7 @@ export default function QuotePreviewModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-12 pt-8 scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent">
-          <div className="max-w-5xl mx-auto bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] rounded-[2rem] overflow-hidden border border-border/10">
+          <div className="max-w-5xl mx-auto bg-card shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] rounded-[2rem] overflow-hidden border border-border/10">
             <QuoteView 
                 proforma={proforma} 
                 items={items} 

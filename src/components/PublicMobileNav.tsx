@@ -30,7 +30,7 @@ export default function PublicMobileNav({ id, unreadCount, phoneNumber, companyN
         <span className="font-serif font-bold text-base text-[#0D3B47]">{companyName}</span>
         <Link
           href={`/p/${id}/request`}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#306C3E] border border-[#D0CECB] rounded-lg text-xs font-semibold shadow-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-card text-[#306C3E] border border-[#D0CECB] rounded-lg text-xs font-semibold shadow-sm"
         >
           <Plus className="h-3.5 w-3.5" />
           New Request

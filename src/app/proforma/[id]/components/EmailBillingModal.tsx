@@ -126,7 +126,7 @@ export function EmailBillingModal({
           </div>
 
           <div className="bg-muted/30 p-3 rounded-lg flex items-center gap-3">
-            <div className="h-10 w-10 rounded bg-white border flex items-center justify-center">
+            <div className="h-10 w-10 rounded bg-card border flex items-center justify-center">
               <FileText className="h-5 w-5 text-red-500" />
             </div>
             <div className="flex-1">

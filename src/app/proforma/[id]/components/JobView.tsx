@@ -955,7 +955,7 @@ export function JobView({
       <div className="space-y-6">
 
         {/* Header Summary */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-6 bg-white p-6 border border-border/40">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 bg-card p-6 border border-border/40">
           <div className="flex items-start gap-4">
             <div className="p-3 bg-primary/10 text-primary">
               <Briefcase className="h-8 w-8" />
@@ -964,8 +964,8 @@ export function JobView({
               <div className="flex items-center gap-2 mb-1">
                 <Badge className={cn(
                   "text-[10px] font-bold tracking-tight uppercase rounded-sm",
-                  proforma.status === 'job_terminated' 
-                    ? "bg-slate-500/10 text-slate-700 border-slate-500/20" 
+                  proforma.status === 'job_terminated'
+                    ? "bg-slate-500/10 text-slate-700 border-slate-500/20"
                     : "bg-primary/10 text-primary border-primary/20"
                 )}>
                   {proforma.status === 'job_terminated' ? 'TERMINATED' : proforma.status.toUpperCase()}
@@ -1265,7 +1265,7 @@ export function JobView({
                     {discountAdjustments.map((adj, idx) => {
                       const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
                       return (
-                        <tr key={`discount-${idx}`} className="bg-red-50/10 text-red-700/80 italic text-xs">
+                        <tr key={`discount-${idx}`} className="italic text-xs">
                           <td colSpan={4} />
                           <td className="px-6 py-2 text-right uppercase tracking-tighter font-black">
                             {adj.label} {adj.valueType === 'percentage' ? `(${adj.value}%)` : ''}
@@ -1297,9 +1297,9 @@ export function JobView({
                         </Button>
                       </td>
                       <td colSpan={2} />
-                      <td className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-emerald-900/40">Total Job Value</td>
+                      <td className="px-6 py-4 text-right text-[10px] uppercase tracking-widest">Total Job Value</td>
                       <td className="px-6 py-4" />
-                      <td className="px-6 py-4 text-right tabular-nums text-xl text-emerald-700">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-6 py-4 text-right tabular-nums text-xl">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                       <td className="px-6 py-4" />
                     </tr>
                   </tbody>
@@ -1415,7 +1415,7 @@ export function JobView({
             </CardHeader>
             <CardContent className="p-0 flex-1 flex flex-col">
               {/* Materials Search Bar */}
-              <div className="p-4 border-b border-border/40 bg-white">
+              <div className="p-4 border-b border-border/40 bg-card">
                 <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -1552,7 +1552,7 @@ export function JobView({
 
                   {/* Materials Pagination Controls */}
                   {totalMaterialPages > 1 && (
-                    <div className="p-4 border-t border-border/40 flex items-center justify-between bg-white mt-auto">
+                    <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
                       <p className="text-[10px] text-muted-foreground">
                         Showing {(materialCurrentPage - 1) * materialsPerPage + 1} - {Math.min(materialCurrentPage * materialsPerPage, filteredMaterials.length)} of {filteredMaterials.length}
                       </p>
@@ -1820,7 +1820,7 @@ export function JobView({
               </CardHeader>
               <CardContent className="p-0 flex-1 flex flex-col">
                 {/* Search Bar */}
-                <div className="p-4 border-b border-border/40 bg-white">
+                <div className="p-4 border-b border-border/40 bg-card">
                   <div className="relative">
                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -1886,7 +1886,7 @@ export function JobView({
 
                     {/* Pagination Controls */}
                     {totalExpensePages > 1 && (
-                      <div className="p-4 border-t border-border/40 flex items-center justify-between bg-white mt-auto">
+                      <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
                         <p className="text-[10px] text-muted-foreground">
                           Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} of {filteredExpenses.length}
                         </p>
@@ -1992,7 +1992,7 @@ export function JobView({
                     </table>
                   </div>
                 ) : (
-                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-white">
+                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
                     <Clock className="h-10 w-10 text-muted-foreground" />
                     <p className="text-xs font-medium px-8 text-center">Time tracked to this job by you or your team will show here</p>
                   </div>
@@ -2103,13 +2103,13 @@ export function JobView({
                           <td className="px-4 py-4">
                             <Badge variant="outline" className={cn(
                               "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest",
-                              inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : 
-                              inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
-                              "bg-muted text-muted-foreground border-border"
+                              inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                  "bg-muted text-muted-foreground border-border"
                             )}>
-                              <span className={cn("w-2 h-2 rounded-full", 
-                                inv.status === 'paid' ? "bg-emerald-500" : 
-                                inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")} 
+                              <span className={cn("w-2 h-2 rounded-full",
+                                inv.status === 'paid' ? "bg-emerald-500" :
+                                  inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")}
                               />
                               {inv.status.toUpperCase()}
                             </Badge>
@@ -2144,13 +2144,13 @@ export function JobView({
                   </table>
                 </div>
 
-                <Button 
-                   variant="ghost" 
-                   className="text-primary font-bold px-0 h-auto hover:bg-transparent"
-                   onClick={() => setIsAddingInvoice(true)}
-                 >
-                   Create Invoice
-                 </Button>
+                <Button
+                  variant="ghost"
+                  className="text-primary font-bold px-0 h-auto hover:bg-transparent"
+                  onClick={() => setIsAddingInvoice(true)}
+                >
+                  Create Invoice
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -2255,7 +2255,7 @@ export function JobView({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {sodimacResults.map((result, idx) => (
                     <div key={idx} className="border border-border/50 rounded-lg p-3 flex gap-4 bg-muted/10 hover:bg-muted/30 transition-colors">
-                      <div className="h-16 w-16 bg-white rounded flex-shrink-0 flex items-center justify-center border border-border/50">
+                      <div className="h-16 w-16 bg-card rounded flex-shrink-0 flex items-center justify-center border border-border/50">
                         {result.photo_url ? (
                           <img src={result.photo_url} alt={result.name} className="h-full w-full object-contain" />
                         ) : (
@@ -2456,14 +2456,14 @@ export function JobView({
       {/* File Viewer Modal */}
       <Dialog open={!!selectedFileUrl} onOpenChange={(open) => !open && setSelectedFileUrl(null)}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-none">
-          <DialogHeader className="p-4 bg-white/10 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-row items-center justify-between">
+          <DialogHeader className="p-4 bg-card/10 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-row items-center justify-between">
             <DialogTitle className="text-white text-sm font-bold flex items-center gap-2">
               <Eye className="h-4 w-4" /> Receipt View
             </DialogTitle>
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/20 h-8 gap-2 font-bold"
+              className="text-white hover:bg-card/20 h-8 gap-2 font-bold"
               onClick={() => {
                 if (selectedFileUrl) window.open(selectedFileUrl, '_blank');
               }}
@@ -2783,7 +2783,7 @@ function AdjustmentsModal({ initialAdjustments, onClose, onSave }: {
                           onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'percentage')}
                           className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
-                            adj.valueType === 'percentage' ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            adj.valueType === 'percentage' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
                           )}
                         >
                           Percent (%)
@@ -2793,7 +2793,7 @@ function AdjustmentsModal({ initialAdjustments, onClose, onSave }: {
                           onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'amount')}
                           className={cn(
                             "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
-                            adj.valueType === 'amount' ? "bg-white shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            adj.valueType === 'amount' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
                           )}
                         >
                           Fixed Amount ($)

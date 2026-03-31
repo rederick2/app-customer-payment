@@ -166,7 +166,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
                 return (
                   <div key={idx} className="relative group animate-in slide-in-from-left-4 fade-in duration-500" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}>
                     {/* Activity Bullet / Icon Center */}
-                    <div className={`absolute -left-[39px] h-8 w-8 rounded-full border shadow-sm flex items-center justify-center bg-white ${act.color} transition-transform group-hover:scale-110`}>
+                    <div className={`absolute -left-[39px] h-8 w-8 rounded-full border shadow-sm flex items-center justify-center bg-card ${act.color} transition-transform group-hover:scale-110`}>
                       <Icon className="h-4 w-4" />
                     </div>
 

@@ -129,7 +129,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
           <CardTitle className="text-lg flex items-center gap-2">
             Scanner of receipts
           </CardTitle>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onClose}>
+          <Button variant="ghost" size="icon" className="text-white hover:bg-card/10" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
         </CardHeader>
@@ -212,7 +212,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                     <Input
                       value={extractedData.place || ''}
                       onChange={(e) => handleUpdateField('place', e.target.value)}
-                      className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
                     />
                   </div>
 
@@ -223,7 +223,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                       step="0.01"
                       value={extractedData.amount || ''}
                       onChange={(e) => handleUpdateField('amount', e.target.value)}
-                      className="bg-white border-emerald-100 focus-visible:ring-emerald-500 font-bold text-[#306C3E]"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500 font-bold text-[#306C3E]"
                     />
                   </div>
 
@@ -233,7 +233,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                       type="date"
                       value={extractedData.date || ''}
                       onChange={(e) => handleUpdateField('date', e.target.value)}
-                      className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
                     />
                   </div>
 
@@ -242,7 +242,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                     <Input
                       value={extractedData.category || ''}
                       onChange={(e) => handleUpdateField('category', e.target.value)}
-                      className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
                     />
                   </div>
 
@@ -251,7 +251,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                     <Input
                       value={extractedData.description || ''}
                       onChange={(e) => handleUpdateField('description', e.target.value)}
-                      className="bg-white border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
                     />
                   </div>
                 </div>

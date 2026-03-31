@@ -60,7 +60,7 @@ export default async function GanttPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-border/40 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border/40 shadow-sm overflow-hidden">
         <GlobalGanttChart
           tasks={activeTasks}
           teamMembers={activeTeamMembers}

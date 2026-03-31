@@ -242,7 +242,7 @@ export function ImportQuotesModal() {
 
   return (
     <>
-      <Button variant="outline" className="gap-2 bg-white text-primary border-primary hover:bg-muted" onClick={() => setOpen(true)}>
+      <Button variant="outline" className="gap-2 bg-card text-primary border-primary hover:bg-muted" onClick={() => setOpen(true)}>
         <Upload className="h-4 w-4" />
         Importar CSV
       </Button>

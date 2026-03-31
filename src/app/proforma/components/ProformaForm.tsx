@@ -152,7 +152,7 @@ function SortableItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group relative bg-white border border-border/40 rounded-xl mb-4 overflow-hidden transition-all duration-300",
+        "group relative bg-card border border-border/40 rounded-xl mb-4 overflow-hidden transition-all duration-300",
         isDragging ? "shadow-2xl ring-2 ring-primary/20 z-50 scale-[1.02]" : "hover:border-primary/20 hover:shadow-md",
         item.is_optional && "bg-muted/5 opacity-80"
       )}
@@ -318,7 +318,7 @@ function SortableItem({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.photoPreviewUrl} alt="Preview" className="object-cover w-full h-full transition-transform duration-500 group-hover/img:scale-110" />
                     <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover/img:opacity-100 transition-all translate-x-2 group-hover/img:translate-x-0">
-                      <label className="h-8 w-8 rounded-lg bg-white/90 backdrop-blur-md shadow-xl border border-border/20 flex items-center justify-center cursor-pointer text-primary hover:bg-white transition-all">
+                      <label className="h-8 w-8 rounded-lg bg-card/90 backdrop-blur-md shadow-xl border border-border/20 flex items-center justify-center cursor-pointer text-primary hover:bg-card transition-all">
                         <Pencil className="h-4 w-4" />
                         <input
                           type="file"
@@ -1171,7 +1171,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
               <div className="flex justify-between items-center group/adj py-1">
                 <span className="text-sm font-medium text-foreground min-w-[100px]">Discount</span>
                 <div className="flex items-center gap-2 flex-1 justify-center max-w-[150px]">
-                  <div className="flex items-center border border-border/60 rounded-xl overflow-hidden bg-white shadow-sm h-11 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                  <div className="flex items-center border border-border/60 rounded-xl overflow-hidden bg-card shadow-sm h-11 transition-all focus-within:ring-2 focus-within:ring-primary/20">
                     <Input
                       type="number"
                       value={discountAdjustment.value || ''}
@@ -1229,7 +1229,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
                           });
                         }
                       }}
-                      className="h-11 w-full pl-4 pr-10 border border-border/60 rounded-xl bg-white shadow-sm text-sm font-bold text-[#0D3B47] focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none transition-all cursor-pointer hover:border-primary/40"
+                      className="h-11 w-full pl-4 pr-10 border border-border/60 rounded-xl bg-card shadow-sm text-sm font-bold text-[#0D3B47] focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none transition-all cursor-pointer hover:border-primary/40"
                       value={availableTaxes.find(t => t.name === taxAdjustment.label)?.id || ""}
                     >
                       <option value="" disabled>Select tax...</option>

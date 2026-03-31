@@ -574,7 +574,7 @@ function TaskCard({ task, style }: { task: Task, style: React.CSSProperties }) {
 
 function JobDetailContent({ job }: { job: Job }) {
   return (
-    <div className="bg-white">
+    <div className="bg-card">
       {/* Popover Header */}
       <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -669,7 +669,7 @@ function JobDetailContent({ job }: { job: Job }) {
 
 function TaskDetailContent({ task }: { task: Task }) {
   return (
-    <div className="bg-white">
+    <div className="bg-card">
       <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className={cn("h-2 w-2 rounded-full", task.status === 'completed' ? "bg-emerald-500" : "bg-orange-500")} />

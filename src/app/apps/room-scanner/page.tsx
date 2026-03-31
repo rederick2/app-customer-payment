@@ -118,7 +118,7 @@ function DimensionEditor({ room, onChange }: { room: RoomData; onChange: (r: Roo
     </button>
   );
   return (
-    <div className="bg-white/10 border border-white/20 rounded-2xl p-4 space-y-3">
+    <div className="bg-card/10 border border-white/20 rounded-2xl p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Editar Longitudes</h3>
         <button onClick={() => setOpen(false)}><X className="h-4 w-4 text-white/50" /></button>
@@ -128,9 +128,9 @@ function DimensionEditor({ room, onChange }: { room: RoomData; onChange: (r: Roo
           <div key={i}>
             <label className="text-xs text-white/60 block mb-1">Pared {i + 1} (m)</label>
             <div className="flex items-center gap-1">
-              <button onClick={() => setDrafts(dr => { const c = [...dr]; c[i] = Math.max(0.1, parseFloat(c[i]) - 0.1).toFixed(1); return c; })} className="h-7 w-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"><Minus className="h-3 w-3" /></button>
-              <input type="number" step="0.1" min="0.1" value={d} onChange={e => setDrafts(dr => { const c = [...dr]; c[i] = e.target.value; return c; })} className="flex-1 bg-white/10 border border-white/20 rounded-lg px-1 py-1 text-center text-xs font-mono font-bold focus:outline-none focus:border-indigo-400 min-w-0" />
-              <button onClick={() => setDrafts(dr => { const c = [...dr]; c[i] = (parseFloat(c[i]) + 0.1).toFixed(1); return c; })} className="h-7 w-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center"><Plus className="h-3 w-3" /></button>
+              <button onClick={() => setDrafts(dr => { const c = [...dr]; c[i] = Math.max(0.1, parseFloat(c[i]) - 0.1).toFixed(1); return c; })} className="h-7 w-7 rounded-lg bg-card/10 hover:bg-card/20 flex items-center justify-center"><Minus className="h-3 w-3" /></button>
+              <input type="number" step="0.1" min="0.1" value={d} onChange={e => setDrafts(dr => { const c = [...dr]; c[i] = e.target.value; return c; })} className="flex-1 bg-card/10 border border-white/20 rounded-lg px-1 py-1 text-center text-xs font-mono font-bold focus:outline-none focus:border-indigo-400 min-w-0" />
+              <button onClick={() => setDrafts(dr => { const c = [...dr]; c[i] = (parseFloat(c[i]) + 0.1).toFixed(1); return c; })} className="h-7 w-7 rounded-lg bg-card/10 hover:bg-card/20 flex items-center justify-center"><Plus className="h-3 w-3" /></button>
             </div>
           </div>
         ))}
@@ -267,7 +267,7 @@ export default function RoomScannerPage() {
       {/* Header */}
       <div className="border-b border-white/10 px-4 py-4 flex items-center gap-4 bg-black/30 backdrop-blur-sm sticky top-0 z-30">
         <Link href="/apps" className="flex items-center gap-1.5 text-white/60 hover:text-white text-sm transition-colors"><ArrowLeft className="h-4 w-4" /> Apps</Link>
-        <div className="h-4 w-px bg-white/20" />
+        <div className="h-4 w-px bg-card/20" />
         <div className="flex items-center gap-2"><ScanLine className="h-4 w-4 text-indigo-400" /><span className="font-semibold text-sm">Room Scanner</span></div>
         {phase !== 'idle' && phase !== 'permission' && (
           <button onClick={reset} className="ml-auto flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors"><RotateCcw className="h-4 w-4" /> Reiniciar</button>
@@ -286,7 +286,7 @@ export default function RoomScannerPage() {
               <h1 className="text-3xl font-bold font-serif mb-2">Room Scanner</h1>
               <p className="text-white/60 max-w-sm leading-relaxed text-sm">Toma una foto, marca las esquinas del piso y luego ingresa la medida real de cada pared para generar un plano 2D exacto.</p>
             </div>
-            <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-3">
+            <div className="w-full max-w-sm bg-card/5 border border-white/10 rounded-2xl p-4 text-left space-y-3">
               {[['📸','Toma o sube una foto de la habitación'],['📍','Marca las esquinas del piso en la foto'],['📏','Indica la longitud real de cada pared'],['📐','Descarga el plano 2D con medidas exactas']].map(([icon, text], i) => (
                 <div key={i} className="flex items-start gap-3"><div className="text-xl shrink-0">{icon}</div><p className="text-sm text-white/70">{text}</p></div>
               ))}
@@ -296,7 +296,7 @@ export default function RoomScannerPage() {
               <button onClick={openCamera} className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-400 hover:to-indigo-500 font-bold px-6 py-4 rounded-2xl shadow-xl hover:-translate-y-0.5 transition-all">
                 <Camera className="h-5 w-5" /> Abrir Cámara
               </button>
-              <button onClick={() => fileRef.current?.click()} className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 font-semibold px-5 py-4 rounded-2xl transition-all text-sm border border-white/10">
+              <button onClick={() => fileRef.current?.click()} className="flex items-center justify-center gap-2 bg-card/10 hover:bg-card/20 font-semibold px-5 py-4 rounded-2xl transition-all text-sm border border-white/10">
                 <Upload className="h-5 w-5" /> Subir
               </button>
             </div>
@@ -324,13 +324,13 @@ export default function RoomScannerPage() {
                 ))}
               </div>
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-                <button onClick={takePhoto} className="h-16 w-16 rounded-full bg-white border-4 border-white/30 shadow-2xl hover:scale-95 active:scale-90 transition-transform">
-                  <div className="h-12 w-12 mx-auto rounded-full bg-white" />
+                <button onClick={takePhoto} className="h-16 w-16 rounded-full bg-card border-4 border-white/30 shadow-2xl hover:scale-95 active:scale-90 transition-transform">
+                  <div className="h-12 w-12 mx-auto rounded-full bg-card" />
                 </button>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => fileRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-sm font-medium py-2.5 rounded-xl transition-colors">
+              <button onClick={() => fileRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 bg-card/10 hover:bg-card/20 text-sm font-medium py-2.5 rounded-xl transition-colors">
                 <Upload className="h-4 w-4" /> Subir imagen
               </button>
               <button onClick={reset} className="text-sm text-white/40 hover:text-white/70 px-3">Cancelar</button>
@@ -351,11 +351,11 @@ export default function RoomScannerPage() {
             </div>
 
             {/* Zoom */}
-            <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5">
+            <div className="flex items-center gap-3 bg-card/5 border border-white/10 rounded-xl px-4 py-2.5">
               <span className="text-xs text-white/50 shrink-0">Zoom</span>
               <input type="range" min={1} max={4} step={0.25} value={zoom} onChange={e => setZoom(parseFloat(e.target.value))} className="flex-1 accent-indigo-500" />
               <span className="text-xs font-bold text-indigo-300 w-10 text-right">{zoom.toFixed(2)}x</span>
-              <button onClick={() => setZoom(1)} className="text-xs text-white/40 hover:text-white px-2 py-1 rounded-lg bg-white/10">Reset</button>
+              <button onClick={() => setZoom(1)} className="text-xs text-white/40 hover:text-white px-2 py-1 rounded-lg bg-card/10">Reset</button>
             </div>
 
             {/* Photo + overlay */}
@@ -379,10 +379,10 @@ export default function RoomScannerPage() {
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => setPoints(p => p.slice(0, -1))} disabled={!points.length} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 text-sm">
+              <button onClick={() => setPoints(p => p.slice(0, -1))} disabled={!points.length} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card/10 hover:bg-card/20 disabled:opacity-30 text-sm">
                 <Trash2 className="h-4 w-4" /> Deshacer
               </button>
-              <button onClick={() => setPoints([])} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-sm">
+              <button onClick={() => setPoints([])} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card/10 hover:bg-card/20 text-sm">
                 <RotateCcw className="h-4 w-4" /> Limpiar
               </button>
               <button onClick={goMeasuring} disabled={points.length < MIN_PTS} className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 font-bold py-2.5 rounded-xl text-sm">
@@ -391,7 +391,7 @@ export default function RoomScannerPage() {
             </div>
 
             {points.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 bg-white/5 border border-white/10 rounded-xl p-3">
+              <div className="flex flex-wrap gap-1.5 bg-card/5 border border-white/10 rounded-xl p-3">
                 {points.map((_, i) => (
                   <span key={i} className={`text-xs font-bold px-2 py-0.5 rounded-full ${i === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-indigo-500/20 text-indigo-300'}`}>Esq. {i + 1}</span>
                 ))}
@@ -409,7 +409,7 @@ export default function RoomScannerPage() {
             </div>
 
             {/* Mini preview */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+            <div className="bg-card/5 border border-white/10 rounded-2xl p-4">
               <p className="text-xs text-white/50 mb-3">Tu habitación ({points.length} esquinas):</p>
               <svg viewBox="0 0 200 150" className="w-full max-w-[260px] mx-auto">
                 <rect width="200" height="150" fill="#1e1b4b" rx="8" />
@@ -432,7 +432,7 @@ export default function RoomScannerPage() {
             {/* Wall inputs */}
             <div className="grid grid-cols-2 gap-3">
               {points.map((_, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3">
+                <div key={i} className="bg-card/5 border border-white/10 rounded-xl p-3">
                   <label className="text-xs text-white/60 block mb-2 font-medium">
                     Pared {i + 1} <span className="text-white/30">(Esq. {i + 1} → Esq. {(i + 1) % points.length + 1})</span>
                   </label>
@@ -441,7 +441,7 @@ export default function RoomScannerPage() {
                       type="number" step="0.1" min="0.1" placeholder="ej. 4.5"
                       value={wallLengths[i] ?? ''}
                       onChange={e => setWallLengths(prev => { const c = [...prev]; c[i] = e.target.value; return c; })}
-                      className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm font-mono font-bold focus:outline-none focus:border-indigo-400 placeholder-white/20"
+                      className="flex-1 bg-card/10 border border-white/20 rounded-lg px-3 py-2 text-sm font-mono font-bold focus:outline-none focus:border-indigo-400 placeholder-white/20"
                     />
                     <span className="text-white/50 text-xs">m</span>
                   </div>
@@ -450,7 +450,7 @@ export default function RoomScannerPage() {
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => setPhase('marking')} className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-medium">← Volver</button>
+              <button onClick={() => setPhase('marking')} className="px-5 py-3 rounded-xl bg-card/10 hover:bg-card/20 text-sm font-medium">← Volver</button>
               <button onClick={generatePlan} disabled={!allLengthsFilled} className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 font-bold py-3 rounded-xl">
                 <ScanLine className="h-4 w-4" /> Generar Plano
               </button>
@@ -473,11 +473,11 @@ export default function RoomScannerPage() {
               <CheckCircle2 className="h-6 w-6 text-emerald-400 shrink-0" />
               <div><h2 className="font-bold text-lg">¡Plano Generado!</h2><p className="text-white/50 text-sm">{room.walls.length} paredes · Área ≈ {room.area.toFixed(1)} m²</p></div>
             </div>
-            <div className="bg-white rounded-2xl p-3 shadow-2xl overflow-x-auto"><div className="min-w-[300px]"><FloorPlanSVG room={room} id={SVG_ID} /></div></div>
+            <div className="bg-card rounded-2xl p-3 shadow-2xl overflow-x-auto"><div className="min-w-[300px]"><FloorPlanSVG room={room} id={SVG_ID} /></div></div>
             <DimensionEditor room={room} onChange={setRoom} />
             <div className="grid grid-cols-2 gap-2">
               {room.walls.map((w, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 flex items-center gap-2">
+                <div key={i} className="bg-card/5 border border-white/10 rounded-xl px-3 py-2.5 flex items-center gap-2">
                   <span className="text-[10px] font-bold bg-indigo-600/40 text-indigo-300 px-1.5 py-0.5 rounded">P{i + 1}</span>
                   <span className="text-sm font-bold">{w.toFixed(1)} m</span>
                 </div>
@@ -491,16 +491,16 @@ export default function RoomScannerPage() {
                 <button onClick={() => setShowDl(v => !v)} className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 font-semibold py-3.5 rounded-xl hover:-translate-y-0.5 transition-all shadow-lg">
                   <Download className="h-4 w-4" /> Descargar Plano
                 </button>
-                <button onClick={reset} className="px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/20"><RotateCcw className="h-4 w-4" /></button>
+                <button onClick={reset} className="px-5 py-3.5 rounded-xl bg-card/10 hover:bg-card/20"><RotateCcw className="h-4 w-4" /></button>
               </div>
               {showDl && (
                 <div className="absolute bottom-full mb-2 left-0 right-14 bg-slate-800 border border-white/20 rounded-2xl overflow-hidden shadow-2xl z-10">
-                  <button onClick={() => { downloadPng(SVG_ID); setShowDl(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-white/10 text-left">
+                  <button onClick={() => { downloadPng(SVG_ID); setShowDl(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-card/10 text-left">
                     <div className="h-9 w-9 rounded-xl bg-emerald-500/20 flex items-center justify-center"><FileImage className="h-4 w-4 text-emerald-400" /></div>
                     <div><div className="font-semibold text-sm">Descargar PNG</div><div className="text-xs text-white/50">Alta resolución (2x)</div></div>
                   </button>
-                  <div className="h-px bg-white/10" />
-                  <button onClick={() => { downloadPdf(SVG_ID, room); setShowDl(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-white/10 text-left">
+                  <div className="h-px bg-card/10" />
+                  <button onClick={() => { downloadPdf(SVG_ID, room); setShowDl(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-card/10 text-left">
                     <div className="h-9 w-9 rounded-xl bg-red-500/20 flex items-center justify-center"><FilePdf className="h-4 w-4 text-red-400" /></div>
                     <div><div className="font-semibold text-sm">Descargar PDF</div><div className="text-xs text-white/50">Listo para imprimir</div></div>
                   </button>
@@ -515,7 +515,7 @@ export default function RoomScannerPage() {
           <div className="flex flex-col items-center gap-6 pt-16 text-center">
             <div className="h-20 w-20 rounded-2xl bg-red-500/20 flex items-center justify-center"><AlertCircle className="h-10 w-10 text-red-400" /></div>
             <div><h2 className="text-xl font-bold mb-2">Acceso a cámara denegado</h2><p className="text-white/50 text-sm max-w-xs">Permite el acceso en los ajustes del navegador.</p></div>
-            <button onClick={reset} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl font-medium"><RotateCcw className="h-4 w-4" /> Reintentar</button>
+            <button onClick={reset} className="flex items-center gap-2 bg-card/10 hover:bg-card/20 px-6 py-3 rounded-xl font-medium"><RotateCcw className="h-4 w-4" /> Reintentar</button>
           </div>
         )}
 

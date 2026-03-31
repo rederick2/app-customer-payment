@@ -84,7 +84,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                     <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all p-2 flex items-center justify-center gap-3">
                        <button 
                         type="button" 
-                        className="p-1.5 rounded-lg text-white hover:bg-white/20 transition-colors"
+                        className="p-1.5 rounded-lg text-white hover:bg-card/20 transition-colors"
                         onClick={() => document.getElementById('logo-upload')?.click()}
                        >
                         <Camera className="h-4 w-4" />

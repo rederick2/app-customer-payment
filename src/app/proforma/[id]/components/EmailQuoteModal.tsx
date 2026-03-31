@@ -103,7 +103,7 @@ export default function EmailQuoteModal({
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
-        <DialogHeader className="p-6 pb-2 border-b bg-white border-border/50">
+        <DialogHeader className="p-6 pb-2 border-b bg-card border-border/50">
           <DialogTitle className="text-xl font-bold text-primary">
             Email quote #{String(proformaNumber || proformaId.split('-')[0]).toUpperCase()} to {clientName}
           </DialogTitle>
@@ -111,13 +111,13 @@ export default function EmailQuoteModal({
 
         <form onSubmit={handleSubmit} className="flex flex-col md:flex-row h-[550px]">
           {/* Left Form Area */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white">
+          <div className="flex-1 p-6 overflow-y-auto bg-card">
             <div className="space-y-5">
 
               {/* To Field (Simulated chips) */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-muted-foreground uppercase">To</label>
-                <div className="flex items-center min-h-[40px] px-3 border border-border/50 rounded-md bg-white focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+                <div className="flex items-center min-h-[40px] px-3 border border-border/50 rounded-md bg-card focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
                   {emailTo ? (
                     <div className="flex items-center gap-1 bg-muted/50 px-2.5 py-1 rounded-full text-sm font-medium border border-border/80">
                       {emailTo}
@@ -156,7 +156,7 @@ export default function EmailQuoteModal({
                   name="subject"
                   defaultValue={defaultSubject}
                   required
-                  className="border-border/50 bg-white"
+                  className="border-border/50 bg-card"
                 />
               </div>
 
@@ -167,7 +167,7 @@ export default function EmailQuoteModal({
                   name="message"
                   defaultValue={defaultMessage}
                   required
-                  className="min-h-[250px] resize-none border-border/50 bg-white leading-relaxed"
+                  className="min-h-[250px] resize-none border-border/50 bg-card leading-relaxed"
                 />
               </div>
 
@@ -184,7 +184,7 @@ export default function EmailQuoteModal({
           <div className="w-full md:w-[300px] border-l border-border/50 bg-[#F8F9FA] p-6 flex flex-col">
             <h3 className="text-sm font-bold text-primary mb-4">Attachments</h3>
 
-            <div className="border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center bg-white hover:bg-muted/10 transition-colors cursor-pointer mb-6">
+            <div className="border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center bg-card hover:bg-muted/10 transition-colors cursor-pointer mb-6">
               <Button type="button" variant="outline" size="sm" className="mb-3 rounded-full font-semibold border-primary text-primary hover:bg-primary/10">
                 <Upload className="h-3 w-3 mr-2" /> Upload Files
               </Button>
@@ -192,7 +192,7 @@ export default function EmailQuoteModal({
             </div>
 
             {/* Automatic Quote PDF Attachment */}
-            <div className="flex items-start gap-3 p-3 bg-white border border-border/50 rounded-lg shadow-sm">
+            <div className="flex items-start gap-3 p-3 bg-card border border-border/50 rounded-lg shadow-sm">
               <Checkbox id="attachPdf" defaultChecked className="mt-1" />
               <div className="flex gap-3 items-center">
                 <div className="bg-primary/10 p-2 rounded flex items-center justify-center">
@@ -208,7 +208,7 @@ export default function EmailQuoteModal({
             {/* Client Portal Link */}
             <div className="mt-4">
               <h3 className="text-sm font-bold text-primary mb-2">Client Portal Link</h3>
-              <div className="flex flex-col gap-2 p-3 bg-white border border-border/50 rounded-lg">
+              <div className="flex flex-col gap-2 p-3 bg-card border border-border/50 rounded-lg">
                 <p className="text-xs text-muted-foreground break-all font-mono leading-relaxed">
                   /p/{proformaId}
                 </p>
@@ -220,7 +220,7 @@ export default function EmailQuoteModal({
         </form>
 
         {/* Footer Actions */}
-        <div className="p-4 px-6 border-t border-border/50 bg-white flex justify-end gap-3">
+        <div className="p-4 px-6 border-t border-border/50 bg-card flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
             Cancel
           </Button>

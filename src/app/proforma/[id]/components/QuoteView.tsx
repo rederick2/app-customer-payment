@@ -251,7 +251,7 @@ function ItemEditor({ item, onSave, onCancel, isReadOnly }: ItemEditorProps) {
                       <Button
                         variant="secondary"
                         size="icon"
-                        className="h-9 w-9 rounded-xl shadow-2xl bg-white/90 backdrop-blur-md border border-border/20 text-primary hover:bg-white"
+                        className="h-9 w-9 rounded-xl shadow-2xl bg-card/90 backdrop-blur-md border border-border/20 text-primary hover:bg-card"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Pencil className="h-4 w-4" />
@@ -408,7 +408,7 @@ function SortableRow({
               )}
             </td>
             <td className="px-4 py-5">
-              <div className="font-bold text-[#0D3B47] text-base flex items-center gap-2">
+              <div className="font-bold text-base flex items-center gap-2">
                 {item.description}
                 {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
               </div>
@@ -430,7 +430,7 @@ function SortableRow({
             </td>
             <td className="px-4 py-5 text-right tabular-nums w-24">{item.quantity}</td>
             <td className="px-4 py-5 text-right tabular-nums w-36">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-            <td className={cn("px-4 py-5 text-right font-bold tabular-nums w-36", item.is_excluded ? "text-muted-foreground line-through decoration-primary/40" : "text-[#0D3B47]")}>
+            <td className={cn("px-4 py-5 text-right font-bold tabular-nums w-36", item.is_excluded ? "text-muted-foreground line-through decoration-primary/40" : "")}>
               ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </td>
           </tr>
@@ -847,7 +847,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
 
 
       {/* Printable Document Area */}
-      <div className="bg-white print:shadow-none border border-border/40 print:border-none p-6 md:p-10 mb-8 relative overflow-hidden">
+      <div className="bg-card print:shadow-none border border-border/40 print:border-none p-6 md:p-10 mb-8 relative overflow-hidden">
 
         {/* Jobber Green Accent Bar */}
         <div className="absolute top-0 left-0 right-0 h-2 bg-[#ac8e68]" />
@@ -1029,7 +1029,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             {/* Sortable Items Container */}
             <div className={cn(
               "space-y-0",
-              "md:border-x md:border-b md:border-border/40 md:bg-white"
+              "md:border-x md:border-b md:border-border/40 md:bg-card"
             )}>
               <SortableContext
                 items={items.map(i => i.id)}
@@ -1151,7 +1151,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 </h3>
                 <div className="flex flex-col items-center sm:items-start gap-4">
                   {proforma.client_signature_data ? (
-                    <div className="bg-white p-4 rounded-xl border border-border/40 shadow-sm transition-all hover:shadow-md max-w-[320px]">
+                    <div className="bg-card p-4 rounded-xl border border-border/40 shadow-sm transition-all hover:shadow-md max-w-[320px]">
                       <img
                         src={proforma.client_signature_data}
                         alt="Customer Signature"

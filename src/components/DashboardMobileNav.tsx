@@ -59,7 +59,7 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
   return (
     <>
       {/* Mobile Top Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-border/40 h-16 flex items-center justify-between px-4">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border/40 h-16 flex items-center justify-between px-4">
         <Link href="/" className="flex items-center space-x-2">
           <img src="/logo.png" alt="Logo" className="h-8" />
         </Link>

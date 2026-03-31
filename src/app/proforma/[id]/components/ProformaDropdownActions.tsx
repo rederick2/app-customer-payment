@@ -62,7 +62,7 @@ export default function ProformaDropdownActions({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" className="flex items-center gap-2 border-border/50 bg-white shadow-sm" disabled={isUpdating} />}>
+      <DropdownMenuTrigger render={<Button variant="outline" className="flex items-center gap-2 border-border/50 bg-card shadow-sm" disabled={isUpdating} />}>
         {isUpdating ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : <MoreHorizontal className="h-4 w-4 text-primary" />}
         More
       </DropdownMenuTrigger>

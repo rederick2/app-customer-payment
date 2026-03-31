@@ -74,7 +74,7 @@ export default function EmailMaterialsModal({
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden bg-[#F8F9FA]">
-        <DialogHeader className="p-6 pb-2 border-b bg-white border-border/50">
+        <DialogHeader className="p-6 pb-2 border-b bg-card border-border/50">
           <DialogTitle className="text-xl font-bold text-primary">
             Email Materials List for {projectName}
           </DialogTitle>
@@ -82,7 +82,7 @@ export default function EmailMaterialsModal({
 
         <form onSubmit={handleSubmit} className="flex flex-col md:flex-row h-[550px]">
            {/* Left Form Area */}
-           <div className="flex-1 p-6 overflow-y-auto bg-white">
+           <div className="flex-1 p-6 overflow-y-auto bg-card">
               <div className="space-y-5">
                 
                 {/* Recipient Selection (To) */}
@@ -92,7 +92,7 @@ export default function EmailMaterialsModal({
                     <PopoverTrigger
                       role="combobox"
                       aria-expanded={comboboxOpen}
-                      className="w-full justify-between h-auto py-3 font-normal bg-white border border-border/50 hover:bg-muted/5 text-left rounded-md px-3 flex items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="w-full justify-between h-auto py-3 font-normal bg-card border border-border/50 hover:bg-muted/5 text-left rounded-md px-3 flex items-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {(() => {
                         const selectedMember = selectedMemberId ? teamMembers.find(m => m.id === selectedMemberId) : null;
@@ -174,7 +174,7 @@ export default function EmailMaterialsModal({
                     name="subject" 
                     defaultValue={defaultSubject} 
                     required 
-                    className="border-border/50 bg-white"
+                    className="border-border/50 bg-card"
                   />
                 </div>
 
@@ -185,7 +185,7 @@ export default function EmailMaterialsModal({
                     name="message" 
                     defaultValue={defaultMessage} 
                     required 
-                    className="min-h-[250px] resize-none border-border/50 bg-white leading-relaxed"
+                    className="min-h-[250px] resize-none border-border/50 bg-card leading-relaxed"
                   />
                 </div>
 
@@ -203,7 +203,7 @@ export default function EmailMaterialsModal({
             <h3 className="text-sm font-bold text-primary mb-4">Attachments</h3>
               
               {/* Automatic Materials PDF Attachment */}
-              <div className="flex items-start gap-3 p-3 bg-white border border-border/50 rounded-lg shadow-sm">
+              <div className="flex items-start gap-3 p-3 bg-card border border-border/50 rounded-lg shadow-sm">
                 <Checkbox id="attachPdf" defaultChecked className="mt-1" />
                 <div className="flex gap-3 items-center">
                   <div className="bg-[#E7D6CB]/30 p-2 rounded flex items-center justify-center">
@@ -220,7 +220,7 @@ export default function EmailMaterialsModal({
         </form>
 
         {/* Footer Actions */}
-        <div className="p-4 px-6 border-t border-border/50 bg-white flex justify-end gap-3">
+        <div className="p-4 px-6 border-t border-border/50 bg-card flex justify-end gap-3">
            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
              Cancel
            </Button>
