@@ -143,7 +143,7 @@ export function DashboardNotifications() {
 
   return (
     <Popover>
-      <PopoverTrigger className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+      <PopoverTrigger className="relative flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
         <Bell className="h-4.5 w-4.5 cursor-pointer" />
         {unreadCount > 0 && (
           <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-red-500 text-white border-2 border-background animate-in zoom-in duration-300">

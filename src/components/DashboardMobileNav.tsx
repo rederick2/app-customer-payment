@@ -3,21 +3,22 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Menu, 
-  X, 
-  LayoutDashboard, 
-  Users, 
-  PlusCircle, 
-  ListTodo, 
-  Calendar, 
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  Users,
+  PlusCircle,
+  ListTodo,
+  Calendar,
   MessageSquare,
   LogOut,
   Settings,
   GanttChart,
   FileText,
   Briefcase,
-  Receipt
+  Receipt,
+  Image
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -38,15 +39,15 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
     { href: '/quotes', icon: FileText, label: 'Quotes' },
     { href: '/jobs', icon: Briefcase, label: 'Jobs' },
     { href: '/invoices', icon: Receipt, label: 'Invoices' },
-    { href: '/proforma/new', icon: PlusCircle, label: 'New Quote' },
     { href: '/requests', icon: ListTodo, label: 'Requests' },
     { href: '/calendar', icon: Calendar, label: 'Calendar' },
     { href: '/gantt', icon: GanttChart, label: 'Gantt' },
-    { 
-      href: '/messages', 
-      icon: MessageSquare, 
-      label: 'Messages', 
-      badge: unreadCount 
+    { href: '/gallery', icon: Image, label: 'Gallery' },
+    {
+      href: '/messages',
+      icon: MessageSquare,
+      label: 'Messages',
+      badge: unreadCount
     },
     { href: '/settings', icon: Settings, label: 'Settings' },
   ];
@@ -63,9 +64,9 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
         <Link href="/" className="flex items-center space-x-2">
           <img src="/logo.png" alt="Logo" className="h-8" />
         </Link>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setIsOpen(!isOpen)}
           className="text-foreground"
         >
@@ -86,8 +87,8 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
                   href={link.href}
                   className={cn(
                     "flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors",
-                    isActive 
-                      ? "bg-primary/10 text-primary" 
+                    isActive
+                      ? "bg-primary/10 text-primary"
                       : "text-foreground/80 hover:bg-muted/50"
                   )}
                 >
@@ -106,8 +107,8 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
           <div className="p-4 border-t border-border/40 mb-4 space-y-2">
             <ThemeToggle />
             <form action={logout}>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="w-full flex items-center px-4 py-3 text-base font-medium text-foreground/80 hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
               >
                 <LogOut className="mr-4 h-5 w-5" />

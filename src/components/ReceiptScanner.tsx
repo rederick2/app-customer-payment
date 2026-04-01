@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { compressImage } from '@/lib/image-compression';
 
 type ReceiptScannerProps = {
   proformaId: string;
@@ -59,9 +60,17 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
     setIsUploading(true);
     try {
+      let fileToUpload = file;
+      
+      // Compress if larger than 5MB
+      if (fileToUpload.size > 5 * 1024 * 1024) {
+        toast.info('Compressing receipt...', { duration: 2000 });
+        fileToUpload = (await compressImage(fileToUpload, 4.5)) as File;
+      }
+
       // 1. Upload to FTP
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
       formData.append('folder', 'expenses');
 
       const uploadRes = await fetch('/api/upload', {

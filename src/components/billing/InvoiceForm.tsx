@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Combobox } from '@/components/ui/combobox';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -20,16 +21,19 @@ interface InvoiceFormProps {
   clientId: string;
   clientName: string;
   proforma?: any;
+  proformas?: any[];
   initialData?: any;
   onCancel?: () => void;
 }
 
-export function InvoiceForm({ clientId, clientName, proforma, initialData, onCancel }: InvoiceFormProps) {
+export function InvoiceForm({ clientId, clientName, proforma, proformas = [], initialData, onCancel }: InvoiceFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const [syncToQBO, setSyncToQBO] = React.useState(true);
   const [unlinkedPayments, setUnlinkedPayments] = React.useState<any[]>([]);
   const [selectedPaymentIds, setSelectedPaymentIds] = React.useState<string[]>([]);
+  const [selectedProformaId, setSelectedProformaId] = React.useState<string | null>(proforma?.id || null);
+  const [currentProforma, setCurrentProforma] = React.useState<any>(proforma || null);
 
   // Helper to calculate discount from proforma adjustments
   const calculateDiscount = (prof: any) => {
@@ -65,15 +69,37 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
     }
   }, [initialData, clientId]);
 
+  // Update form data when proforma changes
+  const handleProformaChange = (id: string | null) => {
+    if (!id) return;
+    const selected = proformas.find(p => p.id === id);
+    if (selected) {
+      setSelectedProformaId(id);
+      setCurrentProforma(selected);
+      setFormData(prev => ({
+        ...prev,
+        total_amount: selected.total || 0,
+        tax_amount: selected.tax || 0,
+        discount_amount: calculateDiscount(selected)
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (!selectedProformaId) {
+      toast.error('You must select a job (Quote) to create the invoice.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const result = await upsertInvoice({
         ...formData,
         id: initialData?.id,
-        proforma_id: proforma?.id || null,
+        proforma_id: selectedProformaId,
         client_id: clientId
       }, selectedPaymentIds);
 
@@ -91,7 +117,7 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
         } else {
           toast.success(initialData ? 'Factura actualizada' : 'Factura creada');
         }
-        
+
         // Navigate back to client page
         router.push(`/clients/${clientId}?tab=invoices-tab`);
         router.refresh();
@@ -124,13 +150,13 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
         <div className="md:col-span-2 space-y-6">
           <Card className="border-border/40 shadow-none rounded-xl overflow-hidden">
             <CardHeader className="bg-muted/10">
-              <CardTitle className="text-lg">Detalles de Facturación</CardTitle>
-              <CardDescription>Información básica y fechas.</CardDescription>
+              <CardTitle className="text-lg">Details of Invoice</CardTitle>
+              <CardDescription>Basic information and dates.</CardDescription>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="invoice_number">Número de Factura</Label>
+                  <Label htmlFor="invoice_number">Invoice Number</Label>
                   <Input
                     id="invoice_number"
                     value={formData.invoice_number}
@@ -140,20 +166,54 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
                     required
                   />
                 </div>
+
+                {!proforma && !initialData && (
+                  <div className="space-y-2">
+                    <Label htmlFor="proforma_link" className="flex items-center gap-1.5">
+                      Link Job <span className="text-destructive">*</span>
+                    </Label>
+                    <Combobox
+                      options={[
+                        { value: '', label: 'No project' },
+                        ...proformas.map(p => ({ value: p.id, label: `#${p.number} – ${p.project_name}` }))
+                      ]}
+                      value={selectedProformaId || ''}
+                      onValueChange={handleProformaChange}
+                      placeholder="Select a project..."
+                      searchPlaceholder="Search projects..."
+                      modal={true}
+                    />
+                    {/*<Select value={selectedProformaId || ''} onValueChange={handleProformaChange}>
+                      <SelectTrigger className="rounded-xl border-primary/20 bg-primary/5">
+                        <SelectValue placeholder="Select job..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {proformas.map((p) => (
+                          <SelectItem key={p.id} value={p.id} className="text-xs" >
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-bold">#-{String(p.number || '').toUpperCase()}</span>
+                              <span className="text-[10px] text-muted-foreground line-clamp-1">{p.project_name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>*/}
+                  </div>
+                )}
                 <div className="space-y-2">
-                  <Label htmlFor="status">Estado</Label>
-                  <Select 
-                    value={formData.status} 
+                  <Label htmlFor="status">Status</Label>
+                  <Select
+                    value={formData.status}
                     onValueChange={val => setFormData({ ...formData, status: val })}
                   >
                     <SelectTrigger className="rounded-xl">
-                      <SelectValue placeholder="Seleccionar estado" />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
-                      <SelectItem value="draft">Borrador</SelectItem>
-                      <SelectItem value="sent">Enviada</SelectItem>
-                      <SelectItem value="paid">Pagada</SelectItem>
-                      <SelectItem value="cancelled">Cancelada</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -161,7 +221,7 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="issue_date">Fecha de Emisión</Label>
+                  <Label htmlFor="issue_date">Issue Date</Label>
                   <Input
                     id="issue_date"
                     type="date"
@@ -172,7 +232,7 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="due_date">Fecha de Vencimiento (Opcional)</Label>
+                  <Label htmlFor="due_date">Due Date (Optional)</Label>
                   <Input
                     id="due_date"
                     type="date"
@@ -193,32 +253,32 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
                     value={formData.total_amount}
                     onChange={e => setFormData({ ...formData, total_amount: parseFloat(e.target.value) || 0 })}
                     required
-                    readOnly={!!proforma}
-                    className={cn("rounded-xl", !!proforma && "bg-muted cursor-not-allowed")}
+                    readOnly={!!currentProforma}
+                    className={cn("rounded-xl", !!currentProforma && "bg-muted cursor-not-allowed")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tax_amount">Impuestos ($)</Label>
+                  <Label htmlFor="tax_amount">Tax ($)</Label>
                   <Input
                     id="tax_amount"
                     type="number"
                     step="0.01"
                     value={formData.tax_amount}
                     onChange={e => setFormData({ ...formData, tax_amount: parseFloat(e.target.value) || 0 })}
-                    readOnly={!!proforma}
-                    className={cn("rounded-xl", !!proforma && "bg-muted cursor-not-allowed")}
+                    readOnly={!!currentProforma}
+                    className={cn("rounded-xl", !!currentProforma && "bg-muted cursor-not-allowed")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="discount_amount">Descuento ($)</Label>
+                  <Label htmlFor="discount_amount">Discount ($)</Label>
                   <Input
                     id="discount_amount"
                     type="number"
                     step="0.01"
                     value={formData.discount_amount}
                     onChange={e => setFormData({ ...formData, discount_amount: parseFloat(e.target.value) || 0 })}
-                    readOnly={!!proforma}
-                    className={cn("rounded-xl", !!proforma && "bg-muted cursor-not-allowed")}
+                    readOnly={!!currentProforma}
+                    className={cn("rounded-xl", !!currentProforma && "bg-muted cursor-not-allowed")}
                   />
                 </div>
               </div>
@@ -227,15 +287,15 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
 
           <Card className="border-border/40 shadow-none rounded-xl overflow-hidden">
             <CardHeader className="bg-muted/10">
-              <CardTitle className="text-lg">Notas Internas</CardTitle>
-              <CardDescription>Información adicional para uso interno.</CardDescription>
+              <CardTitle className="text-lg">Internal Notes</CardTitle>
+              <CardDescription>Additional information for internal use.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Notas adicionales..."
+                placeholder="Additional information..."
                 rows={4}
                 className="rounded-xl resize-none"
               />
@@ -247,14 +307,14 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
           {!initialData && (
             <Card className="border-primary/20 shadow-none rounded-xl overflow-hidden bg-primary/5">
               <CardHeader className="pb-3 px-6 pt-6">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary">Sincronización</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary">Sync</CardTitle>
               </CardHeader>
               <CardContent className="px-6 pb-6 pt-0">
                 <div className="flex items-center space-x-3">
-                  <Checkbox 
-                    id="sync" 
-                    checked={syncToQBO} 
-                    onCheckedChange={(checked) => setSyncToQBO(!!checked)} 
+                  <Checkbox
+                    id="sync"
+                    checked={syncToQBO}
+                    onCheckedChange={(checked) => setSyncToQBO(!!checked)}
                     className="border-primary data-[state=checked]:bg-primary"
                   />
                   <div className="grid gap-1.5 leading-none">
@@ -262,7 +322,7 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
                       QuickBooks Online
                     </Label>
                     <p className="text-[10px] text-muted-foreground leading-tight">
-                      Crear automáticamente el cliente y la factura en QuickBooks.
+                      Create customer and invoice automatically in QuickBooks.
                     </p>
                   </div>
                 </div>
@@ -273,7 +333,7 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
           {!initialData && unlinkedPayments.length > 0 && (
             <Card className="border-border/40 shadow-none rounded-xl overflow-hidden">
               <CardHeader className="bg-muted/10 flex flex-row items-center justify-between py-3 px-4">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Pagos Pendientes</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Unlinked Payments</CardTitle>
                 <Badge variant="secondary" className="text-[10px] h-5 rounded-full font-bold">
                   {selectedPaymentIds.length}
                 </Badge>
@@ -282,11 +342,11 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
                 <div className="max-h-[300px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                   {unlinkedPayments.map(p => (
                     <div key={p.id} className="flex items-center space-x-3 p-3 rounded-xl bg-muted/5 border border-border/40 hover:border-primary/20 transition-all group">
-                      <Checkbox 
+                      <Checkbox
                         id={`p-${p.id}`}
                         checked={selectedPaymentIds.includes(p.id)}
                         onCheckedChange={(checked) => {
-                          setSelectedPaymentIds(prev => 
+                          setSelectedPaymentIds(prev =>
                             checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
                           );
                         }}
@@ -297,7 +357,7 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
                           <span className="font-bold">${p.amount}</span>
                           <span className="text-[10px] text-muted-foreground font-medium">{new Date(p.payment_date).toLocaleDateString()}</span>
                         </div>
-                        <span className="text-[10px] text-muted-foreground capitalize opacity-80">{p.payment_method || 'Desconocido'}</span>
+                        <span className="text-[10px] text-muted-foreground capitalize opacity-80">{p.payment_method || 'Unknown'}</span>
                       </label>
                     </div>
                   ))}
@@ -306,17 +366,17 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
             </Card>
           )}
 
-          {proforma && (
+          {currentProforma && (
             <Card className="border-emerald-100 shadow-none rounded-xl overflow-hidden bg-emerald-50/30">
               <CardHeader className="py-3 px-4 flex flex-row items-center gap-2">
                 <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                   <ExternalLink className="h-3 w-3" />
                 </div>
-                <CardTitle className="text-xs font-bold uppercase tracking-wider text-emerald-700">Proyecto Vinculado</CardTitle>
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-emerald-700">Linked Project</CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4 pt-1">
-                <p className="text-xs font-bold text-emerald-900 line-clamp-1">{proforma.project_name}</p>
-                <p className="text-[10px] text-emerald-600 mt-0.5">Los montos de la factura están bloqueados para coincidir con el proyecto.</p>
+                <p className="text-xs font-bold text-emerald-900 line-clamp-1">{currentProforma.project_name}</p>
+                <p className="text-[10px] text-emerald-600 mt-0.5">The invoice amounts are locked to match the project.</p>
               </CardContent>
             </Card>
           )}
@@ -326,17 +386,17 @@ export function InvoiceForm({ clientId, clientName, proforma, initialData, onCan
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Guardando...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Save className="mr-2 h-5 w-5" />
-                  {initialData ? 'Actualizar Factura' : 'Finalizar y Crear Factura'}
+                  {initialData ? 'Update Invoice' : 'Finalize and Create Invoice'}
                 </>
               )}
             </Button>
             <p className="text-[11px] text-center text-muted-foreground mt-4 px-4 leading-relaxed">
-              Al confirmar, los datos se guardarán localmente. Si la sincronización está activa, se comunicará inmediatamente con QuickBooks Online.
+              Upon confirmation, the data will be saved locally. If synchronization is active, it will communicate immediately with QuickBooks Online.
             </p>
           </div>
         </div>

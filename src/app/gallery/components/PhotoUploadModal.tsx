@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { uploadProjectPhoto } from '../actions';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
+import { compressImage } from '@/lib/image-compression';
 
 const AnnotationEditor = dynamic(() => import('./AnnotationEditor'), { ssr: false });
 
@@ -66,13 +67,19 @@ export default function PhotoUploadModal({ proformaId, proformName, proformas = 
   };
 
   const handleUpload = async () => {
-    const fileToUpload = annotatedBlob || rawFile;
-    if (!fileToUpload) return;
+      let fileToUpload = annotatedBlob || rawFile;
+      if (!fileToUpload) return;
 
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', fileToUpload, rawFile?.name || 'photo.jpg');
+      setUploading(true);
+      try {
+        // Compress if needed (limit to 5MB)
+        if (fileToUpload.size > 5 * 1024 * 1024) {
+          toast.info('Compressing photo...', { duration: 2000 });
+          fileToUpload = await compressImage(fileToUpload, 4.5); // Aim for slightly less than 5MB
+        }
+
+        const fd = new FormData();
+        fd.append('file', fileToUpload, rawFile?.name || 'photo.jpg');
       fd.append('caption', caption);
       fd.append('overlay_text', overlayText);
       fd.append('is_public', String(isPublic));

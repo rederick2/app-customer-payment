@@ -769,9 +769,9 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                     } />
                     <DialogContent className="sm:max-w-[540px]">
                       <DialogHeader className="mb-4">
-                        <DialogTitle>Historial de la Proforma</DialogTitle>
+                        <DialogTitle>History of the Quote</DialogTitle>
                         <DialogDescription>
-                          Seguimiento de todos los cambios de estado realizados.
+                          Tracking of all status changes made.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
@@ -909,16 +909,18 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                   Prepared For
                 </h3>
                 <div className="space-y-2">
-                  <p className="text-2xl font-bold text-foreground">
-                    {(() => {
-                      const c = proforma.clients as any;
-                      if (!c) return 'No Client';
-                      const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
-                      return c.company_name || nameDisplay;
-                    })()}
-                  </p>
+                  <Link href={`/clients/${proforma.client_id}`}>
+                    <p className="text-1xl font-bold text-foreground">
+                      {(() => {
+                        const c = proforma.clients as any;
+                        if (!c) return 'No Client';
+                        const nameDisplay = [c.title, c.first_name, c.last_name].filter(Boolean).join(' ') || c.name;
+                        return c.company_name || nameDisplay;
+                      })()}
+                    </p>
+                  </Link>
 
-                  <div className="text-lg text-muted-foreground/80 leading-relaxed font-medium">
+                  <div className="text-muted-foreground/80 leading-relaxed">
                     {(() => {
                       const c = proforma.clients as any;
                       if (!c) return null;
@@ -994,8 +996,8 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
               <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 mb-2 flex items-center gap-3">
                 Project
               </h3>
-              <p className="text-xl font-bold text-foreground italic leading-tight">
-                "{proforma.project_name}"
+              <p className="text-xl font-bold text-foreground uppercase leading-tight">
+                {proforma.project_name}
               </p>
             </div>
           </div>

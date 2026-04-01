@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { submitServiceRequest } from '../actions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { compressImage } from '@/lib/image-compression';
 
 export default function ServiceRequestForm({ proformaId, clientName }: { proformaId: string, clientName: string }) {
   const router = useRouter();
@@ -64,9 +65,17 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
     }
 
     // Add images manually
-    selectedImages.forEach((img) => {
-      formData.append('images', img.file);
-    });
+    if (selectedImages.some(img => img.file.size > 5 * 1024 * 1024)) {
+      toast.info('Compressing images...', { duration: 3000 });
+    }
+
+    for (const img of selectedImages) {
+      let fileToUpload = img.file;
+      if (fileToUpload.size > 5 * 1024 * 1024) {
+        fileToUpload = (await compressImage(fileToUpload, 4.5)) as File;
+      }
+      formData.append('images', fileToUpload);
+    }
 
     const result = await submitServiceRequest(proformaId, formData);
 

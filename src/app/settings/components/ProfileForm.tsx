@@ -10,6 +10,7 @@ import { updateProfile } from '../actions';
 import { toast } from 'sonner';
 import { Loader2, Camera, Trash2 } from 'lucide-react';
 import Autocomplete from 'react-google-autocomplete';
+import { compressImage } from '@/lib/image-compression';
 
 export default function ProfileForm({ initialData }: { initialData: any }) {
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,12 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
     formData.set('address', address); // Ensure we use the autocomplete value
     
     if (logoFile) {
-      formData.append('logoFile', logoFile);
+      let fileToUpload = logoFile;
+      if (fileToUpload.size > 5 * 1024 * 1024) {
+        toast.info('Compressing logo...', { duration: 2000 });
+        fileToUpload = (await compressImage(fileToUpload, 4.5)) as File;
+      }
+      formData.append('logoFile', fileToUpload);
     } else if (!logoPreview && initialData?.logo_url) {
       formData.append('removeLogo', 'true');
     }

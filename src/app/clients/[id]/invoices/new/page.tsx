@@ -37,6 +37,14 @@ export default async function NewInvoicePage({ params, searchParams }: NewInvoic
       .single();
     proforma = proformaData;
   }
+
+  // 3. Fetch all available proformas for selection if needed
+  const { data: proformas } = await supabase
+    .from('proformas')
+    .select('id, number, project_name, total, tax, subtotal, adjustments')
+    .eq('client_id', clientId)
+    .in('status', ['job', 'quote', 'completed']) // Include these statuses for selection
+    .order('created_at', { ascending: false });
   
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
@@ -44,6 +52,7 @@ export default async function NewInvoicePage({ params, searchParams }: NewInvoic
         clientId={clientId}
         clientName={clientName}
         proforma={proforma}
+        proformas={proformas || []}
       />
     </div>
   );

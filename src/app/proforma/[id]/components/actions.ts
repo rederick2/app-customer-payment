@@ -302,6 +302,32 @@ export async function scheduleJob(proformaId: string, startAt: string, endAt: st
   return { success: true };
 }
 
+export async function updateJobDates(proformaId: string, startAt: string, endAt: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const { error } = await supabase
+    .from('proformas')
+    .update({
+      job_start_at: startAt,
+      job_end_at: endAt
+    })
+    .eq('id', proformaId);
+
+  if (error) {
+    console.error('Error updating job dates:', error);
+    return { error: 'Error al actualizar las fechas del trabajo.' };
+  }
+
+  revalidatePath(`/proforma/${proformaId}`);
+  revalidatePath('/calendar');
+  return { success: true };
+}
+
 export async function toggleItemOptional(itemId: string, proformaId: string, isExcluded: boolean) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

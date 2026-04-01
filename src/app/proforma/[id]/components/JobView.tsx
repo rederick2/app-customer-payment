@@ -36,10 +36,12 @@ import {
   ChevronRight,
   FileDown,
   ZoomIn,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Save
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -89,7 +91,7 @@ import { EmailBillingModal } from './EmailBillingModal';
 import { pdf } from '@react-pdf/renderer';
 import InvoicePDF from '@/lib/pdf/InvoicePDF';
 import PaymentPDF from '@/lib/pdf/PaymentPDF';
-import { deleteInvoice, deleteProformaItem } from './actions';
+import { deleteInvoice, deleteProformaItem, updateJobDates } from './actions';
 
 interface JobViewProps {
   proforma: any;
@@ -118,6 +120,7 @@ export function JobView({
   teamMembers: initialTeamMembers,
   materials: initialMaterials
 }: JobViewProps) {
+  const router = useRouter();
   const [items, setItems] = React.useState(itemsProp);
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
   const [tempCost, setTempCost] = React.useState<string>('');
@@ -173,6 +176,10 @@ export function JobView({
   const [invoiceToDelete, setInvoiceToDelete] = React.useState<any>(null);
   const [billingEmailModal, setBillingEmailModal] = React.useState<{ type: 'invoice' | 'payment', data: any } | null>(null);
   const [isEditingAdjustments, setIsEditingAdjustments] = React.useState(false);
+  const [isEditingDates, setIsEditingDates] = React.useState(false);
+  const [tempStartDate, setTempStartDate] = React.useState(proforma.job_start_at || '');
+  const [tempEndDate, setTempEndDate] = React.useState(proforma.job_end_at || '');
+  const [isSavingDates, setIsSavingDates] = React.useState(false);
 
   const toggleItemExpansion = (itemId: string) => {
     setExpandedItems(prev => {
@@ -573,6 +580,24 @@ export function JobView({
       toast.error('Error al actualizar tarea');
     } else {
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    }
+  };
+
+  const handleSaveDates = async () => {
+    setIsSavingDates(true);
+    try {
+      const res = await updateJobDates(id, tempStartDate, tempEndDate);
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success('Fechas actualizadas');
+        setIsEditingDates(false);
+        router.refresh();
+      }
+    } catch (err) {
+      toast.error('Error al guardar fechas');
+    } finally {
+      setIsSavingDates(false);
     }
   };
 
@@ -995,14 +1020,69 @@ export function JobView({
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Job Type</p>
               <p className="text-sm font-bold">One-off job</p>
             </div>
-            <div>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Started On</p>
-              <p className="text-sm font-bold">{proforma.job_start_at ? format(new Date(proforma.job_start_at), 'MMM d, yyyy') : '-'}</p>
+            <div className="relative group">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center justify-between">
+                Started On
+                {!isEditingDates && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setIsEditingDates(true)}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                )}
+              </p>
+              {isEditingDates ? (
+                <Input
+                  type="date"
+                  value={tempStartDate ? tempStartDate.split('T')[0] : ''}
+                  onChange={(e) => setTempStartDate(e.target.value)}
+                  className="h-8 text-xs p-1"
+                />
+              ) : (
+                <p className="text-sm font-bold">{proforma.job_start_at ? format(new Date(proforma.job_start_at), 'MMM d, yyyy') : '-'}</p>
+              )}
             </div>
-            <div>
+            <div className="relative group">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Ends On</p>
-              <p className="text-sm font-bold">{proforma.job_end_at ? format(new Date(proforma.job_end_at), 'MMM d, yyyy') : '-'}</p>
+              {isEditingDates ? (
+                <Input
+                  type="date"
+                  value={tempEndDate ? tempEndDate.split('T')[0] : ''}
+                  onChange={(e) => setTempEndDate(e.target.value)}
+                  className="h-8 text-xs p-1"
+                />
+              ) : (
+                <p className="text-sm font-bold">{proforma.job_end_at ? format(new Date(proforma.job_end_at), 'MMM d, yyyy') : '-'}</p>
+              )}
             </div>
+            {isEditingDates && (
+              <div className="col-span-2 mt-2 flex justify-end gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-7 text-xs" 
+                  onClick={() => {
+                    setIsEditingDates(false);
+                    setTempStartDate(proforma.job_start_at || '');
+                    setTempEndDate(proforma.job_end_at || '');
+                  }}
+                  disabled={isSavingDates}
+                >
+                  <X className="h-3 w-3 mr-1" /> Cancel
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="h-7 text-xs" 
+                  onClick={handleSaveDates}
+                  disabled={isSavingDates}
+                >
+                  {isSavingDates ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save
+                </Button>
+              </div>
+            )}
             <div>
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">From quote</p>
               <p className="text-sm font-bold text-emerald-600">Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</p>
