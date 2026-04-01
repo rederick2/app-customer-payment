@@ -18,8 +18,8 @@ export class QuickBooksClient {
     this.userId = userId;
   }
 
-  static async fromUserId(userId: string) {
-    const supabase = await createClient();
+  static async fromUserId(userId: string, supabaseClient?: any) {
+    const supabase = supabaseClient || await createClient();
     const { data: config, error } = await supabase
       .from('user_integrations')
       .select('*')
@@ -212,5 +212,20 @@ export class QuickBooksClient {
     });
 
     return await this.handleResponse(response, 'Get Invoice');
+  }
+
+  async getPayment(paymentId: string) {
+    await this.ensureValidToken();
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/payment/${paymentId}?minorversion=70`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.oauthClient.getToken().access_token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    return await this.handleResponse(response, 'Get Payment');
   }
 }

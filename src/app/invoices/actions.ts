@@ -150,6 +150,105 @@ export async function syncPaymentToQuickBooks(paymentId: string) {
   }
 }
 
+export async function syncInvoiceByQboId(qboInvoiceId: string, qboClient: QuickBooksClient, supabaseClient?: any) {
+  const supabase = supabaseClient || await createClient();
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('qbo_invoice_id', qboInvoiceId)
+    .single();
+
+  if (!invoice) {
+    console.log(`Invoice not found for QBO ID ${qboInvoiceId}`);
+    return null;
+  }
+
+  const qboInvoiceData = await qboClient.getInvoice(qboInvoiceId);
+  const qboInvoice = qboInvoiceData.Invoice;
+  const balance = qboInvoice.Balance;
+  
+  let newStatus = invoice.status;
+  if (balance <= 0) {
+    newStatus = 'paid';
+  } else if (balance < qboInvoice.TotalAmt) {
+    newStatus = 'partially_paid';
+  }
+
+  const { error: updateError } = await supabase
+    .from('invoices')
+    .update({ 
+      invoice_number: qboInvoice.DocNumber || invoice.invoice_number,
+      total_amount: qboInvoice.TotalAmt || invoice.total_amount,
+      issue_date: qboInvoice.TxnDate || invoice.issue_date,
+      due_date: qboInvoice.DueDate || invoice.due_date,
+      notes: qboInvoice.PrivateNote || invoice.notes,
+      status: newStatus,
+      last_qbo_sync_at: new Date().toISOString()
+    })
+    .eq('id', invoice.id);
+
+  if (updateError) {
+    console.error(`Error updating invoice ${invoice.id}:`, updateError);
+  }
+
+  return { status: newStatus, balance };
+}
+
+export async function syncPaymentByQboId(qboPaymentId: string, qboClient: QuickBooksClient, supabaseClient?: any) {
+  const supabase = supabaseClient || await createClient();
+  
+  let qboPaymentData;
+  try {
+    qboPaymentData = await qboClient.getPayment(qboPaymentId);
+  } catch (e) {
+    console.error(`Error fetching payment ${qboPaymentId} from QBO:`, e);
+    return null;
+  }
+
+  const qboPayment = qboPaymentData.Payment;
+  if (!qboPayment) return null;
+
+  // Find the linked invoice if any to get client/proforma context
+  const qboInvoiceId = qboPayment.Line?.[0]?.LinkedTxn?.find((txn: any) => txn.TxnType === 'Invoice')?.TxnId;
+
+  if (qboInvoiceId) {
+    const { data: invoice } = await supabase
+      .from('invoices')
+      .select('id, client_id, proforma_id')
+      .eq('qbo_invoice_id', qboInvoiceId)
+      .single();
+
+    if (invoice) {
+      // Record payment locally (linked to client and proforma, NOT invoice_id)
+      const { error: upsertError } = await supabase
+        .from('payments')
+        .upsert({
+          client_id: invoice.client_id,
+          proforma_id: invoice.proforma_id,
+          amount: qboPayment.TotalAmt,
+          payment_date: qboPayment.TxnDate,
+          payment_method: qboPayment.PaymentMethodRef?.name || 'QuickBooks',
+          reference_number: qboPayment.PaymentRefNum, // Transaction Number
+          bank_name: qboPayment.DepositToAccountRef?.name, // Bank Name
+          notes: qboPayment.PrivateNote,
+          type: 'payment',
+          status: 'completed',
+          qbo_payment_id: qboPaymentId,
+          last_qbo_sync_at: new Date().toISOString()
+        }, { onConflict: 'qbo_payment_id' });
+
+      if (upsertError) {
+        console.error(`Error upserting payment for QBO ID ${qboPaymentId}:`, upsertError);
+      }
+
+      // Update invoice status based on balance
+      await syncInvoiceByQboId(qboInvoiceId, qboClient, supabase);
+    }
+  }
+
+  return qboPayment;
+}
+
 export async function syncInvoiceStatusFromQuickBooks(invoiceId: string) {
   try {
     const supabase = await createClient();
@@ -159,7 +258,7 @@ export async function syncInvoiceStatusFromQuickBooks(invoiceId: string) {
     // 1. Fetch local invoice
     const { data: invoice, error: iError } = await supabase
       .from('invoices')
-      .select('*')
+      .select('qbo_invoice_id')
       .eq('id', invoiceId)
       .single();
 
@@ -175,29 +274,11 @@ export async function syncInvoiceStatusFromQuickBooks(invoiceId: string) {
       return { error: 'QuickBooks not connected.' };
     }
 
-    // 3. Fetch from QBO
-    const qboInvoiceData = await qbo.getInvoice(invoice.qbo_invoice_id);
-    const qboInvoice = qboInvoiceData.Invoice;
-
-    // 4. Update status if balance is 0
-    const balance = qboInvoice.Balance;
-    let newStatus = invoice.status;
-
-    if (balance <= 0) {
-      newStatus = 'paid';
-    }
-
-    // 5. Update local DB
-    await supabase
-      .from('invoices')
-      .update({ 
-        status: newStatus,
-        last_qbo_sync_at: new Date().toISOString()
-      })
-      .eq('id', invoiceId);
+    // 3. Sync
+    const result = await syncInvoiceByQboId(invoice.qbo_invoice_id, qbo);
 
     revalidatePath('/invoices');
-    return { success: true, status: newStatus, balance };
+    return { success: true, ...result };
   } catch (e: any) {
     console.error('Status Sync Error:', e);
     return { error: e.message || 'Failed to sync status' };
