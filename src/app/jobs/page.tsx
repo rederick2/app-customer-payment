@@ -8,6 +8,15 @@ export const revalidate = 0;
 
 export default async function JobsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground italic">Cargando trabajos...</p>
+      </div>
+    );
+  }
 
   const { data: proformas, error } = await supabase
     .from('proformas')
@@ -20,6 +29,7 @@ export default async function JobsPage() {
       number,
       clients ( id, name, street_1, city, province, postal_code )
     `)
+    .eq('user_id', user.id)
     .in('status', ['job', 'job_terminated'])
     .order('created_at', { ascending: false });
 

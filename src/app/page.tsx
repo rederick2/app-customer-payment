@@ -19,32 +19,54 @@ export const revalidate = 0;
 
 export default async function Dashboard() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground italic">Cargando sesión...</p>
+      </div>
+    );
+  }
 
   // ── Counts ──────────────────────────────────────────────────
   const { count: proformasCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'approved').eq('is_template', false);
+    .from('proformas').select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('status', 'approved').eq('is_template', false);
 
   const { count: clientsCount } = await supabase
-    .from('clients').select('*', { count: 'exact', head: true });
+    .from('clients').select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id);
 
   const { count: jobsCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'job').eq('is_template', false);
+    .from('proformas').select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('status', 'job').eq('is_template', false);
 
   const { count: pendingCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'quote').eq('is_template', false);
+    .from('proformas').select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('status', 'quote').eq('is_template', false);
 
   const { count: completedCount } = await supabase
-    .from('proformas').select('*', { count: 'exact', head: true }).eq('status', 'completed').eq('is_template', false);
+    .from('proformas').select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('status', 'completed').eq('is_template', false);
 
   // ── Revenue ──────────────────────────────────────────────────
   const { data: revenueData } = await supabase
-    .from('proformas').select('total').in('status', ['job', 'completed']).eq('is_template', false);
+    .from('proformas')
+    .select('total')
+    .eq('user_id', user.id)
+    .in('status', ['job', 'completed']).eq('is_template', false);
   const totalRevenue = (revenueData || []).reduce((s, p) => s + (p.total || 0), 0);
 
   // ── Chart data: all proformas with date + total + status ─────
   const { data: allProformas } = await supabase
     .from('proformas')
     .select('created_at, total, status')
+    .eq('user_id', user.id)
     .eq('is_template', false)
     .order('created_at', { ascending: true });
 
@@ -91,6 +113,7 @@ export default async function Dashboard() {
   const { data: recentProformas } = await supabase
     .from('proformas')
     .select('id, project_name, total, created_at, status, clients ( name )')
+    .eq('user_id', user.id)
     .eq('is_template', false)
     .order('created_at', { ascending: false })
     .limit(7);
@@ -98,6 +121,7 @@ export default async function Dashboard() {
   const { data: recentClients } = await supabase
     .from('clients')
     .select('id, name, email, created_at')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(5);
 

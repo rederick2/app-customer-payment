@@ -89,7 +89,7 @@ import { EmailBillingModal } from './EmailBillingModal';
 import { pdf } from '@react-pdf/renderer';
 import InvoicePDF from '@/lib/pdf/InvoicePDF';
 import PaymentPDF from '@/lib/pdf/PaymentPDF';
-import { deleteInvoice } from './actions';
+import { deleteInvoice, deleteProformaItem } from './actions';
 
 interface JobViewProps {
   proforma: any;
@@ -452,20 +452,17 @@ export function JobView({
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    const { error } = await supabase
-      .from('proforma_items')
-      .delete()
-      .eq('id', itemId);
-
-    if (error) {
+    try {
+      const result = await deleteProformaItem(itemId, id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setItems(prev => prev.filter(item => item.id !== itemId));
+        toast.success('Item eliminado');
+        setItemToDelete(null);
+      }
+    } catch (err) {
       toast.error('Error al eliminar item');
-    } else {
-      const updatedItems = items.filter(item => item.id !== itemId);
-      setItems(updatedItems);
-      toast.success('Item eliminado');
-      setItemToDelete(null);
-      // Sync totals to DB after deletion
-      syncTotalsToDatabase(updatedItems);
     }
   };
 

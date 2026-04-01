@@ -613,6 +613,25 @@ export async function deleteInvoice(invoiceId: string, proformaId: string) {
   return { success: true };
 }
 
+export async function deleteProformaItem(itemId: string, proformaId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autorizado' };
+
+  const { error } = await supabase
+    .from('proforma_items')
+    .delete()
+    .eq('id', itemId);
+
+  if (error) {
+    console.error('Error deleting item:', error);
+    return { error: 'Error al eliminar el ítem.' };
+  }
+
+  // Recalculate proforma totals
+  return await recalculateProformaTotals(proformaId);
+}
+
 export async function sendInvoiceEmail(invoiceId: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

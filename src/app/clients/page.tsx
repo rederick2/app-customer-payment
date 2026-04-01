@@ -18,6 +18,16 @@ export default async function ClientsPage(
 ) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground italic">Cargando clientes...</p>
+      </div>
+    );
+  }
+
   const PAGE_SIZE = 10;
   const page = searchParams?.page ? parseInt(searchParams.page) : 1;
   const q = searchParams?.q || '';
@@ -40,7 +50,8 @@ export default async function ClientsPage(
       ),
       payments ( created_at, amount ),
       invoices ( created_at, invoice_number )
-    `);
+    `)
+    .eq('user_id', user.id);
 
   if (q) {
     query = query.or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,company_name.ilike.%${q}%,email.ilike.%${q}%,street_1.ilike.%${q}%,city.ilike.%${q}%,province.ilike.%${q}%,phone.ilike.%${q}%`);

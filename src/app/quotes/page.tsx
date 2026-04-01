@@ -9,6 +9,15 @@ export const revalidate = 0;
 
 export default async function QuotesPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground italic">Cargando cotizaciones...</p>
+      </div>
+    );
+  }
 
   const { data: proformas, error } = await supabase
     .from('proformas')
@@ -22,6 +31,7 @@ export default async function QuotesPage() {
       is_template,
       clients ( name )
     `)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {

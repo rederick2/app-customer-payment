@@ -6,7 +6,8 @@ import PaymentForm from './components/PaymentForm';
 import TaxSettings from './components/TaxSettings';
 import TeamSettings from './components/TeamSettings';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, CreditCard, Percent, Users } from 'lucide-react';
+import { User, CreditCard, Percent, Users, Share2 } from 'lucide-react';
+import IntegrationsSettings from './components/IntegrationsSettings';
 
 export default function SettingsClient({ 
   initialProfile, 
@@ -44,6 +45,10 @@ export default function SettingsClient({
             <Users className="h-4 w-4" />
             <span>Team Members</span>
           </TabsTrigger>
+          <TabsTrigger value="integrations" className="flex items-center space-x-2">
+            <Share2 className="h-4 w-4" />
+            <span>Integrations</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -60,6 +65,9 @@ export default function SettingsClient({
 
         <TabsContent value="team">
           <TeamSettings initialTeamMembers={initialTeamMembers} />
+        </TabsContent>
+        <TabsContent value="integrations">
+          <IntegrationsSettings />
         </TabsContent>
       </Tabs>
     </div>

@@ -17,6 +17,12 @@ type Notification = {
   type: string;
   message: string;
   is_read: boolean;
+  proformas?: {
+    project_name: string;
+    clients?: {
+      name: string;
+    }
+  }
 };
 
 export function DashboardNotifications() {
@@ -38,7 +44,7 @@ export function DashboardNotifications() {
         // Fetch last 10 notifications
         const { data, error } = await supabase
           .from('notifications')
-          .select('*')
+          .select('*, proformas(project_name, clients(name))')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(10);
@@ -187,9 +193,16 @@ export function DashboardNotifications() {
                       {getIconForType(notif.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm leading-snug ${!notif.is_read ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
-                        {notif.message}
-                      </p>
+                      <div className="flex flex-col gap-0.5">
+                        {notif.proformas?.clients?.name && (
+                          <span className="text-[10px] font-black uppercase tracking-widest text-primary opacity-70">
+                            {notif.proformas.clients.name}
+                          </span>
+                        )}
+                        <p className={`text-sm leading-snug ${!notif.is_read ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                          {notif.message}
+                        </p>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1 font-medium opacity-80">
                         {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                       </p>
