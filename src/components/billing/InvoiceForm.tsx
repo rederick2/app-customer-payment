@@ -138,7 +138,7 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
         </Button>
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold font-serif">
-            {initialData ? `Editar Factura #${formData.invoice_number}` : 'Nueva Factura'}
+            {initialData ? `Edit Invoice #${formData.invoice_number}` : 'New Invoice'}
           </h1>
           <Badge variant="outline" className="bg-primary/5 text-primary">
             Cliente: {clientName}
@@ -175,7 +175,7 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
                     <Combobox
                       options={[
                         { value: '', label: 'No project' },
-                        ...proformas.map(p => ({ value: p.id, label: `#${p.number} – ${p.project_name}` }))
+                        ...proformas.map(p => ({ value: p.id, label: `#${p.number || ''} – ${p.project_name}` }))
                       ]}
                       value={selectedProformaId || ''}
                       onValueChange={handleProformaChange}
@@ -306,9 +306,6 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
         <div className="space-y-6">
           {!initialData && (
             <Card className="border-primary/20 shadow-none rounded-xl overflow-hidden bg-primary/5">
-              <CardHeader className="pb-3 px-6 pt-6">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary">Sync</CardTitle>
-              </CardHeader>
               <CardContent className="px-6 pb-6 pt-0">
                 <div className="flex items-center space-x-3">
                   <Checkbox
@@ -349,6 +346,10 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
                           setSelectedPaymentIds(prev =>
                             checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
                           );
+                          setFormData(prev => ({
+                            ...prev,
+                            total_amount: checked ? prev.total_amount - p.amount : prev.total_amount + p.amount
+                          }));
                         }}
                         className="rounded-full"
                       />
