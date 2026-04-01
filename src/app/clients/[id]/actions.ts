@@ -43,7 +43,24 @@ export async function recordPayment(clientId: string, proformaId: string | null,
   return { success: true };
 }
 
-export async function createInvoice(clientId: string, proformaId: string, formData: FormData) {
+export async function getUnlinkedPayments(clientId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('client_id', clientId)
+    .is('invoice_id', null)
+    .eq('status', 'completed')
+    .order('payment_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching unlinked payments:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function createInvoice(clientId: string, proformaId: string, formData: FormData, paymentIds: string[] = []) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -81,9 +98,17 @@ export async function createInvoice(clientId: string, proformaId: string, formDa
     .select()
     .single();
 
-  if (error) {
+    if (error) {
     console.error('Error creating invoice:', error);
     return { error: 'Error al crear la factura. Es posible que el numero de factura ya exista.' };
+  }
+
+  // Link payments
+  if (paymentIds.length > 0) {
+    await supabase
+      .from('payments')
+      .update({ invoice_id: newData.id })
+      .in('id', paymentIds);
   }
 
   revalidatePath(`/clients/${clientId}`);

@@ -556,7 +556,24 @@ export async function getNextInvoiceNumber() {
   return 'INV-001';
 }
 
-export async function upsertInvoice(data: any) {
+export async function getUnlinkedPayments(clientId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('client_id', clientId)
+    .is('invoice_id', null)
+    .eq('status', 'completed')
+    .order('payment_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching unlinked payments:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function upsertInvoice(data: any, paymentIds: string[] = []) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -580,6 +597,15 @@ export async function upsertInvoice(data: any) {
       .single();
     
     if (error) return { error: error.message };
+
+    // Link payments
+    if (paymentIds.length > 0) {
+      await supabase
+        .from('payments')
+        .update({ invoice_id: updatedData.id })
+        .in('id', paymentIds);
+    }
+
     revalidatePath(`/proforma/${data.proforma_id}`);
     return { success: true, data: updatedData };
   } else {
@@ -601,6 +627,15 @@ export async function upsertInvoice(data: any) {
       .single();
     
     if (error) return { error: error.message };
+
+    // Link payments
+    if (paymentIds.length > 0) {
+      await supabase
+        .from('payments')
+        .update({ invoice_id: newData.id })
+        .in('id', paymentIds);
+    }
+
     revalidatePath(`/proforma/${data.proforma_id}`);
     return { success: true, data: newData };
   }

@@ -41,7 +41,6 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { BillingModals } from './BillingModals';
 import { JobDetailModal } from './JobDetailModal';
-import { InvoiceFormModal } from '@/app/proforma/[id]/components/InvoiceFormModal';
 import { EmailBillingModal } from '@/app/proforma/[id]/components/EmailBillingModal';
 import { deleteInvoice, deletePayment } from '../actions';
 import { toast } from 'sonner';
@@ -76,7 +75,6 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
   const [showMoreDetails, setShowMoreDetails] = React.useState(false);
 
   // New States for Actions
-  const [editingInvoice, setEditingInvoice] = React.useState<any | null>(null);
   const [invoiceToDelete, setInvoiceToDelete] = React.useState<any | null>(null);
   const [paymentToDelete, setPaymentToDelete] = React.useState<any | null>(null);
   const [billingEmailModal, setBillingEmailModal] = React.useState<{ type: 'invoice' | 'payment', data: any } | null>(null);
@@ -407,8 +405,13 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                                             <Mail className="mr-2 h-4 w-4" /> Send Email
                                           </DropdownMenuItem>
                                           <DropdownMenuSeparator />
-                                          <DropdownMenuItem onClick={() => setEditingInvoice(inv)}>
-                                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                                          <DropdownMenuItem className="p-0">
+                                            <Link 
+                                              href={`/invoices/${inv.id}/edit`}
+                                              className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted"
+                                            >
+                                              <Pencil className="mr-2 h-4 w-4" /> Edit
+                                            </Link>
                                           </DropdownMenuItem>
                                           <DropdownMenuItem
                                             onClick={() => setInvoiceToDelete(inv)}
@@ -600,8 +603,13 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                     <Receipt className="h-4 w-4 text-amber-600" /> Register Deposit
                   </DropdownMenuItem>
                   <div className="h-px bg-muted my-1" />
-                  <DropdownMenuItem onClick={() => setOpenModal('invoice')} className="cursor-pointer gap-2 py-2 font-medium rounded-xl">
-                    <FileText className="h-4 w-4 text-blue-600" /> Create Invoice
+                  <DropdownMenuItem className="p-0">
+                    <Link 
+                      href={`/clients/${client.id}/invoices/new`}
+                      className="flex w-full items-center gap-2 px-3 py-2 font-medium rounded-xl transition-colors hover:bg-muted"
+                    >
+                      <FileText className="h-4 w-4 text-blue-600" /> Create Invoice
+                    </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -729,18 +737,6 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
       />
 
       {/* Action Modals */}
-      {editingInvoice && (
-        <InvoiceFormModal
-          clientId={client.id}
-          proformaId={editingInvoice.proforma_id}
-          initialData={editingInvoice}
-          onClose={() => setEditingInvoice(null)}
-          onSuccess={() => {
-            setEditingInvoice(null);
-            toast.success('Invoice updated');
-          }}
-        />
-      )}
 
       {billingEmailModal && (
         <EmailBillingModal

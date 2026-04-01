@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { recordPayment, createInvoice } from '../actions';
+import { recordPayment, createInvoice, getUnlinkedPayments } from '../actions';
 import { syncInvoiceToQuickBooks } from '@/app/invoices/actions';
 import { toast } from 'sonner';
 
@@ -36,6 +36,8 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
   const [amount, setAmount] = React.useState<string>('');
   const [taxAmount, setTaxAmount] = React.useState<number>(0);
   const [discountAmount, setDiscountAmount] = React.useState<number>(0);
+  const [unlinkedPayments, setUnlinkedPayments] = React.useState<any[]>([]);
+  const [selectedPaymentIds, setSelectedPaymentIds] = React.useState<string[]>([]);
 
   const selectedProforma = proformas.find(p => p.id === selectedProformaId);
   const proformaPayments = payments?.filter(p => p.proforma_id === selectedProformaId && p.status === 'completed') || [];
@@ -56,13 +58,17 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
   // Reset states when modal opens/closes
   React.useEffect(() => {
     if (openType) {
-      setSelectedProformaId(null);
-      setAmount('');
       setTaxAmount(0);
       setDiscountAmount(0);
       setSyncToQBO(true);
+      setSelectedPaymentIds([]);
+      setUnlinkedPayments([]);
+
+      if (openType === 'invoice') {
+        getUnlinkedPayments(clientId).then(setUnlinkedPayments);
+      }
     }
-  }, [openType]);
+  }, [openType, clientId]);
 
   // Auto-fill amount when proforma is selected
   const handleProformaChange = (id: string | null) => {
@@ -106,7 +112,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
           setIsSubmitting(false);
           return;
         }
-        result = (await createInvoice(clientId, proformaId, formData)) as any;
+        result = (await createInvoice(clientId, proformaId, formData, selectedPaymentIds)) as any;
       }
 
       if (result?.error) {
@@ -247,6 +253,39 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                   <p className="text-[9px] text-muted-foreground">Sync automatically after saving.</p>
                 </div>
               </div>
+
+              {!isSubmitting && unlinkedPayments.length > 0 && (
+                <div className="space-y-2 border border-border/40 p-2.5 bg-muted/20">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Link existing payments</Label>
+                    <span className="text-[10px] text-primary font-medium">{selectedPaymentIds.length} selected</span>
+                  </div>
+                  <div className="max-h-[100px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                    {unlinkedPayments.map(p => (
+                      <div key={p.id} className="flex items-center space-x-2 p-1.5 bg-background border border-border/40 hover:border-primary/20 transition-colors">
+                        <Checkbox 
+                          id={`bp-${p.id}`}
+                          checked={selectedPaymentIds.includes(p.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedPaymentIds(prev => 
+                              checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
+                            );
+                          }}
+                        />
+                        <label htmlFor={`bp-${p.id}`} className="text-[10px] cursor-pointer flex-1 grid grid-cols-2 gap-1 items-center">
+                          <div className="flex flex-col">
+                            <span className="font-semibold">{new Date(p.payment_date).toLocaleDateString()}</span>
+                            <span className="text-[9px] text-muted-foreground">{p.payment_method || 'Unknown'}</span>
+                          </div>
+                          <div className="text-right font-bold text-primary">
+                            ${p.amount}
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <>

@@ -19,7 +19,7 @@ import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { syncInvoiceToQuickBooks } from '@/app/invoices/actions';
-import { upsertInvoice, getNextInvoiceNumber } from './actions';
+import { upsertInvoice, getNextInvoiceNumber, getUnlinkedPayments } from './actions';
 
 interface InvoiceFormModalProps {
   proformaId: string;
@@ -40,6 +40,8 @@ export function InvoiceFormModal({
 }: InvoiceFormModalProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [syncToQBO, setSyncToQBO] = React.useState(true);
+  const [unlinkedPayments, setUnlinkedPayments] = React.useState<any[]>([]);
+  const [selectedPaymentIds, setSelectedPaymentIds] = React.useState<string[]>([]);
 
   // Helper to calculate discount from proforma adjustments
   const calculateDiscount = (prof: any) => {
@@ -69,7 +71,11 @@ export function InvoiceFormModal({
         setFormData(prev => ({ ...prev, invoice_number: num }));
       });
     }
-  }, [initialData]);
+
+    if (!initialData) {
+      getUnlinkedPayments(clientId).then(setUnlinkedPayments);
+    }
+  }, [initialData, clientId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +87,7 @@ export function InvoiceFormModal({
         id: initialData?.id,
         proforma_id: proformaId,
         client_id: clientId
-      });
+      }, selectedPaymentIds);
 
       if (result.error) {
         toast.error(result.error);
@@ -223,6 +229,41 @@ export function InvoiceFormModal({
                 <p className="text-[10px] text-muted-foreground">
                   Se creará automáticamente el cliente y la factura en QuickBooks Online.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {!initialData && unlinkedPayments.length > 0 && (
+            <div className="space-y-3 border rounded-xl p-3 bg-muted/30 border-muted">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Vincular pagos sin factura</Label>
+                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                  {selectedPaymentIds.length} seleccionados
+                </span>
+              </div>
+              <div className="max-h-[120px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                {unlinkedPayments.map(p => (
+                  <div key={p.id} className="flex items-center space-x-3 p-2 rounded-lg bg-background border border-transparent hover:border-primary/20 transition-colors">
+                    <Checkbox 
+                      id={`p-${p.id}`}
+                      checked={selectedPaymentIds.includes(p.id)}
+                      onCheckedChange={(checked) => {
+                        setSelectedPaymentIds(prev => 
+                          checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
+                        );
+                      }}
+                    />
+                    <label htmlFor={`p-${p.id}`} className="text-xs cursor-pointer flex-1 grid grid-cols-2 gap-2 items-center">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{new Date(p.payment_date).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-muted-foreground capitalize">{p.payment_method || 'Desconocido'}</span>
+                      </div>
+                      <div className="text-right font-bold text-primary">
+                        ${p.amount}
+                      </div>
+                    </label>
+                  </div>
+                ))}
               </div>
             </div>
           )}

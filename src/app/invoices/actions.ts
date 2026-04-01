@@ -88,6 +88,21 @@ export async function syncInvoiceToQuickBooks(invoiceId: string) {
       })
       .eq('id', invoiceId);
 
+    // 7. Sync associated payments
+    const { data: linkedPayments } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('invoice_id', invoiceId)
+      .is('qbo_payment_id', null);
+
+    if (linkedPayments && linkedPayments.length > 0) {
+      for (const p of linkedPayments) {
+        await syncPaymentToQuickBooks(p.id).catch(err => {
+          console.error(`Error syncing linked payment ${p.id}:`, err);
+        });
+      }
+    }
+
     revalidatePath('/invoices');
     return { success: true as const, qboInvoiceId: qboInvoice.Invoice.Id };
   } catch (e: any) {

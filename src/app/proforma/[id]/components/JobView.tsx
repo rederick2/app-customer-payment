@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { format, parseISO, formatISO } from 'date-fns';
@@ -168,8 +168,8 @@ export function JobView({
   const [editingLabor, setEditingLabor] = React.useState<any | null>(null);
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
   const [adjustments, setAdjustments] = React.useState((proforma.adjustments || []) as any[]);
-  const [isAddingInvoice, setIsAddingInvoice] = React.useState(false);
-  const [editingInvoice, setEditingInvoice] = React.useState<any>(null);
+  const [isAddingInvoice, setIsAddingInvoice] = React.useState(false); // Deprecated
+  const [editingInvoice, setEditingInvoice] = React.useState<any>(null); // Deprecated
   const [invoiceToDelete, setInvoiceToDelete] = React.useState<any>(null);
   const [billingEmailModal, setBillingEmailModal] = React.useState<{ type: 'invoice' | 'payment', data: any } | null>(null);
   const [isEditingAdjustments, setIsEditingAdjustments] = React.useState(false);
@@ -2130,8 +2130,13 @@ export function JobView({
                                 <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
                                   <Mail className="h-3.5 w-3.5" /> Send by Email
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingInvoice(inv)}>
-                                  <Pencil className="h-3.5 w-3.5" /> Edit
+                                <DropdownMenuItem className="p-0">
+                                  <Link 
+                                    href={`/invoices/${inv.id}/edit`}
+                                    className="flex w-full items-center gap-2 px-2 py-1.5 text-xs transition-colors hover:bg-muted"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" /> Edit
+                                  </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
                                   <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -2145,13 +2150,12 @@ export function JobView({
                   </table>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  className="text-primary font-bold px-0 h-auto hover:bg-transparent"
-                  onClick={() => setIsAddingInvoice(true)}
+                <Link
+                  href={`/clients/${proforma.client_id}/invoices/new?proformaId=${id}`}
+                  className={cn(buttonVariants({ variant: 'ghost' }), "text-primary font-bold px-0 h-auto hover:bg-transparent")}
                 >
                   Create Invoice
-                </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -2541,23 +2545,7 @@ export function JobView({
         </DialogContent>
       </Dialog>
 
-      {(isAddingInvoice || editingInvoice) && (
-        <InvoiceFormModal
-          proformaId={id}
-          proforma={proforma}
-          clientId={proforma.client_id}
-          initialData={editingInvoice}
-          onClose={() => {
-            setIsAddingInvoice(false);
-            setEditingInvoice(null);
-          }}
-          onSuccess={() => {
-            setIsAddingInvoice(false);
-            setEditingInvoice(null);
-            fetchInvoices();
-          }}
-        />
-      )}
+      {/* InvoiceFormModal has been removed in favor of dedicated pages */}
 
       {billingEmailModal && (
         <EmailBillingModal
