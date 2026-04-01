@@ -169,7 +169,7 @@ export default function CommunicationChat({ proformaId, messages: initialMessage
 
     if (!result.success) {
       setNewMessage(text);
-      toast.error('Error', { description: result.error || 'No se pudo enviar el mensaje.' });
+      toast.error('Error', { description: result.error || 'Can\'t send the message.' });
     }
 
     setIsSubmitting(false);
@@ -201,10 +201,10 @@ export default function CommunicationChat({ proformaId, messages: initialMessage
           {/* Row 1: Icon + Title + Realtime badge */}
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
-            <span className="truncate">Comentarios y Consultas</span>
+            <span className="truncate">Comments and Questions</span>
             <span className="ml-auto text-xs font-normal text-emerald-600 flex items-center gap-1 flex-shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-              <span className="hidden sm:inline">En tiempo real</span>
+              <span className="hidden sm:inline">Realtime</span>
             </span>
           </div>
           {/* Row 2: Online/Offline status */}
@@ -221,17 +221,16 @@ export default function CommunicationChat({ proformaId, messages: initialMessage
         {/* Messages List */}
         <div className="space-y-4 max-h-[55vh] md:max-h-[400px] overflow-y-auto p-1 md:p-2">
           {messages.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No hay mensajes aún. ¡Sé el primero en escribir!</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No messages yet. Be the first to write!</p>
           ) : (
             messages.map((msg) => {
               const isMine = msg.sender_type === role;
               return (
                 <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                    isMine
+                  <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${isMine
                       ? 'bg-primary text-primary-foreground rounded-tr-sm'
                       : 'bg-muted text-foreground rounded-tl-sm border border-border/40'
-                  }`}>
+                    }`}>
                     <p className="text-sm break-words whitespace-pre-wrap">{msg.message}</p>
                   </div>
                   <span className="text-[10px] text-muted-foreground mt-1 px-1 flex items-center gap-1">
@@ -253,7 +252,7 @@ export default function CommunicationChat({ proformaId, messages: initialMessage
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:150ms]" />
                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce [animation-delay:300ms]" />
               </div>
-              <span className="text-[10px] text-muted-foreground self-end mb-0.5">{otherLabel} está escribiendo…</span>
+              <span className="text-[10px] text-muted-foreground self-end mb-0.5">{otherLabel} is typing…</span>
             </div>
           )}
 
@@ -263,7 +262,7 @@ export default function CommunicationChat({ proformaId, messages: initialMessage
         {/* Input Area */}
         <div className="relative mt-4">
           <Textarea
-            placeholder="Escribe un mensaje..."
+            placeholder="Write a message..."
             value={newMessage}
             onChange={handleInputChange}
             className="min-h-[80px] resize-none pr-12 pb-10"
@@ -276,7 +275,7 @@ export default function CommunicationChat({ proformaId, messages: initialMessage
           />
           <div className="absolute bottom-2 right-2 flex items-center gap-2">
             <span className="text-xs text-muted-foreground hidden sm:inline-block mr-2">
-              Enter para enviar
+              Enter to send
             </span>
             <Button
               size="icon"
