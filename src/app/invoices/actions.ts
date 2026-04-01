@@ -8,7 +8,7 @@ export async function syncInvoiceToQuickBooks(invoiceId: string) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Not authenticated' };
+    if (!user) return { success: false as const, error: 'Not authenticated' };
 
     // 1. Fetch invoice details
     const { data: invoice, error: iError } = await supabase
@@ -17,14 +17,14 @@ export async function syncInvoiceToQuickBooks(invoiceId: string) {
       .eq('id', invoiceId)
       .single();
 
-    if (iError || !invoice) return { error: 'Invoice not found' };
+    if (iError || !invoice) return { success: false as const, error: 'Invoice not found' };
 
     // 2. Initialize QBO Client
     let qbo;
     try {
       qbo = await QuickBooksClient.fromUserId(user.id);
     } catch (e) {
-      return { error: 'QuickBooks not connected. Please go to Settings > Integrations.' };
+      return { success: false as const, error: 'QuickBooks not connected. Please go to Settings > Integrations.' };
     }
 
     // 3. Create or find customer in QBO
@@ -89,10 +89,10 @@ export async function syncInvoiceToQuickBooks(invoiceId: string) {
       .eq('id', invoiceId);
 
     revalidatePath('/invoices');
-    return { success: true, qboInvoiceId: qboInvoice.Invoice.Id };
+    return { success: true as const, qboInvoiceId: qboInvoice.Invoice.Id };
   } catch (e: any) {
     console.error('Sync Error:', e);
-    return { error: e.message || 'Failed to sync with QuickBooks' };
+    return { success: false as const, error: e.message || 'Failed to sync with QuickBooks' };
   }
 }
 
@@ -100,7 +100,7 @@ export async function syncPaymentToQuickBooks(paymentId: string) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Not authenticated' };
+    if (!user) return { success: false as const, error: 'Not authenticated' };
 
     // 1. Fetch payment details
     const { data: payment, error: pError } = await supabase
@@ -109,11 +109,11 @@ export async function syncPaymentToQuickBooks(paymentId: string) {
       .eq('id', paymentId)
       .single();
 
-    if (pError || !payment) return { error: 'Payment not found' };
+    if (pError || !payment) return { success: false as const, error: 'Payment not found' };
     
     // Safety check: Needs an invoice
     if (!payment.invoices || !payment.invoices.qbo_invoice_id) {
-      return { error: 'Related invoice must be synced to QuickBooks first.' };
+      return { success: false as const, error: 'Related invoice must be synced to QuickBooks first.' };
     }
 
     // 2. Initialize QBO Client
@@ -121,7 +121,7 @@ export async function syncPaymentToQuickBooks(paymentId: string) {
     try {
       qbo = await QuickBooksClient.fromUserId(user.id);
     } catch (e) {
-      return { error: 'QuickBooks not connected.' };
+      return { success: false as const, error: 'QuickBooks not connected.' };
     }
 
     // 3. Create Payment in QBO
@@ -143,10 +143,10 @@ export async function syncPaymentToQuickBooks(paymentId: string) {
       .eq('id', paymentId);
 
     revalidatePath('/invoices');
-    return { success: true, qboPaymentId: qboPayment.Payment.Id };
+    return { success: true as const, qboPaymentId: qboPayment.Payment.Id };
   } catch (e: any) {
     console.error('Payment Sync Error:', e);
-    return { error: e.message || 'Failed to sync payment' };
+    return { success: false as const, error: e.message || 'Failed to sync payment' };
   }
 }
 
@@ -253,7 +253,7 @@ export async function syncInvoiceStatusFromQuickBooks(invoiceId: string) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Not authenticated' };
+    if (!user) return { success: false as const, error: 'Not authenticated' };
 
     // 1. Fetch local invoice
     const { data: invoice, error: iError } = await supabase
@@ -263,7 +263,7 @@ export async function syncInvoiceStatusFromQuickBooks(invoiceId: string) {
       .single();
 
     if (iError || !invoice || !invoice.qbo_invoice_id) {
-      return { error: 'Invoice not found or not synced to QuickBooks' };
+      return { success: false as const, error: 'Invoice not found or not synced to QuickBooks' };
     }
 
     // 2. Initialize QBO Client
@@ -271,16 +271,19 @@ export async function syncInvoiceStatusFromQuickBooks(invoiceId: string) {
     try {
       qbo = await QuickBooksClient.fromUserId(user.id);
     } catch (e) {
-      return { error: 'QuickBooks not connected.' };
+      return { success: false as const, error: 'QuickBooks not connected.' };
     }
 
     // 3. Sync
     const result = await syncInvoiceByQboId(invoice.qbo_invoice_id, qbo);
+    if (!result) {
+      return { success: false as const, error: 'No se pudo sincronizar el estado desde QuickBooks' };
+    }
 
     revalidatePath('/invoices');
-    return { success: true, ...result };
+    return { success: true as const, ...result };
   } catch (e: any) {
     console.error('Status Sync Error:', e);
-    return { error: e.message || 'Failed to sync status' };
+    return { success: false as const, error: e.message || 'Failed to sync status' };
   }
 }
