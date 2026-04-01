@@ -62,8 +62,42 @@ export async function POST(req: NextRequest) {
         try {
           if (name === 'Invoice') {
             await syncInvoiceByQboId(id, qboClient, supabase);
+            
+            // Notification for Invoice Sync
+            const { data: updatedInvoice } = await supabase
+              .from('invoices')
+              .select('invoice_number, proforma_id, client_id')
+              .eq('qbo_invoice_id', id)
+              .single();
+
+            if (updatedInvoice) {
+              await supabase.from('notifications').insert({
+                user_id: integration.user_id,
+                proforma_id: updatedInvoice.proforma_id,
+                client_id: updatedInvoice.client_id,
+                type: 'sync',
+                message: `Factura ${updatedInvoice.invoice_number} actualizada desde QuickBooks`
+              });
+            }
           } else if (name === 'Payment') {
             await syncPaymentByQboId(id, qboClient, supabase);
+
+            // Notification for Payment Sync
+            const { data: updatedPayment } = await supabase
+              .from('payments')
+              .select('amount, proforma_id, client_id')
+              .eq('qbo_payment_id', id)
+              .single();
+
+            if (updatedPayment) {
+              await supabase.from('notifications').insert({
+                user_id: integration.user_id,
+                proforma_id: updatedPayment.proforma_id,
+                client_id: updatedPayment.client_id,
+                type: 'payment',
+                message: `Pago recibido por $${updatedPayment.amount.toLocaleString()} para el proyecto`
+              });
+            }
           }
         } catch (err) {
           console.error(`Webhook Error syncing ${name} ${id}:`, err);

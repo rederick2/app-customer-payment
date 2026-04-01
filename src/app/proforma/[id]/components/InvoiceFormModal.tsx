@@ -16,6 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { syncInvoiceToQuickBooks } from '@/app/invoices/actions';
 import { upsertInvoice, getNextInvoiceNumber } from './actions';
 
 interface InvoiceFormModalProps {
@@ -34,6 +36,7 @@ export function InvoiceFormModal({
   onSuccess 
 }: InvoiceFormModalProps) {
   const [isLoading, setIsLoading] = React.useState(false);
+  const [syncToQBO, setSyncToQBO] = React.useState(true);
   const [formData, setFormData] = React.useState({
     invoice_number: initialData?.invoice_number || '',
     issue_date: initialData?.issue_date || new Date().toISOString().split('T')[0],
@@ -45,7 +48,7 @@ export function InvoiceFormModal({
 
   React.useEffect(() => {
     if (!initialData?.invoice_number) {
-      getNextInvoiceNumber().then(num => {
+      getNextInvoiceNumber().then((num: string) => {
         setFormData(prev => ({ ...prev, invoice_number: num }));
       });
     }
@@ -66,7 +69,17 @@ export function InvoiceFormModal({
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(initialData ? 'Factura actualizada' : 'Factura creada');
+        if (!initialData && syncToQBO && result.data?.id) {
+          toast.success('Factura creada. Sincronizando...');
+          const syncRes = await syncInvoiceToQuickBooks(result.data.id);
+          if (syncRes.success) {
+            toast.success('Sincronización completada');
+          } else {
+            toast.error('Error en sincronización: ' + syncRes.error);
+          }
+        } else {
+          toast.success(initialData ? 'Factura actualizada' : 'Factura creada');
+        }
         onSuccess();
       }
     } catch (error) {
@@ -150,6 +163,24 @@ export function InvoiceFormModal({
               required
             />
           </div>
+
+          {!initialData && (
+            <div className="flex items-center space-x-2 pt-2 bg-primary/5 p-3 rounded-xl border border-primary/10">
+              <Checkbox 
+                id="sync" 
+                checked={syncToQBO} 
+                onCheckedChange={(checked) => setSyncToQBO(!!checked)} 
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label htmlFor="sync" className="text-xs font-bold uppercase tracking-wider cursor-pointer text-primary">
+                  Sincronizar con QuickBooks
+                </Label>
+                <p className="text-[10px] text-muted-foreground">
+                  Se creará automáticamente el cliente y la factura en QuickBooks Online.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notas Internas</Label>

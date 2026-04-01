@@ -167,6 +167,19 @@ export async function syncInvoiceByQboId(qboInvoiceId: string, qboClient: QuickB
   const qboInvoice = qboInvoiceData.Invoice;
   const balance = qboInvoice.Balance;
   
+  // Extract Taxes
+  const totalTax = qboInvoice.TxnTaxDetail?.TotalTax || 0;
+  
+  // Extract Discounts (can be a line item or a total amount depending on configuration)
+  let totalDiscount = 0;
+  if (Array.isArray(qboInvoice.Line)) {
+    qboInvoice.Line.forEach((line: any) => {
+      if (line.DetailType === 'DiscountLineDetail') {
+        totalDiscount += (line.Amount || 0);
+      }
+    });
+  }
+
   let newStatus = invoice.status;
   if (balance <= 0) {
     newStatus = 'paid';
@@ -179,6 +192,8 @@ export async function syncInvoiceByQboId(qboInvoiceId: string, qboClient: QuickB
     .update({ 
       invoice_number: qboInvoice.DocNumber || invoice.invoice_number,
       total_amount: qboInvoice.TotalAmt || invoice.total_amount,
+      tax_amount: totalTax,
+      discount_amount: totalDiscount,
       issue_date: qboInvoice.TxnDate || invoice.issue_date,
       due_date: qboInvoice.DueDate || invoice.due_date,
       notes: qboInvoice.PrivateNote || invoice.notes,
@@ -220,25 +235,44 @@ export async function syncPaymentByQboId(qboPaymentId: string, qboClient: QuickB
 
     if (invoice) {
       // Record payment locally (linked to client and proforma, NOT invoice_id)
-      const { error: upsertError } = await supabase
+      const paymentData = {
+        client_id: invoice.client_id,
+        proforma_id: invoice.proforma_id,
+        amount: qboPayment.TotalAmt,
+        payment_date: qboPayment.TxnDate,
+        payment_method: qboPayment.PaymentMethodRef?.name || 'QuickBooks',
+        reference_number: qboPayment.PaymentRefNum, // Transaction Number
+        bank_name: qboPayment.DepositToAccountRef?.name, // Bank Name
+        notes: qboPayment.PrivateNote,
+        type: 'payment',
+        status: 'completed',
+        qbo_payment_id: qboPaymentId,
+        last_qbo_sync_at: new Date().toISOString()
+      };
+
+      // Check if payment already exists
+      const { data: existingPayment } = await supabase
         .from('payments')
-        .upsert({
-          client_id: invoice.client_id,
-          proforma_id: invoice.proforma_id,
-          amount: qboPayment.TotalAmt,
-          payment_date: qboPayment.TxnDate,
-          payment_method: qboPayment.PaymentMethodRef?.name || 'QuickBooks',
-          reference_number: qboPayment.PaymentRefNum, // Transaction Number
-          bank_name: qboPayment.DepositToAccountRef?.name, // Bank Name
-          notes: qboPayment.PrivateNote,
-          type: 'payment',
-          status: 'completed',
-          qbo_payment_id: qboPaymentId,
-          last_qbo_sync_at: new Date().toISOString()
-        }, { onConflict: 'qbo_payment_id' });
+        .select('id')
+        .eq('qbo_payment_id', qboPaymentId)
+        .maybeSingle();
+
+      let upsertError;
+      if (existingPayment) {
+        const { error } = await supabase
+          .from('payments')
+          .update(paymentData)
+          .eq('id', existingPayment.id);
+        upsertError = error;
+      } else {
+        const { error } = await supabase
+          .from('payments')
+          .insert(paymentData);
+        upsertError = error;
+      }
 
       if (upsertError) {
-        console.error(`Error upserting payment for QBO ID ${qboPaymentId}:`, upsertError);
+        console.error(`Error syncing payment for QBO ID ${qboPaymentId}:`, upsertError);
       }
 
       // Update invoice status based on balance

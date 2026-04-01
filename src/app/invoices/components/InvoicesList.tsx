@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { syncInvoiceToQuickBooks, syncPaymentToQuickBooks, syncInvoiceStatusFromQuickBooks } from '../actions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { ChevronDown, ChevronUp, CreditCard, DollarSign } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { ChevronDown, ChevronUp, CreditCard, DollarSign, Info, Percent, Tag } from 'lucide-react';
 
 interface InvoicesListProps {
   initialInvoices: any[];
@@ -21,6 +22,32 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [expandedInvoices, setExpandedInvoices] = React.useState<Record<string, boolean>>({});
   const itemsPerPage = 10;
+
+  // Realtime subscription
+  React.useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel('invoices-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'invoices' },
+        () => {
+          router.refresh();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'payments' },
+        () => {
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
 
   const toggleExpand = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,8 +164,22 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                           <p className="font-bold tabular-nums text-primary">
                             ${invoice.total_amount?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                           </p>
+                          {(invoice.tax_amount > 0 || invoice.discount_amount > 0) && (
+                            <div className="flex flex-col items-end gap-0.5 mt-0.5">
+                              {invoice.tax_amount > 0 && (
+                                <p className="text-[9px] text-muted-foreground flex items-center gap-1">
+                                  <Percent className="h-2.5 w-2.5" /> Tax: ${invoice.tax_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </p>
+                              )}
+                              {invoice.discount_amount > 0 && (
+                                <p className="text-[9px] text-rose-500/80 flex items-center gap-1">
+                                  <Tag className="h-2.5 w-2.5" /> Desc: -${invoice.discount_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </p>
+                              )}
+                            </div>
+                          )}
                           {totalPaid > 0 && (
-                            <p className="text-[10px] text-emerald-600 font-medium">
+                            <p className="text-[10px] text-emerald-600 font-medium mt-1">
                               Pagado: ${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </p>
                           )}

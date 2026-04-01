@@ -563,7 +563,7 @@ export async function upsertInvoice(data: any) {
   if (!user) return { error: 'No autorizado' };
 
   if (data.id) {
-    const { error } = await supabase
+    const { data: updatedData, error } = await supabase
       .from('invoices')
       .update({
         invoice_number: data.invoice_number,
@@ -573,11 +573,15 @@ export async function upsertInvoice(data: any) {
         status: data.status,
         notes: data.notes
       })
-      .eq('id', data.id);
+      .eq('id', data.id)
+      .select()
+      .single();
     
     if (error) return { error: error.message };
+    revalidatePath(`/proforma/${data.proforma_id}`);
+    return { success: true, data: updatedData };
   } else {
-    const { error } = await supabase
+    const { data: newData, error } = await supabase
       .from('invoices')
       .insert({
         proforma_id: data.proforma_id,
@@ -588,13 +592,14 @@ export async function upsertInvoice(data: any) {
         total_amount: data.total_amount,
         status: data.status,
         notes: data.notes
-      });
+      })
+      .select()
+      .single();
     
     if (error) return { error: error.message };
+    revalidatePath(`/proforma/${data.proforma_id}`);
+    return { success: true, data: newData };
   }
-
-  revalidatePath(`/proforma/${data.proforma_id}`);
-  return { success: true };
 }
 
 export async function deleteInvoice(invoiceId: string, proformaId: string) {
