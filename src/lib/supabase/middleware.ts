@@ -35,9 +35,11 @@ export async function updateSession(request: NextRequest) {
   // Proteger rutas privadas
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
   const isPublicSharedPage = request.nextUrl.pathname.startsWith('/p/')
+  const isWebhook = request.nextUrl.pathname.startsWith('/api/quickbooks/webhook')
+  const isPublicFile = request.nextUrl.pathname === '/robots.txt' || request.nextUrl.pathname === '/sitemap.xml'
   
   // Si no está logueado y no está en la página de login o vista pública, redirigir a login
-  if (!user && !isAuthPage && !isPublicSharedPage) {
+  if (!user && !isAuthPage && !isPublicSharedPage && !isWebhook && !isPublicFile) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
