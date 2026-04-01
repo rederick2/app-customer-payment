@@ -57,22 +57,29 @@ export async function createInvoice(clientId: string, proformaId: string, formDa
   const dueDate = formData.get('due_date') as string;
   const notes = formData.get('notes') as string;
 
+  const taxAmount = parseFloat(formData.get('tax_amount') as string) || 0;
+  const discountAmount = parseFloat(formData.get('discount_amount') as string) || 0;
+
   if (!invoiceNumber) {
     return { error: 'Se requiere un numero de factura.' };
   }
 
-  const { error } = await supabase
+  const { data: newData, error } = await supabase
     .from('invoices')
     .insert([{
       client_id: clientId,
       proforma_id: proformaId,
       invoice_number: invoiceNumber,
       total_amount: totalAmount,
+      tax_amount: taxAmount,
+      discount_amount: discountAmount,
       issue_date: issueDate,
       due_date: dueDate,
       notes,
       status: 'sent'
-    }]);
+    }])
+    .select()
+    .single();
 
   if (error) {
     console.error('Error creating invoice:', error);
@@ -80,7 +87,7 @@ export async function createInvoice(clientId: string, proformaId: string, formDa
   }
 
   revalidatePath(`/clients/${clientId}`);
-  return { success: true };
+  return { success: true, data: newData };
 }
 
 export async function deleteInvoice(id: string, clientId: string) {

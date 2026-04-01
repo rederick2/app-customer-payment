@@ -14,7 +14,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 import { recordPayment, createInvoice } from '../actions';
+import { syncInvoiceToQuickBooks } from '@/app/invoices/actions';
 import { toast } from 'sonner';
 
 interface BillingModalsProps {
@@ -28,19 +31,36 @@ interface BillingModalsProps {
 
 export function BillingModals({ clientId, proformas, payments, invoices, openType, onClose }: BillingModalsProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [syncToQBO, setSyncToQBO] = React.useState(true);
   const [selectedProformaId, setSelectedProformaId] = React.useState<string | null>(null);
   const [amount, setAmount] = React.useState<string>('');
+  const [taxAmount, setTaxAmount] = React.useState<number>(0);
+  const [discountAmount, setDiscountAmount] = React.useState<number>(0);
 
   const selectedProforma = proformas.find(p => p.id === selectedProformaId);
   const proformaPayments = payments?.filter(p => p.proforma_id === selectedProformaId && p.status === 'completed') || [];
   const totalPaidForProforma = proformaPayments.reduce((acc, p) => acc + p.amount, 0);
   const remainingAmount = selectedProforma ? (selectedProforma.total - totalPaidForProforma) : 0;
 
+  // Helper to calculate discount from proforma adjustments
+  const calculateDiscount = (prof: any) => {
+    if (!prof || !prof.adjustments) return 0;
+    const subtotal = prof.subtotal || 0;
+    const discountAdjustments = prof.adjustments.filter((a: any) => a.type === 'discount');
+    return discountAdjustments.reduce((acc: number, adj: any) => {
+      const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
+      return acc + amount;
+    }, 0);
+  };
+
   // Reset states when modal opens/closes
   React.useEffect(() => {
     if (openType) {
       setSelectedProformaId(null);
       setAmount('');
+      setTaxAmount(0);
+      setDiscountAmount(0);
+      setSyncToQBO(true);
     }
   }, [openType]);
 
@@ -49,6 +69,8 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
     if (!id) {
       setSelectedProformaId(null);
       setAmount('');
+      setTaxAmount(0);
+      setDiscountAmount(0);
       return;
     }
 
@@ -59,6 +81,10 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
       const tPaid = pPayments.reduce((acc, pay) => acc + pay.amount, 0);
       const rem = p.total - tPaid;
       setAmount(rem > 0 ? rem.toString() : '0');
+      
+      // Auto-fill tax and discount
+      setTaxAmount(p.tax || 0);
+      setDiscountAmount(calculateDiscount(p));
     }
   };
 
@@ -80,17 +106,27 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
           setIsSubmitting(false);
           return;
         }
-        result = await createInvoice(clientId, proformaId, formData);
+        result = (await createInvoice(clientId, proformaId, formData)) as any;
       }
 
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success(
-          openType === 'invoice'
-            ? 'Invoice created successfully'
-            : `${openType === 'deposit' ? 'Deposit' : 'Payment'} registered successfully`
-        );
+        if (openType === 'invoice' && syncToQBO && result?.data?.id) {
+          toast.success('Factura creada. Sincronizando con QuickBooks...');
+          const syncRes = await syncInvoiceToQuickBooks(result.data.id);
+          if (syncRes.success) {
+            toast.success('Sincronización completada');
+          } else {
+            toast.error('Error en sincronización: ' + syncRes.error);
+          }
+        } else {
+          toast.success(
+            openType === 'invoice'
+              ? 'Invoice created successfully'
+              : `${openType === 'deposit' ? 'Deposit' : 'Payment'} registered successfully`
+          );
+        }
         onClose();
       }
     } catch (error) {
@@ -141,31 +177,75 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
 
           {openType === 'invoice' ? (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="invoice_number">Invoice Number *</Label>
-                <Input id="invoice_number" className="rounded-none" name="invoice_number" placeholder="Ex. INV-001" required />
+              <div className="space-y-1">
+                <Label htmlFor="invoice_number" className="text-xs">Invoice Number *</Label>
+                <Input id="invoice_number" className="rounded-none h-8" name="invoice_number" placeholder="Ex. INV-001" required />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="total_amount">Total Amount *</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="total_amount" className="text-xs">Total *</Label>
                   <Input
                     id="total_amount"
-                    className="rounded-none"
+                    className={cn("rounded-none h-8", selectedProformaId && "bg-muted cursor-not-allowed")}
                     name="total_amount"
                     type="number"
                     step="0.01"
                     required
-                    defaultValue={selectedProforma?.total || ''}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    readOnly={!!selectedProformaId}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="issue_date">Issue Date</Label>
-                  <Input id="issue_date" className="rounded-none" name="issue_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                <div className="space-y-1">
+                  <Label htmlFor="tax_amount" className="text-xs">Tax ($)</Label>
+                  <Input
+                    id="tax_amount"
+                    className={cn("rounded-none h-8", selectedProformaId && "bg-muted cursor-not-allowed")}
+                    name="tax_amount"
+                    type="number"
+                    step="0.01"
+                    value={taxAmount}
+                    onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
+                    readOnly={!!selectedProformaId}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="discount_amount" className="text-xs">Desc. ($)</Label>
+                  <Input
+                    id="discount_amount"
+                    className={cn("rounded-none h-8", selectedProformaId && "bg-muted cursor-not-allowed")}
+                    name="discount_amount"
+                    type="number"
+                    step="0.01"
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                    readOnly={!!selectedProformaId}
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="due_date">Due Date</Label>
-                <Input id="due_date" className="rounded-none" name="due_date" type="date" />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="issue_date" className="text-xs">Issue Date</Label>
+                  <Input id="issue_date" className="rounded-none h-8" name="issue_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="due_date" className="text-xs">Due Date</Label>
+                  <Input id="due_date" className="rounded-none h-8" name="due_date" type="date" />
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2 bg-primary/5 p-2.5 border border-primary/10 rounded-none">
+                <Checkbox 
+                  id="sync-qbo" 
+                  checked={syncToQBO} 
+                  onCheckedChange={(checked) => setSyncToQBO(!!checked)} 
+                />
+                <div className="grid gap-0.5 leading-none">
+                  <Label htmlFor="sync-qbo" className="text-[10px] font-bold uppercase tracking-wider cursor-pointer text-primary">
+                    Sincronizar con QuickBooks
+                  </Label>
+                  <p className="text-[9px] text-muted-foreground">Sync automatically after saving.</p>
+                </div>
               </div>
             </>
           ) : (

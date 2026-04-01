@@ -17,11 +17,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 import { syncInvoiceToQuickBooks } from '@/app/invoices/actions';
 import { upsertInvoice, getNextInvoiceNumber } from './actions';
 
 interface InvoiceFormModalProps {
   proformaId: string;
+  proforma?: any;
   clientId: string;
   initialData?: any;
   onClose: () => void;
@@ -30,6 +32,7 @@ interface InvoiceFormModalProps {
 
 export function InvoiceFormModal({ 
   proformaId, 
+  proforma,
   clientId, 
   initialData, 
   onClose, 
@@ -37,11 +40,25 @@ export function InvoiceFormModal({
 }: InvoiceFormModalProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [syncToQBO, setSyncToQBO] = React.useState(true);
+
+  // Helper to calculate discount from proforma adjustments
+  const calculateDiscount = (prof: any) => {
+    if (!prof || !prof.adjustments) return 0;
+    const subtotal = prof.subtotal || 0;
+    const discountAdjustments = prof.adjustments.filter((a: any) => a.type === 'discount');
+    return discountAdjustments.reduce((acc: number, adj: any) => {
+      const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
+      return acc + amount;
+    }, 0);
+  };
+
   const [formData, setFormData] = React.useState({
     invoice_number: initialData?.invoice_number || '',
     issue_date: initialData?.issue_date || new Date().toISOString().split('T')[0],
     due_date: initialData?.due_date || '',
-    total_amount: initialData?.total_amount || 0,
+    total_amount: initialData?.total_amount || proforma?.total || 0,
+    tax_amount: initialData?.tax_amount ?? (proforma?.tax || 0),
+    discount_amount: initialData?.discount_amount ?? calculateDiscount(proforma),
     status: initialData?.status || 'draft',
     notes: initialData?.notes || ''
   });
@@ -152,16 +169,44 @@ export function InvoiceFormModal({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="total_amount">Monto Total ($)</Label>
-            <Input
-              id="total_amount"
-              type="number"
-              step="0.01"
-              value={formData.total_amount}
-              onChange={e => setFormData({ ...formData, total_amount: parseFloat(e.target.value) })}
-              required
-            />
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="total_amount">Total ($)</Label>
+              <Input
+                id="total_amount"
+                type="number"
+                step="0.01"
+                value={formData.total_amount}
+                onChange={e => setFormData({ ...formData, total_amount: parseFloat(e.target.value) || 0 })}
+                required
+                readOnly={!!proforma}
+                className={cn(!!proforma && "bg-muted cursor-not-allowed")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tax_amount">Impuestos ($)</Label>
+              <Input
+                id="tax_amount"
+                type="number"
+                step="0.01"
+                value={formData.tax_amount}
+                onChange={e => setFormData({ ...formData, tax_amount: parseFloat(e.target.value) || 0 })}
+                readOnly={!!proforma}
+                className={cn(!!proforma && "bg-muted cursor-not-allowed")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="discount_amount">Desc. ($)</Label>
+              <Input
+                id="discount_amount"
+                type="number"
+                step="0.01"
+                value={formData.discount_amount}
+                onChange={e => setFormData({ ...formData, discount_amount: parseFloat(e.target.value) || 0 })}
+                readOnly={!!proforma}
+                className={cn(!!proforma && "bg-muted cursor-not-allowed")}
+              />
+            </div>
           </div>
 
           {!initialData && (

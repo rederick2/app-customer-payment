@@ -2544,6 +2544,7 @@ export function JobView({
       {(isAddingInvoice || editingInvoice) && (
         <InvoiceFormModal
           proformaId={id}
+          proforma={proforma}
           clientId={proforma.client_id}
           initialData={editingInvoice}
           onClose={() => {

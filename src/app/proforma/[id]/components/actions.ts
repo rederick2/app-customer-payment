@@ -570,6 +570,8 @@ export async function upsertInvoice(data: any) {
         issue_date: data.issue_date,
         due_date: data.due_date,
         total_amount: data.total_amount,
+        tax_amount: data.tax_amount || 0,
+        discount_amount: data.discount_amount || 0,
         status: data.status,
         notes: data.notes
       })
@@ -590,6 +592,8 @@ export async function upsertInvoice(data: any) {
         issue_date: data.issue_date,
         due_date: data.due_date,
         total_amount: data.total_amount,
+        tax_amount: data.tax_amount || 0,
+        discount_amount: data.discount_amount || 0,
         status: data.status,
         notes: data.notes
       })
