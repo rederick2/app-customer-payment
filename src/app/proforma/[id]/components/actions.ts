@@ -9,6 +9,7 @@ import InvoicePDF from '@/lib/pdf/InvoicePDF';
 import PaymentPDF from '@/lib/pdf/PaymentPDF';
 import { sendEmail } from '@/lib/mail';
 import React from 'react';
+import { QuickBooksClient } from '@/lib/quickbooks/client';
 
 async function logStatusChange(proformaId: string, newStatus: string, oldStatus?: string, userId?: string) {
   const supabase = await createClient(); // This is fine for internal server-side calls if authenticated
@@ -795,6 +796,91 @@ export async function sendPaymentEmail(paymentId: string, formData: FormData) {
 
     return { success: true };
   } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function getQuickBooksVendors(userId: string) {
+  const supabase = await createClient();
+  try {
+    const qbo = await QuickBooksClient.fromUserId(userId, supabase);
+    const vendors = await qbo.getVendors();
+    return { success: true, vendors };
+  } catch (err: any) {
+    console.error('Error fetching QBO vendors:', err);
+    return { error: err.message };
+  }
+}
+
+export async function getQuickBooksAccounts(userId: string, type?: string) {
+  const supabase = await createClient();
+  try {
+    const qbo = await QuickBooksClient.fromUserId(userId, supabase);
+    const accounts = await qbo.getAccounts(type);
+    return { success: true, accounts };
+  } catch (err: any) {
+    console.error('Error fetching QBO accounts:', err);
+    return { error: err.message };
+  }
+}
+
+export async function syncExpenseToQuickBooks({
+  expenseId,
+  proformaId,
+  vendorRef,
+  bankAccountRef,
+  expenseAccountRef,
+  userId
+}: {
+  expenseId: string;
+  proformaId: string;
+  vendorRef: string;
+  bankAccountRef: string;
+  expenseAccountRef: string;
+  userId: string;
+}) {
+  const supabase = await createClient();
+
+  // 1. Fetch expense details
+  const { data: expense, error: eError } = await supabase
+    .from('job_expenses')
+    .select('*')
+    .eq('id', expenseId)
+    .single();
+
+  if (eError || !expense) return { error: 'Gasto no encontrado' };
+
+  try {
+    const qbo = await QuickBooksClient.fromUserId(userId, supabase);
+    
+    const purchaseResponse = await qbo.createPurchase({
+      vendorRef,
+      bankAccountRef,
+      expenseAccountRef,
+      amount: expense.amount,
+      description: expense.description || `Expense: ${expense.place}`,
+      date: expense.date,
+      paymentType: 'Cash', // Defaulting to Cash
+    });
+
+    // 2. Update local expense with sync info
+    const { error: uError } = await supabase
+      .from('job_expenses')
+      .update({
+        qbo_vendor_id: vendorRef,
+        qbo_account_id: expenseAccountRef,
+        qbo_bank_account_id: bankAccountRef,
+        qbo_purchase_id: purchaseResponse.Purchase.Id,
+        sync_status: 'synced'
+      })
+      .eq('id', expenseId);
+
+    if (uError) throw new Error('Synced but failed to update local DB');
+
+    revalidatePath(`/proforma/${proformaId}`);
+    return { success: true, qboPurchaseId: purchaseResponse.Purchase.Id };
+  } catch (err: any) {
+    console.error('Error syncing expense to QBO:', err);
     return { error: err.message };
   }
 }

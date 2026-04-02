@@ -201,7 +201,7 @@ export class QuickBooksClient {
       };
     }
 
-    console.log(body);
+    //console.log(body);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -301,9 +301,9 @@ export class QuickBooksClient {
     return await this.handleResponse(response, 'Create Payment');
   }
 
-  async getInvoice(invoiceId: string) {
+  async getInvoice(id: string) {
     await this.ensureValidToken();
-    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/invoice/${invoiceId}?minorversion=70`;
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/invoice/${id}?minorversion=70`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -316,9 +316,9 @@ export class QuickBooksClient {
     return await this.handleResponse(response, 'Get Invoice');
   }
 
-  async getPayment(paymentId: string) {
+  async getPayment(id: string) {
     await this.ensureValidToken();
-    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/payment/${paymentId}?minorversion=70`;
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/payment/${id}?minorversion=70`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -329,5 +329,87 @@ export class QuickBooksClient {
     });
 
     return await this.handleResponse(response, 'Get Payment');
+  }
+
+
+  async getVendors() {
+    await this.ensureValidToken();
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/query?query=select * from Vendor where Active = true&minorversion=70`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.oauthClient.getToken().access_token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    const data = await this.handleResponse(response, 'Get Vendors');
+    return data?.QueryResponse?.Vendor || [];
+  }
+
+  async getAccounts(type?: string) {
+    await this.ensureValidToken();
+    let query = 'select * from Account where Active = true';
+    if (type) {
+      query += ` and AccountType = '${type}'`;
+    }
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/query?query=${encodeURIComponent(query)}&minorversion=70`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.oauthClient.getToken().access_token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    const data = await this.handleResponse(response, 'Get Accounts');
+    return data?.QueryResponse?.Account || [];
+  }
+
+  async createPurchase(purchase: {
+    vendorRef: string;
+    bankAccountRef: string;
+    expenseAccountRef: string;
+    amount: number;
+    description: string;
+    date: string;
+    paymentType: 'Cash' | 'Check' | 'CreditCard';
+  }) {
+    await this.ensureValidToken();
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/purchase?minorversion=70`;
+
+    const body = {
+      PaymentType: purchase.paymentType,
+      AccountRef: { value: purchase.bankAccountRef },
+      Line: [
+        {
+          Amount: purchase.amount,
+          Description: purchase.description,
+          DetailType: 'AccountBasedExpenseLineDetail',
+          AccountBasedExpenseLineDetail: {
+            AccountRef: { value: purchase.expenseAccountRef }
+          }
+        }
+      ],
+      EntityRef: {
+        value: purchase.vendorRef,
+        type: 'Vendor'
+      },
+      TxnDate: purchase.date
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.oauthClient.getToken().access_token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    return await this.handleResponse(response, 'Create Purchase');
   }
 }
