@@ -79,6 +79,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -108,7 +114,7 @@ interface JobViewProps {
   materials: any[];
 }
 
-export function JobView({
+export default function JobView({
   proforma,
   items: itemsProp,
   id,
@@ -485,755 +491,770 @@ export function JobView({
     }
   }, [id]);
 
-    const handleStartEditing = (item: any) => {
-      setEditingItemId(item.id);
-      setTempCost((item.cost || 0).toString());
-    };
+  const handleStartEditing = (item: any) => {
+    setEditingItemId(item.id);
+    setTempCost((item.cost || 0).toString());
+  };
 
-    const handleCancelEditing = () => {
-      setEditingItemId(null);
-      setTempCost('');
-    };
+  const handleCancelEditing = () => {
+    setEditingItemId(null);
+    setTempCost('');
+  };
 
-    const handleSaveCost = async (itemId: string) => {
-      if (isSavingCost) return;
-      setIsSavingCost(true);
+  const handleSaveCost = async (itemId: string) => {
+    if (isSavingCost) return;
+    setIsSavingCost(true);
 
-      const newCost = parseFloat(tempCost) || 0;
+    const newCost = parseFloat(tempCost) || 0;
 
-      const { error } = await supabase
-        .from('proforma_items')
-        .update({ cost: newCost })
-        .eq('id', itemId);
+    const { error } = await supabase
+      .from('proforma_items')
+      .update({ cost: newCost })
+      .eq('id', itemId);
 
-      if (error) {
-        toast.error('Error al actualizar el costo');
+    if (error) {
+      toast.error('Error al actualizar el costo');
+    } else {
+      setItems(prev => prev.map(item => item.id === itemId ? { ...item, cost: newCost } : item));
+      toast.success('Costo actualizado');
+      handleCancelEditing();
+    }
+    setIsSavingCost(false);
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      const result = await deleteProformaItem(itemId, id);
+      if (result.error) {
+        toast.error(result.error);
       } else {
-        setItems(prev => prev.map(item => item.id === itemId ? { ...item, cost: newCost } : item));
-        toast.success('Costo actualizado');
-        handleCancelEditing();
+        setItems(prev => prev.filter(item => item.id !== itemId));
+        toast.success('Item eliminado');
+        setItemToDelete(null);
       }
-      setIsSavingCost(false);
-    };
+    } catch (err) {
+      toast.error('Error al eliminar item');
+    }
+  };
 
-    const handleDeleteItem = async (itemId: string) => {
-      try {
-        const result = await deleteProformaItem(itemId, id);
-        if (result.error) {
-          toast.error(result.error);
-        } else {
-          setItems(prev => prev.filter(item => item.id !== itemId));
-          toast.success('Item eliminado');
-          setItemToDelete(null);
-        }
-      } catch (err) {
-        toast.error('Error al eliminar item');
-      }
-    };
+  const handleKeyDown = (e: React.KeyboardEvent, itemId: string) => {
+    if (e.key === 'Enter') {
+      handleSaveCost(itemId);
+    } else if (e.key === 'Escape') {
+      handleCancelEditing();
+    }
+  };
 
-    const handleKeyDown = (e: React.KeyboardEvent, itemId: string) => {
-      if (e.key === 'Enter') {
-        handleSaveCost(itemId);
-      } else if (e.key === 'Escape') {
-        handleCancelEditing();
-      }
-    };
+  const handleDeletePayment = async (paymentId: string) => {
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', paymentId);
 
-    const handleDeletePayment = async (paymentId: string) => {
-      const { error } = await supabase
-        .from('payments')
-        .delete()
-        .eq('id', paymentId);
+    if (error) {
+      toast.error('Error al eliminar pago');
+    } else {
+      setPayments(prev => prev.filter(p => p.id !== paymentId));
+      toast.success('Pago eliminado');
+      setPaymentToDelete(null);
+    }
+  };
 
-      if (error) {
-        toast.error('Error al eliminar pago');
+  const handleDeleteExpense = async (expenseId: string) => {
+    const { error } = await supabase
+      .from('job_expenses')
+      .delete()
+      .eq('id', expenseId);
+
+    if (error) {
+      toast.error('Error al eliminar gasto');
+    } else {
+      setExpenses(prev => prev.filter(e => e.id !== expenseId));
+      toast.success('Gasto eliminado');
+      setExpenseToDelete(null);
+    }
+  };
+
+  const handleDeleteVisit = async (visitId: string) => {
+    const { error } = await supabase
+      .from('job_visits')
+      .delete()
+      .eq('id', visitId);
+
+    if (error) {
+      toast.error('Error al eliminar visita');
+    } else {
+      setVisits(prev => prev.filter(v => v.id !== visitId));
+      toast.success('Visita eliminada');
+    }
+  };
+
+  const handeDeleteLabor = async (laborId: string) => {
+    const { error } = await supabase
+      .from('job_time_entries')
+      .delete()
+      .eq('id', laborId);
+
+    if (error) {
+      toast.error('Error al eliminar labor');
+    } else {
+      setTimeEntries(prev => prev.filter(t => t.id !== laborId));
+      toast.success('Labor eliminada');
+      setLaborToDelete(null);
+    }
+  };
+
+  const handleUpdateVisitStatus = async (visitId: string, status: string) => {
+    const { error } = await supabase
+      .from('job_visits')
+      .update({ status })
+      .eq('id', visitId);
+
+    if (error) {
+      toast.error('Error al actualizar estado');
+    } else {
+      setVisits(prev => prev.map(v => v.id === visitId ? { ...v, status } : v));
+      toast.success('Estado actualizado');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    const { error } = await supabase
+      .from('job_tasks')
+      .delete()
+      .eq('id', taskId);
+
+    if (error) {
+      toast.error('Error al eliminar tarea');
+    } else {
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      toast.success('Tarea eliminada');
+      setTaskToDelete(null);
+    }
+  };
+
+  const handleToggleTaskStatus = async (taskId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+    const { error } = await supabase
+      .from('job_tasks')
+      .update({ status: newStatus })
+      .eq('id', taskId);
+
+    if (error) {
+      toast.error('Error al actualizar tarea');
+    } else {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    }
+  };
+
+  const handleSaveDates = async () => {
+    setIsSavingDates(true);
+    try {
+      const res = await updateJobDates(id, tempStartDate, tempEndDate);
+      if (res.error) {
+        toast.error(res.error);
       } else {
-        setPayments(prev => prev.filter(p => p.id !== paymentId));
-        toast.success('Pago eliminado');
-        setPaymentToDelete(null);
+        toast.success('Fechas actualizadas');
+        setIsEditingDates(false);
+        router.refresh();
       }
-    };
+    } catch (err) {
+      toast.error('Error al guardar fechas');
+    } finally {
+      setIsSavingDates(false);
+    }
+  };
 
-    const handleDeleteExpense = async (expenseId: string) => {
-      const { error } = await supabase
-        .from('job_expenses')
-        .delete()
-        .eq('id', expenseId);
+  const handleGenerateMaterials = async () => {
+    if (!aiMaterialPrompt.trim()) {
+      toast.error('Ingrese una descripción para generar materiales.');
+      return;
+    }
 
-      if (error) {
-        toast.error('Error al eliminar gasto');
-      } else {
-        setExpenses(prev => prev.filter(e => e.id !== expenseId));
-        toast.success('Gasto eliminado');
-        setExpenseToDelete(null);
-      }
-    };
+    setIsGeneratingMaterials(true);
+    try {
+      const response = await fetch('/api/materials/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectName: proforma.project_name,
+          projectDescription: aiMaterialPrompt
+        }),
+      });
 
-    const handleDeleteVisit = async (visitId: string) => {
-      const { error } = await supabase
-        .from('job_visits')
-        .delete()
-        .eq('id', visitId);
-
-      if (error) {
-        toast.error('Error al eliminar visita');
-      } else {
-        setVisits(prev => prev.filter(v => v.id !== visitId));
-        toast.success('Visita eliminada');
-      }
-    };
-
-    const handeDeleteLabor = async (laborId: string) => {
-      const { error } = await supabase
-        .from('job_time_entries')
-        .delete()
-        .eq('id', laborId);
-
-      if (error) {
-        toast.error('Error al eliminar labor');
-      } else {
-        setTimeEntries(prev => prev.filter(t => t.id !== laborId));
-        toast.success('Labor eliminada');
-        setLaborToDelete(null);
-      }
-    };
-
-    const handleUpdateVisitStatus = async (visitId: string, status: string) => {
-      const { error } = await supabase
-        .from('job_visits')
-        .update({ status })
-        .eq('id', visitId);
-
-      if (error) {
-        toast.error('Error al actualizar estado');
-      } else {
-        setVisits(prev => prev.map(v => v.id === visitId ? { ...v, status } : v));
-        toast.success('Estado actualizado');
-      }
-    };
-
-    const handleDeleteTask = async (taskId: string) => {
-      const { error } = await supabase
-        .from('job_tasks')
-        .delete()
-        .eq('id', taskId);
-
-      if (error) {
-        toast.error('Error al eliminar tarea');
-      } else {
-        setTasks(prev => prev.filter(t => t.id !== taskId));
-        toast.success('Tarea eliminada');
-        setTaskToDelete(null);
-      }
-    };
-
-    const handleToggleTaskStatus = async (taskId: string, currentStatus: string) => {
-      const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
-      const { error } = await supabase
-        .from('job_tasks')
-        .update({ status: newStatus })
-        .eq('id', taskId);
-
-      if (error) {
-        toast.error('Error al actualizar tarea');
-      } else {
-        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
-      }
-    };
-
-    const handleSaveDates = async () => {
-      setIsSavingDates(true);
-      try {
-        const res = await updateJobDates(id, tempStartDate, tempEndDate);
-        if (res.error) {
-          toast.error(res.error);
-        } else {
-          toast.success('Fechas actualizadas');
-          setIsEditingDates(false);
-          router.refresh();
-        }
-      } catch (err) {
-        toast.error('Error al guardar fechas');
-      } finally {
-        setIsSavingDates(false);
-      }
-    };
-
-    const handleGenerateMaterials = async () => {
-      if (!aiMaterialPrompt.trim()) {
-        toast.error('Ingrese una descripción para generar materiales.');
-        return;
+      if (!response.ok) {
+        throw new Error('Error al generar materiales');
       }
 
-      setIsGeneratingMaterials(true);
-      try {
-        const response = await fetch('/api/materials/generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            projectName: proforma.project_name,
-            projectDescription: aiMaterialPrompt
-          }),
-        });
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error('Error al generar materiales');
-        }
+      if (data.materials && data.materials.length > 0) {
+        // Save to Supabase
+        const materialsToInsert = data.materials.map((m: any) => ({
+          proforma_id: id,
+          name: m.name,
+          description: m.description,
+          quantity: m.quantity || 1,
+          unit_price: m.unit_price || 0,
+          total_price: (m.quantity || 1) * (m.unit_price || 0),
+          photo_url: null,
+          product_url: null
+        }));
 
-        const data = await response.json();
-
-        if (data.materials && data.materials.length > 0) {
-          // Save to Supabase
-          const materialsToInsert = data.materials.map((m: any) => ({
-            proforma_id: id,
-            name: m.name,
-            description: m.description,
-            quantity: m.quantity || 1,
-            unit_price: m.unit_price || 0,
-            total_price: (m.quantity || 1) * (m.unit_price || 0),
-            photo_url: null,
-            product_url: null
-          }));
-
-          const { data: inserted, error } = await supabase
-            .from('job_materials')
-            .insert(materialsToInsert)
-            .select();
-
-          if (error) throw error;
-
-          setMaterials(prev => [...(inserted || []), ...prev]);
-          toast.success('Materiales generados y agregados exitosamente.');
-          setIsAddingMaterial(false);
-          setAiMaterialPrompt('');
-        } else {
-          toast.error('No se generaron materiales.');
-        }
-      } catch (error: any) {
-        console.error(error);
-        toast.error(error.message || 'Error de conexión');
-      } finally {
-        setIsGeneratingMaterials(false);
-      }
-    };
-
-    const handleSearchSodimac = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!sodimacQuery.trim()) return;
-
-      if (searchStore === 'ace') {
-        return handleSearchAce(e);
-      }
-
-      setIsSodimacLoading(true);
-      setSodimacResults([]);
-      try {
-        const response = await fetch(`/api/materials/search?q=${encodeURIComponent(sodimacQuery)}`);
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.error || 'Error al buscar en Home Depot');
-        setSodimacResults(data.materials || []);
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setIsSodimacLoading(false);
-      }
-    };
-
-    const handleSearchAce = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!sodimacQuery.trim()) return;
-
-      setIsSodimacLoading(true);
-      setSodimacResults([]);
-      try {
-        const response = await fetch(`/api/materials/searcha?q=${encodeURIComponent(sodimacQuery)}`);
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.error || 'Error al buscar en Ace Hardware');
-        setSodimacResults(data.materials || []);
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        setIsSodimacLoading(false);
-      }
-    };
-
-    const handleAddSodimacMaterial = async (mat: any) => {
-      try {
         const { data: inserted, error } = await supabase
           .from('job_materials')
-          .insert([{
-            proforma_id: id,
-            name: mat.name,
-            description: mat.description,
-            quantity: mat.quantity || 1,
-            unit_price: mat.unit_price || 0,
-            total_price: (mat.quantity || 1) * (mat.unit_price || 0),
-            photo_url: mat.photo_url || null,
-            product_url: mat.product_url || null
-          }])
+          .insert(materialsToInsert)
           .select();
 
         if (error) throw error;
 
         setMaterials(prev => [...(inserted || []), ...prev]);
-        toast.success('Material de Sodimac añadido exitosamente.');
-      } catch (error: any) {
-        console.error(error);
-        toast.error('Error al guardar el material de Sodimac');
-      }
-    };
-
-    const handleDeleteMaterial = async (materialId: string) => {
-      const { error } = await supabase
-        .from('job_materials')
-        .delete()
-        .eq('id', materialId);
-
-      if (error) {
-        toast.error('Error al eliminar material');
+        toast.success('Materiales generados y agregados exitosamente.');
+        setIsAddingMaterial(false);
+        setAiMaterialPrompt('');
       } else {
-        setMaterials(prev => prev.filter(m => m.id !== materialId));
-        toast.success('Material eliminado');
+        toast.error('No se generaron materiales.');
       }
-    };
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Error de conexión');
+    } finally {
+      setIsGeneratingMaterials(false);
+    }
+  };
 
-    const handleToggleMaterialStatus = async (materialId: string, currentStatus: boolean) => {
-      const { error } = await supabase
+  const handleSearchSodimac = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sodimacQuery.trim()) return;
+
+    if (searchStore === 'ace') {
+      return handleSearchAce(e);
+    }
+
+    setIsSodimacLoading(true);
+    setSodimacResults([]);
+    try {
+      const response = await fetch(`/api/materials/search?q=${encodeURIComponent(sodimacQuery)}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Error al buscar en Home Depot');
+      setSodimacResults(data.materials || []);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSodimacLoading(false);
+    }
+  };
+
+  const handleSearchAce = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sodimacQuery.trim()) return;
+
+    setIsSodimacLoading(true);
+    setSodimacResults([]);
+    try {
+      const response = await fetch(`/api/materials/searcha?q=${encodeURIComponent(sodimacQuery)}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Error al buscar en Ace Hardware');
+      setSodimacResults(data.materials || []);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSodimacLoading(false);
+    }
+  };
+
+  const handleAddSodimacMaterial = async (mat: any) => {
+    try {
+      const { data: inserted, error } = await supabase
         .from('job_materials')
-        .update({ is_purchased: !currentStatus })
-        .eq('id', materialId);
+        .insert([{
+          proforma_id: id,
+          name: mat.name,
+          description: mat.description,
+          quantity: mat.quantity || 1,
+          unit_price: mat.unit_price || 0,
+          total_price: (mat.quantity || 1) * (mat.unit_price || 0),
+          photo_url: mat.photo_url || null,
+          product_url: mat.product_url || null
+        }])
+        .select();
 
-      if (error) {
-        toast.error('Error al actualizar material');
-      } else {
-        setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, is_purchased: !currentStatus } : m));
-      }
-    };
+      if (error) throw error;
 
-    const handleStartEditingMaterial = (mat: any) => {
-      setEditingMaterialId(mat.id);
-      setTempMaterialQty((mat.quantity || 1).toString());
-    };
+      setMaterials(prev => [...(inserted || []), ...prev]);
+      toast.success('Material de Sodimac añadido exitosamente.');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Error al guardar el material de Sodimac');
+    }
+  };
 
-    const handleCancelEditingMaterial = () => {
-      setEditingMaterialId(null);
-      setTempMaterialQty('');
-    };
+  const handleDeleteMaterial = async (materialId: string) => {
+    const { error } = await supabase
+      .from('job_materials')
+      .delete()
+      .eq('id', materialId);
 
-    const handleSaveMaterialQty = async (materialId: string) => {
-      if (isSavingMaterialQty) return;
-      setIsSavingMaterialQty(true);
+    if (error) {
+      toast.error('Error al eliminar material');
+    } else {
+      setMaterials(prev => prev.filter(m => m.id !== materialId));
+      toast.success('Material eliminado');
+    }
+  };
 
-      const newQty = parseFloat(tempMaterialQty) || 1;
-      const material = materials.find(m => m.id === materialId);
-      if (!material) {
-        setIsSavingMaterialQty(false);
-        return;
-      }
-      const newTotalPrice = newQty * (material.unit_price || 0);
+  const handleToggleMaterialStatus = async (materialId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('job_materials')
+      .update({ is_purchased: !currentStatus })
+      .eq('id', materialId);
 
-      const { error } = await supabase
-        .from('job_materials')
-        .update({ quantity: newQty, total_price: newTotalPrice })
-        .eq('id', materialId);
+    if (error) {
+      toast.error('Error al actualizar material');
+    } else {
+      setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, is_purchased: !currentStatus } : m));
+    }
+  };
 
-      if (error) {
-        toast.error('Error al actualizar cantidad');
-      } else {
-        setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, quantity: newQty, total_price: newTotalPrice } : m));
-        toast.success('Cantidad actualizada');
-        handleCancelEditingMaterial();
-      }
+  const handleStartEditingMaterial = (mat: any) => {
+    setEditingMaterialId(mat.id);
+    setTempMaterialQty((mat.quantity || 1).toString());
+  };
+
+  const handleCancelEditingMaterial = () => {
+    setEditingMaterialId(null);
+    setTempMaterialQty('');
+  };
+
+  const handleSaveMaterialQty = async (materialId: string) => {
+    if (isSavingMaterialQty) return;
+    setIsSavingMaterialQty(true);
+
+    const newQty = parseFloat(tempMaterialQty) || 1;
+    const material = materials.find(m => m.id === materialId);
+    if (!material) {
       setIsSavingMaterialQty(false);
-    };
+      return;
+    }
+    const newTotalPrice = newQty * (material.unit_price || 0);
 
-    const handleMaterialKeyDown = (e: React.KeyboardEvent, materialId: string) => {
-      if (e.key === 'Enter') {
-        handleSaveMaterialQty(materialId);
-      } else if (e.key === 'Escape') {
-        handleCancelEditingMaterial();
+    const { error } = await supabase
+      .from('job_materials')
+      .update({ quantity: newQty, total_price: newTotalPrice })
+      .eq('id', materialId);
+
+    if (error) {
+      toast.error('Error al actualizar cantidad');
+    } else {
+      setMaterials(prev => prev.map(m => m.id === materialId ? { ...m, quantity: newQty, total_price: newTotalPrice } : m));
+      toast.success('Cantidad actualizada');
+      handleCancelEditingMaterial();
+    }
+    setIsSavingMaterialQty(false);
+  };
+
+  const handleMaterialKeyDown = (e: React.KeyboardEvent, materialId: string) => {
+    if (e.key === 'Enter') {
+      handleSaveMaterialQty(materialId);
+    } else if (e.key === 'Escape') {
+      handleCancelEditingMaterial();
+    }
+  };
+
+  // Totals calculations
+  // Filtering and Pagination logic
+
+  const filteredMaterials = (materials || []).filter(mat =>
+    (mat.name?.toLowerCase().includes(materialSearchTerm.toLowerCase()) || '') ||
+    (mat.description?.toLowerCase().includes(materialSearchTerm.toLowerCase()) || '')
+  );
+
+  const totalMaterialPages = Math.ceil(filteredMaterials.length / materialsPerPage);
+  const paginatedMaterials = filteredMaterials.slice(
+    (materialCurrentPage - 1) * materialsPerPage,
+    materialCurrentPage * materialsPerPage
+  );
+
+  const handleMaterialSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMaterialSearchTerm(e.target.value);
+    setMaterialCurrentPage(1);
+  };
+
+  const totalMaterialsCost = (materials || []).reduce((acc, mat) => acc + (mat.total_price || 0), 0);
+
+
+  const filteredExpenses = expenses.filter(exp =>
+    (exp.place?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
+    (exp.description?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
+    (exp.category?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '')
+  );
+
+  const totalExpensePages = Math.ceil(filteredExpenses.length / itemsPerPage);
+  const paginatedExpenses = filteredExpenses.slice(
+    (expenseCurrentPage - 1) * itemsPerPage,
+    expenseCurrentPage * itemsPerPage
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setExpenseSearchTerm(e.target.value);
+    setExpenseCurrentPage(1); // Reset to first page on search
+  };
+
+  const subtotal = items.reduce((acc, item) => {
+    if (item.is_excluded) return acc;
+    return acc + (item.total_price || 0);
+  }, 0);
+
+  const discountAdjustments = adjustments.filter(adj => adj.type === 'discount');
+  const taxAdjustments = adjustments.filter(adj => adj.type === 'tax');
+
+  const totalDiscount = discountAdjustments.reduce((acc, adj) => {
+    const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
+    return acc + amount;
+  }, 0);
+
+  const taxableAmount = subtotal - totalDiscount;
+  const totalTax = taxAdjustments.reduce((acc, adj) => {
+    const amount = adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value;
+    return acc + amount;
+  }, 0);
+
+  const totalInvoiced = subtotal - totalDiscount + totalTax;
+  const totalCost = items.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
+  const totalLaborCost = timeEntries.reduce((acc, entry) => acc + (Number(entry.total_cost) || 0), 0);
+  const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);
+
+  const totalProfit = totalInvoiced - totalCost - totalLaborCost - totalExpenses;
+  const profitMargin = totalInvoiced > 0 ? (totalProfit / totalInvoiced) * 100 : 0;
+
+  const handleViewInvoicePDF = async (invoice: any) => {
+    try {
+      const blob = await pdf(
+        <InvoicePDF
+          invoice={invoice}
+          proforma={proforma}
+          client={proforma.clients}
+          user={proforma.users}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error generating Invoice PDF:', error);
+      toast.error('Error al generar el PDF de la factura');
+    }
+  };
+
+  const handleViewPaymentPDF = async (payment: any) => {
+    try {
+      const blob = await pdf(
+        <PaymentPDF
+          payment={payment}
+          proforma={proforma}
+          client={proforma.clients}
+          user={proforma.users}
+        />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error generating Payment PDF:', error);
+      toast.error('Error al generar el recibo de pago');
+    }
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    try {
+      const result = await deleteInvoice(invoiceId, id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Factura eliminada');
+        setInvoiceToDelete(null);
+        fetchInvoices();
       }
-    };
+    } catch (error) {
+      toast.error('Error al eliminar la factura');
+    }
+  };
 
-    // Totals calculations
-    // Filtering and Pagination logic
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-6xl animate-in fade-in duration-500">
 
-    const filteredMaterials = (materials || []).filter(mat =>
-      (mat.name?.toLowerCase().includes(materialSearchTerm.toLowerCase()) || '') ||
-      (mat.description?.toLowerCase().includes(materialSearchTerm.toLowerCase()) || '')
-    );
+      {/* Action Bar */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Link href="/clients" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Directory
+          </Link>
+          <span className="text-muted-foreground/40">·</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground mr-1">Job for</span>
+            <span className="text-sm font-bold text-foreground">
+              {(() => {
+                const c = proforma.clients as any;
+                return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || c?.name || 'Client';
+              })()}
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm">
+            <Search className="h-4 w-4" />
+            <span className="hidden sm:inline">Search</span>
+          </Button>
 
-    const totalMaterialPages = Math.ceil(filteredMaterials.length / materialsPerPage);
-    const paginatedMaterials = filteredMaterials.slice(
-      (materialCurrentPage - 1) * materialsPerPage,
-      materialCurrentPage * materialsPerPage
-    );
-
-    const handleMaterialSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setMaterialSearchTerm(e.target.value);
-      setMaterialCurrentPage(1);
-    };
-
-    const totalMaterialsCost = (materials || []).reduce((acc, mat) => acc + (mat.total_price || 0), 0);
-
-
-    const filteredExpenses = expenses.filter(exp =>
-      (exp.place?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
-      (exp.description?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '') ||
-      (exp.category?.toLowerCase().includes(expenseSearchTerm.toLowerCase()) || '')
-    );
-
-    const totalExpensePages = Math.ceil(filteredExpenses.length / itemsPerPage);
-    const paginatedExpenses = filteredExpenses.slice(
-      (expenseCurrentPage - 1) * itemsPerPage,
-      expenseCurrentPage * itemsPerPage
-    );
-
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setExpenseSearchTerm(e.target.value);
-      setExpenseCurrentPage(1); // Reset to first page on search
-    };
-
-    const subtotal = items.reduce((acc, item) => {
-      if (item.is_excluded) return acc;
-      return acc + (item.total_price || 0);
-    }, 0);
-
-    const discountAdjustments = adjustments.filter(adj => adj.type === 'discount');
-    const taxAdjustments = adjustments.filter(adj => adj.type === 'tax');
-
-    const totalDiscount = discountAdjustments.reduce((acc, adj) => {
-      const amount = adj.valueType === 'percentage' ? (subtotal * adj.value) / 100 : adj.value;
-      return acc + amount;
-    }, 0);
-
-    const taxableAmount = subtotal - totalDiscount;
-    const totalTax = taxAdjustments.reduce((acc, adj) => {
-      const amount = adj.valueType === 'percentage' ? (taxableAmount * adj.value) / 100 : adj.value;
-      return acc + amount;
-    }, 0);
-
-    const totalInvoiced = subtotal - totalDiscount + totalTax;
-    const totalCost = items.reduce((acc, item) => acc + (item.cost || 0) * item.quantity, 0);
-    const totalLaborCost = timeEntries.reduce((acc, entry) => acc + (Number(entry.total_cost) || 0), 0);
-    const totalExpenses = expenses.reduce((acc, exp) => acc + Number(exp.amount), 0);
-
-    const totalProfit = totalInvoiced - totalCost - totalLaborCost - totalExpenses;
-    const profitMargin = totalInvoiced > 0 ? (totalProfit / totalInvoiced) * 100 : 0;
-
-    const handleViewInvoicePDF = async (invoice: any) => {
-      try {
-        const blob = await pdf(
-          <InvoicePDF
-            invoice={invoice}
+          <Dialog>
+            <DialogTrigger render={
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                <HistoryIcon className="h-4 w-4 text-muted-foreground" />
+                <span className="hidden sm:inline">History</span>
+              </Button>
+            } />
+            <DialogContent className="sm:max-w-[540px]">
+              <DialogHeader className="mb-4">
+                <DialogTitle>Job History</DialogTitle>
+                <DialogDescription>
+                  Track all status changes made to this job.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
+                <StatusHistory proformaId={id} />
+              </div>
+            </DialogContent>
+          </Dialog>
+          <ProformaDropdownActions
+            proformaId={id}
+            currentStatus={proforma.status || 'draft'}
+            projectName={proforma.project_name}
             proforma={proforma}
-            client={proforma.clients}
-            user={proforma.users}
+            items={items}
           />
-        ).toBlob();
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      } catch (error) {
-        console.error('Error generating Invoice PDF:', error);
-        toast.error('Error al generar el PDF de la factura');
-      }
-    };
+        </div>
+      </div>
 
-    const handleViewPaymentPDF = async (payment: any) => {
-      try {
-        const blob = await pdf(
-          <PaymentPDF
-            payment={payment}
-            proforma={proforma}
-            client={proforma.clients}
-            user={proforma.users}
-          />
-        ).toBlob();
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      } catch (error) {
-        console.error('Error generating Payment PDF:', error);
-        toast.error('Error al generar el recibo de pago');
-      }
-    };
+      {/* Main Content Area */}
+      <div className="space-y-6">
 
-    const handleDeleteInvoice = async (invoiceId: string) => {
-      try {
-        const result = await deleteInvoice(invoiceId, id);
-        if (result.error) {
-          toast.error(result.error);
-        } else {
-          toast.success('Factura eliminada');
-          setInvoiceToDelete(null);
-          fetchInvoices();
-        }
-      } catch (error) {
-        toast.error('Error al eliminar la factura');
-      }
-    };
-
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl animate-in fade-in duration-500">
-
-        {/* Action Bar */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Link href="/clients" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Directory
-            </Link>
-            <span className="text-muted-foreground/40">·</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground mr-1">Job for</span>
-              <span className="text-sm font-bold text-foreground">
-                {(() => {
-                  const c = proforma.clients as any;
-                  return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || c?.name || 'Client';
-                })()}
-              </span>
+        {/* Header Summary */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 bg-card p-6 border border-border/40">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-primary/10 text-primary">
+              <Briefcase className="h-8 w-8" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge className={cn(
+                  "text-[10px] font-bold tracking-tight uppercase rounded-sm",
+                  proforma.status === 'job_terminated'
+                    ? "bg-slate-500/10 text-slate-700 border-slate-500/20"
+                    : "bg-primary/10 text-primary border-primary/20"
+                )}>
+                  {proforma.status === 'job_terminated' ? 'TERMINATED' : proforma.status.toUpperCase()}
+                </Badge>
+                <span className="text-muted-foreground text-xs font-semibold">Job #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">{proforma.project_name}</h1>
+              <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <UserIcon className="h-3.5 w-3.5" />
+                  <Link href={`/clients/${proforma.clients?.id}`}>
+                    <span>{proforma.clients?.company_name || proforma.clients?.name || 'No name provided'}</span>
+                  </Link>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>{proforma.clients?.street_1 || proforma.clients?.address || 'No address provided'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-primary font-medium">
+                  <Mail className="h-3.5 w-3.5" />
+                  <span>{proforma.clients?.email || 'No email'}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2 items-center">
-            <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm">
-              <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">Search</span>
-            </Button>
 
-            <Dialog>
-              <DialogTrigger render={
-                <Button variant="outline" size="sm" className="h-9 gap-2">
-                  <HistoryIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="hidden sm:inline">History</span>
+          <div className="grid grid-cols-2 gap-x-12 gap-y-4 w-full md:w-auto">
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Job Type</p>
+              <p className="text-sm font-bold">One-off job</p>
+            </div>
+            <div className="relative group">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center justify-between">
+                Started On
+                {!isEditingDates && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setIsEditingDates(true)}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                )}
+              </p>
+              {isEditingDates ? (
+                <Input
+                  type="date"
+                  value={tempStartDate ? tempStartDate.split('T')[0] : ''}
+                  onChange={(e) => setTempStartDate(e.target.value)}
+                  className="h-8 text-xs p-1"
+                />
+              ) : (
+                <p className="text-sm font-bold">{proforma.job_start_at ? format(new Date(proforma.job_start_at), 'MMM d, yyyy') : '-'}</p>
+              )}
+            </div>
+            <div className="relative group">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Ends On</p>
+              {isEditingDates ? (
+                <Input
+                  type="date"
+                  value={tempEndDate ? tempEndDate.split('T')[0] : ''}
+                  onChange={(e) => setTempEndDate(e.target.value)}
+                  className="h-8 text-xs p-1"
+                />
+              ) : (
+                <p className="text-sm font-bold">{proforma.job_end_at ? format(new Date(proforma.job_end_at), 'MMM d, yyyy') : '-'}</p>
+              )}
+            </div>
+            {isEditingDates && (
+              <div className="col-span-2 mt-2 flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    setIsEditingDates(false);
+                    setTempStartDate(proforma.job_start_at || '');
+                    setTempEndDate(proforma.job_end_at || '');
+                  }}
+                  disabled={isSavingDates}
+                >
+                  <X className="h-3 w-3 mr-1" /> Cancel
                 </Button>
-              } />
-              <DialogContent className="sm:max-w-[540px]">
-                <DialogHeader className="mb-4">
-                  <DialogTitle>Job History</DialogTitle>
-                  <DialogDescription>
-                    Track all status changes made to this job.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="max-h-[60vh] overflow-y-auto pr-2 pb-4">
-                  <StatusHistory proformaId={id} />
-                </div>
-              </DialogContent>
-            </Dialog>
-            <ProformaDropdownActions
-              proformaId={id}
-              currentStatus={proforma.status || 'draft'}
-              projectName={proforma.project_name}
-              proforma={proforma}
-              items={items}
-            />
+                <Button
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleSaveDates}
+                  disabled={isSavingDates}
+                >
+                  {isSavingDates ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save
+                </Button>
+              </div>
+            )}
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">From quote</p>
+              <p className="text-sm font-bold text-emerald-600">Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</p>
+            </div>
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="space-y-6">
-
-          {/* Header Summary */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-6 bg-card p-6 border border-border/40">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-primary/10 text-primary">
-                <Briefcase className="h-8 w-8" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge className={cn(
-                    "text-[10px] font-bold tracking-tight uppercase rounded-sm",
-                    proforma.status === 'job_terminated'
-                      ? "bg-slate-500/10 text-slate-700 border-slate-500/20"
-                      : "bg-primary/10 text-primary border-primary/20"
-                  )}>
-                    {proforma.status === 'job_terminated' ? 'TERMINATED' : proforma.status.toUpperCase()}
-                  </Badge>
-                  <span className="text-muted-foreground text-xs font-semibold">Job #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
-                </div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">{proforma.project_name}</h1>
-                <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <UserIcon className="h-3.5 w-3.5" />
-                    <Link href={`/clients/${proforma.clients?.id}`}>
-                      <span>{proforma.clients?.company_name || proforma.clients?.name || 'No name provided'}</span>
-                    </Link>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5" />
-                    <span>{proforma.clients?.street_1 || proforma.clients?.address || 'No address provided'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-primary font-medium">
-                    <Mail className="h-3.5 w-3.5" />
-                    <span>{proforma.clients?.email || 'No email'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-12 gap-y-4 w-full md:w-auto">
-              <div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Job Type</p>
-                <p className="text-sm font-bold">One-off job</p>
-              </div>
-              <div className="relative group">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center justify-between">
-                  Started On
-                  {!isEditingDates && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => setIsEditingDates(true)}
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                  )}
-                </p>
-                {isEditingDates ? (
-                  <Input
-                    type="date"
-                    value={tempStartDate ? tempStartDate.split('T')[0] : ''}
-                    onChange={(e) => setTempStartDate(e.target.value)}
-                    className="h-8 text-xs p-1"
-                  />
-                ) : (
-                  <p className="text-sm font-bold">{proforma.job_start_at ? format(new Date(proforma.job_start_at), 'MMM d, yyyy') : '-'}</p>
-                )}
-              </div>
-              <div className="relative group">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Ends On</p>
-                {isEditingDates ? (
-                  <Input
-                    type="date"
-                    value={tempEndDate ? tempEndDate.split('T')[0] : ''}
-                    onChange={(e) => setTempEndDate(e.target.value)}
-                    className="h-8 text-xs p-1"
-                  />
-                ) : (
-                  <p className="text-sm font-bold">{proforma.job_end_at ? format(new Date(proforma.job_end_at), 'MMM d, yyyy') : '-'}</p>
-                )}
-              </div>
-              {isEditingDates && (
-                <div className="col-span-2 mt-2 flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setIsEditingDates(false);
-                      setTempStartDate(proforma.job_start_at || '');
-                      setTempEndDate(proforma.job_end_at || '');
-                    }}
-                    disabled={isSavingDates}
-                  >
-                    <X className="h-3 w-3 mr-1" /> Cancel
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={handleSaveDates}
-                    disabled={isSavingDates}
-                  >
-                    {isSavingDates ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />} Save
-                  </Button>
-                </div>
-              )}
-              <div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">From quote</p>
-                <p className="text-sm font-bold text-emerald-600">Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</p>
-              </div>
-            </div>
+        {/* Profitability Panel */}
+        <div className="bg-muted/10 border border-border/40 overflow-hidden">
+          <div className="p-4 border-b border-border/40 flex items-center justify-between">
+            <button
+              onClick={() => setShowProfitability(!showProfitability)}
+              className="flex items-center gap-2 text-sm font-bold hover:text-primary transition-colors"
+            >
+              {showProfitability ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {showProfitability ? 'Hide Profitability' : 'Show Profitability'}
+            </button>
           </div>
 
-          {/* Profitability Panel */}
-          <div className="bg-muted/10 border border-border/40 overflow-hidden">
-            <div className="p-4 border-b border-border/40 flex items-center justify-between">
-              <button
-                onClick={() => setShowProfitability(!showProfitability)}
-                className="flex items-center gap-2 text-sm font-bold hover:text-primary transition-colors"
-              >
-                {showProfitability ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                {showProfitability ? 'Hide Profitability' : 'Show Profitability'}
-              </button>
-            </div>
-
-            {showProfitability && (
-              <div className="p-6">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-                  <div className="flex items-center gap-6">
-                    <div className="relative h-24 w-24 flex items-center justify-center">
-                      <svg className="h-full w-full transform -rotate-90">
-                        <circle
-                          cx="48"
-                          cy="48"
-                          r="40"
-                          fill="transparent"
-                          stroke="#E2E0D8"
-                          strokeWidth="10"
-                        />
-                        <circle
-                          cx="48"
-                          cy="48"
-                          r="40"
-                          fill="transparent"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth="10"
-                          strokeDasharray={`${(profitMargin / 100) * 251.2} 251.2`}
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-lg font-bold">{profitMargin.toFixed(1)}%</span>
-                      </div>
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">{profitMargin.toFixed(2)}%</h2>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Profit margin</p>
+          {showProfitability && (
+            <div className="p-6">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+                <div className="flex items-center gap-6">
+                  <div className="relative h-24 w-24 flex items-center justify-center">
+                    <svg className="h-full w-full transform -rotate-90">
+                      <circle
+                        cx="48"
+                        cy="48"
+                        r="40"
+                        fill="transparent"
+                        stroke="#E2E0D8"
+                        strokeWidth="10"
+                      />
+                      <circle
+                        cx="48"
+                        cy="48"
+                        r="40"
+                        fill="transparent"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="10"
+                        strokeDasharray={`${(profitMargin / 100) * 251.2} 251.2`}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-lg font-bold">{profitMargin.toFixed(1)}%</span>
                     </div>
                   </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">{profitMargin.toFixed(2)}%</h2>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Profit margin</p>
+                  </div>
+                </div>
 
-                  <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
-                    <div className="text-center md:text-left">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total price</p>
-                      <p className="text-xl font-bold font-serif">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                    </div>
-                    <div className="text-center md:text-left">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <span className="w-2 h-0.5 bg-blue-500" /> Line Item Cost
-                      </p>
-                      <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                    </div>
-                    <div className="text-center md:text-left">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <span className="w-2 h-0.5 bg-sky-400" /> Labor
-                      </p>
-                      <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                    </div>
-                    <div className="text-center md:text-left">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <span className="w-2 h-0.5 bg-purple-400" /> Expenses
-                      </p>
-                      <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                    </div>
-                    <div className="h-10 w-px bg-border/40 hidden md:block" />
-                    <div className="text-center md:text-left">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                        <span className="w-2 h-0.5 bg-emerald-500" /> Profit
-                      </p>
-                      <p className="text-xl font-bold font-serif -ml-3"><span className="text-emerald-600 px-1">=</span> ${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                    </div>
+                <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
+                  <div className="text-center md:text-left">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total price</p>
+                    <p className="text-xl font-bold font-serif">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="text-center md:text-left">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
+                      <span className="w-2 h-0.5 bg-blue-500" /> Line Item Cost
+                    </p>
+                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="text-center md:text-left">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
+                      <span className="w-2 h-0.5 bg-sky-400" /> Labor
+                    </p>
+                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="text-center md:text-left">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
+                      <span className="w-2 h-0.5 bg-purple-400" /> Expenses
+                    </p>
+                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="h-10 w-px bg-border/40 hidden md:block" />
+                  <div className="text-center md:text-left">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
+                      <span className="w-2 h-0.5 bg-emerald-500" /> Profit
+                    </p>
+                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-emerald-600 px-1">=</span> ${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          {/* Sections Grid */}
-          <div className="grid grid-cols-1 gap-6">
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="items" className="space-y-6">
+          <TabsList className="bg-muted/10 p-1 h-auto grid grid-cols-2 md:flex items-center gap-1 border border-border/40">
+            <TabsTrigger value="items" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+              Job Items
+            </TabsTrigger>
+            <TabsTrigger value="work" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+              Work Progress
+            </TabsTrigger>
+            <TabsTrigger value="finance" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+              Financials
+            </TabsTrigger>
+            <TabsTrigger value="materials" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+              Materials
+            </TabsTrigger>
+          </TabsList>
 
-            {/* Line Items Section */}
+          {/* Tab: Items */}
+          <TabsContent value="items" className="space-y-6 mt-0">
             <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
                 <CardTitle className="text-lg font-bold">Line Items</CardTitle>
@@ -1512,16 +1533,14 @@ export function JobView({
                       <p className="text-xs text-foreground italic whitespace-pre-wrap">{proforma.notes}</p>
                     </div>
                   )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground">Total Invoiced</span>
-                    <span className="text-lg font-bold text-emerald-600">${totalInvoiced.toLocaleString('en-US')}</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            {/* Materials Section */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
+          {/* Tab: Materials */}
+          <TabsContent value="materials" className="space-y-6 mt-0">
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col">
               <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between py-4 bg-muted/5 gap-4 border-b border-border/40">
                 <div className="flex items-center gap-2">
                   <ListTodo className="h-5 w-5 text-primary" />
@@ -1731,7 +1750,10 @@ export function JobView({
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
 
+          {/* Tab: Work Progress */}
+          <TabsContent value="work" className="space-y-6 mt-0">
             {/* Work Progress Photos Section */}
             <WorkProgressSection proformaId={proforma.id} proformaName={proforma.project_name} />
 
@@ -1861,285 +1883,177 @@ export function JobView({
                 )}
               </CardContent>
             </Card>
-            {/* Payments, Expenses, Labor & Visits Row */}
-            {/* Payments Row */}
-            <div className="grid grid-cols-1 gap-6">
-              {/* Payments */}
-              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold">Payments</CardTitle>
+          </TabsContent>
+
+          {/* Tab: Financials (Block 1) */}
+          <TabsContent value="finance" className="space-y-6 mt-0">
+            {/* Payments */}
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Payments</CardTitle>
+                <Button
+                  size="sm"
+                  className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
+                  onClick={() => setIsRecordingPayment(true)}
+                >
+                  <Plus className="h-4 w-4" /> Record Payment
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                {payments.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                        <tr>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                          <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/30">
+                        {payments.map(payment => (
+                          <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
+                            <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
+                            <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
+                            <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td className="px-6 py-4 text-center">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                  <MoreVertical className="h-4 w-4" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
+                                    <Eye className="h-3.5 w-3.5" /> View Receipt
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
+                                    <Mail className="h-3.5 w-3.5" /> Send by Email
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
+                                    <Pencil className="h-3.5 w-3.5" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
+                                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                    <DollarSign className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-xs font-medium px-8 text-center">No payment records found for this job</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Expenses */}
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Expenses</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5"
+                    onClick={() => setIsScanningExpense(true)}
+                  >
+                    <Camera className="h-4 w-4" /> Scanner AI
+                  </Button>
                   <Button
                     size="sm"
                     className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
-                    onClick={() => setIsRecordingPayment(true)}
+                    onClick={() => setIsAddingExpense(true)}
                   >
-                    <Plus className="h-4 w-4" /> Record Payment
+                    <Plus className="h-4 w-4" /> New Expense
                   </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {payments.length > 0 ? (
+                </div>
+              </CardHeader>
+              <CardContent className="p-0 flex-1 flex flex-col">
+                {/* Search Bar */}
+                <div className="p-4 border-b border-border/40 bg-card">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by place, description or category..."
+                      className="pl-9 h-9 text-xs"
+                      value={expenseSearchTerm}
+                      onChange={handleSearchChange}
+                    />
+                  </div>
+                </div>
+
+                {paginatedExpenses.length > 0 ? (
+                  <>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                           <tr>
                             <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Place</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Sync</th>
                             <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
                             <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border/30">
-                          {payments.map(payment => (
-                            <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
-                              <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
-                              <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td className="px-6 py-4 text-center">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                    <MoreVertical className="h-4 w-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-40">
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
-                                      <Eye className="h-3.5 w-3.5" /> View Receipt
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
-                                      <Mail className="h-3.5 w-3.5" /> Send by Email
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
-                                      <Eye className="h-3.5 w-3.5" /> View Receipt
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
-                                      <Mail className="h-3.5 w-3.5" /> Send by Email
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
-                                      <Pencil className="h-3.5 w-3.5" /> Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
-                                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                      <DollarSign className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">No payment records found for this job</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Expenses */}
-              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold">Expenses</CardTitle>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5"
-                      onClick={() => setIsScanningExpense(true)}
-                    >
-                      <Camera className="h-4 w-4" /> Scanner AI
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
-                      onClick={() => setIsAddingExpense(true)}
-                    >
-                      <Plus className="h-4 w-4" /> New Expense
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0 flex-1 flex flex-col">
-                  {/* Search Bar */}
-                  <div className="p-4 border-b border-border/40 bg-card">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by place, description or category..."
-                        className="pl-9 h-9 text-xs"
-                        value={expenseSearchTerm}
-                        onChange={handleSearchChange}
-                      />
-                    </div>
-                  </div>
-
-                  {paginatedExpenses.length > 0 ? (
-                    <>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                            <tr>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Place</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Sync</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
-                              <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/30">
-                            {paginatedExpenses.map(exp => (
-                              <tr key={exp.id} className="hover:bg-muted/5 transition-colors group">
-                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(exp.date), 'dd/MM/yyyy')}</td>
-                                <td className="px-6 py-4 font-bold text-foreground text-xs">{exp.place || 'Supplier'}</td>
-                                <td className="px-6 py-4 text-xs text-muted-foreground line-clamp-1 max-w-[150px]">{exp.description}</td>
-                                <td className="px-6 py-4">
-                                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
-                                    {exp.category}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                  {exp.sync_status === 'synced' ? (
-                                    <div className="flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-full h-6 w-6 mx-auto" title="Synced to QuickBooks">
-                                      <CheckCircle2 className="h-3.5 w-3.5" />
-                                    </div>
-                                  ) : (
-                                    qboIntegration && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                                        onClick={() => handleSyncExpenseToQBO(exp)}
-                                        disabled={syncingExpenseId === exp.id}
-                                        title="Sync to QuickBooks"
-                                      >
-                                        {syncingExpenseId === exp.id ? (
-                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        ) : (
-                                          <RefreshCw className="h-3.5 w-3.5" />
-                                        )}
-                                      </Button>
-                                    )
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 text-right tabular-nums font-bold text-red-600 text-xs">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td className="px-6 py-4 text-center">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7" />}>
-                                      <MoreVertical className="h-3.5 w-3.5" />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-40">
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedExpenseForEdit(exp)}>
-                                        <Pencil className="h-3.5 w-3.5" /> Edit
-                                      </DropdownMenuItem>
-                                      {exp.image_url && (
-                                        <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedFileUrl(exp.image_url)}>
-                                          <Eye className="h-3.5 w-3.5" /> View File
-                                        </DropdownMenuItem>
-                                      )}
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
-                                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Pagination Controls */}
-                      {totalExpensePages > 1 && (
-                        <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
-                          <p className="text-[10px] text-muted-foreground">
-                            Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} of {filteredExpenses.length}
-                          </p>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              disabled={expenseCurrentPage === 1}
-                              onClick={() => setExpenseCurrentPage(prev => prev - 1)}
-                            >
-                              <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <div className="flex items-center gap-1.5 px-2">
-                              <span className="text-xs font-bold text-foreground">{expenseCurrentPage}</span>
-                              <span className="text-[10px] text-muted-foreground">/</span>
-                              <span className="text-xs text-muted-foreground">{totalExpensePages}</span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              disabled={expenseCurrentPage === totalExpensePages}
-                              onClick={() => setExpenseCurrentPage(prev => prev + 1)}
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                      <Receipt className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">
-                        {expenseSearchTerm ? 'No expenses found matching your search' : 'Log your expenses to track detailed job costs'}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Labor */}
-              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold">Labor</CardTitle>
-                  <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
-                    <Plus className="h-4 w-4" /> New Time Entry
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {timeEntries.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                          <tr>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
-                            <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                          {timeEntries.map(entry => (
-                            <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(entry.date), 'dd/MM/yyyy')}</td>
+                          {paginatedExpenses.map(exp => (
+                            <tr key={exp.id} className="hover:bg-muted/5 transition-colors group">
+                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(exp.date), 'dd/MM/yyyy')}</td>
+                              <td className="px-6 py-4 font-bold text-foreground text-xs">{exp.place || 'Supplier'}</td>
+                              <td className="px-6 py-4 text-xs text-muted-foreground line-clamp-1 max-w-[150px]">{exp.description}</td>
                               <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                    <UserIcon className="h-3 w-3" />
-                                  </div>
-                                  <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
-                                </div>
+                                <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
+                                  {exp.category}
+                                </span>
                               </td>
-                              <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
-                              <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
-                              <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td className="px-6 py-4 text-center">
+                                {exp.sync_status === 'synced' ? (
+                                  <div className="flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-full h-6 w-6 mx-auto" title="Synced to QuickBooks">
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                  </div>
+                                ) : (
+                                  qboIntegration && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                                      onClick={() => handleSyncExpenseToQBO(exp)}
+                                      disabled={syncingExpenseId === exp.id}
+                                      title="Sync to QuickBooks"
+                                    >
+                                      {syncingExpenseId === exp.id ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      ) : (
+                                        <RefreshCw className="h-3.5 w-3.5" />
+                                      )}
+                                    </Button>
+                                  )
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-right tabular-nums font-bold text-red-600 text-xs">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                               <td className="px-6 py-4 text-center">
                                 <DropdownMenu>
-                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
+                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7" />}>
                                     <MoreVertical className="h-3.5 w-3.5" />
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-32">
-                                    <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}>
+                                  <DropdownMenuContent align="end" className="w-40">
+                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedExpenseForEdit(exp)}>
                                       <Pencil className="h-3.5 w-3.5" /> Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}>
+                                    {exp.image_url && (
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedFileUrl(exp.image_url)}>
+                                        <Eye className="h-3.5 w-3.5" /> View File
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
                                       <Trash2 className="h-3.5 w-3.5" /> Delete
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
@@ -2147,88 +2061,196 @@ export function JobView({
                               </td>
                             </tr>
                           ))}
-                          <tr className="bg-muted/5 font-bold">
-                            <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
-                            <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td />
-                          </tr>
                         </tbody>
                       </table>
                     </div>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
-                      <Clock className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">Time tracked to this job by you or your team will show here</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
 
-              {/* Visits */}
-              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold">Visits</CardTitle>
-                  <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
-                    <Plus className="h-4 w-4" /> New Visit
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {visits.length > 0 ? (
-                    <div className="divide-y divide-border/30">
-                      {visits.map(visit => (
-                        <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "h-10 w-10 rounded-lg flex items-center justify-center",
-                              visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
-                            )}>
-                              <Calendar className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
-                                {visit.status === 'overdue' && (
-                                  <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Overdue</Badge>
-                                )}
-                                {visit.status === 'completed' && (
-                                  <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Completed</Badge>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-0.5">Assigned to: {visit.assigned_name || 'Unassigned'}</p>
-                            </div>
+                    {/* Pagination Controls */}
+                    {totalExpensePages > 1 && (
+                      <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
+                        <p className="text-[10px] text-muted-foreground">
+                          Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} of {filteredExpenses.length}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            disabled={expenseCurrentPage === 1}
+                            onClick={() => setExpenseCurrentPage(prev => prev - 1)}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <div className="flex items-center gap-1.5 px-2">
+                            <span className="text-xs font-bold text-foreground">{expenseCurrentPage}</span>
+                            <span className="text-[10px] text-muted-foreground">/</span>
+                            <span className="text-xs text-muted-foreground">{totalExpensePages}</span>
                           </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" />}>
-                              <MoreVertical className="h-4 w-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}>
-                                <CheckCircle2 className="h-4 w-4" /> Complete Visit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'scheduled')}>
-                                <Calendar className="h-4 w-4" /> Reschedule
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteVisit(visit.id)}>
-                                <Trash2 className="h-4 w-4" /> Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            disabled={expenseCurrentPage === totalExpensePages}
+                            onClick={() => setExpenseCurrentPage(prev => prev + 1)}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
-                      <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium">No visits scheduled for this job yet</p>
-                      <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                    <Receipt className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-xs font-medium px-8 text-center">
+                      {expenseSearchTerm ? 'No expenses found matching your search' : 'Log your expenses to track detailed job costs'}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            {/* Invoices */}
+          {/* Tab: Work Progress (Block 2) */}
+          <TabsContent value="work" className="space-y-6 mt-0">
+            {/* Labor */}
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Labor</CardTitle>
+                <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
+                  <Plus className="h-4 w-4" /> New Time Entry
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                {timeEntries.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                        <tr>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
+                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
+                          <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/30">
+                        {timeEntries.map(entry => (
+                          <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
+                            <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(entry.date), 'dd/MM/yyyy')}</td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                  <UserIcon className="h-3 w-3" />
+                                </div>
+                                <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
+                            <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
+                            <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td className="px-6 py-4 text-center">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-32">
+                                  <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}>
+                                    <Pencil className="h-3.5 w-3.5" /> Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}>
+                                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="bg-muted/5 font-bold">
+                          <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
+                          <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                          <td />
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
+                    <Clock className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-xs font-medium px-8 text-center">Time tracked to this job by you or your team will show here</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Visits */}
             <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold">Visits</CardTitle>
+                <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
+                  <Plus className="h-4 w-4" /> New Visit
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                {visits.length > 0 ? (
+                  <div className="divide-y divide-border/30">
+                    {visits.map(visit => (
+                      <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className={cn(
+                            "h-10 w-10 rounded-lg flex items-center justify-center",
+                            visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                          )}>
+                            <Calendar className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
+                              {visit.status === 'overdue' && (
+                                <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Overdue</Badge>
+                              )}
+                              {visit.status === 'completed' && (
+                                <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Completed</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">Assigned to: {visit.assigned_name || 'Unassigned'}</p>
+                          </div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" />}>
+                            <MoreVertical className="h-4 w-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}>
+                              <CheckCircle2 className="h-4 w-4" /> Complete Visit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'scheduled')}>
+                              <Calendar className="h-4 w-4" /> Reschedule
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteVisit(visit.id)}>
+                              <Trash2 className="h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-xs font-medium">No visits scheduled for this job yet</p>
+                    <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Financials (Block 2) */}
+          <TabsContent value="finance" className="space-y-6 mt-0">
+            {/* Invoices */}
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
                 <CardTitle className="text-lg font-bold">Invoices</CardTitle>
               </CardHeader>
@@ -2322,9 +2344,12 @@ export function JobView({
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
 
+          {/* Tab: Work Progress (Block 3) */}
+          <TabsContent value="work" className="space-y-6 mt-0">
             {/* Internal Notes */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
               <CardHeader className="py-4 bg-muted/5 border-b border-border/40">
                 <CardTitle className="text-lg font-bold">Internal notes</CardTitle>
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
@@ -2340,1863 +2365,1863 @@ export function JobView({
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-
-        <Dialog open={isAddingMaterial} onOpenChange={setIsAddingMaterial}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Generate Materials with AI</DialogTitle>
-              <DialogDescription>
-                Describe what materials you need (e.g. "Bathroom remodel 10m2").
-                The AI will calculate quantities using average Home Depot prices.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="aiPrompt">Project / Materials Description</Label>
-                <textarea
-                  id="aiPrompt"
-                  className="w-full min-h-[100px] rounded-md border border-input bg-background p-3 text-sm"
-                  placeholder="E.g: Laminate floor installation for a 20 square meter living room..."
-                  value={aiMaterialPrompt}
-                  onChange={(e) => setAiMaterialPrompt(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setIsAddingMaterial(false)} disabled={isGeneratingMaterials}>
-                Cancel
-              </Button>
-              <Button onClick={handleGenerateMaterials} disabled={isGeneratingMaterials} className="font-bold">
-                {isGeneratingMaterials ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  'Generate with AI'
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isSearchingSodimac} onOpenChange={setIsSearchingSodimac}>
-          <DialogContent className="sm:max-w-[700px] bg-background">
-            <DialogHeader>
-              <DialogTitle>Manual Search</DialogTitle>
-              <DialogDescription>
-                Search products directly and add them to the proforma.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4 py-4 min-h-[400px]">
-              <form onSubmit={handleSearchSodimac} className="flex gap-2">
-                <Input
-                  placeholder="Ejemplo: Cemento sol, pintura latex blanco..."
-                  value={sodimacQuery}
-                  onChange={(e) => setSodimacQuery(e.target.value)}
-                  className="flex-1"
-                  autoFocus
-                />
-                <select
-                  value={searchStore}
-                  onChange={(e) => setSearchStore(e.target.value as 'homedepot' | 'ace')}
-                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="homedepot">Home Depot</option>
-                  <option value="ace">Ace Hardware</option>
-                </select>
-                <Button type="submit" disabled={isSodimacLoading} className="font-bold">
-                  {isSodimacLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-                  Search
-                </Button>
-              </form>
-
-              <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: '50vh' }}>
-                {isSodimacLoading ? (
-                  <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
-                    <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
-                    <p>Searching {searchStore === 'ace' ? 'Ace Hardware' : 'Home Depot'}...</p>
-                  </div>
-                ) : sodimacResults.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {sodimacResults.map((result, idx) => (
-                      <div key={idx} className="border border-border/50 rounded-lg p-3 flex gap-4 bg-muted/10 hover:bg-muted/30 transition-colors">
-                        <div className="h-16 w-16 bg-card rounded flex-shrink-0 flex items-center justify-center border border-border/50">
-                          {result.photo_url ? (
-                            <img src={result.photo_url} alt={result.name} className="h-full w-full object-contain" />
-                          ) : (
-                            <ListTodo className="h-6 w-6 text-muted-foreground/30" />
-                          )}
-                        </div>
-                        <div className="flex flex-col flex-1 min-w-0">
-                          <a href={result.product_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-foreground leading-tight hover:underline line-clamp-2">
-                            {result.name}
-                          </a>
-                          <p className="text-sm font-bold text-emerald-600 mt-1">$ {result.unit_price.toFixed(2)}</p>
-                          <Button
-                            size="sm"
-                            className="mt-2 h-7 text-[10px] w-fit"
-                            onClick={() => handleAddSodimacMaterial(result)}
-                          >
-                            <Plus className="h-3 w-3 mr-1" /> Add
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : sodimacQuery && !isSodimacLoading ? (
-                  <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
-                    <p>No results found for "{sodimacQuery}"</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
-                    <p>Type a term and press Search</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {isAddingExpense && (
-          <ExpenseFormModal
-            proformaId={id}
-            user={user}
-            qboIntegration={qboIntegration}
-            onClose={() => setIsAddingExpense(false)}
-            onSuccess={() => {
-              setIsAddingExpense(false);
-              fetchExpenses();
-            }}
-          />
-        )}
-
-        {isScanningExpense && (
-          <ReceiptScanner
-            proformaId={id}
-            onClose={() => setIsScanningExpense(false)}
-            onSuccess={() => {
-              setIsScanningExpense(false);
-              fetchExpenses();
-            }}
-          />
-        )}
-
-        {isRecordingPayment && (
-          <RecordPaymentModal
-            proformaId={id}
-            clientId={proforma.client_id}
-            onClose={() => setIsRecordingPayment(false)}
-            onSuccess={() => {
-              setIsRecordingPayment(false);
-              fetchPayments();
-            }}
-          />
-        )}
-
-        {/* Edit Expense Modal */}
-        {selectedExpenseForEdit && (
-          <EditExpenseModal
-            expense={selectedExpenseForEdit}
-            user={user}
-            qboIntegration={qboIntegration}
-            onClose={() => setSelectedExpenseForEdit(null)}
-            onSuccess={() => {
-              setSelectedExpenseForEdit(null);
-              fetchExpenses();
-            }}
-          />
-        )}
-
-        {isEmailingMaterials && (
-          <EmailMaterialsModal
-            proformaId={id}
-            proformaNumber={proforma.number}
-            projectName={proforma.project_name}
-            teamMembers={teamMembers}
-            openOverride={isEmailingMaterials}
-            setOpenOverride={setIsEmailingMaterials}
-          />
-        )}
-
-        {/* Labor Modal */}
-
-        {isAddingLabor && (
-          <LaborFormModal proformaId={id} teamMembers={teamMembers} onClose={() => setIsAddingLabor(false)} onSuccess={() => { setIsAddingLabor(false); fetchTimeEntries(); }} />
-        )}
-        {isAddingTask && (
-          <TaskFormModal
-            proformaId={id}
-            items={items}
-            teamMembers={teamMembers}
-            onClose={() => setIsAddingTask(false)}
-            onSuccess={() => { setIsAddingTask(false); fetchTasks(); }}
-          />
-        )}
-        {/* Visit Modal */}
-        {isAddingVisit && (
-          <VisitFormModal
-            proformaId={id}
-            onClose={() => setIsAddingVisit(false)}
-            onSuccess={() => {
-              setIsAddingVisit(false);
-              fetchVisits();
-            }}
-          />
-        )}
-
-        {/* Task Media Upload Dialog */}
-        <Dialog open={!!uploadingForTask} onOpenChange={(open) => !open && setUploadingForTask(null)}>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-base font-bold">
-                <Camera className="h-4 w-4 text-emerald-600" />
-                Upload Work Media
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                {uploadingForTask?.title}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4 mt-2">
-              {/* Caption */}
-              <div className="space-y-1">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Caption (optional)</Label>
-                <Input
-                  placeholder="e.g. Tile installation completed"
-                  value={mediaCaption}
-                  onChange={e => setMediaCaption(e.target.value)}
-                  className="h-9 text-sm"
-                />
-              </div>
-
-              {/* File Picker */}
-              <div>
-                <label className="cursor-pointer block">
-                  <div className={cn(
-                    "border-2 border-dashed border-border/50 rounded-xl p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-all",
-                    isUploadingMedia && "opacity-60 pointer-events-none"
-                  )}>
-                    {isUploadingMedia ? (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-                        <p className="text-sm font-medium">Uploading…</p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <Camera className="h-8 w-8 text-muted-foreground/40" />
-                        <p className="text-sm font-medium">Click to select photos or videos</p>
-                        <p className="text-xs">JPG, PNG, WEBP, MP4 supported</p>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*,video/*"
-                    multiple
-                    className="hidden"
-                    onChange={e => handleUploadTaskMedia(e.target.files)}
-                    disabled={isUploadingMedia}
-                  />
-                </label>
-              </div>
-
-              {/* Uploaded media thumbnails */}
-              {uploadingForTask && (taskMedia[uploadingForTask.id] || []).length > 0 && (
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Uploaded</p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {(taskMedia[uploadingForTask.id] || []).map((m: any) => (
-                      <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer"
-                        className="block aspect-square rounded-lg overflow-hidden border border-border/50 hover:opacity-80 transition-opacity bg-muted/10">
-                        {m.type === 'video' ? (
-                          <video src={m.url} className="w-full h-full object-cover" muted />
-                        ) : (
-                          <img src={m.url} alt={m.caption || 'media'} className="w-full h-full object-cover" />
-                        )}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* File Viewer Modal */}
-        <Dialog open={!!selectedFileUrl} onOpenChange={(open) => !open && setSelectedFileUrl(null)}>
-          <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-none">
-            <DialogHeader className="p-4 bg-card/10 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-row items-center justify-between">
-              <DialogTitle className="text-white text-sm font-bold flex items-center gap-2">
-                <Eye className="h-4 w-4" /> Receipt View
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-card/20 h-8 gap-2 font-bold"
-                onClick={() => {
-                  if (selectedFileUrl) window.open(selectedFileUrl, '_blank');
-                }}
-              >
-                <FileDown className="h-4 w-4" /> Download
-              </Button>
-            </DialogHeader>
-            <div className="flex items-center justify-center min-h-[50vh] max-h-[85vh] p-4 pt-16">
-              {selectedFileUrl ? (
-                <img
-                  src={selectedFileUrl}
-                  alt="Receipt"
-                  className="max-w-full max-h-full object-contain shadow-2xl rounded-sm"
-                />
-              ) : (
-                <div className="text-white/40 flex flex-col items-center gap-2">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                  <p className="text-xs uppercase font-black tracking-widest">Loading...</p>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-        {isAddingMaterialManually && (
-          <ManualMaterialFormModal
-            proformaId={id}
-            onClose={() => setIsAddingMaterialManually(false)}
-            onSuccess={() => {
-              //fetchMaterials();
-              setIsAddingMaterialManually(false);
-            }}
-          />
-        )}
-        {isAddingLineItem && (
-          <LineItemFormModal
-            proformaId={id}
-            itemsCount={items.length}
-            itemPresets={itemPresets}
-            onClose={() => setIsAddingLineItem(false)}
-            onSuccess={() => {
-              fetchItems();
-              setIsAddingLineItem(false);
-            }}
-          />
-        )}
-
-        <Dialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Eliminar Item</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que deseas eliminar "{itemToDelete?.description}"? Esta acción no se puede deshacer.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setItemToDelete(null)}>Cancelar</Button>
-              <Button variant="destructive" onClick={() => itemToDelete && handleDeleteItem(itemToDelete.id)}>Eliminar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={!!invoiceToDelete} onOpenChange={(isOpen) => !isOpen && setInvoiceToDelete(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Eliminar Factura</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que deseas eliminar la factura #{invoiceToDelete?.invoice_number}? Esta acción no se puede deshacer.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setInvoiceToDelete(null)}>Cancelar</Button>
-              <Button variant="destructive" onClick={() => invoiceToDelete && handleDeleteInvoice(invoiceToDelete.id)}>Eliminar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* InvoiceFormModal has been removed in favor of dedicated pages */}
-
-        {billingEmailModal && (
-          <EmailBillingModal
-            type={billingEmailModal.type}
-            id={billingEmailModal.data.id}
-            clientEmail={proforma.clients?.email || ''}
-            clientName={proforma.clients?.first_name || proforma.clients?.name || 'Cliente'}
-            referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : String(proforma.number || billingEmailModal.data.id.split('-')[0]).toUpperCase()}
-            onClose={() => setBillingEmailModal(null)}
-          />
-        )}
-
-        <Dialog open={!!paymentToDelete} onOpenChange={(isOpen) => !isOpen && setPaymentToDelete(null)}>
-          <DialogContent className="border-slate-200">
-            <DialogHeader>
-              <DialogTitle>Eliminar Pago</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que deseas eliminar este pago de ${Number(paymentToDelete?.amount || 0).toLocaleString()}? Esta acción no se puede deshacer.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setPaymentToDelete(null)}>Cancelar</Button>
-              <Button variant="destructive" onClick={() => paymentToDelete && handleDeletePayment(paymentToDelete.id)}>Eliminar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={!!expenseToDelete} onOpenChange={(isOpen) => !isOpen && setExpenseToDelete(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Eliminar Gasto</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que deseas eliminar el gasto "{expenseToDelete?.description || expenseToDelete?.place}"? Esta acción no se puede deshacer.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setExpenseToDelete(null)}>Cancelar</Button>
-              <Button variant="destructive" onClick={() => expenseToDelete && handleDeleteExpense(expenseToDelete.id)}>Eliminar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={!!laborToDelete} onOpenChange={(isOpen) => !isOpen && setLaborToDelete(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Eliminar Labor</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que deseas eliminar esta entrada de labor para {laborToDelete?.user_name}? Esta acción no se puede deshacer.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setLaborToDelete(null)}>Cancelar</Button>
-              <Button variant="destructive" onClick={() => laborToDelete && handeDeleteLabor(laborToDelete.id)}>Eliminar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={!!taskToDelete} onOpenChange={(isOpen) => !isOpen && setTaskToDelete(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Eliminar Tarea</DialogTitle>
-              <DialogDescription>
-                ¿Estás seguro de que deseas eliminar la tarea "{taskToDelete?.title}"? Esta acción no se puede deshacer.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setTaskToDelete(null)}>Cancelar</Button>
-              <Button variant="destructive" onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id)}>Eliminar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Editing Modals */}
-        {editingPayment && (
-          <RecordPaymentModal
-            proformaId={id}
-            clientId={proforma.client_id}
-            payment={editingPayment}
-            onClose={() => setEditingPayment(null)}
-            onSuccess={() => {
-              setEditingPayment(null);
-              fetchPayments();
-            }}
-          />
-        )}
-
-        {editingLabor && (
-          <LaborFormModal
-            proformaId={id}
-            teamMembers={teamMembers}
-            entry={editingLabor}
-            onClose={() => setEditingLabor(null)}
-            onSuccess={() => {
-              setEditingLabor(null);
-              fetchTimeEntries();
-            }}
-          />
-        )}
-
-        {editingTask && (
-          <TaskFormModal
-            proformaId={id}
-            items={items}
-            teamMembers={teamMembers}
-            task={editingTask}
-            onClose={() => setEditingTask(null)}
-            onSuccess={() => {
-              setEditingTask(null);
-              fetchTasks();
-            }}
-          />
-        )}
-
-        {isEditingAdjustments && (
-          <AdjustmentsModal
-            initialAdjustments={adjustments}
-            onClose={() => setIsEditingAdjustments(false)}
-            onSave={async (newAdjustments) => {
-              setAdjustments(newAdjustments);
-              await syncTotalsToDatabase(items, newAdjustments);
-              setIsEditingAdjustments(false);
-              toast.success('Adjustments updated');
-            }}
-          />
-        )}
-
+          </TabsContent>
+        </Tabs>
       </div>
-    );
-  }
 
-  function AdjustmentsModal({ initialAdjustments, onClose, onSave }: {
-    initialAdjustments: any[],
-    onClose: () => void,
-    onSave: (adjustments: any[]) => Promise<void>
-  }) {
-    const [adjustments, setAdjustments] = React.useState([...initialAdjustments]);
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-    const handleAddAdjustment = (type: 'tax' | 'discount') => {
-      setAdjustments([
-        ...adjustments,
-        {
-          id: crypto.randomUUID(),
-          label: type === 'tax' ? 'Sales Tax' : 'Discount',
-          type,
-          valueType: 'percentage',
-          value: 0
-        }
-      ]);
-    };
-
-    const handleUpdateAdjustment = (id: string, field: string, value: any) => {
-      setAdjustments(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
-    };
-
-    const handleRemoveAdjustment = (id: string) => {
-      setAdjustments(prev => prev.filter(a => a.id !== id));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      await onSave(adjustments);
-      setIsSubmitting(false);
-    };
-
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-xl">
+      <Dialog open={isAddingMaterial} onOpenChange={setIsAddingMaterial}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Tag className="h-5 w-5 text-primary" />
-              Manage Adjustments
-            </DialogTitle>
+            <DialogTitle>Generate Materials with AI</DialogTitle>
             <DialogDescription>
-              Add or modify taxes and discounts for this job.
+              Describe what materials you need (e.g. "Bathroom remodel 10m2").
+              The AI will calculate quantities using average Home Depot prices.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="aiPrompt">Project / Materials Description</Label>
+              <textarea
+                id="aiPrompt"
+                className="w-full min-h-[100px] rounded-md border border-input bg-background p-3 text-sm"
+                placeholder="E.g: Laminate floor installation for a 20 square meter living room..."
+                value={aiMaterialPrompt}
+                onChange={(e) => setAiMaterialPrompt(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setIsAddingMaterial(false)} disabled={isGeneratingMaterials}>
+              Cancel
+            </Button>
+            <Button onClick={handleGenerateMaterials} disabled={isGeneratingMaterials} className="font-bold">
+              {isGeneratingMaterials ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Generate with AI'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSearchingSodimac} onOpenChange={setIsSearchingSodimac}>
+        <DialogContent className="sm:max-w-[700px] bg-background">
+          <DialogHeader>
+            <DialogTitle>Manual Search</DialogTitle>
+            <DialogDescription>
+              Search products directly and add them to the proforma.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4 min-h-[400px]">
+            <form onSubmit={handleSearchSodimac} className="flex gap-2">
+              <Input
+                placeholder="Ejemplo: Cemento sol, pintura latex blanco..."
+                value={sodimacQuery}
+                onChange={(e) => setSodimacQuery(e.target.value)}
+                className="flex-1"
+                autoFocus
+              />
+              <select
+                value={searchStore}
+                onChange={(e) => setSearchStore(e.target.value as 'homedepot' | 'ace')}
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="homedepot">Home Depot</option>
+                <option value="ace">Ace Hardware</option>
+              </select>
+              <Button type="submit" disabled={isSodimacLoading} className="font-bold">
+                {isSodimacLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                Search
+              </Button>
+            </form>
+
+            <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: '50vh' }}>
+              {isSodimacLoading ? (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
+                  <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
+                  <p>Searching {searchStore === 'ace' ? 'Ace Hardware' : 'Home Depot'}...</p>
+                </div>
+              ) : sodimacResults.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {sodimacResults.map((result, idx) => (
+                    <div key={idx} className="border border-border/50 rounded-lg p-3 flex gap-4 bg-muted/10 hover:bg-muted/30 transition-colors">
+                      <div className="h-16 w-16 bg-card rounded flex-shrink-0 flex items-center justify-center border border-border/50">
+                        {result.photo_url ? (
+                          <img src={result.photo_url} alt={result.name} className="h-full w-full object-contain" />
+                        ) : (
+                          <ListTodo className="h-6 w-6 text-muted-foreground/30" />
+                        )}
+                      </div>
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <a href={result.product_url} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-foreground leading-tight hover:underline line-clamp-2">
+                          {result.name}
+                        </a>
+                        <p className="text-sm font-bold text-emerald-600 mt-1">$ {result.unit_price.toFixed(2)}</p>
+                        <Button
+                          size="sm"
+                          className="mt-2 h-7 text-[10px] w-fit"
+                          onClick={() => handleAddSodimacMaterial(result)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" /> Add
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : sodimacQuery && !isSodimacLoading ? (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
+                  <p>No results found for "{sodimacQuery}"</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-12 text-muted-foreground opacity-60">
+                  <p>Type a term and press Search</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {isAddingExpense && (
+        <ExpenseFormModal
+          proformaId={id}
+          user={user}
+          qboIntegration={qboIntegration}
+          onClose={() => setIsAddingExpense(false)}
+          onSuccess={() => {
+            setIsAddingExpense(false);
+            fetchExpenses();
+          }}
+        />
+      )}
+
+      {isScanningExpense && (
+        <ReceiptScanner
+          proformaId={id}
+          onClose={() => setIsScanningExpense(false)}
+          onSuccess={() => {
+            setIsScanningExpense(false);
+            fetchExpenses();
+          }}
+        />
+      )}
+
+      {isRecordingPayment && (
+        <RecordPaymentModal
+          proformaId={id}
+          clientId={proforma.client_id}
+          onClose={() => setIsRecordingPayment(false)}
+          onSuccess={() => {
+            setIsRecordingPayment(false);
+            fetchPayments();
+          }}
+        />
+      )}
+
+      {/* Edit Expense Modal */}
+      {selectedExpenseForEdit && (
+        <EditExpenseModal
+          expense={selectedExpenseForEdit}
+          user={user}
+          qboIntegration={qboIntegration}
+          onClose={() => setSelectedExpenseForEdit(null)}
+          onSuccess={() => {
+            setSelectedExpenseForEdit(null);
+            fetchExpenses();
+          }}
+        />
+      )}
+
+      {isEmailingMaterials && (
+        <EmailMaterialsModal
+          proformaId={id}
+          proformaNumber={proforma.number}
+          projectName={proforma.project_name}
+          teamMembers={teamMembers}
+          openOverride={isEmailingMaterials}
+          setOpenOverride={setIsEmailingMaterials}
+        />
+      )}
+
+      {/* Labor Modal */}
+
+      {isAddingLabor && (
+        <LaborFormModal proformaId={id} teamMembers={teamMembers} onClose={() => setIsAddingLabor(false)} onSuccess={() => { setIsAddingLabor(false); fetchTimeEntries(); }} />
+      )}
+      {isAddingTask && (
+        <TaskFormModal
+          proformaId={id}
+          items={items}
+          teamMembers={teamMembers}
+          onClose={() => setIsAddingTask(false)}
+          onSuccess={() => { setIsAddingTask(false); fetchTasks(); }}
+        />
+      )}
+      {/* Visit Modal */}
+      {isAddingVisit && (
+        <VisitFormModal
+          proformaId={id}
+          onClose={() => setIsAddingVisit(false)}
+          onSuccess={() => {
+            setIsAddingVisit(false);
+            fetchVisits();
+          }}
+        />
+      )}
+
+      {/* Task Media Upload Dialog */}
+      <Dialog open={!!uploadingForTask} onOpenChange={(open) => !open && setUploadingForTask(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold">
+              <Camera className="h-4 w-4 text-emerald-600" />
+              Upload Work Media
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {uploadingForTask?.title}
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {adjustments.length > 0 ? (
-                adjustments.map((adj, index) => (
-                  <div key={adj.id || index} className="p-4 rounded-xl border border-border/40 bg-muted/5 space-y-4 relative group">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-full"
-                      onClick={() => handleRemoveAdjustment(adj.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+          <div className="space-y-4 mt-2">
+            {/* Caption */}
+            <div className="space-y-1">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Caption (optional)</Label>
+              <Input
+                placeholder="e.g. Tile installation completed"
+                value={mediaCaption}
+                onChange={e => setMediaCaption(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Label</Label>
+            {/* File Picker */}
+            <div>
+              <label className="cursor-pointer block">
+                <div className={cn(
+                  "border-2 border-dashed border-border/50 rounded-xl p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-all",
+                  isUploadingMedia && "opacity-60 pointer-events-none"
+                )}>
+                  {isUploadingMedia ? (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                      <p className="text-sm font-medium">Uploading…</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Camera className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-sm font-medium">Click to select photos or videos</p>
+                      <p className="text-xs">JPG, PNG, WEBP, MP4 supported</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+                  onChange={e => handleUploadTaskMedia(e.target.files)}
+                  disabled={isUploadingMedia}
+                />
+              </label>
+            </div>
+
+            {/* Uploaded media thumbnails */}
+            {uploadingForTask && (taskMedia[uploadingForTask.id] || []).length > 0 && (
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Uploaded</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {(taskMedia[uploadingForTask.id] || []).map((m: any) => (
+                    <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer"
+                      className="block aspect-square rounded-lg overflow-hidden border border-border/50 hover:opacity-80 transition-opacity bg-muted/10">
+                      {m.type === 'video' ? (
+                        <video src={m.url} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={m.url} alt={m.caption || 'media'} className="w-full h-full object-cover" />
+                      )}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Viewer Modal */}
+      <Dialog open={!!selectedFileUrl} onOpenChange={(open) => !open && setSelectedFileUrl(null)}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-none">
+          <DialogHeader className="p-4 bg-card/10 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-row items-center justify-between">
+            <DialogTitle className="text-white text-sm font-bold flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Receipt View
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-card/20 h-8 gap-2 font-bold"
+              onClick={() => {
+                if (selectedFileUrl) window.open(selectedFileUrl, '_blank');
+              }}
+            >
+              <FileDown className="h-4 w-4" /> Download
+            </Button>
+          </DialogHeader>
+          <div className="flex items-center justify-center min-h-[50vh] max-h-[85vh] p-4 pt-16">
+            {selectedFileUrl ? (
+              <img
+                src={selectedFileUrl}
+                alt="Receipt"
+                className="max-w-full max-h-full object-contain shadow-2xl rounded-sm"
+              />
+            ) : (
+              <div className="text-white/40 flex flex-col items-center gap-2">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <p className="text-xs uppercase font-black tracking-widest">Loading...</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      {isAddingMaterialManually && (
+        <ManualMaterialFormModal
+          proformaId={id}
+          onClose={() => setIsAddingMaterialManually(false)}
+          onSuccess={() => {
+            //fetchMaterials();
+            setIsAddingMaterialManually(false);
+          }}
+        />
+      )}
+      {isAddingLineItem && (
+        <LineItemFormModal
+          proformaId={id}
+          itemsCount={items.length}
+          itemPresets={itemPresets}
+          onClose={() => setIsAddingLineItem(false)}
+          onSuccess={() => {
+            fetchItems();
+            setIsAddingLineItem(false);
+          }}
+        />
+      )}
+
+      <Dialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Item</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar "{itemToDelete?.description}"? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setItemToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => itemToDelete && handleDeleteItem(itemToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!invoiceToDelete} onOpenChange={(isOpen) => !isOpen && setInvoiceToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Factura</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar la factura #{invoiceToDelete?.invoice_number}? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setInvoiceToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => invoiceToDelete && handleDeleteInvoice(invoiceToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* InvoiceFormModal has been removed in favor of dedicated pages */}
+
+      {billingEmailModal && (
+        <EmailBillingModal
+          type={billingEmailModal.type}
+          id={billingEmailModal.data.id}
+          clientEmail={proforma.clients?.email || ''}
+          clientName={proforma.clients?.first_name || proforma.clients?.name || 'Cliente'}
+          referenceNumber={billingEmailModal.type === 'invoice' ? billingEmailModal.data.invoice_number : String(proforma.number || billingEmailModal.data.id.split('-')[0]).toUpperCase()}
+          onClose={() => setBillingEmailModal(null)}
+        />
+      )}
+
+      <Dialog open={!!paymentToDelete} onOpenChange={(isOpen) => !isOpen && setPaymentToDelete(null)}>
+        <DialogContent className="border-slate-200">
+          <DialogHeader>
+            <DialogTitle>Eliminar Pago</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar este pago de ${Number(paymentToDelete?.amount || 0).toLocaleString()}? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setPaymentToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => paymentToDelete && handleDeletePayment(paymentToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!expenseToDelete} onOpenChange={(isOpen) => !isOpen && setExpenseToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Gasto</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar el gasto "{expenseToDelete?.description || expenseToDelete?.place}"? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setExpenseToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => expenseToDelete && handleDeleteExpense(expenseToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!laborToDelete} onOpenChange={(isOpen) => !isOpen && setLaborToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Labor</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar esta entrada de labor para {laborToDelete?.user_name}? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setLaborToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => laborToDelete && handeDeleteLabor(laborToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!taskToDelete} onOpenChange={(isOpen) => !isOpen && setTaskToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Tarea</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar la tarea "{taskToDelete?.title}"? Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setTaskToDelete(null)}>Cancelar</Button>
+            <Button variant="destructive" onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id)}>Eliminar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Editing Modals */}
+      {editingPayment && (
+        <RecordPaymentModal
+          proformaId={id}
+          clientId={proforma.client_id}
+          payment={editingPayment}
+          onClose={() => setEditingPayment(null)}
+          onSuccess={() => {
+            setEditingPayment(null);
+            fetchPayments();
+          }}
+        />
+      )}
+
+      {editingLabor && (
+        <LaborFormModal
+          proformaId={id}
+          teamMembers={teamMembers}
+          entry={editingLabor}
+          onClose={() => setEditingLabor(null)}
+          onSuccess={() => {
+            setEditingLabor(null);
+            fetchTimeEntries();
+          }}
+        />
+      )}
+
+      {editingTask && (
+        <TaskFormModal
+          proformaId={id}
+          items={items}
+          teamMembers={teamMembers}
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSuccess={() => {
+            setEditingTask(null);
+            fetchTasks();
+          }}
+        />
+      )}
+
+      {isEditingAdjustments && (
+        <AdjustmentsModal
+          initialAdjustments={adjustments}
+          onClose={() => setIsEditingAdjustments(false)}
+          onSave={async (newAdjustments) => {
+            setAdjustments(newAdjustments);
+            await syncTotalsToDatabase(items, newAdjustments);
+            setIsEditingAdjustments(false);
+            toast.success('Adjustments updated');
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function AdjustmentsModal({ initialAdjustments, onClose, onSave }: {
+  initialAdjustments: any[],
+  onClose: () => void,
+  onSave: (adjustments: any[]) => Promise<void>
+}) {
+  const [adjustments, setAdjustments] = React.useState([...initialAdjustments]);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleAddAdjustment = (type: 'tax' | 'discount') => {
+    setAdjustments([
+      ...adjustments,
+      {
+        id: crypto.randomUUID(),
+        label: type === 'tax' ? 'Sales Tax' : 'Discount',
+        type,
+        valueType: 'percentage',
+        value: 0
+      }
+    ]);
+  };
+
+  const handleUpdateAdjustment = (id: string, field: string, value: any) => {
+    setAdjustments(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+  };
+
+  const handleRemoveAdjustment = (id: string) => {
+    setAdjustments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    await onSave(adjustments);
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Tag className="h-5 w-5 text-primary" />
+            Manage Adjustments
+          </DialogTitle>
+          <DialogDescription>
+            Add or modify taxes and discounts for this job.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+            {adjustments.length > 0 ? (
+              adjustments.map((adj, index) => (
+                <div key={adj.id || index} className="p-4 rounded-xl border border-border/40 bg-muted/5 space-y-4 relative group">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-full"
+                    onClick={() => handleRemoveAdjustment(adj.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Label</Label>
+                      <Input
+                        value={adj.label}
+                        onChange={(e) => handleUpdateAdjustment(adj.id, 'label', e.target.value)}
+                        placeholder="e.g. Christmas Discount"
+                        className="h-9 text-sm font-bold"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Type</Label>
+                      <select
+                        value={adj.type}
+                        onChange={(e) => handleUpdateAdjustment(adj.id, 'type', e.target.value)}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm font-bold focus:ring-2 focus:ring-ring outline-none"
+                      >
+                        <option value="tax">Tax (+)</option>
+                        <option value="discount">Discount (-)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Value Type</Label>
+                      <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'percentage')}
+                          className={cn(
+                            "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+                            adj.valueType === 'percentage' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          Percent (%)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'amount')}
+                          className={cn(
+                            "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+                            adj.valueType === 'amount' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          Fixed Amount ($)
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Value</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-xs">
+                          {adj.valueType === 'percentage' ? '%' : '$'}
+                        </span>
                         <Input
-                          value={adj.label}
-                          onChange={(e) => handleUpdateAdjustment(adj.id, 'label', e.target.value)}
-                          placeholder="e.g. Christmas Discount"
-                          className="h-9 text-sm font-bold"
+                          type="number"
+                          step="0.01"
+                          value={adj.value}
+                          onChange={(e) => handleUpdateAdjustment(adj.id, 'value', parseFloat(e.target.value) || 0)}
+                          className="pl-7 h-9 text-sm font-bold"
                           required
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Type</Label>
-                        <select
-                          value={adj.type}
-                          onChange={(e) => handleUpdateAdjustment(adj.id, 'type', e.target.value)}
-                          className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm font-bold focus:ring-2 focus:ring-ring outline-none"
-                        >
-                          <option value="tax">Tax (+)</option>
-                          <option value="discount">Discount (-)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Value Type</Label>
-                        <div className="flex bg-muted/20 p-1 rounded-lg border border-border/40">
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'percentage')}
-                            className={cn(
-                              "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
-                              adj.valueType === 'percentage' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                            )}
-                          >
-                            Percent (%)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateAdjustment(adj.id, 'valueType', 'amount')}
-                            className={cn(
-                              "flex-1 flex items-center justify-center gap-1.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
-                              adj.valueType === 'amount' ? "bg-card shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-                            )}
-                          >
-                            Fixed Amount ($)
-                          </button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Value</Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-xs">
-                            {adj.valueType === 'percentage' ? '%' : '$'}
-                          </span>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={adj.value}
-                            onChange={(e) => handleUpdateAdjustment(adj.id, 'value', parseFloat(e.target.value) || 0)}
-                            className="pl-7 h-9 text-sm font-bold"
-                            required
-                          />
-                        </div>
-                      </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="py-8 text-center border-2 border-dashed border-border/40 rounded-2xl bg-muted/5">
-                  <p className="text-sm text-muted-foreground">No adjustments applied yet.</p>
                 </div>
-              )}
-            </div>
+              ))
+            ) : (
+              <div className="py-8 text-center border-2 border-dashed border-border/40 rounded-2xl bg-muted/5">
+                <p className="text-sm text-muted-foreground">No adjustments applied yet.</p>
+              </div>
+            )}
+          </div>
 
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1 gap-2 border-dashed font-bold h-11"
-                onClick={() => handleAddAdjustment('tax')}
-              >
-                <Plus className="h-4 w-4" /> Add Tax
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1 gap-2 border-dashed font-bold h-11"
-                onClick={() => handleAddAdjustment('discount')}
-              >
-                <Plus className="h-4 w-4" /> Add Discount
-              </Button>
-            </div>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 gap-2 border-dashed font-bold h-11"
+              onClick={() => handleAddAdjustment('tax')}
+            >
+              <Plus className="h-4 w-4" /> Add Tax
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 gap-2 border-dashed font-bold h-11"
+              onClick={() => handleAddAdjustment('discount')}
+            >
+              <Plus className="h-4 w-4" /> Add Discount
+            </Button>
+          </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="font-bold">
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90 font-bold min-w-[120px]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Adjustments'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="font-bold">
+              Cancel
+            </Button>
+            <Button type="submit" className="bg-primary hover:bg-primary/90 font-bold min-w-[120px]" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Adjustments'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-  function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess, payment }: { proformaId: string, clientId: string, onClose: () => void, onSuccess: () => void, payment?: any }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const supabase = createClient();
+function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess, payment }: { proformaId: string, clientId: string, onClose: () => void, onSuccess: () => void, payment?: any }) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const supabase = createClient();
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      const formData = new FormData(e.currentTarget);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
 
-      const paymentData = {
-        proforma_id: proformaId,
-        client_id: clientId,
-        amount: parseFloat(formData.get('amount') as string),
-        payment_date: formData.get('payment_date'),
-        payment_method: formData.get('payment_method'),
-        type: 'payment',
-        notes: formData.get('notes')
-      };
-
-      const { error } = payment
-        ? await supabase.from('payments').update(paymentData).eq('id', payment.id)
-        : await supabase.from('payments').insert([paymentData]);
-
-      if (error) {
-        toast.error(payment ? 'Error updating payment' : 'Error recording payment');
-      } else {
-        toast.success(payment ? 'Payment updated successfully' : 'Payment recorded successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
+    const paymentData = {
+      proforma_id: proformaId,
+      client_id: clientId,
+      amount: parseFloat(formData.get('amount') as string),
+      payment_date: formData.get('payment_date'),
+      payment_method: formData.get('payment_method'),
+      type: 'payment',
+      notes: formData.get('notes')
     };
 
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{payment ? 'Edit Payment' : 'Record Payment'}</DialogTitle>
-            <DialogDescription>{payment ? 'Update the details of this payment.' : 'Log a payment received for this job.'}</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+    const { error } = payment
+      ? await supabase.from('payments').update(paymentData).eq('id', payment.id)
+      : await supabase.from('payments').insert([paymentData]);
+
+    if (error) {
+      toast.error(payment ? 'Error updating payment' : 'Error recording payment');
+    } else {
+      toast.success(payment ? 'Payment updated successfully' : 'Payment recorded successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{payment ? 'Edit Payment' : 'Record Payment'}</DialogTitle>
+          <DialogDescription>{payment ? 'Update the details of this payment.' : 'Log a payment received for this job.'}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount ($)</Label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" defaultValue={payment?.amount} placeholder="0.00" required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="payment_date">Payment Date</Label>
+            <Input id="payment_date" name="payment_date" type="date" defaultValue={payment?.payment_date || new Date().toISOString().split('T')[0]} required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="payment_method">Payment Method</Label>
+            <select
+              id="payment_method"
+              name="payment_method"
+              defaultValue={payment?.payment_method || 'Cash'}
+              className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              required
+            >
+              <option value="Cash">Cash</option>
+              <option value="Transfer">Transfer</option>
+              <option value="Card">Card</option>
+              <option value="Check">Check</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <textarea
+              id="notes"
+              name="notes"
+              defaultValue={payment?.notes || ''}
+              className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Additional details..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : payment ? 'Update Payment' : 'Record Payment'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ExpenseFormModal({
+  proformaId,
+  user,
+  qboIntegration,
+  onClose,
+  onSuccess
+}: {
+  proformaId: string,
+  user: any,
+  qboIntegration: any,
+  onClose: () => void,
+  onSuccess: () => void
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [vendors, setVendors] = React.useState<any[]>([]);
+  const [accounts, setAccounts] = React.useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = React.useState<any[]>([]);
+  const [isLoadingQbo, setIsLoadingQbo] = React.useState(false);
+  const supabase = createClient();
+
+  React.useEffect(() => {
+    if (qboIntegration && user) {
+      const loadQboData = async () => {
+        setIsLoadingQbo(true);
+        try {
+          const [vRes, aRes, bRes] = await Promise.all([
+            getQuickBooksVendors(user.id),
+            getQuickBooksAccounts(user.id, 'Expense'),
+            getQuickBooksAccounts(user.id, 'Bank')
+          ]);
+          if (vRes.success) setVendors(vRes.vendors);
+          if (aRes.success) setAccounts(aRes.accounts);
+          if (bRes.success) setBankAccounts(bRes.accounts);
+        } catch (err) {
+          console.error('Error loading QBO data:', err);
+        } finally {
+          setIsLoadingQbo(false);
+        }
+      };
+      loadQboData();
+    }
+  }, [qboIntegration, user]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+
+    const { error } = await supabase
+      .from('job_expenses')
+      .insert([{
+        proforma_id: proformaId,
+        place: formData.get('place'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        amount: parseFloat(formData.get('amount') as string),
+        date: formData.get('date'),
+        qbo_vendor_id: formData.get('qbo_vendor_id'),
+        qbo_account_id: formData.get('qbo_account_id'),
+        qbo_bank_account_id: formData.get('qbo_bank_account_id'),
+      }]);
+
+    if (error) {
+      toast.error('Error saving expense');
+    } else {
+      toast.success('Expense saved successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Expense</DialogTitle>
+          <DialogDescription>Log a purchase or cost for this job.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {qboIntegration && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/20 rounded-lg border border-border/40">
+              <div className="space-y-2">
+                <Label htmlFor="qbo_vendor_id" className="text-[10px] uppercase font-bold text-muted-foreground">QuickBooks Vendor</Label>
+                {isLoadingQbo ? (
+                  <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <select
+                    id="qbo_vendor_id"
+                    name="qbo_vendor_id"
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select vendor...</option>
+                    {vendors.map(v => (
+                      <option key={v.Id} value={v.Id}>{v.DisplayName}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qbo_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">QBO Category (Expense)</Label>
+                {isLoadingQbo ? (
+                  <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <select
+                    id="qbo_account_id"
+                    name="qbo_account_id"
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select account...</option>
+                    {accounts.map(a => (
+                      <option key={a.Id} value={a.Id}>{a.Name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qbo_bank_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">Bank / Source</Label>
+                {isLoadingQbo ? (
+                  <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <select
+                    id="qbo_bank_account_id"
+                    name="qbo_bank_account_id"
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select bank...</option>
+                    {bankAccounts.map(a => (
+                      <option key={a.Id} value={a.Id}>{a.Name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="place">Place of Purchase</Label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input id="place" name="place" className="pl-9" placeholder="e.g. Home Depot" required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input id="description" name="description" placeholder="e.g. Paint and brushes" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <div className="relative">
+                <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="category" name="category" className="pl-9" placeholder="e.g. Materials" required />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="amount">Amount ($)</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" defaultValue={payment?.amount} placeholder="0.00" required />
+                <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" placeholder="0.00" required />
               </div>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="payment_date">Payment Date</Label>
-              <Input id="payment_date" name="payment_date" type="date" defaultValue={payment?.payment_date || new Date().toISOString().split('T')[0]} required />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="payment_method">Payment Method</Label>
-              <select
-                id="payment_method"
-                name="payment_method"
-                defaultValue={payment?.payment_method || 'Cash'}
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                required
-              >
-                <option value="Cash">Cash</option>
-                <option value="Transfer">Transfer</option>
-                <option value="Card">Card</option>
-                <option value="Check">Check</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 text-primary-foreground font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Expense'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
-              <textarea
-                id="notes"
-                name="notes"
-                defaultValue={payment?.notes || ''}
-                className="w-full flex min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Additional details..."
-              />
-            </div>
+function EditExpenseModal({
+  expense,
+  user,
+  qboIntegration,
+  onClose,
+  onSuccess
+}: {
+  expense: any,
+  user: any,
+  qboIntegration: any,
+  onClose: () => void,
+  onSuccess: () => void
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [vendors, setVendors] = React.useState<any[]>([]);
+  const [accounts, setAccounts] = React.useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = React.useState<any[]>([]);
+  const [isLoadingQbo, setIsLoadingQbo] = React.useState(false);
+  const supabase = createClient();
 
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : payment ? 'Update Payment' : 'Record Payment'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  function ExpenseFormModal({
-    proformaId,
-    user,
-    qboIntegration,
-    onClose,
-    onSuccess
-  }: {
-    proformaId: string,
-    user: any,
-    qboIntegration: any,
-    onClose: () => void,
-    onSuccess: () => void
-  }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [vendors, setVendors] = React.useState<any[]>([]);
-    const [accounts, setAccounts] = React.useState<any[]>([]);
-    const [bankAccounts, setBankAccounts] = React.useState<any[]>([]);
-    const [isLoadingQbo, setIsLoadingQbo] = React.useState(false);
-    const supabase = createClient();
-
-    React.useEffect(() => {
-      if (qboIntegration && user) {
-        const loadQboData = async () => {
-          setIsLoadingQbo(true);
-          try {
-            const [vRes, aRes, bRes] = await Promise.all([
-              getQuickBooksVendors(user.id),
-              getQuickBooksAccounts(user.id, 'Expense'),
-              getQuickBooksAccounts(user.id, 'Bank')
-            ]);
-            if (vRes.success) setVendors(vRes.vendors);
-            if (aRes.success) setAccounts(aRes.accounts);
-            if (bRes.success) setBankAccounts(bRes.accounts);
-          } catch (err) {
-            console.error('Error loading QBO data:', err);
-          } finally {
-            setIsLoadingQbo(false);
-          }
-        };
-        loadQboData();
-      }
-    }, [qboIntegration, user]);
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      const formData = new FormData(e.currentTarget);
-
-      const { error } = await supabase
-        .from('job_expenses')
-        .insert([{
-          proforma_id: proformaId,
-          place: formData.get('place'),
-          description: formData.get('description'),
-          category: formData.get('category'),
-          amount: parseFloat(formData.get('amount') as string),
-          date: formData.get('date'),
-          qbo_vendor_id: formData.get('qbo_vendor_id'),
-          qbo_account_id: formData.get('qbo_account_id'),
-          qbo_bank_account_id: formData.get('qbo_bank_account_id'),
-        }]);
-
-      if (error) {
-        toast.error('Error saving expense');
-      } else {
-        toast.success('Expense saved successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
-    };
-
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New Expense</DialogTitle>
-            <DialogDescription>Log a purchase or cost for this job.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            {qboIntegration && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/20 rounded-lg border border-border/40">
-                <div className="space-y-2">
-                  <Label htmlFor="qbo_vendor_id" className="text-[10px] uppercase font-bold text-muted-foreground">QuickBooks Vendor</Label>
-                  {isLoadingQbo ? (
-                    <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <select
-                      id="qbo_vendor_id"
-                      name="qbo_vendor_id"
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">Select vendor...</option>
-                      {vendors.map(v => (
-                        <option key={v.Id} value={v.Id}>{v.DisplayName}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qbo_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">QBO Category (Expense)</Label>
-                  {isLoadingQbo ? (
-                    <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <select
-                      id="qbo_account_id"
-                      name="qbo_account_id"
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">Select account...</option>
-                      {accounts.map(a => (
-                        <option key={a.Id} value={a.Id}>{a.Name}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qbo_bank_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">Bank / Source</Label>
-                  {isLoadingQbo ? (
-                    <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <select
-                      id="qbo_bank_account_id"
-                      name="qbo_bank_account_id"
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">Select bank...</option>
-                      {bankAccounts.map(a => (
-                        <option key={a.Id} value={a.Id}>{a.Name}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="place">Place of Purchase</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="place" name="place" className="pl-9" placeholder="e.g. Home Depot" required />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" name="description" placeholder="e.g. Paint and brushes" required />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="category" name="category" className="pl-9" placeholder="e.g. Materials" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" placeholder="0.00" required />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" className="flex-1 text-primary-foreground font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Expense'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  function EditExpenseModal({
-    expense,
-    user,
-    qboIntegration,
-    onClose,
-    onSuccess
-  }: {
-    expense: any,
-    user: any,
-    qboIntegration: any,
-    onClose: () => void,
-    onSuccess: () => void
-  }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [vendors, setVendors] = React.useState<any[]>([]);
-    const [accounts, setAccounts] = React.useState<any[]>([]);
-    const [bankAccounts, setBankAccounts] = React.useState<any[]>([]);
-    const [isLoadingQbo, setIsLoadingQbo] = React.useState(false);
-    const supabase = createClient();
-
-    React.useEffect(() => {
-      if (qboIntegration && user) {
-        const loadQboData = async () => {
-          setIsLoadingQbo(true);
-          try {
-            const [vRes, aRes, bRes] = await Promise.all([
-              getQuickBooksVendors(user.id),
-              getQuickBooksAccounts(user.id, 'Expense'),
-              getQuickBooksAccounts(user.id, 'Bank')
-            ]);
-            if (vRes.success) setVendors(vRes.vendors);
-            if (aRes.success) setAccounts(aRes.accounts);
-            if (bRes.success) setBankAccounts(bRes.accounts);
-          } catch (err) {
-            console.error('Error loading QBO data:', err);
-          } finally {
-            setIsLoadingQbo(false);
-          }
-        };
-        loadQboData();
-      }
-    }, [qboIntegration, user]);
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      const formData = new FormData(e.currentTarget);
-
-      const { error } = await supabase
-        .from('job_expenses')
-        .update({
-          place: formData.get('place'),
-          description: formData.get('description'),
-          category: formData.get('category'),
-          amount: parseFloat(formData.get('amount') as string),
-          date: formData.get('date'),
-          qbo_vendor_id: formData.get('qbo_vendor_id'),
-          qbo_account_id: formData.get('qbo_account_id'),
-          qbo_bank_account_id: formData.get('qbo_bank_account_id'),
-        })
-        .eq('id', expense.id);
-
-      if (error) {
-        toast.error('Error updating expense');
-      } else {
-        toast.success('Expense updated successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
-    };
-
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" /> Edit Expense</DialogTitle>
-            <DialogDescription>Update the details of this expense.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            {qboIntegration && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/20 rounded-lg border border-border/40">
-                <div className="space-y-2">
-                  <Label htmlFor="qbo_vendor_id" className="text-[10px] uppercase font-bold text-muted-foreground">QuickBooks Vendor</Label>
-                  {isLoadingQbo ? (
-                    <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <select
-                      id="qbo_vendor_id"
-                      name="qbo_vendor_id"
-                      defaultValue={expense.qbo_vendor_id || ""}
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">Select vendor...</option>
-                      {vendors.map(v => (
-                        <option key={v.Id} value={v.Id}>{v.DisplayName}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qbo_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">QBO Category (Expense)</Label>
-                  {isLoadingQbo ? (
-                    <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <select
-                      id="qbo_account_id"
-                      name="qbo_account_id"
-                      defaultValue={expense.qbo_account_id || ""}
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">Select account...</option>
-                      {accounts.map(a => (
-                        <option key={a.Id} value={a.Id}>{a.Name}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qbo_bank_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">Bank / Source</Label>
-                  {isLoadingQbo ? (
-                    <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <select
-                      id="qbo_bank_account_id"
-                      name="qbo_bank_account_id"
-                      defaultValue={expense.qbo_bank_account_id || ""}
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">Select bank...</option>
-                      {bankAccounts.map(a => (
-                        <option key={a.Id} value={a.Id}>{a.Name}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="place">Place of Purchase</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="place" name="place" className="pl-9" defaultValue={expense.place} placeholder="e.g. Home Depot" required />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" name="description" defaultValue={expense.description} placeholder="e.g. Paint and brushes" required />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="category" name="category" className="pl-9" defaultValue={expense.category} placeholder="e.g. Materials" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" defaultValue={expense.amount} placeholder="0.00" required />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input id="date" name="date" type="date" defaultValue={expense.date} required />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" className="flex-1 font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Expense'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: {
-    proformaId: string,
-    teamMembers: any[],
-    onClose: () => void,
-    onSuccess: () => void,
-    entry?: any
-  }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [startTime, setStartTime] = React.useState(entry?.start_time || '08:00');
-    const [endTime, setEndTime] = React.useState(entry?.end_time || '17:00');
-    const [hours, setHours] = React.useState(entry?.hours || 8);
-    const [minutes, setMinutes] = React.useState(entry?.minutes || 0);
-    const [hourlyRate, setHourlyRate] = React.useState(entry?.hourly_rate || 0);
-    const [date, setDate] = React.useState(entry?.date || new Date().toISOString().split('T')[0]);
-    const [notes, setNotes] = React.useState(entry?.notes || '');
-    const [teamMemberId, setTeamMemberId] = React.useState(entry?.team_member_id || '');
-
-    const supabase = createClient();
-
-    // Calculate hours/minutes when start/end time changes
-    React.useEffect(() => {
-      if (!startTime || !endTime) return;
-      const [startH, startM] = startTime.split(':').map(Number);
-      const [endH, endM] = endTime.split(':').map(Number);
-
-      let diffMinutes = (endH * 60 + endM) - (startH * 60 + startM);
-      if (diffMinutes < 0) diffMinutes += 24 * 60; // Handle overnight
-
-      setHours(Math.floor(diffMinutes / 60));
-      setMinutes(diffMinutes % 60);
-    }, [startTime, endTime]);
-
-    const totalCost = (hours + minutes / 60) * hourlyRate;
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-
-      const laborData = {
-        proforma_id: proformaId,
-        team_member_id: teamMemberId,
-        user_name: teamMembers.find(m => m.id === teamMemberId)?.name,
-        duration: `${hours}h ${minutes}m`,
-        hours: hours,
-        minutes: minutes,
-        start_time: startTime,
-        end_time: endTime,
-        hourly_rate: hourlyRate,
-        total_cost: totalCost,
-        date: date,
-        notes: notes
+  React.useEffect(() => {
+    if (qboIntegration && user) {
+      const loadQboData = async () => {
+        setIsLoadingQbo(true);
+        try {
+          const [vRes, aRes, bRes] = await Promise.all([
+            getQuickBooksVendors(user.id),
+            getQuickBooksAccounts(user.id, 'Expense'),
+            getQuickBooksAccounts(user.id, 'Bank')
+          ]);
+          if (vRes.success) setVendors(vRes.vendors);
+          if (aRes.success) setAccounts(aRes.accounts);
+          if (bRes.success) setBankAccounts(bRes.accounts);
+        } catch (err) {
+          console.error('Error loading QBO data:', err);
+        } finally {
+          setIsLoadingQbo(false);
+        }
       };
+      loadQboData();
+    }
+  }, [qboIntegration, user]);
 
-      const { error } = entry
-        ? await supabase.from('job_time_entries').update(laborData).eq('id', entry.id)
-        : await supabase.from('job_time_entries').insert([laborData]);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
 
-      if (error) {
-        toast.error(entry ? 'Error updating labor' : 'Error logging labor');
-      } else {
-        toast.success(entry ? 'Labor updated successfully' : 'Labor logged successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
+    const { error } = await supabase
+      .from('job_expenses')
+      .update({
+        place: formData.get('place'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        amount: parseFloat(formData.get('amount') as string),
+        date: formData.get('date'),
+        qbo_vendor_id: formData.get('qbo_vendor_id'),
+        qbo_account_id: formData.get('qbo_account_id'),
+        qbo_bank_account_id: formData.get('qbo_bank_account_id'),
+      })
+      .eq('id', expense.id);
+
+    if (error) {
+      toast.error('Error updating expense');
+    } else {
+      toast.success('Expense updated successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" /> Edit Expense</DialogTitle>
+          <DialogDescription>Update the details of this expense.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {qboIntegration && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3 bg-muted/20 rounded-lg border border-border/40">
+              <div className="space-y-2">
+                <Label htmlFor="qbo_vendor_id" className="text-[10px] uppercase font-bold text-muted-foreground">QuickBooks Vendor</Label>
+                {isLoadingQbo ? (
+                  <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <select
+                    id="qbo_vendor_id"
+                    name="qbo_vendor_id"
+                    defaultValue={expense.qbo_vendor_id || ""}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select vendor...</option>
+                    {vendors.map(v => (
+                      <option key={v.Id} value={v.Id}>{v.DisplayName}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qbo_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">QBO Category (Expense)</Label>
+                {isLoadingQbo ? (
+                  <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <select
+                    id="qbo_account_id"
+                    name="qbo_account_id"
+                    defaultValue={expense.qbo_account_id || ""}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select account...</option>
+                    {accounts.map(a => (
+                      <option key={a.Id} value={a.Id}>{a.Name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qbo_bank_account_id" className="text-[10px] uppercase font-bold text-muted-foreground">Bank / Source</Label>
+                {isLoadingQbo ? (
+                  <div className="h-9 flex items-center justify-center bg-background rounded-md border border-input">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <select
+                    id="qbo_bank_account_id"
+                    name="qbo_bank_account_id"
+                    defaultValue={expense.qbo_bank_account_id || ""}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Select bank...</option>
+                    {bankAccounts.map(a => (
+                      <option key={a.Id} value={a.Id}>{a.Name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="place">Place of Purchase</Label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input id="place" name="place" className="pl-9" defaultValue={expense.place} placeholder="e.g. Home Depot" required />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Input id="description" name="description" defaultValue={expense.description} placeholder="e.g. Paint and brushes" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <div className="relative">
+                <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="category" name="category" className="pl-9" defaultValue={expense.category} placeholder="e.g. Materials" required />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input id="amount" name="amount" type="number" step="0.01" className="pl-9" defaultValue={expense.amount} placeholder="0.00" required />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" name="date" type="date" defaultValue={expense.date} required />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Expense'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: {
+  proformaId: string,
+  teamMembers: any[],
+  onClose: () => void,
+  onSuccess: () => void,
+  entry?: any
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [startTime, setStartTime] = React.useState(entry?.start_time || '08:00');
+  const [endTime, setEndTime] = React.useState(entry?.end_time || '17:00');
+  const [hours, setHours] = React.useState(entry?.hours || 8);
+  const [minutes, setMinutes] = React.useState(entry?.minutes || 0);
+  const [hourlyRate, setHourlyRate] = React.useState(entry?.hourly_rate || 0);
+  const [date, setDate] = React.useState(entry?.date || new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = React.useState(entry?.notes || '');
+  const [teamMemberId, setTeamMemberId] = React.useState(entry?.team_member_id || '');
+
+  const supabase = createClient();
+
+  // Calculate hours/minutes when start/end time changes
+  React.useEffect(() => {
+    if (!startTime || !endTime) return;
+    const [startH, startM] = startTime.split(':').map(Number);
+    const [endH, endM] = endTime.split(':').map(Number);
+
+    let diffMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+    if (diffMinutes < 0) diffMinutes += 24 * 60; // Handle overnight
+
+    setHours(Math.floor(diffMinutes / 60));
+    setMinutes(diffMinutes % 60);
+  }, [startTime, endTime]);
+
+  const totalCost = (hours + minutes / 60) * hourlyRate;
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const laborData = {
+      proforma_id: proformaId,
+      team_member_id: teamMemberId,
+      user_name: teamMembers.find(m => m.id === teamMemberId)?.name,
+      duration: `${hours}h ${minutes}m`,
+      hours: hours,
+      minutes: minutes,
+      start_time: startTime,
+      end_time: endTime,
+      hourly_rate: hourlyRate,
+      total_cost: totalCost,
+      date: date,
+      notes: notes
     };
 
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{entry ? 'Edit Labor Entry' : 'Time Entry'}</DialogTitle>
-            <DialogDescription>{entry ? 'Update the details of this labor entry.' : 'Record a new shift or labor assignment.'}</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            {/* Start / End Time */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start_time">Start Time</Label>
-                <Input
-                  id="start_time"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_time">End Time</Label>
-                <Input
-                  id="end_time"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+    const { error } = entry
+      ? await supabase.from('job_time_entries').update(laborData).eq('id', entry.id)
+      : await supabase.from('job_time_entries').insert([laborData]);
 
-            {/* Duration (calculated) */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="hours">Hours</Label>
-                <Input
-                  id="hours"
-                  type="number"
-                  min={0}
-                  value={hours}
-                  onChange={(e) => setHours(Number(e.target.value))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="minutes">Minutes</Label>
-                <Input
-                  id="minutes"
-                  type="number"
-                  min={0}
-                  max={59}
-                  value={minutes}
-                  onChange={(e) => setMinutes(Number(e.target.value))}
-                />
-              </div>
-            </div>
+    if (error) {
+      toast.error(entry ? 'Error updating labor' : 'Error logging labor');
+    } else {
+      toast.success(entry ? 'Labor updated successfully' : 'Labor logged successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
 
-            {/* Date */}
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{entry ? 'Edit Labor Entry' : 'Time Entry'}</DialogTitle>
+          <DialogDescription>{entry ? 'Update the details of this labor entry.' : 'Record a new shift or labor assignment.'}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {/* Start / End Time */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="start_time">Start Time</Label>
               <Input
-                id="date"
-                name="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                id="start_time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
                 required
               />
             </div>
-
-            {/* Team Member */}
             <div className="space-y-2">
-              <Label htmlFor="team_member_id">Team Member</Label>
-              <select
-                id="team_member_id"
-                name="team_member_id"
-                value={teamMemberId}
-                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                onChange={(e) => {
-                  const id = e.target.value;
-                  setTeamMemberId(id);
-                  const selectedMember = teamMembers.find(m => m.id === id);
-                  if (selectedMember && selectedMember.hourly_cost !== undefined) {
-                    setHourlyRate(Number(selectedMember.hourly_cost));
-                  }
-                }}
+              <Label htmlFor="end_time">End Time</Label>
+              <Input
+                id="end_time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
                 required
-              >
-                <option value="" disabled>Select an employee...</option>
-                {teamMembers.map(member => (
-                  <option key={member.id} value={member.id}>{member.name} {member.hourly_cost ? `($${member.hourly_cost}/hr)` : ''}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Hourly Rate + Total */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="hourly_rate"
-                    type="number"
-                    step="0.01"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(Number(e.target.value))}
-                    className="pl-9"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Total Labor Cost</Label>
-                <div className="flex h-10 items-center rounded-md border border-input bg-muted/30 px-3 text-sm font-semibold text-foreground">
-                  ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">Shift Notes (Optional)</Label>
-              <textarea
-                id="notes"
-                name="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full min-h-[70px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Record summary of work completed during this shift..."
               />
             </div>
+          </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : entry ? 'Update Labor' : 'Log Time Entry'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string, onClose: () => void, onSuccess: () => void }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const supabase = createClient();
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      const formData = new FormData(e.currentTarget);
-
-      const { error } = await supabase
-        .from('job_visits')
-        .insert([{
-          proforma_id: proformaId,
-          assigned_name: formData.get('assigned_name'),
-          visit_date: formData.get('visit_date'),
-          status: formData.get('status'),
-          notes: formData.get('notes')
-        }]);
-
-      if (error) {
-        toast.error('Error scheduling visit');
-      } else {
-        toast.success('Visit scheduled successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
-    };
-
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Schedule New Visit</DialogTitle>
-            <DialogDescription>Plan an on-site visit for this job.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {/* Duration (calculated) */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="assigned_name">Assign To</Label>
-              <Input id="assigned_name" name="assigned_name" placeholder="Full name" required />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="visit_date">Date &amp; Time</Label>
-                <Input id="visit_date" name="visit_date" type="datetime-local" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  name="status"
-                  className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  required
-                >
-                  <option value="scheduled">Scheduled</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <textarea
-                id="notes"
-                name="notes"
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Visit instructions..."
+              <Label htmlFor="hours">Hours</Label>
+              <Input
+                id="hours"
+                type="number"
+                min={0}
+                value={hours}
+                onChange={(e) => setHours(Number(e.target.value))}
               />
             </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Schedule Visit'}
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="minutes">Minutes</Label>
+              <Input
+                id="minutes"
+                type="number"
+                min={0}
+                max={59}
+                value={minutes}
+                onChange={(e) => setMinutes(Number(e.target.value))}
+              />
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+          </div>
 
-  function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess, task }: {
-    proformaId: string,
-    items: any[],
-    teamMembers: any[],
-    onClose: () => void,
-    onSuccess: () => void,
-    task?: any
-  }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const supabase = createClient();
+          {/* Date */}
+          <div className="space-y-2">
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              name="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
+          </div>
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      const formData = new FormData(e.currentTarget);
+          {/* Team Member */}
+          <div className="space-y-2">
+            <Label htmlFor="team_member_id">Team Member</Label>
+            <select
+              id="team_member_id"
+              name="team_member_id"
+              value={teamMemberId}
+              className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onChange={(e) => {
+                const id = e.target.value;
+                setTeamMemberId(id);
+                const selectedMember = teamMembers.find(m => m.id === id);
+                if (selectedMember && selectedMember.hourly_cost !== undefined) {
+                  setHourlyRate(Number(selectedMember.hourly_cost));
+                }
+              }}
+              required
+            >
+              <option value="" disabled>Select an employee...</option>
+              {teamMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name} {member.hourly_cost ? `($${member.hourly_cost}/hr)` : ''}</option>
+              ))}
+            </select>
+          </div>
 
-      const taskData = {
+          {/* Hourly Rate + Total */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="hourly_rate"
+                  type="number"
+                  step="0.01"
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(Number(e.target.value))}
+                  className="pl-9"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Total Labor Cost</Label>
+              <div className="flex h-10 items-center rounded-md border border-input bg-muted/30 px-3 text-sm font-semibold text-foreground">
+                ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label htmlFor="notes">Shift Notes (Optional)</Label>
+            <textarea
+              id="notes"
+              name="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full min-h-[70px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Record summary of work completed during this shift..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : entry ? 'Update Labor' : 'Log Time Entry'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string, onClose: () => void, onSuccess: () => void }) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+
+    const { error } = await supabase
+      .from('job_visits')
+      .insert([{
         proforma_id: proformaId,
-        proforma_item_id: (formData.get('proforma_item_id') as string) || null,
-        assigned_to: (formData.get('assigned_to') as string) || null,
-        title: formData.get('title') as string,
-        description: formData.get('description') as string,
-        due_date: formData.get('due_date') ? formatISO(new Date(formData.get('due_date') as string)) : null,
-        end_date: formData.get('end_date') ? formatISO(new Date(formData.get('end_date') as string)) : null,
-        status: task ? task.status : 'pending'
-      };
+        assigned_name: formData.get('assigned_name'),
+        visit_date: formData.get('visit_date'),
+        status: formData.get('status'),
+        notes: formData.get('notes')
+      }]);
 
-      const { error } = task
-        ? await supabase.from('job_tasks').update(taskData).eq('id', task.id)
-        : await supabase.from('job_tasks').insert([taskData]);
+    if (error) {
+      toast.error('Error scheduling visit');
+    } else {
+      toast.success('Visit scheduled successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
 
-      if (error) {
-        toast.error(task ? 'Error updating task' : 'Error creating task');
-      } else {
-        toast.success(task ? 'Task updated successfully' : 'Task created successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Schedule New Visit</DialogTitle>
+          <DialogDescription>Plan an on-site visit for this job.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="assigned_name">Assign To</Label>
+            <Input id="assigned_name" name="assigned_name" placeholder="Full name" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="visit_date">Date &amp; Time</Label>
+              <Input id="visit_date" name="visit_date" type="datetime-local" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <select
+                id="status"
+                name="status"
+                className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                required
+              >
+                <option value="scheduled">Scheduled</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <textarea
+              id="notes"
+              name="notes"
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Visit instructions..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Schedule Visit'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess, task }: {
+  proformaId: string,
+  items: any[],
+  teamMembers: any[],
+  onClose: () => void,
+  onSuccess: () => void,
+  task?: any
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+
+    const taskData = {
+      proforma_id: proformaId,
+      proforma_item_id: (formData.get('proforma_item_id') as string) || null,
+      assigned_to: (formData.get('assigned_to') as string) || null,
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      due_date: formData.get('due_date') ? formatISO(new Date(formData.get('due_date') as string)) : null,
+      end_date: formData.get('end_date') ? formatISO(new Date(formData.get('end_date') as string)) : null,
+      status: task ? task.status : 'pending'
     };
 
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
-            <DialogDescription>
-              {task ? 'Update task details and assignments.' : 'Create a task and optionally assign it to a team member.'}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <Label htmlFor="title">Task Title</Label>
-              <Input id="title" name="title" defaultValue={task?.title} placeholder="e.g. Buy paint" required />
-            </div>
+    const { error } = task
+      ? await supabase.from('job_tasks').update(taskData).eq('id', task.id)
+      : await supabase.from('job_tasks').insert([taskData]);
 
-            <div className="space-y-2">
-              <Label htmlFor="proforma_item_id">Link to Line Item (Optional)</Label>
-              <select
-                id="proforma_item_id"
-                name="proforma_item_id"
-                defaultValue={task?.proforma_item_id || ''}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="">None</option>
-                {items.map(item => (
-                  <option key={item.id} value={item.id}>{item.description}</option>
-                ))}
-              </select>
-            </div>
+    if (error) {
+      toast.error(task ? 'Error updating task' : 'Error creating task');
+    } else {
+      toast.success(task ? 'Task updated successfully' : 'Task created successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
 
-            <div className="space-y-2">
-              <Label htmlFor="assigned_to">Assign To</Label>
-              <select
-                id="assigned_to"
-                name="assigned_to"
-                defaultValue={task?.assigned_to || ''}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="">Unassigned</option>
-                {teamMembers.map(member => (
-                  <option key={member.id} value={member.id}>{member.name}</option>
-                ))}
-              </select>
-            </div>
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
+          <DialogDescription>
+            {task ? 'Update task details and assignments.' : 'Create a task and optionally assign it to a team member.'}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="title">Task Title</Label>
+            <Input id="title" name="title" defaultValue={task?.title} placeholder="e.g. Buy paint" required />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="due_date">Start Date/Time</Label>
-                <Input
-                  id="due_date"
-                  name="due_date"
-                  type="datetime-local"
-                  defaultValue={task?.due_date ? format(new Date(task.due_date), "yyyy-MM-dd'T'HH:mm") : ''}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_date">End Date/Time</Label>
-                <Input
-                  id="end_date"
-                  name="end_date"
-                  type="datetime-local"
-                  defaultValue={task?.end_date ? format(new Date(task.end_date), "yyyy-MM-dd'T'HH:mm") : ''}
-                />
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="proforma_item_id">Link to Line Item (Optional)</Label>
+            <select
+              id="proforma_item_id"
+              name="proforma_item_id"
+              defaultValue={task?.proforma_item_id || ''}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">None</option>
+              {items.map(item => (
+                <option key={item.id} value={item.id}>{item.description}</option>
+              ))}
+            </select>
+          </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="assigned_to">Assign To</Label>
+            <select
+              id="assigned_to"
+              name="assigned_to"
+              defaultValue={task?.assigned_to || ''}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Unassigned</option>
+              {teamMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <textarea
-                id="description"
-                name="description"
-                defaultValue={task?.description || ''}
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Additional details..."
+              <Label htmlFor="due_date">Start Date/Time</Label>
+              <Input
+                id="due_date"
+                name="due_date"
+                type="datetime-local"
+                defaultValue={task?.due_date ? format(new Date(task.due_date), "yyyy-MM-dd'T'HH:mm") : ''}
               />
             </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : task ? 'Update Task' : 'Create Task'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-
-  function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, onSuccess }: {
-    proformaId: string,
-    itemsCount: number,
-    itemPresets?: any[],
-    onClose: () => void,
-    onSuccess: () => void
-  }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [comboboxOpen, setComboboxOpen] = React.useState(false);
-
-    // Controlled fields
-    const [description, setDescription] = React.useState('');
-    const [details, setDetails] = React.useState('');
-    const [quantity, setQuantity] = React.useState('1');
-    const [unitPrice, setUnitPrice] = React.useState('0.00');
-    const [cost, setCost] = React.useState('0.00');
-    const [isOptional, setIsOptional] = React.useState(false);
-
-    const supabase = createClient();
-
-    const handleSelectPreset = (preset: any) => {
-      setDescription(preset.description || '');
-      setDetails(preset.details || '');
-      setUnitPrice((preset.unit_price || 0).toString());
-      setCost((preset.cost || 0).toString());
-      setComboboxOpen(false);
-    };
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-
-      const qty = parseFloat(quantity) || 1;
-      const price = parseFloat(unitPrice) || 0;
-      const totalPrice = qty * price;
-
-      const { error } = await supabase
-        .from('proforma_items')
-        .insert([{
-          proforma_id: proformaId,
-          description: description,
-          details: details,
-          quantity: qty,
-          unit_price: price,
-          total_price: totalPrice,
-          cost: parseFloat(cost) || 0,
-          is_optional: isOptional,
-          sort_order: itemsCount
-        }]);
-
-      if (error) {
-        toast.error('Error adding item');
-        console.error(error);
-      } else {
-        toast.success('Item added successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
-    };
-
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>New Proforma Item</DialogTitle>
-            <DialogDescription>Add a product or service line item to this proforma.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="description">Product / Service</Label>
-              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-                <PopoverTrigger render={<div className="relative" />}>
-                  <Input
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Item name"
-                    autoComplete="off"
-                    required
-                  />
-                  {itemPresets.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-0 hover:bg-transparent"
-                      onClick={() => setComboboxOpen(!comboboxOpen)}
-                    >
-                      <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", comboboxOpen && "rotate-180")} />
-                    </Button>
-                  )}
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search existing items..." />
-                    <CommandList className="max-h-[300px] overflow-y-auto">
-                      <CommandEmpty>No previous items found.</CommandEmpty>
-                      <CommandGroup heading="Recent Items">
-                        {itemPresets.map((preset, idx) => (
-                          <CommandItem
-                            key={idx}
-                            value={preset.description}
-                            onSelect={() => handleSelectPreset(preset)}
-                            className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
-                          >
-                            <div className="flex w-full items-center justify-between">
-                              <span className="font-bold">{preset.description}</span>
-                              <span className="text-xs font-bold text-emerald-600">$ {preset.unit_price.toFixed(2)}</span>
+              <Label htmlFor="end_date">End Date/Time</Label>
+              <Input
+                id="end_date"
+                name="end_date"
+                type="datetime-local"
+                defaultValue={task?.end_date ? format(new Date(task.end_date), "yyyy-MM-dd'T'HH:mm") : ''}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <textarea
+              id="description"
+              name="description"
+              defaultValue={task?.description || ''}
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Additional details..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : task ? 'Update Task' : 'Create Task'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, onSuccess }: {
+  proformaId: string,
+  itemsCount: number,
+  itemPresets?: any[],
+  onClose: () => void,
+  onSuccess: () => void
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [comboboxOpen, setComboboxOpen] = React.useState(false);
+
+  // Controlled fields
+  const [description, setDescription] = React.useState('');
+  const [details, setDetails] = React.useState('');
+  const [quantity, setQuantity] = React.useState('1');
+  const [unitPrice, setUnitPrice] = React.useState('0.00');
+  const [cost, setCost] = React.useState('0.00');
+  const [isOptional, setIsOptional] = React.useState(false);
+
+  const supabase = createClient();
+
+  const handleSelectPreset = (preset: any) => {
+    setDescription(preset.description || '');
+    setDetails(preset.details || '');
+    setUnitPrice((preset.unit_price || 0).toString());
+    setCost((preset.cost || 0).toString());
+    setComboboxOpen(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const qty = parseFloat(quantity) || 1;
+    const price = parseFloat(unitPrice) || 0;
+    const totalPrice = qty * price;
+
+    const { error } = await supabase
+      .from('proforma_items')
+      .insert([{
+        proforma_id: proformaId,
+        description: description,
+        details: details,
+        quantity: qty,
+        unit_price: price,
+        total_price: totalPrice,
+        cost: parseFloat(cost) || 0,
+        is_optional: isOptional,
+        sort_order: itemsCount
+      }]);
+
+    if (error) {
+      toast.error('Error adding item');
+      console.error(error);
+    } else {
+      toast.success('Item added successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New Proforma Item</DialogTitle>
+          <DialogDescription>Add a product or service line item to this proforma.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="description">Product / Service</Label>
+            <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+              <PopoverTrigger render={<div className="relative" />}>
+                <Input
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Item name"
+                  autoComplete="off"
+                  required
+                />
+                {itemPresets.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-0 hover:bg-transparent"
+                    onClick={() => setComboboxOpen(!comboboxOpen)}
+                  >
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", comboboxOpen && "rotate-180")} />
+                  </Button>
+                )}
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search existing items..." />
+                  <CommandList className="max-h-[300px] overflow-y-auto">
+                    <CommandEmpty>No previous items found.</CommandEmpty>
+                    <CommandGroup heading="Recent Items">
+                      {itemPresets.map((preset, idx) => (
+                        <CommandItem
+                          key={idx}
+                          value={preset.description}
+                          onSelect={() => handleSelectPreset(preset)}
+                          className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <span className="font-bold">{preset.description}</span>
+                            <span className="text-xs font-bold text-emerald-600">$ {preset.unit_price.toFixed(2)}</span>
+                          </div>
+                          {preset.details && (
+                            <div className="text-xs text-muted-foreground truncate w-full">
+                              {preset.details}
                             </div>
-                            {preset.details && (
-                              <div className="text-xs text-muted-foreground truncate w-full">
-                                {preset.details}
-                              </div>
-                            )}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="details">Details</Label>
+            <textarea
+              id="details"
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Detailed description..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="details">Details</Label>
-              <textarea
-                id="details"
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Detailed description..."
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input
+                id="quantity"
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                step="0.01"
+                required
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  step="0.01"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit_price">Unit Price</Label>
-                <Input
-                  id="unit_price"
-                  type="number"
-                  value={unitPrice}
-                  onChange={(e) => setUnitPrice(e.target.value)}
-                  step="0.01"
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cost">Estimated Cost</Label>
-                <Input
-                  id="cost"
-                  type="number"
-                  value={cost}
-                  onChange={(e) => setCost(e.target.value)}
-                  step="0.01"
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="flex items-center space-x-2 pt-8">
-                <Checkbox
-                  id="is_optional_modal"
-                  checked={isOptional}
-                  onCheckedChange={(checked) => setIsOptional(checked as boolean)}
-                />
-                <Label htmlFor="is_optional_modal">Is optional?</Label>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  function ManualMaterialFormModal({ proformaId, onClose, onSuccess }: {
-    proformaId: string,
-    onClose: () => void,
-    onSuccess: () => void
-  }) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const supabase = createClient();
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      const formData = new FormData(e.currentTarget);
-
-      const quantity = parseFloat(formData.get('quantity') as string) || 1;
-      const unitPrice = parseFloat(formData.get('unit_price') as string) || 0;
-      const totalPrice = quantity * unitPrice;
-
-      const { error } = await supabase
-        .from('job_materials')
-        .insert([{
-          proforma_id: proformaId,
-          name: formData.get('name') as string,
-          description: formData.get('description') as string,
-          quantity: quantity,
-          unit_price: unitPrice,
-          total_price: totalPrice,
-          is_purchased: false
-        }]);
-
-      if (error) {
-        toast.error('Error adding material');
-        console.error(error);
-      } else {
-        toast.success('Material added successfully');
-        onSuccess();
-      }
-      setIsSubmitting(false);
-    };
-
-    return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="border-b border-border/40 pb-4">
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold text-primary">
-              <Pencil className="h-5 w-5 text-primary" />
-              New Manual Material
-            </DialogTitle>
-            <DialogDescription>Add a material manually without searching online.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Material Name</Label>
-              <Input id="name" name="name" placeholder="e.g. 5 Gallon White Paint" required />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input id="quantity" name="quantity" type="number" defaultValue="1" step="0.01" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit_price">Unit Price ($)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground font-bold" />
-                  <Input id="unit_price" name="unit_price" type="number" step="0.01" className="pl-8" placeholder="0.00" required />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Notes / Details (Optional)</Label>
-              <textarea
-                id="description"
-                name="description"
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                placeholder="e.g. Specific brand or color codes..."
+              <Label htmlFor="unit_price">Unit Price</Label>
+              <Input
+                id="unit_price"
+                type="number"
+                value={unitPrice}
+                onChange={(e) => setUnitPrice(e.target.value)}
+                step="0.01"
+                placeholder="0.00"
+                required
               />
             </div>
+          </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Material'}
-              </Button>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cost">Estimated Cost</Label>
+              <Input
+                id="cost"
+                type="number"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                step="0.01"
+                placeholder="0.00"
+              />
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+            <div className="flex items-center space-x-2 pt-8">
+              <Checkbox
+                id="is_optional_modal"
+                checked={isOptional}
+                onCheckedChange={(checked) => setIsOptional(checked as boolean)}
+              />
+              <Label htmlFor="is_optional_modal">Is optional?</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ManualMaterialFormModal({ proformaId, onClose, onSuccess }: {
+  proformaId: string,
+  onClose: () => void,
+  onSuccess: () => void
+}) {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+
+    const quantity = parseFloat(formData.get('quantity') as string) || 1;
+    const unitPrice = parseFloat(formData.get('unit_price') as string) || 0;
+    const totalPrice = quantity * unitPrice;
+
+    const { error } = await supabase
+      .from('job_materials')
+      .insert([{
+        proforma_id: proformaId,
+        name: formData.get('name') as string,
+        description: formData.get('description') as string,
+        quantity: quantity,
+        unit_price: unitPrice,
+        total_price: totalPrice,
+        is_purchased: false
+      }]);
+
+    if (error) {
+      toast.error('Error adding material');
+      console.error(error);
+    } else {
+      toast.success('Material added successfully');
+      onSuccess();
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="border-b border-border/40 pb-4">
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold text-primary">
+            <Pencil className="h-5 w-5 text-primary" />
+            New Manual Material
+          </DialogTitle>
+          <DialogDescription>Add a material manually without searching online.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="name">Material Name</Label>
+            <Input id="name" name="name" placeholder="e.g. 5 Gallon White Paint" required />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input id="quantity" name="quantity" type="number" defaultValue="1" step="0.01" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unit_price">Unit Price ($)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground font-bold" />
+                <Input id="unit_price" name="unit_price" type="number" step="0.01" className="pl-8" placeholder="0.00" required />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Notes / Details (Optional)</Label>
+            <textarea
+              id="description"
+              name="description"
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder="e.g. Specific brand or color codes..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Material'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
