@@ -18,7 +18,7 @@ export default async function InvoicesPage() {
     );
   }
   
-  // 1. Fetch invoices with basic project and client info
+  // 1. Fetch invoices with full project and client info
   // We use !inner on proformas to filter the entire result by project owner
   const { data: invoices, error: invError } = await supabase
     .from('invoices')
@@ -26,12 +26,44 @@ export default async function InvoicesPage() {
       id,
       invoice_number,
       total_amount,
+      tax_amount,
+      discount_amount,
       issue_date,
+      due_date,
       status,
+      notes,
       proforma_id,
       qbo_invoice_id,
-      proformas!inner ( project_name, user_id ),
-      clients ( name, qbo_customer_id )
+      proformas!inner ( 
+        id,
+        project_name, 
+        user_id,
+        number,
+        valid_until,
+        proforma_items ( 
+          id,
+          description,
+          details,
+          quantity,
+          unit_price,
+          total_price,
+          is_excluded
+        )
+      ),
+      clients ( 
+        id,
+        name, 
+        company_name,
+        first_name,
+        last_name,
+        email,
+        phone,
+        street_1,
+        city,
+        province,
+        postal_code,
+        qbo_customer_id 
+      )
     `)
     .eq('proformas.user_id', user.id)
     .order('issue_date', { ascending: false });
@@ -40,7 +72,14 @@ export default async function InvoicesPage() {
     console.error('Error fetching invoices:', invError);
   }
 
-  // 2. Fetch all payments for the active proformas
+  // 2. Fetch the current user's company profile
+  const { data: userProfile } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  // 3. Fetch all payments for the active proformas
   const proformaIds = Array.from(new Set((invoices || []).map(i => i.proforma_id)));
   const { data: allPayments, error: payError } = proformaIds.length > 0 
     ? await supabase
@@ -53,7 +92,7 @@ export default async function InvoicesPage() {
     console.error('Error fetching payments:', payError);
   }
 
-  // 3. Combine data: Map payments back to each invoice via proforma_id
+  // 4. Combine data: Map payments back to each invoice via proforma_id
   const enrichedInvoices = (invoices || []).map(invoice => ({
     ...invoice,
     payments: (allPayments || []).filter(p => p.proforma_id === invoice.proforma_id)
@@ -76,7 +115,7 @@ export default async function InvoicesPage() {
         </div>
       </div>
 
-      <InvoicesList initialInvoices={enrichedInvoices} />
+      <InvoicesList initialInvoices={enrichedInvoices} userProfile={userProfile} />
     </div>
   );
 }

@@ -14,13 +14,22 @@ import { ChevronDown, ChevronUp, CreditCard, DollarSign, Info, Percent, Tag } fr
 
 interface InvoicesListProps {
   initialInvoices: any[];
+  userProfile?: any;
 }
 
-export function InvoicesList({ initialInvoices }: InvoicesListProps) {
+import { pdf } from '@react-pdf/renderer';
+import InvoicePDF from '@/lib/pdf/InvoicePDF';
+import PaymentPDF from '@/lib/pdf/PaymentPDF';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { Eye } from 'lucide-react';
+
+export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
   const [expandedInvoices, setExpandedInvoices] = React.useState<Record<string, boolean>>({});
+  const [previewData, setPreviewData] = React.useState<{ url: string | null; title: string; filename?: string } | null>(null);
+  const [isGenerating, setIsGenerating] = React.useState(false);
   const itemsPerPage = 10;
 
   // Realtime subscription
@@ -55,7 +64,7 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
   };
 
   // Filtering
-  const filteredInvoices = initialInvoices.filter(i => 
+  const filteredInvoices = initialInvoices.filter(i =>
     (i.proformas as any)?.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (i.clients as any)?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     i.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -73,13 +82,73 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  const handleViewInvoicePDF = async (invoice: any) => {
+    try {
+      setIsGenerating(true);
+      const loadingToast = toast.loading('Generating Invoice PDF...');
+
+      const blob = await pdf(
+        <InvoicePDF
+          invoice={invoice}
+          proforma={invoice.proformas}
+          client={invoice.clients}
+          user={userProfile}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      setPreviewData({
+        url,
+        title: `#${invoice.invoice_number}`,
+        filename: `Invoice_${invoice.invoice_number}.pdf`
+      });
+
+      toast.dismiss(loadingToast);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error generating Invoice PDF.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleViewPaymentPDF = async (payment: any, invoice: any) => {
+    try {
+      setIsGenerating(true);
+      const loadingToast = toast.loading('Generating Payment Receipt...');
+
+      const blob = await pdf(
+        <PaymentPDF
+          payment={payment}
+          proforma={invoice.proformas}
+          client={invoice.clients}
+          user={userProfile}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      setPreviewData({
+        url,
+        title: `Payment Receipt`,
+        filename: `Receipt_${payment.id.split('-')[0].toUpperCase()}.pdf`
+      });
+
+      toast.dismiss(loadingToast);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error generating Payment Receipt.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4 max-w-md w-full ml-auto">
         <div className="relative w-full group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input 
-            placeholder="Buscar por proyecto o cliente..." 
+          <Input
+            placeholder="Buscar por proyecto o cliente..."
             className="pl-10 h-10 border-border/40 bg-card/50 backdrop-blur-sm focus-visible:ring-primary/20 transition-all rounded-xl"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -93,12 +162,12 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] font-black uppercase tracking-widest bg-muted/50 text-muted-foreground border-b border-border/40">
                 <tr>
-                  <th scope="col" className="px-6 py-4">Proyecto</th>
-                  <th scope="col" className="px-6 py-4">Cliente</th>
-                  <th scope="col" className="px-6 py-4">Fecha</th>
-                  <th scope="col" className="px-6 py-4">Estado</th>
+                  <th scope="col" className="px-6 py-4">Project</th>
+                  <th scope="col" className="px-6 py-4">Client</th>
+                  <th scope="col" className="px-6 py-4">Date</th>
+                  <th scope="col" className="px-6 py-4">Status</th>
                   <th scope="col" className="px-6 py-4 text-right">Total</th>
-                  <th scope="col" className="px-6 py-4 text-right">Acción</th>
+                  <th scope="col" className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
@@ -109,19 +178,19 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
 
                   return (
                     <React.Fragment key={invoice.id}>
-                      <tr 
+                      <tr
                         className={cn(
                           "group hover:bg-muted/50 transition-colors cursor-pointer border-l-4",
-                          invoice.status === 'paid' ? "border-l-emerald-500" : 
-                          totalPaid > 0 ? "border-l-blue-500" : "border-l-transparent"
+                          invoice.status === 'paid' ? "border-l-emerald-500" :
+                            totalPaid > 0 ? "border-l-blue-500" : "border-l-transparent"
                         )}
                         onClick={() => router.push(`/proforma/${invoice.proforma_id}?view=quote`)}
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-6 w-6 rounded-md hover:bg-primary/10"
                               onClick={(e) => toggleExpand(invoice.id, e)}
                             >
@@ -139,16 +208,15 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                         </td>
                         <td className="px-6 py-4">
                           <div className="space-y-1.5">
-                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                              invoice.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${invoice.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                               invoice.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              'bg-muted/50 text-muted-foreground border-border/40'
-                            }`}>
+                                'bg-muted/50 text-muted-foreground border-border/40'
+                              }`}>
                               {invoice.status || 'draft'}
                             </span>
                             <div className="flex items-center gap-2">
                               <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden">
-                                <div 
+                                <div
                                   className={cn(
                                     "h-full transition-all duration-500",
                                     percentPaid === 100 ? "bg-emerald-500" : "bg-blue-500"
@@ -186,13 +254,13 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className={cn(
                                 "h-8 px-2 rounded-lg transition-all",
-                                invoice.qbo_invoice_id 
-                                  ? "text-emerald-600 hover:bg-emerald-50 bg-emerald-50/50" 
+                                invoice.qbo_invoice_id
+                                  ? "text-emerald-600 hover:bg-emerald-50 bg-emerald-50/50"
                                   : "text-muted-foreground hover:text-primary hover:bg-primary/5"
                               )}
                               title={invoice.qbo_invoice_id ? "Sincronizado con QuickBooks" : "Sincronizar a QuickBooks"}
@@ -225,9 +293,9 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                               )}
                             </Button>
                             {invoice.qbo_invoice_id && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
                                 title="Actualizar estado desde QuickBooks"
                                 onClick={async (e) => {
@@ -246,16 +314,18 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                                 <RotateCw className="h-3.5 w-3.5" />
                               </Button>
                             )}
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="h-8 text-xs font-bold border-primary/20 hover:bg-primary/5 px-4 rounded-lg"
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-[10px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 px-4 rounded-lg flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                router.push(`/proforma/${invoice.proforma_id}?view=quote`);
+                                handleViewInvoicePDF(invoice);
                               }}
+                              disabled={isGenerating}
                             >
-                              Ver Detalle
+                              <Eye className="h-3 w-3" />
+                              View PDF
                             </Button>
                           </div>
                         </td>
@@ -273,7 +343,7 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                                   {invoice.payments?.length || 0} Pagos registrados
                                 </span>
                               </div>
-                              
+
                               {invoice.payments && invoice.payments.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                   {invoice.payments.map((payment: any) => (
@@ -289,53 +359,67 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                                           </p>
                                         </div>
                                       </div>
-                                      
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={cn(
-                                          "h-7 px-2 rounded-lg transition-all",
-                                          payment.qbo_payment_id 
-                                            ? "text-emerald-600 bg-emerald-50/50" 
-                                            : "opacity-0 group-hover/pay:opacity-100 text-muted-foreground hover:text-primary hover:bg-primary/5"
-                                        )}
-                                        onClick={async (e) => {
-                                          e.stopPropagation();
-                                          if (payment.qbo_payment_id) {
-                                            toast.info('Este pago ya ha sido sincronizado.');
-                                            return;
-                                          }
-                                          if (!invoice.qbo_invoice_id) {
-                                            toast.error('Primero sincroniza la factura a QuickBooks.');
-                                            return;
-                                          }
-                                          const loadingToast = toast.loading('Sincronizando pago...');
-                                          const res = await syncPaymentToQuickBooks(payment.id);
-                                          toast.dismiss(loadingToast);
-                                          if (res.success) {
-                                            toast.success('Pago sincronizado!');
-                                          } else {
-                                            toast.error(res.error || 'Fallo al sincronizar pago');
-                                          }
-                                        }}
-                                      >
-                                        {payment.qbo_payment_id ? (
-                                          <div className="flex items-center gap-1">
-                                            <CheckCircle2 className="h-3 w-3" />
-                                            <span className="text-[9px] font-bold uppercase">Sync</span>
-                                          </div>
-                                        ) : (
-                                          <div className="flex items-center gap-1">
-                                            <Cloud className="h-3 w-3" />
-                                            <span className="text-[9px] font-bold uppercase">Sync</span>
-                                          </div>
-                                        )}
-                                      </Button>
+
+                                      <div className="flex items-center gap-1">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 w-7 p-0 rounded-lg text-primary hover:bg-primary/10 transition-all opacity-0 group-hover/pay:opacity-100"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleViewPaymentPDF(payment, invoice);
+                                          }}
+                                          title="View Receipt PDF"
+                                        >
+                                          <Eye className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className={cn(
+                                            "h-7 px-2 rounded-lg transition-all",
+                                            payment.qbo_payment_id
+                                              ? "text-emerald-600 bg-emerald-50/50"
+                                              : "opacity-0 group-hover/pay:opacity-100 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                          )}
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (payment.qbo_payment_id) {
+                                              toast.info('Este pago ya ha sido sincronizado.');
+                                              return;
+                                            }
+                                            if (!invoice.qbo_invoice_id) {
+                                              toast.error('Primero sincroniza la factura a QuickBooks.');
+                                              return;
+                                            }
+                                            const loadingToast = toast.loading('Sincronizando pago...');
+                                            const res = await syncPaymentToQuickBooks(payment.id);
+                                            toast.dismiss(loadingToast);
+                                            if (res.success) {
+                                              toast.success('Pago sincronizado!');
+                                            } else {
+                                              toast.error(res.error || 'Fallo al sincronizar pago');
+                                            }
+                                          }}
+                                        >
+                                          {payment.qbo_payment_id ? (
+                                            <div className="flex items-center gap-1">
+                                              <CheckCircle2 className="h-3 w-3" />
+                                              <span className="text-[9px] font-bold uppercase">Sync</span>
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center gap-1">
+                                              <Cloud className="h-3 w-3" />
+                                              <span className="text-[9px] font-bold uppercase">Sync</span>
+                                            </div>
+                                          )}
+                                        </Button>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-[11px] italic text-muted-foreground py-2">No hay pagos registrados para esta factura.</p>
+                                <p className="text-[11px] italic text-muted-foreground py-2">No payments registered for this invoice.</p>
                               )}
                             </div>
                           </td>
@@ -349,14 +433,14 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
           ) : (
             <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
               <FileText className="h-16 w-16 text-muted/20 mb-4" />
-              <p className="text-lg font-serif italic">No se encontraron invoices.</p>
+              <p className="text-lg font-serif italic">No invoices found.</p>
               {searchTerm && (
-                <Button 
-                  variant="link" 
-                  className="mt-2 text-primary" 
+                <Button
+                  variant="link"
+                  className="mt-2 text-primary"
                   onClick={() => setSearchTerm('')}
                 >
-                  Limpiar búsqueda
+                  Clear search
                 </Button>
               )}
             </div>
@@ -393,7 +477,7 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
                       pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
                     }
                   }
-                  
+
                   return pages.map((page, index) => {
                     if (page === '...') {
                       return (
@@ -429,6 +513,13 @@ export function InvoicesList({ initialInvoices }: InvoicesListProps) {
           </div>
         )}
       </Card>
+      <PDFPreviewModal
+        isOpen={!!previewData}
+        onClose={() => setPreviewData(null)}
+        blobUrl={previewData?.url || null}
+        title={previewData?.title || ''}
+        filename={previewData?.filename}
+      />
     </div>
   );
 }

@@ -38,7 +38,7 @@ export async function syncInvoiceToQuickBooks(invoiceId: string) {
         phone: client.phone,
       });
       qboCustomerId = qboCustomer.Customer.Id;
-      
+
       // Update local client with QBO Customer ID
       await supabase
         .from('clients')
@@ -58,31 +58,33 @@ export async function syncInvoiceToQuickBooks(invoiceId: string) {
     // 5. Create Invoice in QBO
     // We'll create a single line item for the invoice total if items aren't mapped 1:1 to partial invoices.
     // Or just use the proforma items if it's a full invoice.
-    const items = (proformaItems && proformaItems.length > 0) 
+    const items = (proformaItems && proformaItems.length > 0)
       ? proformaItems.map(item => ({
-          description: item.description,
-          amount: item.total_price || (item.quantity * item.unit_price),
-          quantity: item.quantity || 1,
-          unitPrice: item.unit_price,
-        }))
+        description: item.description,
+        amount: item.total_price || (item.quantity * item.unit_price),
+        quantity: item.quantity || 1,
+        unitPrice: item.unit_price,
+      }))
       : [{
-          description: `Servicios por Factura ${invoice.invoice_number}`,
-          amount: invoice.total_amount,
-          quantity: 1,
-          unitPrice: invoice.total_amount
-        }];
+        description: `Services for Invoice ${invoice.invoice_number}`,
+        amount: invoice.total_amount,
+        quantity: 1,
+        unitPrice: invoice.total_amount
+      }];
 
     const qboInvoice = await qbo.createInvoice({
       customerRef: qboCustomerId,
       number: invoice.invoice_number,
       total: invoice.total_amount,
       items: items,
+      taxAmount: invoice.tax_amount,
+      discountAmount: invoice.discount_amount,
     });
 
     // 6. Update local invoice with QBO Invoice ID
     await supabase
       .from('invoices')
-      .update({ 
+      .update({
         qbo_invoice_id: qboInvoice.Invoice.Id,
         last_qbo_sync_at: new Date().toISOString()
       })
@@ -125,7 +127,7 @@ export async function syncPaymentToQuickBooks(paymentId: string) {
       .single();
 
     if (pError || !payment) return { success: false as const, error: 'Payment not found' };
-    
+
     // Safety check: Needs an invoice
     if (!payment.invoices || !payment.invoices.qbo_invoice_id) {
       return { success: false as const, error: 'Related invoice must be synced to QuickBooks first.' };
@@ -151,7 +153,7 @@ export async function syncPaymentToQuickBooks(paymentId: string) {
     // 4. Update local payment with QBO Payment ID
     await supabase
       .from('payments')
-      .update({ 
+      .update({
         qbo_payment_id: qboPayment.Payment.Id,
         last_qbo_sync_at: new Date().toISOString()
       })
@@ -181,10 +183,10 @@ export async function syncInvoiceByQboId(qboInvoiceId: string, qboClient: QuickB
   const qboInvoiceData = await qboClient.getInvoice(qboInvoiceId);
   const qboInvoice = qboInvoiceData.Invoice;
   const balance = qboInvoice.Balance;
-  
+
   // Extract Taxes
   const totalTax = qboInvoice.TxnTaxDetail?.TotalTax || 0;
-  
+
   // Extract Discounts (can be a line item or a total amount depending on configuration)
   let totalDiscount = 0;
   if (Array.isArray(qboInvoice.Line)) {
@@ -204,7 +206,7 @@ export async function syncInvoiceByQboId(qboInvoiceId: string, qboClient: QuickB
 
   const { error: updateError } = await supabase
     .from('invoices')
-    .update({ 
+    .update({
       invoice_number: qboInvoice.DocNumber || invoice.invoice_number,
       total_amount: qboInvoice.TotalAmt || invoice.total_amount,
       tax_amount: totalTax,
@@ -226,7 +228,7 @@ export async function syncInvoiceByQboId(qboInvoiceId: string, qboClient: QuickB
 
 export async function syncPaymentByQboId(qboPaymentId: string, qboClient: QuickBooksClient, supabaseClient?: any) {
   const supabase = supabaseClient || await createClient();
-  
+
   let qboPaymentData;
   try {
     qboPaymentData = await qboClient.getPayment(qboPaymentId);

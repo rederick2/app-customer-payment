@@ -13,7 +13,7 @@ import React from 'react';
 async function logStatusChange(proformaId: string, newStatus: string, oldStatus?: string, userId?: string) {
   const supabase = await createClient(); // This is fine for internal server-side calls if authenticated
   // Or use admin client if we want to ensure it works even for complex flows
-  
+
   await supabase
     .from('proforma_status_history')
     .insert({
@@ -91,7 +91,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
         .from('proformas')
         .update({ status: 'sent' })
         .eq('id', proformaId);
-      
+
       await logStatusChange(proformaId, 'sent', 'draft', user.id);
     }
 
@@ -605,6 +605,8 @@ export async function upsertInvoice(data: any, paymentIds: string[] = []) {
 
   if (!user) return { error: 'No autorizado' };
 
+  console.log(data);
+
   if (data.id) {
     const { data: updatedData, error } = await supabase
       .from('invoices')
@@ -621,7 +623,7 @@ export async function upsertInvoice(data: any, paymentIds: string[] = []) {
       .eq('id', data.id)
       .select()
       .single();
-    
+
     if (error) return { error: error.message };
 
     // Link payments
@@ -651,7 +653,7 @@ export async function upsertInvoice(data: any, paymentIds: string[] = []) {
       })
       .select()
       .single();
-    
+
     if (error) return { error: error.message };
 
     // Link payments

@@ -47,7 +47,7 @@ export class QuickBooksClient {
       try {
         const authResponse = await this.oauthClient.refresh();
         const tokens = authResponse.getJson();
-        
+
         // Update tokens in DB
         const supabase = await createClient();
         await supabase
@@ -119,7 +119,7 @@ export class QuickBooksClient {
   async createCustomer(client: { name: string; email?: string; phone?: string }) {
     await this.ensureValidToken();
     const url = `https://${this.baseUrl}/v3/company/${this.realmId}/customer?minorversion=70`;
-    
+
     // De-dupe and truncate fields based on QuickBooks limits (Error 2050 prevention)
     const displayName = (client.name || '').substring(0, 100);
     const email = (client.email || '').substring(0, 100);
@@ -141,10 +141,67 @@ export class QuickBooksClient {
 
     return await this.handleResponse(response, 'Create Customer');
   }
-
-  async createInvoice(invoice: { customerRef: string; items: any[]; total: number; number: string }) {
+  async createInvoice(invoice: {
+    customerRef: string;
+    items: any[];
+    total: number;
+    number: string;
+    taxAmount?: number;
+    discountAmount?: number;
+  }) {
     await this.ensureValidToken();
     const url = `https://${this.baseUrl}/v3/company/${this.realmId}/invoice?minorversion=70`;
+
+    const lines = invoice.items.map(item => ({
+      Description: item.description,
+      Amount: item.amount,
+      DetailType: 'SalesItemLineDetail',
+      SalesItemLineDetail: {
+        Qty: item.quantity,
+        UnitPrice: item.unitPrice,
+        TaxCodeRef: {
+          value: 'TAX'
+        }
+      }
+    }));
+
+    // Add Discount Line if present
+    if (invoice.discountAmount && invoice.discountAmount > 0) {
+      lines.push({
+        Amount: invoice.discountAmount,
+        DetailType: 'DiscountLineDetail',
+        DiscountLineDetail: {
+          PercentBased: false,
+          DiscountAccountRef: { value: 28 }
+        }
+      } as any);
+    }
+
+    const body: any = {
+      DocNumber: invoice.number,
+      Line: lines,
+      CustomerRef: { value: invoice.customerRef },
+      GlobalTaxCalculation: 'TaxExcluded'
+    };
+
+    // Add Tax Detail if present
+    if (invoice.taxAmount && invoice.taxAmount > 0) {
+      body.TxnTaxDetail = {
+        TotalTax: invoice.taxAmount,
+        TaxLine: [
+          {
+            Amount: invoice.taxAmount,
+            DetailType: 'TaxLineDetail',
+            TaxLineDetail: {
+              TaxRateRef: { value: 3 },
+              PercentBased: false
+            }
+          }
+        ]
+      };
+    }
+
+    console.log(body);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -153,23 +210,68 @@ export class QuickBooksClient {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        DocNumber: invoice.number,
-        Line: invoice.items.map(item => ({
-          Description: item.description,
-          Amount: item.amount,
-          DetailType: 'SalesItemLineDetail',
-          SalesItemLineDetail: {
-            Qty: item.quantity,
-            UnitPrice: item.unitPrice,
-          }
-        })),
-        CustomerRef: { value: invoice.customerRef }
-      }),
+      body: JSON.stringify(body),
+    });
+
+    return await this.handleResponse(response as any, 'Create Invoice');
+  }
+  /*async createInvoice(invoice: { 
+    customerRef: string; 
+    items: any[]; 
+    total: number; 
+    number: string;
+    taxAmount?: number;
+    discountAmount?: number;
+  }) {
+    await this.ensureValidToken();
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/invoice?minorversion=70`;
+
+    const lines = invoice.items.map(item => ({
+      Description: item.description,
+      Amount: item.amount,
+      DetailType: 'SalesItemLineDetail',
+      SalesItemLineDetail: {
+        Qty: item.quantity,
+        UnitPrice: item.unitPrice,
+      }
+    }));
+
+    // Add Discount Line if present
+    if (invoice.discountAmount && invoice.discountAmount > 0) {
+      lines.push({
+        Amount: invoice.discountAmount,
+        DetailType: 'DiscountLineDetail',
+        DiscountLineDetail: {
+          PercentBased: false
+        }
+      } as any);
+    }
+
+    const body: any = {
+      DocNumber: invoice.number,
+      Line: lines,
+      CustomerRef: { value: invoice.customerRef }
+    };
+
+    // Add Tax Detail if present
+    if (invoice.taxAmount && invoice.taxAmount > 0) {
+      body.TxnTaxDetail = {
+        TotalTax: invoice.taxAmount
+      };
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.oauthClient.getToken().access_token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(body),
     });
 
     return await this.handleResponse(response, 'Create Invoice');
-  }
+  }*/
 
   async createPayment(payment: { customerRef: string; invoiceRef: string; amount: number; date: string }) {
     await this.ensureValidToken();

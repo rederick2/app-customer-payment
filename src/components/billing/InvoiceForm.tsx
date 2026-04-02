@@ -107,15 +107,15 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
         toast.error(result.error);
       } else {
         if (!initialData && syncToQBO && result.data?.id) {
-          toast.success('Factura creada. Sincronizando con QuickBooks...');
+          toast.success('Invoice created. Synchronizing with QuickBooks...');
           const syncRes = await syncInvoiceToQuickBooks(result.data.id);
           if (syncRes.success) {
-            toast.success('Sincronización completada');
+            toast.success('Synchronization completed');
           } else {
-            toast.error('Error en sincronización: ' + syncRes.error);
+            toast.error('Error in synchronization: ' + syncRes.error);
           }
         } else {
-          toast.success(initialData ? 'Factura actualizada' : 'Factura creada');
+          toast.success(initialData ? 'Invoice updated' : 'Invoice created');
         }
 
         // Navigate back to client page

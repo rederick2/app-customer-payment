@@ -128,6 +128,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 700
   },
+  table: {
+    marginTop: 20,
+    marginBottom: 20
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: BRAND_BROWN,
+    color: '#ffffff',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    fontWeight: 700
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
+  colDesc: { width: '55%', paddingRight: 10 },
+  colQty: { width: '10%', textAlign: 'center' },
+  colPrice: { width: '15%', textAlign: 'right' },
+  colTotal: { width: '20%', textAlign: 'right' },
+  tableHeaderText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: 700,
+    textTransform: 'uppercase'
+  },
+  itemTitle: {
+    fontSize: 10,
+    fontWeight: 700,
+    marginBottom: 4
+  },
+  itemDetails: {
+    fontSize: 9,
+    color: '#666666',
+    lineHeight: 1.4
+  },
   notesBox: {
     marginTop: 30,
     padding: 10,
@@ -235,10 +274,6 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
               <Text style={{ color: '#666' }}>Date</Text>
               <Text>{dateFormatted}</Text>
             </View>
-            <View style={styles.summaryRow}>
-              <Text style={{ color: '#666' }}>Due Date</Text>
-              <Text>{dueDateFormatted}</Text>
-            </View>
             <View style={styles.summaryTotalRow}>
               <Text style={styles.summaryTotalLabel}>Amount Due</Text>
               <Text style={styles.summaryTotalValue}>
@@ -248,16 +283,63 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
           </View>
         </View>
 
-        {/* Description Table (Simplified) */}
-        <View style={{ marginTop: 20, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingBottom: 15 }}>
-          <Text style={styles.label}>Project Items / Services</Text>
-          <Text style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>{proforma?.project_name}</Text>
-          <Text style={{ fontSize: 10, color: '#666', lineHeight: 1.4 }}>
-            Professional services associated with the project reference #{proforma.id.split('-')[0].toUpperCase()}.
-            This invoice covers the scheduled billing amount as agreed in the initial contract.
-          </Text>
-        </View>
+        {/* Line Items Table */}
+        <View style={styles.table}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderText, styles.colDesc]}>Product/Service</Text>
+            <Text style={[styles.tableHeaderText, styles.colQty]}>Qty.</Text>
+            <Text style={[styles.tableHeaderText, styles.colPrice]}>Unit Price</Text>
+            <Text style={[styles.tableHeaderText, styles.colTotal]}>Total</Text>
+          </View>
 
+          {proforma?.proforma_items && proforma.proforma_items
+            .filter((item: any) => !item.is_excluded)
+            .map((item: any, i: number) => (
+              <View key={i} style={styles.tableRow} wrap={true}>
+                <View style={styles.colDesc}>
+                  <Text style={styles.itemTitle}>{item.description}</Text>
+                  {item.details && <Text style={styles.itemDetails}>{item.details}</Text>}
+                </View>
+                <Text style={[styles.recipientDetail, styles.colQty]}>{item.quantity}</Text>
+                <Text style={[styles.recipientDetail, styles.colPrice]}>
+                  ${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </Text>
+                <Text style={[styles.recipientDetail, styles.colTotal, { fontWeight: 700 }]}>
+                  ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </Text>
+              </View>
+            ))}
+        </View>
+        <View style={styles.mainContentGrid}>
+          <View style={styles.recipientBox}></View>
+          <View style={styles.summaryBox}>
+            {/* Add a summary row for the table */}
+            <View style={styles.summaryRow}>
+              <Text style={{ color: '#666' }}>Subtotal</Text>
+              <Text style={{ fontSize: 9 }}>
+                ${proforma?.proforma_items.reduce((acc: number, item: any) => acc + item.total_price, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={{ color: '#666' }}>Tax</Text>
+              <Text style={{ fontSize: 9 }}>
+                ${invoice.tax_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={{ color: '#666' }}>Discount</Text>
+              <Text style={{ fontSize: 9 }}>
+                ${invoice.discount_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={{ color: '#666' }}>Total</Text>
+              <Text style={{ fontSize: 9 }}>
+                ${invoice.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
+          </View>
+        </View>
         {/* Notes Section if exists */}
         {invoice.notes && (
           <View style={styles.notesBox}>
