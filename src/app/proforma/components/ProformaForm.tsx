@@ -461,19 +461,23 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           .select('*')
           .eq('user_id', user.id);
         if (taxesData) setAvailableTaxes(taxesData);
-      }
 
-      const { data: clientsData } = await supabase.from('clients').select('*, proformas(created_at)');
-      if (clientsData) {
-        const sortedClients = clientsData.sort((a, b) => {
-          const aDocs = a.proformas || [];
-          const bDocs = b.proformas || [];
-          const aMax = aDocs.length > 0 ? Math.max(...aDocs.map((p: any) => new Date(p.created_at).getTime())) : new Date(a.created_at || 0).getTime();
-          const bMax = bDocs.length > 0 ? Math.max(...bDocs.map((p: any) => new Date(p.created_at).getTime())) : new Date(b.created_at || 0).getTime();
-          if (aMax !== bMax) return bMax - aMax;
-          return (a.name || a.company_name || '').localeCompare(b.name || b.company_name || '');
-        });
-        setClients(sortedClients);
+        const { data: clientsData } = await supabase
+          .from('clients')
+          .select('*, proformas(created_at)')
+          .eq('user_id', user.id);
+
+        if (clientsData) {
+          const sortedClients = clientsData.sort((a, b) => {
+            const aDocs = a.proformas || [];
+            const bDocs = b.proformas || [];
+            const aMax = aDocs.length > 0 ? Math.max(...aDocs.map((p: any) => new Date(p.created_at).getTime())) : new Date(a.created_at || 0).getTime();
+            const bMax = bDocs.length > 0 ? Math.max(...bDocs.map((p: any) => new Date(p.created_at).getTime())) : new Date(b.created_at || 0).getTime();
+            if (aMax !== bMax) return bMax - aMax;
+            return (a.name || a.company_name || '').localeCompare(b.name || b.company_name || '');
+          });
+          setClients(sortedClients);
+        }
       }
 
       const { data: catalogData } = await supabase
@@ -723,7 +727,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+    //console.log('handleSubmit');
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
@@ -736,8 +740,11 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         const { data: maxProforma } = await supabase
           .from('proformas')
           .select('number')
+          .eq('user_id', user.id)
           .order('number', { ascending: false })
           .limit(1);
+
+        //console.log('maxProforma', maxProforma);
 
         const currentMax = maxProforma?.[0]?.number || 0;
         nextNumber = Math.max(currentMax + 1, startSequence);
@@ -747,6 +754,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       if (!isTemplate) {
         finalClientId = selectedClientId;
         const clientPayload = {
+          user_id: user.id,
           title,
           first_name: firstName,
           last_name: lastName,
@@ -775,6 +783,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       }
 
       const proformaPayload = {
+        user_id: user.id,
         client_id: finalClientId,
         project_name: projectName,
         valid_until: validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
