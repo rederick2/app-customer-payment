@@ -175,7 +175,7 @@ export default function EditClientPage() {
 
     } catch (error) {
       console.error('Error updating client:', error);
-      alert('Error al actualizar el cliente. Por favor intenta de nuevo.');
+      alert('Error to update client. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -197,7 +197,7 @@ export default function EditClientPage() {
       .eq('id', params.id);
 
     if (error) {
-      alert('Error al eliminar cliente');
+      alert('Error to delete client');
       setIsSubmitting(false);
       setShowDeleteDialog(false);
     } else {
@@ -207,7 +207,7 @@ export default function EditClientPage() {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground animate-pulse">Cargando cliente...</div>;
+    return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading client...</div>;
   }
 
   return (
@@ -216,13 +216,13 @@ export default function EditClientPage() {
         <div>
           <Link href={`../${params.id}`} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
+            Back
           </Link>
-          <h1 className="font-serif text-3xl font-bold tracking-tight">Editar Cliente</h1>
+          <h1 className="font-serif text-3xl font-bold tracking-tight">Edit Client</h1>
         </div>
         <Button variant="destructive" size="sm" type="button" onClick={() => setShowDeleteDialog(true)} disabled={isSubmitting}>
           <Trash2 className="mr-2 h-4 w-4" />
-          Eliminar
+          Delete
         </Button>
       </div>
 
@@ -230,16 +230,16 @@ export default function EditClientPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" /> Confirmar Eliminación
+              <AlertTriangle className="h-5 w-5" /> Confirm Delete
             </DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar este cliente permanentemente? Se eliminarán también todas sus proformas, facturas y registros asociados. Esta acción no se puede deshacer.
+              Are you sure you want to permanently delete this client? All associated proformas, invoices, and records will also be deleted. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isSubmitting}>Cancelar</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-              Sí, eliminar cliente
+              Yes, delete client
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -250,27 +250,27 @@ export default function EditClientPage() {
         {/* Contact Details */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Detalles de Contacto</CardTitle>
+            <CardTitle className="text-lg font-serif">Contact Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Título</Label>
+                <Label htmlFor="title">Title</Label>
                 <Input id="title" placeholder="Sr., Sra., Ing." value={title} onChange={e => setTitle(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="firstName">Nombre *</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input id="firstName" required placeholder="Ej. Juan" value={firstName} onChange={e => setFirstName(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Apellido *</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input id="lastName" required placeholder="Ej. Pérez" value={lastName} onChange={e => setLastName(e.target.value)} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">Teléfono</Label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input id="phone" type="tel" placeholder="+123456789" value={phone} onChange={e => setPhone(e.target.value)} />
               </div>
               <div className="space-y-2">
@@ -295,20 +295,20 @@ export default function EditClientPage() {
         {/* Extra Phones */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Teléfonos Adicionales</CardTitle>
+            <CardTitle className="text-lg font-serif">Additional Phones</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="workPhone">Trabajo</Label>
+                <Label htmlFor="workPhone">Work</Label>
                 <Input id="workPhone" type="tel" value={workPhone} onChange={e => setWorkPhone(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="mobilePhone">Móvil</Label>
+                <Label htmlFor="mobilePhone">Mobile</Label>
                 <Input id="mobilePhone" type="tel" value={mobilePhone} onChange={e => setMobilePhone(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="homePhone">Casa</Label>
+                <Label htmlFor="homePhone">Home</Label>
                 <Input id="homePhone" type="tel" value={homePhone} onChange={e => setHomePhone(e.target.value)} />
               </div>
               <div className="space-y-2">
@@ -316,7 +316,7 @@ export default function EditClientPage() {
                 <Input id="faxPhone" type="tel" value={faxPhone} onChange={e => setFaxPhone(e.target.value)} />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="otherPhones">Otros Teléfonos</Label>
+                <Label htmlFor="otherPhones">Other Phones</Label>
                 <Input id="otherPhones" type="text" value={otherPhones} onChange={e => setOtherPhones(e.target.value)} />
               </div>
             </div>
@@ -326,11 +326,11 @@ export default function EditClientPage() {
         {/* Property Address */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Dirección (Property Address)</CardTitle>
+            <CardTitle className="text-lg font-serif">Address (Property Address)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="street1">Línea de Calle 1 (Busca con Google) *</Label>
+              <Label htmlFor="street1">Street Line 1</Label>
               <Autocomplete
                 apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
                 onPlaceSelected={handlePlaceSelected}
@@ -338,35 +338,35 @@ export default function EditClientPage() {
                   types: ["address"],
                 }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Empieza a escribir una dirección..."
+                placeholder="Start typing an address..."
                 defaultValue={street1}
                 onChange={(e: any) => setStreet1(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="street2">Línea de Calle 2</Label>
-              <Input id="street2" placeholder="Departamento, Suite, Piso..." value={street2} onChange={e => setStreet2(e.target.value)} />
+              <Label htmlFor="street2">Street Line 2</Label>
+              <Input id="street2" placeholder="Apartment, Suite, Floor..." value={street2} onChange={e => setStreet2(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">Ciudad</Label>
-                <Input id="city" placeholder="Ej. Madrid" value={city} onChange={e => setCity(e.target.value)} />
+                <Label htmlFor="city">City</Label>
+                <Input id="city" placeholder="Ex. New York" value={city} onChange={e => setCity(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="province">Provincia / Estado</Label>
-                <Input id="province" placeholder="Ej. Madrid" value={province} onChange={e => setProvince(e.target.value)} />
+                <Label htmlFor="province">State</Label>
+                <Input id="province" placeholder="Ex. New York" value={province} onChange={e => setProvince(e.target.value)} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="postalCode">Código Postal</Label>
+                <Label htmlFor="postalCode">Postal Code</Label>
                 <Input id="postalCode" placeholder="28001" value={postalCode} onChange={e => setPostalCode(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="country">País</Label>
+                <Label htmlFor="country">Country</Label>
                 <Input id="country" placeholder="España" value={country} onChange={e => setCountry(e.target.value)} />
               </div>
             </div>
@@ -377,45 +377,45 @@ export default function EditClientPage() {
         <Card className="shadow-sm border-border/50">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div>
-              <CardTitle className="text-lg font-serif">Dirección de Facturación</CardTitle>
-              <CardDescription>Opcional. Si es igual a la de servicio, puede quedar vacía.</CardDescription>
+              <CardTitle className="text-lg font-serif">Billing Address</CardTitle>
+              <CardDescription>Optional. If it is the same as the service address, it can be left empty.</CardDescription>
             </div>
-            <Button 
-               variant="secondary" 
-               size="sm" 
-               type="button" 
-               onClick={copyServiceAddress}
-               className="text-[11px] h-8 font-medium"
+            <Button
+              variant="secondary"
+              size="sm"
+              type="button"
+              onClick={copyServiceAddress}
+              className="text-[11px] h-8 font-medium"
             >
-              Copiar Dirección
+              Copy Address
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="billingStreet1">Línea de Calle 1</Label>
+              <Label htmlFor="billingStreet1">Street Line 1</Label>
               <Input id="billingStreet1" value={billingStreet1} onChange={e => setBillingStreet1(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="billingStreet2">Línea de Calle 2</Label>
-              <Input id="billingStreet2" placeholder="Departamento, Suite, Piso..." value={billingStreet2} onChange={e => setBillingStreet2(e.target.value)} />
+              <Label htmlFor="billingStreet2">Street Line 2</Label>
+              <Input id="billingStreet2" placeholder="Apartment, Suite, Floor..." value={billingStreet2} onChange={e => setBillingStreet2(e.target.value)} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="billingCity">Ciudad</Label>
+                <Label htmlFor="billingCity">City</Label>
                 <Input id="billingCity" value={billingCity} onChange={e => setBillingCity(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="billingState">Provincia / Estado</Label>
+                <Label htmlFor="billingState">State</Label>
                 <Input id="billingState" value={billingState} onChange={e => setBillingState(e.target.value)} />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="billingPostalCode">Código Postal</Label>
+                <Label htmlFor="billingPostalCode">Postal Code</Label>
                 <Input id="billingPostalCode" value={billingPostalCode} onChange={e => setBillingPostalCode(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="billingCountry">País</Label>
+                <Label htmlFor="billingCountry">Country</Label>
                 <Input id="billingCountry" value={billingCountry} onChange={e => setBillingCountry(e.target.value)} />
               </div>
             </div>
@@ -425,24 +425,24 @@ export default function EditClientPage() {
         {/* Preferences */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Preferencias</CardTitle>
+            <CardTitle className="text-lg font-serif">Preferences</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
               <Checkbox id="reminders" checked={reminders} onCheckedChange={(c) => setReminders(!!c)} />
-              <Label htmlFor="reminders" className="cursor-pointer">Recibir recordatorios de visita automáticos</Label>
+              <Label htmlFor="reminders" className="cursor-pointer">Receive automatic visit reminders</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="jobFollowUps" checked={jobFollowUps} onCheckedChange={(c) => setJobFollowUps(!!c)} />
-              <Label htmlFor="jobFollowUps" className="cursor-pointer">Recibir seguimientos de trabajo automáticos</Label>
+              <Label htmlFor="jobFollowUps" className="cursor-pointer">Receive automatic job follow-ups</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="quoteFollowUps" checked={quoteFollowUps} onCheckedChange={(c) => setQuoteFollowUps(!!c)} />
-              <Label htmlFor="quoteFollowUps" className="cursor-pointer">Recibir seguimientos de cotización automáticos</Label>
+              <Label htmlFor="quoteFollowUps" className="cursor-pointer">Receive automatic quote follow-ups</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox id="invoiceFollowUps" checked={invoiceFollowUps} onCheckedChange={(c) => setInvoiceFollowUps(!!c)} />
-              <Label htmlFor="invoiceFollowUps" className="cursor-pointer">Recibir seguimientos de factura automáticos</Label>
+              <Label htmlFor="invoiceFollowUps" className="cursor-pointer">Receive automatic invoice follow-ups</Label>
             </div>
           </CardContent>
         </Card>
@@ -450,7 +450,7 @@ export default function EditClientPage() {
         <div className="flex justify-end pt-4 pb-12">
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:-translate-y-1">
             <Save className="mr-2 h-5 w-5" />
-            {isSubmitting ? 'Guardando...' : 'Actualizar Cliente'}
+            {isSubmitting ? 'Saving...' : 'Update Client'}
           </Button>
         </div>
       </form>

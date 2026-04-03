@@ -1,4 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { PDFFormattedText } from './components/PDFFormattedText';
+
 
 // Add a standard modern font
 Font.register({
@@ -136,10 +138,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
   },
-  colDesc: { width: '55%', paddingRight: 10 },
-  colQty: { width: '10%', textAlign: 'center' },
-  colPrice: { width: '15%', textAlign: 'right' },
-  colTotal: { width: '20%', textAlign: 'right' },
+  colDesc: { width: '65%', paddingRight: 10 },
+  colQty: { width: '7%', textAlign: 'center' },
+  colPrice: { width: '13%', textAlign: 'right' },
+  colTotal: { width: '15%', textAlign: 'right' },
   tableHeaderText: {
     color: '#ffffff',
     fontSize: 9,
@@ -332,7 +334,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
             <View key={i} style={styles.tableRow} wrap={true}>
               <View style={styles.colDesc}>
                 <Text style={styles.itemTitle}>{item.description}</Text>
-                {item.details && <Text style={styles.itemDetails}>{item.details}</Text>}
+                {item.details && <PDFFormattedText text={item.details} textStyle={styles.itemDetails} />}
               </View>
               <Text style={[styles.recipientDetail, styles.colQty]}>{item.quantity}</Text>
               <Text style={[styles.recipientDetail, styles.colPrice]}>
@@ -356,7 +358,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
         {proforma.notes && (
           <View style={styles.notesBox} wrap={true}>
             <Text style={styles.notesLabel}>Notes & Special Conditions</Text>
-            <Text style={styles.notesText}>{proforma.notes}</Text>
+            <PDFFormattedText text={proforma.notes} textStyle={styles.notesText} />
           </View>
         )}
 
@@ -415,7 +417,7 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
 
         {/* Signature & Footer Section */}
         <View style={styles.footer} wrap={false}>
-          <View style={{ borderTopWidth: 2, borderTopColor: BRAND_BROWN, marginBottom: 20, width: 40 }} />
+          <View style={{ marginBottom: 20, width: 40 }} />
           {proforma.status === 'approved' && (proforma.client_signature_data || proforma.client_signed_name) ? (
             <View style={{ marginBottom: 30 }}>
               <Text style={[styles.label, { color: BRAND_BROWN }]}>Accepted & Signed By:</Text>

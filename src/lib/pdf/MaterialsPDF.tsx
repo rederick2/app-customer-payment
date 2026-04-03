@@ -1,4 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { PDFFormattedText } from './components/PDFFormattedText';
+
 
 Font.register({
   family: 'Inter',
@@ -93,7 +95,7 @@ export default function MaterialsPDF({ proforma, materials, client }: MaterialsP
             <View wrap={false} key={i} style={styles.tableRow}>
               <View style={styles.colDesc}>
                 <Text style={styles.itemDesc}>{mat.name}</Text>
-                {mat.description && <Text style={styles.itemDetails}>{mat.description}</Text>}
+                {mat.description && <PDFFormattedText text={mat.description} textStyle={styles.itemDetails} />}
               </View>
               <Text style={styles.colQty}>{mat.quantity}</Text>
             </View>

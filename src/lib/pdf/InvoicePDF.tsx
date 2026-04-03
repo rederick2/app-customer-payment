@@ -1,4 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { PDFFormattedText } from './components/PDFFormattedText';
+
 
 // Add a standard modern font
 Font.register({
@@ -147,10 +149,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
   },
-  colDesc: { width: '55%', paddingRight: 10 },
-  colQty: { width: '10%', textAlign: 'center' },
-  colPrice: { width: '15%', textAlign: 'right' },
-  colTotal: { width: '20%', textAlign: 'right' },
+  colDesc: { width: '65%', paddingRight: 10 },
+  colQty: { width: '7%', textAlign: 'center' },
+  colPrice: { width: '13%', textAlign: 'right' },
+  colTotal: { width: '15%', textAlign: 'right' },
   tableHeaderText: {
     color: '#ffffff',
     fontSize: 9,
@@ -298,7 +300,7 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
               <View key={i} style={styles.tableRow} wrap={true}>
                 <View style={styles.colDesc}>
                   <Text style={styles.itemTitle}>{item.description}</Text>
-                  {item.details && <Text style={styles.itemDetails}>{item.details}</Text>}
+                  {item.details && <PDFFormattedText text={item.details} textStyle={styles.itemDetails} />}
                 </View>
                 <Text style={[styles.recipientDetail, styles.colQty]}>{item.quantity}</Text>
                 <Text style={[styles.recipientDetail, styles.colPrice]}>
@@ -344,7 +346,7 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
         {invoice.notes && (
           <View style={styles.notesBox}>
             <Text style={styles.notesTitle}>Notes</Text>
-            <Text style={styles.notesText}>{invoice.notes}</Text>
+            <PDFFormattedText text={invoice.notes} textStyle={styles.notesText} />
           </View>
         )}
 

@@ -201,6 +201,7 @@ export default async function Dashboard() {
                 <Card className="shadow-sm border-border/40">
                   <CardContent className="p-3 space-y-1">
                     {[
+                      { href: '/clients/new', label: 'New Client', icon: Users, color: 'text-blue-500' },
                       { href: '/proforma/new', label: 'New Quote', icon: FileText, color: 'text-blue-500' },
                       { href: '/clients', label: 'Manage Clients', icon: Users, color: 'text-orange-500' },
                       { href: '/jobs', label: 'View Jobs', icon: Briefcase, color: 'text-violet-500' },

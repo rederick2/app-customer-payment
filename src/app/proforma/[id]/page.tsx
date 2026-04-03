@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { QuoteView } from './components/QuoteView';
-import { JobView } from './components/JobView';
+import JobView from './components/JobView';
 
 export const revalidate = 0;
 

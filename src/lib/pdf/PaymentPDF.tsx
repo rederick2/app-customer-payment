@@ -1,4 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { PDFFormattedText } from './components/PDFFormattedText';
+
 
 // Add a standard modern font
 Font.register({
@@ -256,7 +258,7 @@ export default function PaymentPDF({ payment, proforma, client, user }: PaymentP
         {payment.notes && (
           <View style={{ marginTop: 25 }}>
             <Text style={styles.label}>Notes</Text>
-            <Text style={{ fontSize: 9, color: '#666', lineHeight: 1.5 }}>{payment.notes}</Text>
+            <PDFFormattedText text={payment.notes} textStyle={{ fontSize: 9, color: '#666' }} />
           </View>
         )}
 
