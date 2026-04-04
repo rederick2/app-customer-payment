@@ -87,7 +87,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
       const tPaid = pPayments.reduce((acc, pay) => acc + pay.amount, 0);
       const rem = p.total - tPaid;
       setAmount(rem > 0 ? rem.toString() : '0');
-      
+
       // Auto-fill tax and discount
       setTaxAmount(p.tax || 0);
       setDiscountAmount(calculateDiscount(p));
@@ -144,7 +144,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
 
   return (
     <Dialog open={openType !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px] rounded-none shadow-lg border-border/40">
+      <DialogContent className="sm:max-w-[425px] rounded-2xl shadow-2xl border-border/40 bg-background/95 backdrop-blur-xl p-6">
         <DialogHeader>
           <DialogTitle className="font-bold text-xl">
             {openType === 'payment' && 'Register Payment'}
@@ -158,22 +158,27 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           {/* Project Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="proforma_id">Project / Proforma {openType === 'invoice' && '*'}</Label>
+          <div className="space-y-2 text-left">
+            <Label htmlFor="proforma_id" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Project / Quote {openType === 'invoice' && '*'}</Label>
             <Select
               name="proforma_id"
               required={openType === 'invoice'}
               onValueChange={handleProformaChange}
               value={selectedProformaId || undefined}
             >
-              <SelectTrigger className="rounded-none">
-                <SelectValue placeholder="Select a project...">
-                  {selectedProforma ? selectedProforma.project_name : undefined}
-                </SelectValue>
+              <SelectTrigger
+                id="proforma_id"
+                className="w-full h-12 bg-background border-border/60 rounded-xl shadow-sm hover:bg-accent/5 transition-all focus:ring-2 focus:ring-primary/10 px-4"
+              >
+                <SelectValue placeholder="Select a project..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl border-border/40 shadow-2xl animate-in zoom-in-95 duration-200">
                 {proformas.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
+                  <SelectItem
+                    key={p.id}
+                    value={p.id}
+                    className="py-3 px-4 rounded-lg cursor-pointer transition-colors"
+                  >
                     {p.project_name}
                   </SelectItem>
                 ))}
@@ -183,16 +188,16 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
 
           {openType === 'invoice' ? (
             <>
-              <div className="space-y-1">
-                <Label htmlFor="invoice_number" className="text-xs">Invoice Number *</Label>
-                <Input id="invoice_number" className="rounded-none h-8" name="invoice_number" placeholder="Ex. INV-001" required />
+              <div className="space-y-2 text-left">
+                <Label htmlFor="invoice_number" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Invoice Number *</Label>
+                <Input id="invoice_number" className="rounded-xl h-11 shadow-sm border-border/60 focus:ring-2 focus:ring-primary/10" name="invoice_number" placeholder="Ex. INV-001" required />
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1">
-                  <Label htmlFor="total_amount" className="text-xs">Total *</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="total_amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Total *</Label>
                   <Input
                     id="total_amount"
-                    className={cn("rounded-none h-8", selectedProformaId && "bg-muted cursor-not-allowed")}
+                    className={cn("rounded-xl h-11 shadow-sm border-border/60", selectedProformaId && "bg-muted cursor-not-allowed")}
                     name="total_amount"
                     type="number"
                     step="0.01"
@@ -202,11 +207,11 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                     readOnly={!!selectedProformaId}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="tax_amount" className="text-xs">Tax ($)</Label>
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="tax_amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Tax ($)</Label>
                   <Input
                     id="tax_amount"
-                    className={cn("rounded-none h-8", selectedProformaId && "bg-muted cursor-not-allowed")}
+                    className={cn("rounded-xl h-11 shadow-sm border-border/60", selectedProformaId && "bg-muted cursor-not-allowed")}
                     name="tax_amount"
                     type="number"
                     step="0.01"
@@ -215,11 +220,11 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                     readOnly={!!selectedProformaId}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="discount_amount" className="text-xs">Desc. ($)</Label>
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="discount_amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Desc. ($)</Label>
                   <Input
                     id="discount_amount"
-                    className={cn("rounded-none h-8", selectedProformaId && "bg-muted cursor-not-allowed")}
+                    className={cn("rounded-xl h-11 shadow-sm border-border/60", selectedProformaId && "bg-muted cursor-not-allowed")}
                     name="discount_amount"
                     type="number"
                     step="0.01"
@@ -229,56 +234,58 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label htmlFor="issue_date" className="text-xs">Issue Date</Label>
-                  <Input id="issue_date" className="rounded-none h-8" name="issue_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="issue_date" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Issue Date</Label>
+                  <Input id="issue_date" className="rounded-xl h-11 shadow-sm border-border/60" name="issue_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="due_date" className="text-xs">Due Date</Label>
-                  <Input id="due_date" className="rounded-none h-8" name="due_date" type="date" />
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="due_date" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Due Date</Label>
+                  <Input id="due_date" className="rounded-xl h-11 shadow-sm border-border/60" name="due_date" type="date" />
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-2 bg-primary/5 p-2.5 border border-primary/10 rounded-none">
-                <Checkbox 
-                  id="sync-qbo" 
-                  checked={syncToQBO} 
-                  onCheckedChange={(checked) => setSyncToQBO(!!checked)} 
+
+              <div className="flex items-center space-x-3 bg-primary/5 p-4 border border-primary/10 rounded-2xl">
+                <Checkbox
+                  id="sync-qbo"
+                  checked={syncToQBO}
+                  onCheckedChange={(checked) => setSyncToQBO(!!checked)}
+                  className="rounded-md border-primary animate-in zoom-in-50 duration-300"
                 />
-                <div className="grid gap-0.5 leading-none">
-                  <Label htmlFor="sync-qbo" className="text-[10px] font-bold uppercase tracking-wider cursor-pointer text-primary">
+                <div className="grid gap-1 leading-none">
+                  <Label htmlFor="sync-qbo" className="text-[10px] font-black uppercase tracking-widest cursor-pointer text-primary">
                     Sincronizar con QuickBooks
                   </Label>
-                  <p className="text-[9px] text-muted-foreground">Sync automatically after saving.</p>
+                  <p className="text-[9px] text-muted-foreground/80 font-medium">Auto-sync after creation for seamless accounting.</p>
                 </div>
               </div>
 
               {!isSubmitting && unlinkedPayments.length > 0 && (
-                <div className="space-y-2 border border-border/40 p-2.5 bg-muted/20">
+                <div className="space-y-3 border border-border/40 p-4 bg-muted/20 rounded-2xl">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Link existing payments</Label>
-                    <span className="text-[10px] text-primary font-medium">{selectedPaymentIds.length} selected</span>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Link existing payments</Label>
+                    <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">{selectedPaymentIds.length} selected</span>
                   </div>
-                  <div className="max-h-[100px] overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+                  <div className="max-h-[120px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                     {unlinkedPayments.map(p => (
-                      <div key={p.id} className="flex items-center space-x-2 p-1.5 bg-background border border-border/40 hover:border-primary/20 transition-colors">
-                        <Checkbox 
+                      <div key={p.id} className="flex items-center space-x-3 p-3 bg-background border border-border/40 rounded-xl hover:border-primary/30 hover:scale-[1.01] transition-all shadow-sm">
+                        <Checkbox
                           id={`bp-${p.id}`}
                           checked={selectedPaymentIds.includes(p.id)}
                           onCheckedChange={(checked) => {
-                            setSelectedPaymentIds(prev => 
+                            setSelectedPaymentIds(prev =>
                               checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
                             );
                           }}
+                          className="rounded-md"
                         />
                         <label htmlFor={`bp-${p.id}`} className="text-[10px] cursor-pointer flex-1 grid grid-cols-2 gap-1 items-center">
-                          <div className="flex flex-col">
-                            <span className="font-semibold">{new Date(p.payment_date).toLocaleDateString()}</span>
-                            <span className="text-[9px] text-muted-foreground">{p.payment_method || 'Unknown'}</span>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-bold text-foreground">{new Date(p.payment_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            <span className="text-[9px] text-muted-foreground font-black uppercase tracking-tighter opacity-60">{p.payment_method || 'Unknown'}</span>
                           </div>
-                          <div className="text-right font-bold text-primary">
-                            ${p.amount}
+                          <div className="text-right font-black text-primary text-xs">
+                            ${p.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </div>
                         </label>
                       </div>
@@ -290,11 +297,11 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount *</Label>
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Amount *</Label>
                   <Input
                     id="amount"
-                    className="rounded-none"
+                    className="rounded-xl h-11 shadow-sm border-border/60"
                     name="amount"
                     type="number"
                     step="0.01"
@@ -306,39 +313,39 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                     onChange={(e) => setAmount(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="payment_date">Date</Label>
-                  <Input id="payment_date" className="rounded-none" name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="payment_date" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Date</Label>
+                  <Input id="payment_date" className="rounded-xl h-11 shadow-sm border-border/60" name="payment_date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment_method">Payment Method</Label>
+              <div className="space-y-2 text-left">
+                <Label htmlFor="payment_method" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Payment Method</Label>
                 <Select name="payment_method" defaultValue="transfer">
-                  <SelectTrigger className="rounded-none">
+                  <SelectTrigger className="w-full h-11 rounded-xl bg-background border-border/60 shadow-sm hover:bg-accent/5 transition-all px-4">
                     <SelectValue placeholder="Select method..." />
                   </SelectTrigger>
-                  <SelectContent className="rounded-none">
-                    <SelectItem value="transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Credit/Debit Card</SelectItem>
-                    <SelectItem value="check">Check</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                  <SelectContent className="rounded-xl border-border/40 shadow-2xl">
+                    <SelectItem value="transfer" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Bank Transfer</SelectItem>
+                    <SelectItem value="cash" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Cash</SelectItem>
+                    <SelectItem value="card" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Credit/Debit Card</SelectItem>
+                    <SelectItem value="check" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Check</SelectItem>
+                    <SelectItem value="other" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
-            <Textarea id="notes" name="notes" placeholder="Additional details..." className="rounded-none" />
+          <div className="space-y-2 text-left">
+            <Label htmlFor="notes" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Notes (Optional)</Label>
+            <Textarea id="notes" name="notes" placeholder="Additional details..." className="rounded-xl border-border/60 min-h-[80px]" />
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="rounded-none">
+          <DialogFooter className="pt-6 border-t border-border/40 mt-4 gap-3">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="bg-secundary hover:bg-secundary/90 text-secundary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-8 h-11 shadow-md transition-all hover:scale-105 active:scale-95">
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-none" disabled={isSubmitting}>
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-8 h-11 shadow-md transition-all hover:scale-105 active:scale-95" disabled={isSubmitting}>
               {isSubmitting ? 'Saving...' : 'Confirm Record'}
             </Button>
           </DialogFooter>
