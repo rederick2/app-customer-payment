@@ -42,7 +42,7 @@ export default async function QuotesPage() {
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Quotes</h1>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-1">Quotes</h1>
           <p className="text-muted-foreground text-sm">List of all quotes.</p>
         </div>
         <div className="flex items-center gap-2">

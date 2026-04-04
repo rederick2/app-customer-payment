@@ -117,24 +117,30 @@ export default async function ClientsPage(
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Client Directory</h1>
+          <h1 className="font-bold text-3xl md:text-4xl font-bold tracking-tight mb-1">Clients</h1>
           <p className="text-muted-foreground text-sm">Manage your contacts and their information.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <ClientSearchInput />
-          <ImportClientsModal />
-          <Link href="/clients/new">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-1 whitespace-nowrap">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Client
-            </Button>
-          </Link>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-stretch sm:items-center">
+          <div className="flex-1 sm:w-64">
+            <ClientSearchInput />
+          </div>
+          <div className="flex-1 gap-2">
+            {/*<div className="flex-1 sm:flex-initial">
+              <ImportClientsModal />
+            </div>*/}
+            <Link href="/clients/new" className="flex-1 sm:flex-initial">
+              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-1 whitespace-nowrap">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Client
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
-      <Card className="shadow-sm border-border/50 overflow-hidden">
-        <div className="overflow-x-auto">
+      <Card className="shadow-sm border-border/50 overflow-hidden bg-transparent hidden md:block">
+        <div className="hidden md:block">
           {clients && clients.length > 0 ? (
             <table className="w-full text-sm text-left border-collapse">
               <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
@@ -188,20 +194,83 @@ export default async function ClientsPage(
                 ))}
               </tbody>
             </table>
-          ) : (
-            <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
-              <Users className="h-12 w-12 text-muted/50 mb-4" />
-              <p>You have no clients in your directory.</p>
-              <Link href="/clients/new" className="mt-4 text-primary hover:underline">
-                Add your first client
-              </Link>
-            </div>
-          )}
+          ) : null}
         </div>
-        {totalPages > 1 && (
-          <ClientPagination totalPages={totalPages} />
-        )}
       </Card>
+      {/* Mobile View */}
+      <div className="md:hidden">
+        {clients && clients.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 p-0">
+            {clients.map((client) => (
+              <Card key={client.id} className="overflow-hidden border-border/40 shadow-sm">
+                <div className="p-4 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <Link href={`/clients/${client.id}`} className="block flex-1 group">
+                      <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
+                        {getDisplayName(client)}
+                      </h3>
+                      <p className="text-xs text-muted-foreground/70 flex items-center gap-1 mt-1 uppercase tracking-tighter font-black">
+                        {client.email || 'NO EMAIL'}
+                      </p>
+                    </Link>
+                    <Link href={`/clients/${client.id}/edit`}>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 rounded-lg">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/20">
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest mb-1">Last Activity</p>
+                      <ClientActivityTrigger
+                        client={client}
+                        latestActivity={client._latestActivity ? new Date(client._latestActivity) : null}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest mb-1">Phone</p>
+                      <p className="text-sm font-medium">{client.phone || '-'}</p>
+                    </div>
+                  </div>
+
+                  {client.street_1 && (
+                    <div className="pt-2 border-t border-border/20">
+                      <p className="text-[10px] font-black uppercase text-muted-foreground/60 tracking-widest mb-1">Location</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {client.street_1}, {client.city}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <Link href={`/clients/${client.id}`} className="block w-full">
+                  <Button variant="secondary" className="w-full rounded-none border-t border-border/30 h-10 text-[10px] font-black uppercase tracking-widest hover:bg-primary/5 hover:text-primary transition-all">
+                    View full details
+                  </Button>
+                </Link>
+              </Card>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Empty State shared */}
+      {!clients || clients.length === 0 ? (
+        <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
+          <Users className="h-16 w-16 text-muted/20 mb-4" />
+          <p className="text-lg font-serif italic text-foreground/70">No clients found in directory.</p>
+          <Link href="/clients/new" className="mt-6">
+            <Button variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/5 px-8">
+              Add your first client
+            </Button>
+          </Link>
+        </div>
+      ) : null}
+
+      {totalPages > 1 && (
+        <ClientPagination totalPages={totalPages} />
+      )}
+
     </div>
   );
 }

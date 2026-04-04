@@ -214,9 +214,9 @@ function SortableItem({
         (item.is_optional && !comboboxOpen) && "bg-muted/5 opacity-60"
       )}
     >
-      <div className="flex items-start gap-4 p-6">
+      <div className="flex flex-col md:flex-row items-start gap-4 p-4 md:p-6">
         {/* Drag Handle & Optional Checkbox Area */}
-        <div className="flex flex-col items-center gap-4 pt-4">
+        <div className="flex flex-row md:flex-col items-center justify-between w-full md:w-auto gap-4 md:pt-4">
           <div
             {...attributes}
             {...listeners}
@@ -224,14 +224,27 @@ function SortableItem({
           >
             <GripVertical className="h-6 w-6" />
           </div>
+          <div className="md:hidden">
+            {showRemoveButton && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => removeItem(item.id)}
+                className="text-destructive/40 hover:text-destructive hover:bg-destructive/10 transition-colors h-10 w-10 rounded-xl"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 space-y-2">
           {/* Main Context Row */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
-            <div className="md:col-span-6 space-y-2">
+            <div className={cn("md:col-span-6 space-y-2", comboboxOpen && "relative z-[100]")}>
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item Name *</Label>
-              <div className="w-full relative isolate">
+              <div className="w-full relative">
                 <div className="relative group/trigger">
                   <Input
                     placeholder="Product or service name..."
@@ -264,7 +277,7 @@ function SortableItem({
                 </div>
 
                 {comboboxOpen && catalog.length > 0 && (
-                  <div className="absolute top-[calc(100%+4px)] left-0 w-full z-[999999] rounded-2xl border border-border/40 bg-background shadow-2xl overflow-visible">
+                  <div className="absolute top-[calc(100%+4px)] left-0 w-full z-[9999] rounded-2xl border border-border/40 bg-background shadow-2xl overflow-visible">
                     <Command className="bg-background text-left overflow-visible rounded-2xl">
                       <CommandInput placeholder="Search catalog..." className="h-11 border-none focus:ring-0" />
                       <CommandList className="max-h-[240px] overflow-y-auto custom-scrollbar">
@@ -296,90 +309,92 @@ function SortableItem({
               </div>
             </div>
 
-            <div className="md:col-span-2 space-y-2">
-              <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quantity *</Label>
-              <div className="relative group/price">
-                <Input
-                  type="number"
-                  min="1"
-                  value={item.quantity || ''}
-                  required
-                  onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                  className="rounded-xl h-11 text-center font-bold"
-                />
+            <div className="grid grid-cols-2 md:col-span-4 gap-4">
+              <div className="space-y-2">
+                <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quantity *</Label>
+                <div className="relative group/price">
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.quantity || ''}
+                    required
+                    onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                    className="rounded-xl h-11 text-center font-bold"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="md:col-span-2 space-y-2 text-right">
-              <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Price *</Label>
-              <div className="relative group/price">
-                <CurrencyInput
-                  id={`price-${item.id}`}
-                  type="text"
-                  inputMode="decimal"
-                  value={item.unit_price}
-                  required
-                  onChange={(val: string) => {
-                    const newPrice = parseFloat(val) || 0;
-                    const currentMarkup = item.markup || 0;
-                    const newCost = Number((newPrice / (1 + currentMarkup / 100)).toFixed(2));
-                    updateItemFields(item.id, { unit_price: newPrice, cost: newCost });
-                  }}
-                  className="rounded-xl h-11 border-border/60 focus:ring-2 focus:ring-primary/10 pl-7 text-right font-bold transition-all peer"
-                />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">$</span>
+              <div className="space-y-2 text-right">
+                <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Price *</Label>
+                <div className="relative group/price">
+                  <CurrencyInput
+                    id={`price-${item.id}`}
+                    type="text"
+                    inputMode="decimal"
+                    value={item.unit_price}
+                    required
+                    onChange={(val: string) => {
+                      const newPrice = parseFloat(val) || 0;
+                      const currentMarkup = item.markup || 0;
+                      const newCost = Number((newPrice / (1 + currentMarkup / 100)).toFixed(2));
+                      updateItemFields(item.id, { unit_price: newPrice, cost: newCost });
+                    }}
+                    className="rounded-xl h-11 border-border/60 focus:ring-2 focus:ring-primary/10 pl-7 text-right font-bold transition-all peer"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">$</span>
 
-                <div className="absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
-                  <div className="space-y-2 text-left">
-                    <Label className="text-xs font-bold text-muted-foreground">Unit Cost</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1"
-                        placeholder="0.00"
-                        value={item.cost === undefined ? '' : item.cost}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '') {
-                            updateItemFields(item.id, { cost: undefined });
-                            return;
-                          }
-                          const newCost = parseFloat(val) || 0;
-                          const currentMarkup = item.markup || 0;
-                          const newPrice = Number((newCost * (1 + currentMarkup / 100)).toFixed(2));
-                          updateItemFields(item.id, { cost: newCost, unit_price: newPrice });
-                        }}
-                        className="pl-7 font-medium text-left"
-                      />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">$</span>
+                  <div className="absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
+                    <div className="space-y-2 text-left">
+                      <Label className="text-xs font-bold text-muted-foreground">Unit Cost</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          min="0"
+                          step="1"
+                          placeholder="0.00"
+                          value={item.cost === undefined ? '' : item.cost}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              updateItemFields(item.id, { cost: undefined });
+                              return;
+                            }
+                            const newCost = parseFloat(val) || 0;
+                            const currentMarkup = item.markup || 0;
+                            const newPrice = Number((newCost * (1 + currentMarkup / 100)).toFixed(2));
+                            updateItemFields(item.id, { cost: newCost, unit_price: newPrice });
+                          }}
+                          className="pl-7 font-medium text-left"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">$</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-2 text-left">
-                    <Label className="text-xs font-bold text-muted-foreground">Markup (%)</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        step="1"
-                        placeholder="0"
-                        value={item.markup === undefined ? '' : item.markup}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === '') {
-                            updateItemFields(item.id, { markup: undefined });
-                            return;
-                          }
-                          const newMarkup = parseFloat(val) || 0;
-                          const currentCost = item.cost || 0;
-                          const newPrice = Number((currentCost * (1 + newMarkup / 100)).toFixed(2));
-                          updateItemFields(item.id, { markup: newMarkup, unit_price: newPrice });
-                        }}
-                        className="pr-7 font-medium text-left"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">%</span>
+                    <div className="space-y-2 text-left">
+                      <Label className="text-xs font-bold text-muted-foreground">Markup (%)</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="1"
+                          placeholder="0"
+                          value={item.markup === undefined ? '' : item.markup}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              updateItemFields(item.id, { markup: undefined });
+                              return;
+                            }
+                            const newMarkup = parseFloat(val) || 0;
+                            const currentCost = item.cost || 0;
+                            const newPrice = Number((currentCost * (1 + newMarkup / 100)).toFixed(2));
+                            updateItemFields(item.id, { markup: newMarkup, unit_price: newPrice });
+                          }}
+                          className="pr-7 font-medium text-left"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none">%</span>
+                      </div>
                     </div>
+                    <p className="text-[10px] text-muted-foreground leading-tight text-center pt-2 border-t border-border/40">These calculations won't be visible to your clients</p>
                   </div>
-                  <p className="text-[10px] text-muted-foreground leading-tight text-center pt-2 border-t border-border/40">These calculations won't be visible to your clients</p>
                 </div>
               </div>
             </div>
@@ -391,7 +406,7 @@ function SortableItem({
               </div>
             </div>
 
-            <div className="md:col-span-1 flex items-center justify-center pt-8">
+            <div className="hidden md:flex md:col-span-1 items-center justify-center pt-8">
               {showRemoveButton && (
                 <Button
                   type="button"
@@ -999,36 +1014,35 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          {onBack ? (
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Change Start Option
-            </button>
-          ) : (
-            <Link href={mode === 'edit' ? `/proforma/${initialData?.proforma?.id}` : "/quotes"} className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {mode === 'edit' ? 'Back to Quote' : 'Back to Quotes'}
-            </Link>
-          )}
-          <h1 className="font-serif text-3xl font-bold tracking-tight">
-            {mode === 'edit' ? 'Edit Quote' : 'New Quote'}
-          </h1>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onBack ? onBack() : router.back()}
+            className="rounded-full hover:bg-muted transition-colors h-10 w-10 shrink-0"
+          >
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+          </Button>
+          <div>
+            <h1 className="text-2xl uppercase md:text-3xl font-bold tracking-tight">
+              {mode === 'edit' ? 'Edit Quote' : 'New Quote'}
+            </h1>
+            <p className="text-muted-foreground text-xs md:text-sm">
+              {mode === 'create' ? 'Create a professional proposal.' : 'Update your project details.'}
+            </p>
+          </div>
         </div>
 
         {mode === 'create' && (
           <Button
             type="button"
             onClick={() => setIsAIModalOpen(true)}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center gap-2 h-12 px-6 rounded-2xl"
+            className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 h-11 px-6 rounded-2xl"
           >
-            <Sparkles className="h-5 w-5 fill-white/20" />
-            <span className="font-bold tracking-tight">Generate with AI</span>
+            <Sparkles className="h-4 w-4 fill-white/20" />
+            <span className="font-bold tracking-tight text-xs uppercase">Generate with AI</span>
           </Button>
         )}
       </div>
@@ -1051,11 +1065,11 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </div>
         )}
 
-        <div className={cn("grid gap-6", isTemplate ? "md:grid-cols-1" : "md:grid-cols-2")}>
+        <div className={cn("grid gap-6", isTemplate ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2")}>
           {!isTemplate && (
             <Card className="shadow-sm border-border/50">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-serif">Client Details</CardTitle>
+                <CardTitle className="text-lg uppercase font-bold">Client Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {mode === 'create' && (
@@ -1214,7 +1228,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
 
           <Card className="shadow-sm border-border/50">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-serif">Project Details</CardTitle>
+              <CardTitle className="text-lg uppercase font-bold">Project Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -1242,10 +1256,10 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         </div>
 
         <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
-          <CardHeader className="pb-8 px-10 pt-10 flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-serif font-bold tracking-tight">Quote Items</CardTitle>
+          <CardHeader className="pb-6 px-4 md:px-10 pt-6 md:pt-10 flex flex-row items-center justify-between">
+            <CardTitle className="text-xl md:text-2xl uppercase font-bold tracking-tight">Quote Items</CardTitle>
           </CardHeader>
-          <CardContent className="px-10 pb-10">
+          <CardContent className="px-4 md:px-10 pb-10">
             <datalist id="catalog-descriptions">
               {catalog.map(c => <option key={c.description} value={c.description} />)}
             </datalist>
@@ -1295,12 +1309,12 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
 
         <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
           {/* Subtotal */}
-          <div className="flex justify-between w-full sm:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4">
+          <div className="flex justify-between w-full md:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4">
             <span className="text-muted-foreground uppercase text-[10px] tracking-widest self-center">Subtotal:</span>
-            <span className="font-bold text-lg">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            <span className="font-bold text-lg tabular-nums">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
 
-          <div className="w-full sm:w-96 space-y-4">
+          <div className="w-full md:w-96 space-y-4">
             {/* Discount Row */}
             {discountAdjustment ? (
               <div className="flex justify-between items-center group/adj py-1">
@@ -1394,7 +1408,12 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
             ) : null}
           </div>
 
-          <div className="flex flex-col items-end gap-2 w-full sm:w-80">
+          <div className="flex justify-between items-center w-full md:w-96 pt-6 border-t-2 border-primary/10 mt-6 pb-2">
+            <span className="uppercase text-[12px] tracking-[0.3em] font-black text-primary/40">Total</span>
+            <span className="text-2xl md:text-3xl font-serif font-black text-primary tabular-nums tracking-tight whitespace-nowrap ml-4">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          </div>
+
+          <div className="flex flex-col items-end gap-2 w-full md:w-96">
             {!adjustments.find(a => a.type === 'discount') && (
               <button
                 type="button"
@@ -1416,19 +1435,14 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
                 <PlusCircle className="h-3 w-3" /> Add Tax
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setIsDepositDialogOpen(true)}
+              className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest hover:underline pt-2"
+            >
+              {(depositAmount > 0 || requiredDeposit > 0) ? `Required: $${requiredDeposit.toLocaleString()} | Deposit: $${depositAmount.toLocaleString()} - Edit` : "Add Deposit or Payment Schedule"}
+            </button>
           </div>
-
-          <div className="flex justify-between items-center w-full sm:w-96 pt-6 border-t-2 border-primary/10 mt-6 pb-2">
-            <span className="uppercase text-[12px] tracking-[0.3em] font-black text-primary/40">Total</span>
-            <span className="text-3xl font-serif font-black text-primary tabular-nums tracking-tight whitespace-nowrap ml-4">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsDepositDialogOpen(true)}
-            className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest hover:underline pt-2"
-          >
-            {(depositAmount > 0 || requiredDeposit > 0) ? `Required: $${requiredDeposit.toLocaleString()} | Deposit: $${depositAmount.toLocaleString()} - Edit` : "Add Deposit or Payment Schedule"}
-          </button>
         </div>
 
         {/* Dialogs */}

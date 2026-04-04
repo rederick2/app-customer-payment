@@ -250,11 +250,11 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                 </div>
               </div>
               
-              <div className="rounded-2xl border border-dashed border-border/60 bg-muted/5 p-8 transition-all relative overflow-hidden group">
+              <div className="rounded-2xl border border-dashed border-border/60 bg-muted/5 p-4 md:p-8 transition-all relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="text-[10px] bg-primary/10 text-primary-foreground px-2 py-1 rounded-full font-bold uppercase tracking-widest">PDF Preview</div>
                 </div>
-                <div className="space-y-6 max-w-md">
+                <div className="space-y-6 max-w-full md:max-w-md">
                   <div>
                     <h4 style={{ fontSize: `${Math.round(pdfFontSize * 1.6)}px`, fontWeight: 700 }} className="text-foreground transition-all duration-300">
                       Invoice #INV-0001

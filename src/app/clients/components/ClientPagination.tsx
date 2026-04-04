@@ -35,20 +35,20 @@ export function ClientPagination({ totalPages }: ClientPaginationProps) {
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1}
         >
-          Anterior
+          Back
         </Button>
         <Button
           variant="outline"
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
         >
-          Siguiente
+          Next
         </Button>
       </div>
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">
-            Página <span className="font-medium">{currentPage}</span> de <span className="font-medium">{totalPages}</span>
+          <p className="text-xs text-muted-foreground font-medium">
+            Showing page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
           </p>
         </div>
         <div>
@@ -59,7 +59,7 @@ export function ClientPagination({ totalPages }: ClientPaginationProps) {
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
             >
-              <span className="sr-only">Anterior</span>
+              <span className="sr-only">Previous</span>
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
             {/* Si totalPages no es muy grande podemos iterar */}
@@ -67,8 +67,8 @@ export function ClientPagination({ totalPages }: ClientPaginationProps) {
               // Lógica simplificada: mostramos un rango cercano
               let pageToShow = i + 1;
               if (totalPages > 5 && currentPage > 3) {
-                  pageToShow = currentPage - 2 + i;
-                  if (pageToShow > totalPages) return null;
+                pageToShow = currentPage - 2 + i;
+                if (pageToShow > totalPages) return null;
               }
               return (
                 <Button
@@ -87,7 +87,7 @@ export function ClientPagination({ totalPages }: ClientPaginationProps) {
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
             >
-              <span className="sr-only">Siguiente</span>
+              <span className="sr-only">Next</span>
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </nav>

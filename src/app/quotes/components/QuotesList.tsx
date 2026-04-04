@@ -77,8 +77,8 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
         </div>
       </div>
 
-      <Card className="shadow-sm border-border/50 overflow-hidden bg-card/50 backdrop-blur-sm">
-        <div className="overflow-x-auto">
+      <Card className="shadow-sm border-border/50 overflow-hidden bg-transparent hidden md:block">
+        <div className="hidden md:block">
           {filteredProformas.length > 0 ? (
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] font-black uppercase tracking-widest bg-muted/50 text-muted-foreground border-b border-border/40">
@@ -179,95 +179,174 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                 ))}
               </tbody>
             </table>
-          ) : (
-            <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
-              {activeTab === 'templates' ? (
-                <LayoutTemplate className="h-16 w-16 text-muted/20 mb-4" />
-              ) : (
-                <FileText className="h-16 w-16 text-muted/20 mb-4" />
-              )}
-              <p className="text-lg font-serif italic">
-                {activeTab === 'templates' ? 'No templates found.' : 'No quotes found.'}
-              </p>
-              {searchTerm && (
-                <Button
-                  variant="link"
-                  className="mt-2 text-primary"
-                  onClick={() => setSearchTerm('')}
-                >
-                  Clear search
-                </Button>
-              )}
-            </div>
-          )}
+          ) : null}
         </div>
-
-        {/* Pagination Footer */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-border/30 flex items-center justify-between bg-muted/20">
-            <div className="text-xs text-muted-foreground font-medium">
-              Showing <span className="text-foreground">{Math.min(filteredProformas.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(filteredProformas.length, currentPage * itemsPerPage)}</span> of <span className="text-foreground">{filteredProformas.length}</span> quotes
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-lg border-border/40"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => prev - 1)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-1 mx-2">
-                {(() => {
-                  const pages = [];
-                  if (totalPages <= 7) {
-                    for (let i = 1; i <= totalPages; i++) pages.push(i);
-                  } else {
-                    if (currentPage <= 4) {
-                      pages.push(1, 2, 3, 4, 5, '...', totalPages);
-                    } else if (currentPage >= totalPages - 3) {
-                      pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-                    } else {
-                      pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-                    }
-                  }
-
-                  return pages.map((page, index) => {
-                    if (page === '...') {
-                      return (
-                        <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground/50 font-bold select-none cursor-default">
-                          ...
-                        </span>
-                      );
-                    }
-                    return (
-                      <Button
-                        key={`page-${page}`}
-                        variant={currentPage === page ? "default" : "ghost"}
-                        size="sm"
-                        className={`h-8 w-8 rounded-lg p-0 text-xs font-bold ${currentPage === page ? 'bg-primary text-primary-foreground' : ''}`}
-                        onClick={() => setCurrentPage(page as number)}
-                      >
-                        {page}
-                      </Button>
-                    );
-                  });
-                })()}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-lg border-border/40"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(prev => prev + 1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
       </Card>
+      {/* Mobile View */}
+      <div className="md:hidden">
+        {paginatedProformas.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 p-0">
+            {paginatedProformas.map((proforma) => (
+              <Card
+                key={proforma.id}
+                className="overflow-hidden border-border/40 shadow-sm transition-all active:scale-[0.98]"
+                onClick={() => router.push(`/proforma/${proforma.id}?view=quote`)}
+              >
+                <div className="p-4 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg leading-tight">{proforma.project_name}</h3>
+                      <p className="text-[10px] font-mono text-muted-foreground/60 uppercase mt-1">REF: {proforma.number || proforma.id.split('-')[0]}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-primary text-lg">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+
+                  {activeTab === 'quotes' && (
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/20">
+                      <div className="flex flex-col">
+                        <p className="text-[9px] font-black uppercase text-muted-foreground/50 tracking-widest">Client</p>
+                        <p className="text-xs font-bold truncate max-w-[120px]">
+                          {(proforma.clients as any)?.company_name || (proforma.clients as any)?.name || 'No Client'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <p className="text-[9px] font-black uppercase text-muted-foreground/50 tracking-widest">Status</p>
+                        <span className={`mt-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${proforma.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                          proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            'bg-muted/50 text-muted-foreground border-border/40'
+                          }`}>
+                          {proforma.status || 'draft'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-border/20">
+                    <p className="text-[10px] text-muted-foreground font-medium italic">
+                      {new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                    {activeTab === 'templates' && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/proforma/${proforma.id}/edit`);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-destructive"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (confirm('Are you sure?')) {
+                              const { createClient } = await import('@/lib/supabase/client');
+                              const supabase = createClient();
+                              await supabase.from('proformas').delete().eq('id', proforma.id);
+                              window.location.reload();
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Empty State shared */}
+      {filteredProformas.length === 0 ? (
+        <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
+          {activeTab === 'templates' ? (
+            <LayoutTemplate className="h-16 w-16 text-muted/20 mb-4" />
+          ) : (
+            <FileText className="h-16 w-16 text-muted/20 mb-4" />
+          )}
+          <p className="text-lg font-serif italic">
+            {activeTab === 'templates' ? 'No templates found.' : 'No quotes found.'}
+          </p>
+        </div>
+      ) : null}
+
+
+      {/* Pagination Footer */}
+      {totalPages > 1 && (
+        <div className="px-6 py-4 border-t border-border/30 flex items-center justify-between bg-muted/20">
+          <div className="text-xs text-muted-foreground font-medium">
+            Showing <span className="text-foreground">{Math.min(filteredProformas.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(filteredProformas.length, currentPage * itemsPerPage)}</span> of <span className="text-foreground">{filteredProformas.length}</span> quotes
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-lg border-border/40"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-1 mx-2">
+              {(() => {
+                const pages = [];
+                if (totalPages <= 7) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  if (currentPage <= 4) {
+                    pages.push(1, 2, 3, 4, 5, '...', totalPages);
+                  } else if (currentPage >= totalPages - 3) {
+                    pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                  } else {
+                    pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+                  }
+                }
+
+                return pages.map((page, index) => {
+                  if (page === '...') {
+                    return (
+                      <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground/50 font-bold select-none cursor-default">
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <Button
+                      key={`page-${page}`}
+                      variant={currentPage === page ? "default" : "ghost"}
+                      size="sm"
+                      className={`h-8 w-8 rounded-lg p-0 text-xs font-bold ${currentPage === page ? 'bg-primary text-primary-foreground' : ''}`}
+                      onClick={() => setCurrentPage(page as number)}
+                    >
+                      {page}
+                    </Button>
+                  );
+                });
+              })()}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-lg border-border/40"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
