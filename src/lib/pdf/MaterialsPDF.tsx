@@ -12,25 +12,25 @@ Font.register({
   ]
 });
 
-const styles = StyleSheet.create({
+const getStyles = (baseSize: number) => StyleSheet.create({
   page: { 
     paddingTop: 40,
     paddingHorizontal: 40,
     paddingBottom: 80,
     fontFamily: 'Inter', 
-    fontSize: 10, 
+    fontSize: baseSize, 
     color: '#0D3B47', 
     backgroundColor: '#ffffff' 
   },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#E2E0D8', paddingBottom: 20, marginBottom: 20 },
-  companyName: { fontSize: 24, fontWeight: 700, color: '#306C3E' },
-  companySub: { fontSize: 10, color: '#6e7a7e', marginTop: 4 },
-  docTitle: { fontSize: 18, fontWeight: 700, textTransform: 'uppercase', color: '#6e7a7e', letterSpacing: 2 },
-  docDetails: { fontSize: 10, textAlign: 'right', marginTop: 8, color: '#3d4b4f' },
+  companyName: { fontSize: baseSize * 2.4, fontWeight: 700, color: '#306C3E' },
+  companySub: { fontSize: baseSize, color: '#6e7a7e', marginTop: 4 },
+  docTitle: { fontSize: baseSize * 1.8, fontWeight: 700, textTransform: 'uppercase', color: '#6e7a7e', letterSpacing: 2 },
+  docDetails: { fontSize: baseSize, textAlign: 'right', marginTop: 8, color: '#3d4b4f' },
   infoGrid: { flexDirection: 'row', marginBottom: 30 },
   infoCol: { flex: 1 },
-  sectionTitle: { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: '#6e7a7e', letterSpacing: 1, marginBottom: 6 },
-  clientName: { fontSize: 12, fontWeight: 600, marginBottom: 4 },
+  sectionTitle: { fontSize: baseSize * 0.9, fontWeight: 700, textTransform: 'uppercase', color: '#6e7a7e', letterSpacing: 1, marginBottom: 6 },
+  clientName: { fontSize: baseSize * 1.2, fontWeight: 600, marginBottom: 4 },
   textRow: { marginBottom: 2, color: '#3d4b4f' },
   table: { width: '100%', marginBottom: 30 },
   tableHeader: { flexDirection: 'row', backgroundColor: '#F4F2EC', borderBottomWidth: 1, borderBottomColor: '#E2E0D8', borderTopWidth: 1, borderTopColor: '#E2E0D8', paddingVertical: 8, paddingHorizontal: 4 },
@@ -38,18 +38,20 @@ const styles = StyleSheet.create({
   colQty: { flex: 1, textAlign: 'center', fontWeight: 600 },
   tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#f0f0f0', paddingVertical: 10, paddingHorizontal: 4 },
   itemDesc: { fontWeight: 600, marginBottom: 2 },
-  itemDetails: { fontSize: 9, color: '#6e7a7e', paddingRight: 10 },
+  itemDetails: { fontSize: baseSize * 0.9, color: '#6e7a7e', paddingRight: 10 },
   footer: { position: 'absolute', bottom: 40, left: 40, right: 40, borderTopWidth: 1, borderTopColor: '#E2E0D8', paddingTop: 10, textAlign: 'center' },
-  footerText: { fontSize: 8, color: '#6e7a7e', marginBottom: 2 }
+  footerText: { fontSize: baseSize * 0.8, color: '#6e7a7e', marginBottom: 2 }
 });
 
 interface MaterialsPDFProps {
   proforma: any;
   materials: any[];
   client: any;
+  user?: any;
 }
 
-export default function MaterialsPDF({ proforma, materials, client }: MaterialsPDFProps) {
+export default function MaterialsPDF({ proforma, materials, client, user }: MaterialsPDFProps) {
+  const styles = getStyles(user?.pdf_font_size || 10);
   const clientNameDisplay = client?.company_name || 
     [client?.first_name, client?.last_name].filter(Boolean).join(' ') || 
     client?.name || 'Cliente';

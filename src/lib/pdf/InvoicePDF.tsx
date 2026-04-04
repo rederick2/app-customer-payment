@@ -16,33 +16,33 @@ Font.register({
 const BRAND_BROWN = '#ac8e68';
 const DARK_NAVY = '#303030';
 
-const styles = StyleSheet.create({
+const getStyles = (baseSize: number = 10) => StyleSheet.create({
   page: {
     paddingTop: 30,
     paddingHorizontal: 40,
     paddingBottom: 40,
     fontFamily: 'Inter',
-    fontSize: 10,
+    fontSize: baseSize,
     color: DARK_NAVY,
     backgroundColor: '#ffffff'
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 25,
+    marginBottom: baseSize * 2.5,
     alignItems: 'flex-start'
   },
   companyInfo: {
     width: '60%',
   },
   companyName: {
-    fontSize: 16,
+    fontSize: baseSize * 1.6,
     fontWeight: 700,
     marginBottom: 4,
     color: '#000000'
   },
   companyDetail: {
-    fontSize: 9,
+    fontSize: baseSize * 0.9,
     color: '#666666'
   },
   logo: {
@@ -51,13 +51,13 @@ const styles = StyleSheet.create({
     objectFit: 'contain'
   },
   titleContainer: {
-    marginBottom: 20,
+    marginBottom: baseSize * 2,
     borderBottomWidth: 2,
     borderBottomColor: BRAND_BROWN,
     paddingBottom: 10
   },
   title: {
-    fontSize: 24,
+    fontSize: baseSize * 2.4,
     fontWeight: 700,
     color: BRAND_BROWN,
     textTransform: 'uppercase'
@@ -65,25 +65,25 @@ const styles = StyleSheet.create({
   mainContentGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30
+    marginBottom: baseSize * 3
   },
   recipientBox: {
     width: '50%'
   },
   label: {
-    fontSize: 8,
+    fontSize: baseSize * 0.8,
     fontWeight: 700,
     color: '#999999',
     textTransform: 'uppercase',
     marginBottom: 8
   },
   recipientName: {
-    fontSize: 12,
+    fontSize: baseSize * 1.2,
     fontWeight: 700,
     marginBottom: 4
   },
   recipientDetail: {
-    fontSize: 10,
+    fontSize: baseSize,
     color: '#444444',
     marginBottom: 2
   },
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   },
   summaryHeaderText: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: baseSize * 1.2,
     fontWeight: 700
   },
   summaryRow: {
@@ -121,18 +121,18 @@ const styles = StyleSheet.create({
   },
   summaryTotalLabel: {
     color: '#ffffff',
-    fontSize: 11,
+    fontSize: baseSize * 1.1,
     fontWeight: 700,
     textTransform: 'uppercase'
   },
   summaryTotalValue: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: baseSize * 1.2,
     fontWeight: 700
   },
   table: {
-    marginTop: 20,
-    marginBottom: 20
+    marginTop: baseSize * 2,
+    marginBottom: baseSize * 2
   },
   tableHeader: {
     flexDirection: 'row',
@@ -149,28 +149,28 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
   },
-  colDesc: { width: '65%', paddingRight: 10 },
+  colDesc: { width: '55%', paddingRight: 10 },
   colQty: { width: '7%', textAlign: 'center' },
-  colPrice: { width: '13%', textAlign: 'right' },
-  colTotal: { width: '15%', textAlign: 'right' },
+  colPrice: { width: '18%', textAlign: 'right' },
+  colTotal: { width: '20%', textAlign: 'right' },
   tableHeaderText: {
     color: '#ffffff',
-    fontSize: 9,
+    fontSize: baseSize * 0.9,
     fontWeight: 700,
     textTransform: 'uppercase'
   },
   itemTitle: {
-    fontSize: 10,
+    fontSize: baseSize,
     fontWeight: 700,
     marginBottom: 4
   },
   itemDetails: {
-    fontSize: 9,
+    fontSize: baseSize * 0.9,
     color: '#666666',
     lineHeight: 1.4
   },
   notesBox: {
-    marginTop: 30,
+    marginTop: baseSize * 3,
     padding: 10,
     backgroundColor: '#f9fafb',
     borderRadius: 4,
@@ -178,14 +178,14 @@ const styles = StyleSheet.create({
     borderLeftColor: BRAND_BROWN
   },
   notesTitle: {
-    fontSize: 8,
+    fontSize: baseSize * 0.8,
     fontWeight: 700,
     color: '#999999',
     textTransform: 'uppercase',
     marginBottom: 4
   },
   notesText: {
-    fontSize: 9,
+    fontSize: baseSize * 0.9,
     color: '#444444',
     lineHeight: 1.4
   },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     paddingTop: 10
   },
   footerText: {
-    fontSize: 8,
+    fontSize: baseSize * 0.8,
     color: '#999999'
   }
 });
@@ -213,6 +213,7 @@ interface InvoicePDFProps {
 }
 
 export default function InvoicePDF({ invoice, proforma, client, user }: InvoicePDFProps) {
+  const styles = getStyles(user?.pdf_font_size || 10);
   const clientNameDisplay = client?.company_name ||
     [client?.first_name, client?.last_name].filter(Boolean).join(' ') ||
     client?.name ||

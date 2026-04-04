@@ -237,7 +237,7 @@ export default function EditClientPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isSubmitting}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={isSubmitting}>Cancel</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
               Yes, delete client
             </Button>

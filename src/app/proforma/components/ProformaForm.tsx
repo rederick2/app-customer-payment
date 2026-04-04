@@ -903,9 +903,9 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
             .single();
           if (clientError) throw clientError;
           finalClientId = clientData.id;
-        } else if (selectedClientId) {
+        } /*else if (selectedClientId) {
           await supabase.from('clients').update(clientPayload).eq('id', selectedClientId);
-        }
+        }*/
       }
 
       const proformaPayload = {

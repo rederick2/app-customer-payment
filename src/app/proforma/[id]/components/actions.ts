@@ -44,7 +44,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
   // 1. Fetch full proforma data for the PDF
   const { data: proforma, error: pError } = await supabase
     .from('proformas')
-    .select('*,users(display_name,terms_conditions), clients(*), applied_taxes:users (taxes (*))')
+    .select('*,users(*), clients(*), applied_taxes:users (taxes (*))')
     .eq('id', proformaId)
     .single();
 
@@ -510,7 +510,7 @@ export async function sendMaterialsEmail(proformaId: string, formData: FormData)
   // Fetch proforma and materials data
   const { data: proforma, error: pError } = await supabase
     .from('proformas')
-    .select('*, clients(*)')
+    .select('*, clients(*), users(*)')
     .eq('id', proformaId)
     .single();
 
@@ -528,7 +528,8 @@ export async function sendMaterialsEmail(proformaId: string, formData: FormData)
       React.createElement(MaterialsPDF, {
         proforma,
         materials: materials || [],
-        client: proforma.clients
+        client: proforma.clients,
+        user: proforma.users
       }) as React.ReactElement<DocumentProps>
     );
 

@@ -16,6 +16,7 @@ export async function updateProfile(formData: FormData) {
   const businessLicense = formData.get('businessLicense') as string
   const proformaSequenceStart = parseInt(formData.get('proformaSequenceStart') as string) || 1
   const termsConditions = formData.get('termsConditions') as string
+  const pdfFontSize = parseInt(formData.get('pdfFontSize') as string) || 10
   const logoFile = formData.get('logoFile') as File | null
   const removeLogo = formData.get('removeLogo') === 'true'
 
@@ -53,7 +54,8 @@ export async function updateProfile(formData: FormData) {
     address: address,
     business_license: businessLicense,
     proforma_sequence_start: proformaSequenceStart,
-    terms_conditions: termsConditions
+    terms_conditions: termsConditions,
+    pdf_font_size: pdfFontSize
   }
 
   if (logoUrl !== undefined) {

@@ -17,13 +17,13 @@ const BRAND_BROWN = '#ac8e68';
 const DARK_NAVY = '#303030';
 const SUCCESS_GREEN = '#10b981';
 
-const styles = StyleSheet.create({
+const getStyles = (baseSize: number) => StyleSheet.create({
   page: {
     paddingTop: 30,
     paddingHorizontal: 40,
     paddingBottom: 40,
     fontFamily: 'Inter',
-    fontSize: 10,
+    fontSize: baseSize,
     color: DARK_NAVY,
     backgroundColor: '#ffffff'
   },
@@ -37,13 +37,13 @@ const styles = StyleSheet.create({
     width: '60%',
   },
   companyName: {
-    fontSize: 16,
+    fontSize: baseSize * 1.6,
     fontWeight: 700,
     marginBottom: 4,
     color: '#000000'
   },
   companyDetail: {
-    fontSize: 9,
+    fontSize: baseSize * 0.9,
     color: '#666666'
   },
   logo: {
@@ -61,13 +61,13 @@ const styles = StyleSheet.create({
     alignItems: 'baseline'
   },
   title: {
-    fontSize: 24,
+    fontSize: baseSize * 2.4,
     fontWeight: 700,
     color: SUCCESS_GREEN,
     textTransform: 'uppercase'
   },
   receiptNumber: {
-    fontSize: 10,
+    fontSize: baseSize,
     fontWeight: 700,
     color: '#999999'
   },
@@ -80,19 +80,19 @@ const styles = StyleSheet.create({
     width: '50%'
   },
   label: {
-    fontSize: 8,
+    fontSize: baseSize * 0.8,
     fontWeight: 700,
     color: '#999999',
     textTransform: 'uppercase',
     marginBottom: 8
   },
   recipientName: {
-    fontSize: 12,
+    fontSize: baseSize * 1.2,
     fontWeight: 700,
     marginBottom: 4
   },
   recipientDetail: {
-    fontSize: 10,
+    fontSize: baseSize,
     color: '#444444',
     marginBottom: 2
   },
@@ -107,14 +107,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   amountLabel: {
-    fontSize: 9,
+    fontSize: baseSize * 0.9,
     fontWeight: 700,
     color: SUCCESS_GREEN,
     textTransform: 'uppercase',
     marginBottom: 5
   },
   amountValue: {
-    fontSize: 20,
+    fontSize: baseSize * 2,
     fontWeight: 700,
     color: SUCCESS_GREEN
   },
@@ -132,13 +132,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f9fafb'
   },
   detailLabel: {
-    fontSize: 9,
+    fontSize: baseSize * 0.9,
     fontWeight: 700,
     color: '#999999',
     textTransform: 'uppercase'
   },
   detailValue: {
-    fontSize: 10,
+    fontSize: baseSize,
     fontWeight: 700,
     color: DARK_NAVY
   },
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     borderColor: SUCCESS_GREEN + '20'
   },
   confirmationText: {
-    fontSize: 12,
+    fontSize: baseSize * 1.2,
     fontWeight: 700,
     color: SUCCESS_GREEN,
     textAlign: 'center'
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     paddingTop: 10
   },
   footerText: {
-    fontSize: 8,
+    fontSize: baseSize * 0.8,
     color: '#999999'
   }
 });
@@ -181,6 +181,7 @@ interface PaymentPDFProps {
 }
 
 export default function PaymentPDF({ payment, proforma, client, user }: PaymentPDFProps) {
+  const styles = getStyles(user?.pdf_font_size || 10);
   const clientNameDisplay = client?.company_name ||
     [client?.first_name, client?.last_name].filter(Boolean).join(' ') ||
     client?.name ||

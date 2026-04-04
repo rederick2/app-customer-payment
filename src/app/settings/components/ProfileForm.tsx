@@ -17,6 +17,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
   const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.logo_url || null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [address, setAddress] = useState(initialData?.address || '');
+  const [pdfFontSize, setPdfFontSize] = useState(initialData?.pdf_font_size || 10);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -220,6 +221,63 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
               placeholder="e.g. This quote is valid for 30 days..."
               className="min-h-[120px] bg-background border-border/60 border-dashed focus:border-primary/30 text-sm leading-relaxed p-4 rounded-xl resize-none"
             />
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-border/50">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="pdfFontSize" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">PDF Font Size</Label>
+              <span className="text-xs font-bold text-primary bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+                {pdfFontSize}px
+              </span>
+            </div>
+            <div className="flex flex-col gap-6">
+              <div className="px-2">
+                <input 
+                  type="range" 
+                  id="pdfFontSize"
+                  name="pdfFontSize"
+                  min="8" 
+                  max="16" 
+                  step="1" 
+                  value={pdfFontSize} 
+                  onChange={(e) => setPdfFontSize(parseInt(e.target.value))}
+                  className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary transition-all hover:accent-primary/80"
+                />
+                <div className="flex justify-between mt-2 px-0.5">
+                  <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Small (8px)</span>
+                  <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Normal (10px)</span>
+                  <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Large (16px)</span>
+                </div>
+              </div>
+              
+              <div className="rounded-2xl border border-dashed border-border/60 bg-muted/5 p-8 transition-all relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-[10px] bg-primary/10 text-primary-foreground px-2 py-1 rounded-full font-bold uppercase tracking-widest">PDF Preview</div>
+                </div>
+                <div className="space-y-6 max-w-md">
+                  <div>
+                    <h4 style={{ fontSize: `${Math.round(pdfFontSize * 1.6)}px`, fontWeight: 700 }} className="text-foreground transition-all duration-300">
+                      Invoice #INV-0001
+                    </h4>
+                    <p style={{ fontSize: `${Math.round(pdfFontSize * 0.9)}px` }} className="text-muted-foreground/60 transition-all duration-300 mt-1">
+                      Date: {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <p style={{ fontSize: `${pdfFontSize}px` }} className="text-foreground/80 leading-relaxed transition-all duration-300 font-medium">
+                      This is a sample of how your item descriptions and notes will look in your generated PDFs. 
+                      You can adjust the slider above to reach the perfect legibility for your brand.
+                    </p>
+                    <div className="pt-4 border-t border-border/20">
+                      <p style={{ fontSize: `${Math.round(pdfFontSize * 1.2)}px`, fontWeight: 600 }} className="text-foreground transition-all duration-300">
+                        Total Amount: $1,250.00
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
         <CardFooter className="bg-muted/30 pt-6 border-t border-border/50">
