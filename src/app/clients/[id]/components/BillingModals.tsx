@@ -29,15 +29,91 @@ interface BillingModalsProps {
   onClose: () => void;
 }
 
+const formatUSD = (val: string | number) => {
+  const num = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(num)) return '';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+};
+
+const parseUSD = (val: string) => {
+  return val.replace(/[^0-9.]/g, '');
+};
+
+// Internal component for handling currency input focus/blur logic
+const CurrencyInput = ({
+  value,
+  onChange,
+  className,
+  ...props
+}: any) => {
+  const [localValue, setLocalValue] = React.useState(value?.toString() || '');
+  const [isFocused, setIsFocused] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isFocused) {
+      setLocalValue(value?.toString() || '');
+    }
+  }, [value, isFocused]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = parseUSD(e.target.value);
+    setLocalValue(e.target.value);
+    onChange(raw);
+  };
+
+  return (
+    <Input
+      {...props}
+      value={isFocused ? localValue : formatUSD(value)}
+      onFocus={() => {
+        setIsFocused(true);
+        setLocalValue(value?.toString() || '');
+      }}
+      onBlur={() => {
+        setIsFocused(false);
+      }}
+      onChange={handleChange}
+      className={className}
+    />
+  );
+};
+
 export function BillingModals({ clientId, proformas, payments, invoices, openType, onClose }: BillingModalsProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [syncToQBO, setSyncToQBO] = React.useState(true);
+  const [paymentMethod, setPaymentMethod] = React.useState<string | null>('transfer');
+
+  const paymentMethodLabels: Record<string, string> = {
+    transfer: 'Bank Transfer',
+    cash: 'Cash',
+    card: 'Credit/Debit Card',
+    check: 'Check',
+    other: 'Other'
+  };
   const [selectedProformaId, setSelectedProformaId] = React.useState<string | null>(null);
   const [amount, setAmount] = React.useState<string>('');
   const [taxAmount, setTaxAmount] = React.useState<number>(0);
   const [discountAmount, setDiscountAmount] = React.useState<number>(0);
   const [unlinkedPayments, setUnlinkedPayments] = React.useState<any[]>([]);
   const [selectedPaymentIds, setSelectedPaymentIds] = React.useState<string[]>([]);
+
+  // Reset states when modal opens/closes
+  React.useEffect(() => {
+    if (openType) {
+      setTaxAmount(0);
+      setDiscountAmount(0);
+      setSyncToQBO(true);
+      setSelectedPaymentIds([]);
+      setUnlinkedPayments([]);
+
+      if (openType === 'invoice') {
+        getUnlinkedPayments(clientId).then(setUnlinkedPayments);
+      }
+    }
+  }, [openType, clientId]);
 
   const selectedProforma = proformas.find(p => p.id === selectedProformaId);
   const proformaPayments = payments?.filter(p => p.proforma_id === selectedProformaId && p.status === 'completed') || [];
@@ -55,22 +131,6 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
     }, 0);
   };
 
-  // Reset states when modal opens/closes
-  React.useEffect(() => {
-    if (openType) {
-      setTaxAmount(0);
-      setDiscountAmount(0);
-      setSyncToQBO(true);
-      setSelectedPaymentIds([]);
-      setUnlinkedPayments([]);
-
-      if (openType === 'invoice') {
-        getUnlinkedPayments(clientId).then(setUnlinkedPayments);
-      }
-    }
-  }, [openType, clientId]);
-
-  // Auto-fill amount when proforma is selected
   const handleProformaChange = (id: string | null) => {
     if (!id) {
       setSelectedProformaId(null);
@@ -146,7 +206,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
     <Dialog open={openType !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px] rounded-2xl shadow-2xl border-border/40 bg-background/95 backdrop-blur-xl p-6">
         <DialogHeader>
-          <DialogTitle className="font-bold text-xl">
+          <DialogTitle className="font-bold text-xl uppercase">
             {openType === 'payment' && 'Register Payment'}
             {openType === 'deposit' && 'Register Advance Deposit'}
             {openType === 'invoice' && 'Create New Invoice'}
@@ -170,7 +230,9 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                 id="proforma_id"
                 className="w-full h-12 bg-background border-border/60 rounded-xl shadow-sm hover:bg-accent/5 transition-all focus:ring-2 focus:ring-primary/10 px-4"
               >
-                <SelectValue placeholder="Select a project..." />
+                <SelectValue placeholder="Select a project...">
+                  {selectedProforma?.project_name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-border/40 shadow-2xl animate-in zoom-in-95 duration-200">
                 {proformas.map((p) => (
@@ -195,43 +257,52 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-2 text-left">
                   <Label htmlFor="total_amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Total *</Label>
-                  <Input
-                    id="total_amount"
-                    className={cn("rounded-xl h-11 shadow-sm border-border/60", selectedProformaId && "bg-muted cursor-not-allowed")}
-                    name="total_amount"
-                    type="number"
-                    step="0.01"
-                    required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    readOnly={!!selectedProformaId}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">$</span>
+                    <CurrencyInput
+                      id="total_amount"
+                      className={cn("rounded-xl h-11 shadow-sm border-border/60 pl-7 font-bold", selectedProformaId && "bg-muted cursor-not-allowed")}
+                      name="total_amount"
+                      type="text"
+                      inputMode="decimal"
+                      required
+                      value={amount}
+                      onChange={setAmount}
+                      readOnly={!!selectedProformaId}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2 text-left">
                   <Label htmlFor="tax_amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Tax ($)</Label>
-                  <Input
-                    id="tax_amount"
-                    className={cn("rounded-xl h-11 shadow-sm border-border/60", selectedProformaId && "bg-muted cursor-not-allowed")}
-                    name="tax_amount"
-                    type="number"
-                    step="0.01"
-                    value={taxAmount}
-                    onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
-                    readOnly={!!selectedProformaId}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">$</span>
+                    <CurrencyInput
+                      id="tax_amount"
+                      className={cn("rounded-xl h-11 shadow-sm border-border/60 pl-7", selectedProformaId && "bg-muted cursor-not-allowed")}
+                      name="tax_amount"
+                      type="text"
+                      inputMode="decimal"
+                      value={taxAmount}
+                      onChange={(val: string) => setTaxAmount(parseFloat(val) || 0)}
+                      readOnly={!!selectedProformaId}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2 text-left">
                   <Label htmlFor="discount_amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Desc. ($)</Label>
-                  <Input
-                    id="discount_amount"
-                    className={cn("rounded-xl h-11 shadow-sm border-border/60", selectedProformaId && "bg-muted cursor-not-allowed")}
-                    name="discount_amount"
-                    type="number"
-                    step="0.01"
-                    value={discountAmount}
-                    onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                    readOnly={!!selectedProformaId}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">$</span>
+                    <CurrencyInput
+                      id="discount_amount"
+                      className={cn("rounded-xl h-11 shadow-sm border-border/60 pl-7", selectedProformaId && "bg-muted cursor-not-allowed")}
+                      name="discount_amount"
+                      type="text"
+                      inputMode="decimal"
+                      value={discountAmount}
+                      onChange={(val: string) => setDiscountAmount(parseFloat(val) || 0)}
+                      readOnly={!!selectedProformaId}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -299,19 +370,20 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2 text-left">
                   <Label htmlFor="amount" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Amount *</Label>
-                  <Input
-                    id="amount"
-                    className="rounded-xl h-11 shadow-sm border-border/60"
-                    name="amount"
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="0.00"
-                    min="1"
-                    max={selectedProforma ? remainingAmount : undefined}
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">$</span>
+                    <CurrencyInput
+                      id="amount"
+                      className="rounded-xl h-11 shadow-sm border-border/60 pl-7 font-bold"
+                      name="amount"
+                      type="text"
+                      inputMode="decimal"
+                      required
+                      placeholder="0.00"
+                      value={amount}
+                      onChange={setAmount}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2 text-left">
                   <Label htmlFor="payment_date" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Date</Label>
@@ -320,11 +392,18 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
               </div>
               <div className="space-y-2 text-left">
                 <Label htmlFor="payment_method" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Payment Method</Label>
-                <Select name="payment_method" defaultValue="transfer">
-                  <SelectTrigger className="w-full h-11 rounded-xl bg-background border-border/60 shadow-sm hover:bg-accent/5 transition-all px-4">
-                    <SelectValue placeholder="Select method..." />
+                <Select
+                  name="payment_method"
+                  defaultValue="transfer"
+                  onValueChange={(val) => setPaymentMethod(val)}
+                  value={paymentMethod}
+                >
+                  <SelectTrigger className="w-full h-11 rounded-xl bg-background border-border/60 shadow-sm hover:bg-accent/5 transition-all px-4 uppercase">
+                    <SelectValue placeholder="Select method...">
+                      {paymentMethod && paymentMethodLabels[paymentMethod]}
+                    </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border/40 shadow-2xl">
+                  <SelectContent className="rounded-xl border-border/40 shadow-2xl uppercase">
                     <SelectItem value="transfer" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Bank Transfer</SelectItem>
                     <SelectItem value="cash" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Cash</SelectItem>
                     <SelectItem value="card" className="py-2.5 px-4 rounded-lg cursor-pointer transition-colors font-medium">Credit/Debit Card</SelectItem>

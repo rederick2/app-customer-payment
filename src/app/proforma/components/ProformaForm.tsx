@@ -79,6 +79,7 @@ interface Adjustment {
 
 interface CatalogItem {
   description: string;
+  details?: string;
   unit_price: number;
 }
 
@@ -121,6 +122,51 @@ interface SortableItemProps {
   showRemoveButton: boolean;
 }
 
+const formatUSD = (val: string | number) => {
+  const num = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(num)) return '';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+};
+
+const parseUSD = (val: string) => {
+  return val.replace(/[^0-9.]/g, '');
+};
+
+const CurrencyInput = ({
+  value,
+  onChange,
+  className,
+  ...props
+}: any) => {
+  const [localValue, setLocalValue] = useState(value?.toString() || '');
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) setLocalValue(value?.toString() || '');
+  }, [value, isFocused]);
+
+  return (
+    <Input
+      {...props}
+      value={isFocused ? localValue : formatUSD(value)}
+      onFocus={() => {
+        setIsFocused(true);
+        setLocalValue(value?.toString() || '');
+      }}
+      onBlur={() => setIsFocused(false)}
+      onChange={(e) => {
+        const raw = parseUSD(e.target.value);
+        setLocalValue(e.target.value);
+        onChange(raw);
+      }}
+      className={className}
+    />
+  );
+};
+
 function SortableItem({
   item,
   catalog,
@@ -131,6 +177,8 @@ function SortableItem({
   removeItem,
   showRemoveButton
 }: SortableItemProps) {
+  const [comboboxOpen, setComboboxOpen] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -143,8 +191,17 @@ function SortableItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 50 : undefined,
+    zIndex: isDragging || comboboxOpen ? 50 : undefined,
     position: 'relative' as const,
+  };
+
+  const handleSelectPreset = (preset: CatalogItem) => {
+    updateItemFields(item.id, {
+      description: preset.description,
+      details: preset.details || '',
+      unit_price: preset.unit_price
+    });
+    setComboboxOpen(false);
   };
 
   return (
@@ -152,9 +209,9 @@ function SortableItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group relative bg-card border border-border/40 rounded-xl mb-4 overflow-hidden transition-all duration-300",
-        isDragging ? "shadow-2xl ring-2 ring-primary/20 z-50 scale-[1.02]" : "hover:border-primary/20 hover:shadow-md",
-        item.is_optional && "bg-muted/5 opacity-80"
+        "group relative bg-card border border-border/40 rounded-xl mb-4",
+        (isDragging || comboboxOpen) ? "z-[150]" : "hover:border-primary/20",
+        (item.is_optional && !comboboxOpen) && "bg-muted/5 opacity-60"
       )}
     >
       <div className="flex items-start gap-4 p-6">
@@ -172,54 +229,105 @@ function SortableItem({
         <div className="flex-1 space-y-6">
           {/* Main Context Row */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
-            <div className="md:col-span-5 space-y-2">
-              <Label>Item Name *</Label>
-              <Input
-                placeholder="Product or service name..."
-                value={item.description}
-                required
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const matched = catalog.find(c => c.description === val);
-                  if (matched) {
-                    updateItemFields(item.id, { description: val, unit_price: matched.unit_price });
-                  } else {
-                    updateItem(item.id, 'description', val);
-                  }
-                }}
-              />
+            <div className="md:col-span-6 space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item Name *</Label>
+              <div className="w-full relative isolate">
+                <div className="relative group/trigger">
+                  <Input
+                    placeholder="Product or service name..."
+                    value={item.description}
+                    required
+                    autoComplete="off"
+                    onFocus={() => setComboboxOpen(true)}
+                    onBlur={() => {
+                      // Delay hidding to let clicks on the list register
+                      setTimeout(() => setComboboxOpen(false), 200);
+                    }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      updateItem(item.id, 'description', val);
+                      if (!comboboxOpen) setComboboxOpen(true);
+                    }}
+                    className="w-full h-12 bg-background border-border/40 rounded-xl hover:bg-accent/5 transition-all focus:ring-2 focus:ring-primary/10 pl-4 pr-10 font-bold"
+                  />
+                  {catalog.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-0 hover:bg-transparent"
+                      onClick={() => setComboboxOpen(!comboboxOpen)}
+                    >
+                      <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-300", comboboxOpen && "rotate-180")} />
+                    </Button>
+                  )}
+                </div>
+
+                {comboboxOpen && catalog.length > 0 && (
+                  <div className="absolute top-[calc(100%+4px)] left-0 w-full z-[999999] rounded-2xl border border-border/40 bg-background shadow-2xl overflow-visible">
+                    <Command className="bg-background text-left overflow-visible rounded-2xl">
+                      <CommandInput placeholder="Search catalog..." className="h-11 border-none focus:ring-0" />
+                      <CommandList className="max-h-[240px] overflow-y-auto custom-scrollbar">
+                        <CommandEmpty className="p-4 text-xs text-muted-foreground italic">No matches found.</CommandEmpty>
+                        <CommandGroup heading="Recent Items" className="p-2 text-[10px] font-black tracking-widest text-muted-foreground/50">
+                          {catalog.map((preset, idx) => (
+                            <CommandItem
+                              key={idx}
+                              value={preset.description}
+                              onSelect={() => handleSelectPreset(preset)}
+                              className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer rounded-xl"
+                            >
+                              <div className="flex w-full items-center justify-between">
+                                <span className="font-bold text-sm text-foreground">{preset.description}</span>
+                                <span className="text-xs font-black text-primary">${formatUSD(preset.unit_price)}</span>
+                              </div>
+                              {preset.details && (
+                                <div className="text-[10px] text-muted-foreground line-clamp-1 w-full font-medium leading-relaxed mt-0.5">
+                                  {preset.details}
+                                </div>
+                              )}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="md:col-span-2 space-y-2">
-              <Label className="text-center block">Quantity *</Label>
-              <Input
-                type="number"
-                min="1"
-                value={item.quantity || ''}
-                required
-                onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                className="text-center font-bold"
-              />
-            </div>
-
-            <div className="md:col-span-2 space-y-2 text-right">
-              <Label className="px-2">Unit Price *</Label>
+              <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quantity *</Label>
               <div className="relative group/price">
                 <Input
                   type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.unit_price === 0 && item.cost === undefined ? '' : item.unit_price}
+                  min="1"
+                  value={item.quantity || ''}
                   required
-                  onChange={(e) => {
-                    const newPrice = parseFloat(e.target.value) || 0;
+                  onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                  className="rounded-xl h-11 text-center font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-2 space-y-2 text-right">
+              <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Price *</Label>
+              <div className="relative group/price">
+                <CurrencyInput
+                  id={`price-${item.id}`}
+                  type="text"
+                  inputMode="decimal"
+                  value={item.unit_price}
+                  required
+                  onChange={(val: string) => {
+                    const newPrice = parseFloat(val) || 0;
                     const currentMarkup = item.markup || 0;
                     const newCost = Number((newPrice / (1 + currentMarkup / 100)).toFixed(2));
                     updateItemFields(item.id, { unit_price: newPrice, cost: newCost });
                   }}
-                  className="text-right font-bold pr-10 cursor-pointer peer"
+                  className="rounded-xl h-11 border-border/60 focus:ring-2 focus:ring-primary/10 pl-7 text-right font-bold transition-all peer"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">USD</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">$</span>
 
                 <div className="absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
                   <div className="space-y-2 text-left">
@@ -228,7 +336,7 @@ function SortableItem({
                       <Input
                         type="number"
                         min="0"
-                        step="0.01"
+                        step="1"
                         placeholder="0.00"
                         value={item.cost === undefined ? '' : item.cost}
                         onChange={(e) => {
@@ -252,7 +360,7 @@ function SortableItem({
                     <div className="relative">
                       <Input
                         type="number"
-                        step="0.1"
+                        step="1"
                         placeholder="0"
                         value={item.markup === undefined ? '' : item.markup}
                         onChange={(e) => {
@@ -277,8 +385,8 @@ function SortableItem({
             </div>
 
             <div className="md:col-span-2 space-y-2 text-right">
-              <Label className="px-2 text-muted-foreground/60">Total</Label>
-              <div className="h-10 flex items-center justify-end font-bold text-primary text-lg tracking-tight pr-2">
+              <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total</Label>
+              <div className="rounded-xl h-11 flex items-center justify-end font-bold text-primary text-lg tracking-tight pr-2">
                 ${(item.quantity * item.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
             </div>
@@ -363,15 +471,28 @@ function SortableItem({
           </div>
 
           {/* Optional Toggle Row */}
-          <div className="pt-4 flex items-center">
+          {/* Cambiamos el contenedor padre para que empuje todo a la derecha */}
+          <div className="pt-4 flex justify-end">
+
+            {/* El botón/etiqueta con su estilo */}
             <div className="flex items-center gap-3 bg-muted/10 px-4 py-2 rounded-xl border border-border/40 hover:bg-muted/20 transition-all cursor-pointer group/opt">
+
+              {/* El texto primero */}
+              <Label
+                htmlFor={`opt-${item.id}`}
+                className="text-xs font-medium text-muted-foreground cursor-pointer select-none"
+              >
+                Mark as optional
+              </Label>
+
+              {/* El checkbox a la derecha del texto */}
               <Checkbox
                 id={`opt-${item.id}`}
                 checked={item.is_optional}
                 onCheckedChange={(checked) => updateItem(item.id, 'is_optional', !!checked)}
                 className="h-5 w-5 rounded-md border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all group-hover/opt:scale-110"
               />
-              <Label htmlFor={`opt-${item.id}`} className="text-xs font-medium text-muted-foreground cursor-pointer select-none">Mark as optional</Label>
+
             </div>
           </div>
         </div>
@@ -482,17 +603,22 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
 
       const { data: catalogData } = await supabase
         .from('proforma_items')
-        .select('description, unit_price')
+        .select('description, unit_price, details')
         .limit(1000);
 
       if (catalogData) {
-        const unique = new Map<string, number>();
+        const unique = new Map<string, CatalogItem>();
         [...catalogData].reverse().forEach(item => {
-          if (!unique.has(item.description)) {
-            unique.set(item.description, item.unit_price);
+          const desc = item.description?.trim() || "";
+          if (desc && !unique.has(desc.toLowerCase())) {
+            unique.set(desc.toLowerCase(), {
+              description: desc,
+              unit_price: item.unit_price,
+              details: item.details || ""
+            });
           }
         });
-        setCatalog(Array.from(unique.entries()).map(([desc, price]) => ({ description: desc, unit_price: price })));
+        setCatalog(Array.from(unique.values()));
       }
     };
     fetchData();
@@ -1525,10 +1651,10 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </DialogContent>
         </Dialog>
 
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-6 pt-4 pb-12">
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-6 pt-4 pb-64">
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:-translate-y-1">
             <Save className="mr-2 h-5 w-5" />
-            {isSubmitting ? 'Saving Proforma...' : isTemplate ? 'Save Template' : mode === 'edit' ? 'Update Proforma' : 'Generate and Save Proforma'}
+            {isSubmitting ? 'Saving Quote...' : isTemplate ? 'Save Template' : mode === 'edit' ? 'Update Quote' : 'Generate and Save Quote'}
           </Button>
         </div>
       </form>

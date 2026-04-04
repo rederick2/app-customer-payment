@@ -92,16 +92,15 @@ export function JobsList({ initialProformas }: JobsListProps) {
                       {new Date(proforma.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                          proforma.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                            proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              proforma.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                                proforma.status === 'job_terminated' ? 'bg-slate-50 text-slate-700 border-slate-200' :
-                                  proforma.status === 'job' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                    'bg-muted/50 text-muted-foreground border-border/40'
-                          }`}>
-                          {proforma.status === 'job_terminated' ? 'Terminado' : (proforma.status || 'draft')}
-                        </span>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${proforma.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                          proforma.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            proforma.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                              proforma.status === 'job_terminated' ? 'bg-slate-50 text-slate-700 border-slate-200' :
+                                proforma.status === 'job' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                  'bg-muted/50 text-muted-foreground border-border/40'
+                        }`}>
+                        {proforma.status === 'job_terminated' ? 'Terminated' : (proforma.status || 'draft')}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right font-bold tabular-nums text-primary">
                       ${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}

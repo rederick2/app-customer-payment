@@ -3937,6 +3937,53 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess, tas
 }
 
 
+const formatUSDInModal = (val: string | number) => {
+  const num = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(num)) return '';
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+};
+
+const parseUSDInModal = (val: string) => {
+  return val.replace(/[^0-9.]/g, '');
+};
+
+const CurrencyInputInModal = ({
+  value,
+  onChange,
+  className,
+  ...props
+}: any) => {
+  const [localValue, setLocalValue] = React.useState(value?.toString() || '');
+  const [isFocused, setIsFocused] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isFocused) setLocalValue(value?.toString() || '');
+  }, [value, isFocused]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = parseUSDInModal(e.target.value);
+    setLocalValue(e.target.value);
+    onChange(raw);
+  };
+
+  return (
+    <Input
+      {...props}
+      value={isFocused ? localValue : formatUSDInModal(value)}
+      onFocus={() => {
+        setIsFocused(true);
+        setLocalValue(value?.toString() || '');
+      }}
+      onBlur={() => setIsFocused(false)}
+      onChange={handleChange}
+      className={className}
+    />
+  );
+};
+
 function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, onSuccess }: {
   proformaId: string,
   itemsCount: number,
@@ -3955,7 +4002,15 @@ function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, 
   const [cost, setCost] = React.useState('0.00');
   const [isOptional, setIsOptional] = React.useState(false);
 
-  const supabase = createClient();
+  const uniquePresets = React.useMemo(() => {
+    const map = new Map();
+    [...itemPresets].reverse().forEach(p => {
+      if (p.description && !map.has(p.description.toLowerCase())) {
+        map.set(p.description.toLowerCase(), p);
+      }
+    });
+    return Array.from(map.values());
+  }, [itemPresets]);
 
   const handleSelectPreset = (preset: any) => {
     setDescription(preset.description || '');
@@ -3997,25 +4052,36 @@ function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, 
     setIsSubmitting(false);
   };
 
+  const supabase = createClient();
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-3xl shadow-2xl border-border/40 bg-background/95 backdrop-blur-xl p-8 overflow-visible">
         <DialogHeader>
-          <DialogTitle>New Proforma Item</DialogTitle>
-          <DialogDescription>Add a product or service line item to this proforma.</DialogDescription>
+          <DialogTitle>NEW ITEM</DialogTitle>
+          <DialogDescription>Add a product or service line item to this quote.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="description">Product / Service</Label>
-            <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-              <PopoverTrigger render={<div className="relative" />}>
+          <div className="space-y-2 text-left">
+            <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Product / Service *</Label>
+            <div className={cn("w-full relative isolate", comboboxOpen && "z-[100]")}>
+              <div className="relative group/trigger">
                 <Input
                   id="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onFocus={() => setComboboxOpen(true)}
+                  onBlur={() => {
+                    // Delay hiding to let clicks on the list register
+                    setTimeout(() => setComboboxOpen(false), 200);
+                  }}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (!comboboxOpen) setComboboxOpen(true);
+                  }}
                   placeholder="Item name"
                   autoComplete="off"
                   required
+                  className="w-full h-12 bg-background border-border/60 rounded-xl shadow-sm hover:bg-accent/5 transition-all focus:ring-2 focus:ring-primary/10 pl-4 pr-10 font-bold"
                 />
                 {itemPresets.length > 0 && (
                   <Button
@@ -4025,108 +4091,123 @@ function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, 
                     className="absolute right-0 top-0 h-full px-3 py-0 hover:bg-transparent"
                     onClick={() => setComboboxOpen(!comboboxOpen)}
                   >
-                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", comboboxOpen && "rotate-180")} />
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-300", comboboxOpen && "rotate-180")} />
                   </Button>
                 )}
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search existing items..." />
-                  <CommandList className="max-h-[300px] overflow-y-auto">
-                    <CommandEmpty>No previous items found.</CommandEmpty>
-                    <CommandGroup heading="Recent Items">
-                      {itemPresets.map((preset, idx) => (
-                        <CommandItem
-                          key={idx}
-                          value={preset.description}
-                          onSelect={() => handleSelectPreset(preset)}
-                          className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
-                        >
-                          <div className="flex w-full items-center justify-between">
-                            <span className="font-bold">{preset.description}</span>
-                            <span className="text-xs font-bold text-emerald-600">$ {preset.unit_price.toFixed(2)}</span>
-                          </div>
-                          {preset.details && (
-                            <div className="text-xs text-muted-foreground truncate w-full">
-                              {preset.details}
+              </div>
+
+              {comboboxOpen && uniquePresets.length > 0 && (
+                <div className="absolute top-[calc(100%+8px)] left-0 w-full z-[110] rounded-2xl border border-border/40 bg-popover/95 backdrop-blur-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                  <Command className="bg-transparent">
+                    <CommandInput placeholder="Search existing items..." className="h-11 border-none focus:ring-0" />
+                    <CommandList className="max-h-[240px] overflow-y-auto custom-scrollbar">
+                      <CommandEmpty className="p-4 text-xs text-muted-foreground italic">No previous items found.</CommandEmpty>
+                      <CommandGroup heading="Recent Items" className="p-2 text-[10px] font-black tracking-widest text-muted-foreground/50">
+                        {uniquePresets.map((preset, idx) => (
+                          <CommandItem
+                            key={idx}
+                            value={preset.description}
+                            onSelect={() => handleSelectPreset(preset)}
+                            className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer hover:bg-primary/5 rounded-xl transition-all"
+                          >
+                            <div className="flex w-full items-center justify-between">
+                              <span className="font-bold text-sm text-foreground">{preset.description}</span>
+                              <span className="text-xs font-black text-primary">${formatUSDInModal(preset.unit_price)}</span>
                             </div>
-                          )}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+                            {preset.details && (
+                              <div className="text-[10px] text-muted-foreground line-clamp-1 w-full font-medium leading-relaxed mt-0.5">
+                                {preset.details}
+                              </div>
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="details">Details</Label>
+          <div className="space-y-2 text-left">
+            <Label htmlFor="details" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Details (Optional)</Label>
             <textarea
               id="details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Detailed description..."
+              className="w-full min-h-[100px] rounded-xl border border-border/60 bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/10 shadow-sm transition-all"
+              placeholder="Additional details, measurements, or context..."
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
+            <div className="space-y-2 text-left">
+              <Label htmlFor="quantity" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Quantity *</Label>
               <Input
                 id="quantity"
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                step="0.01"
+                step="1"
                 required
+                className="rounded-xl h-11 border-border/60 shadow-sm focus:ring-2 focus:ring-primary/10 px-4 font-bold"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="unit_price">Unit Price</Label>
-              <Input
-                id="unit_price"
-                type="number"
-                value={unitPrice}
-                onChange={(e) => setUnitPrice(e.target.value)}
-                step="0.01"
-                placeholder="0.00"
-                required
-              />
+            <div className="space-y-2 text-left">
+              <Label htmlFor="unit_price" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Unit Price *</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">$</span>
+                <CurrencyInputInModal
+                  id="unit_price"
+                  type="text"
+                  inputMode="decimal"
+                  value={unitPrice}
+                  onChange={setUnitPrice}
+                  required
+                  className="rounded-xl h-11 border-border/60 shadow-sm focus:ring-2 focus:ring-primary/10 pl-7 font-bold"
+                />
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="cost">Estimated Cost</Label>
-              <Input
-                id="cost"
-                type="number"
-                value={cost}
-                onChange={(e) => setCost(e.target.value)}
-                step="0.01"
-                placeholder="0.00"
-              />
+            <div className="space-y-2 text-left">
+              <Label htmlFor="cost" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Estimated Cost (Internal)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 text-sm">$</span>
+                <CurrencyInputInModal
+                  id="cost"
+                  type="text"
+                  inputMode="decimal"
+                  value={cost}
+                  onChange={setCost}
+                  className="rounded-xl h-11 border-border/60 shadow-sm focus:ring-2 focus:ring-primary/10 pl-7 font-bold bg-muted/20"
+                />
+              </div>
             </div>
-            <div className="flex items-center space-x-2 pt-8">
-              <Checkbox
-                id="is_optional_modal"
-                checked={isOptional}
-                onCheckedChange={(checked) => setIsOptional(checked as boolean)}
-              />
-              <Label htmlFor="is_optional_modal">Is optional?</Label>
+            <div className="flex flex-col justify-end pb-3 pl-2">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="is_optional_modal"
+                  checked={isOptional}
+                  onCheckedChange={(checked) => setIsOptional(checked as boolean)}
+                  className="rounded-md border-primary"
+                />
+                <Label htmlFor="is_optional_modal" className="text-[10px] font-black uppercase tracking-widest cursor-pointer text-muted-foreground">
+                  Marcar como opcional
+                </Label>
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
+          <DialogFooter className="pt-8 border-t border-border/40 mt-6 gap-3">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-10 h-11 shadow-lg transition-all hover:scale-105 active:scale-95">
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item'}
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-10 h-11 shadow-lg transition-all hover:scale-105 active:scale-95" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item to Job'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
