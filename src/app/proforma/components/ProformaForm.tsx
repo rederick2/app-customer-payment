@@ -226,9 +226,9 @@ function SortableItem({
           </div>
         </div>
 
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-2">
           {/* Main Context Row */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
             <div className="md:col-span-6 space-y-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item Name *</Label>
               <div className="w-full relative isolate">
@@ -248,7 +248,7 @@ function SortableItem({
                       updateItem(item.id, 'description', val);
                       if (!comboboxOpen) setComboboxOpen(true);
                     }}
-                    className="w-full h-12 bg-background border-border/40 rounded-xl hover:bg-accent/5 transition-all focus:ring-2 focus:ring-primary/10 pl-4 pr-10 font-bold"
+                    className="w-full h-11 bg-background border-border/40 rounded-xl hover:bg-accent/5 transition-all focus:ring-2 focus:ring-primary/10 pl-4 pr-10 font-bold"
                   />
                   {catalog.length > 0 && (
                     <Button
@@ -407,9 +407,9 @@ function SortableItem({
           </div>
 
           {/* Description & Photo Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
             <div className="lg:col-span-3 space-y-2">
-              <Label>Description</Label>
+              <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description</Label>
               <Textarea
                 placeholder="Detailed description of product or materials..."
                 value={item.details}
@@ -419,8 +419,8 @@ function SortableItem({
             </div>
 
             <div className="lg:col-span-1 space-y-2">
-              <Label>Item Photo</Label>
-              <div className="relative h-32 w-full rounded-2xl overflow-hidden border-2 border-border/40 bg-muted/10 group/img flex items-center justify-center hover:border-primary/20 transition-all shadow-sm">
+              <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Upload Photo</Label>
+              <div className="relative h-25 w-full rounded-2xl overflow-hidden border-2 border-border/40 bg-muted/10 group/img flex items-center justify-center hover:border-primary/20 transition-all">
                 {item.photoPreviewUrl ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
