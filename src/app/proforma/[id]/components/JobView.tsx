@@ -1042,50 +1042,46 @@ export default function JobView({
       <div className="space-y-6">
 
         {/* Header Summary */}
-        <div className="flex flex-col md:flex-row justify-between items-start gap-6 bg-card p-6 border border-border/40">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-primary/10 text-primary">
+        <div className="flex flex-col lg:flex-row justify-between items-start gap-8 bg-card p-6 md:p-8 border border-border/40 rounded-2xl shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start gap-5 w-full">
+            <div className="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
               <Briefcase className="h-8 w-8" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
+            <div className="space-y-2 w-full">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge className={cn(
-                  "text-[10px] font-bold tracking-tight uppercase rounded-sm",
+                  "text-[10px] font-black tracking-widest uppercase rounded-md px-2",
                   proforma.status === 'job_terminated'
                     ? "bg-slate-500/10 text-slate-700 border-slate-500/20"
-                    : "bg-primary/10 text-primary border-primary/20"
+                    : "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
                 )}>
-                  {proforma.status === 'job_terminated' ? 'TERMINATED' : proforma.status.toUpperCase()}
+                  {proforma.status === 'job_terminated' ? 'TERMINATED' : 'ACTIVE JOB'}
                 </Badge>
-                <span className="text-muted-foreground text-xs font-semibold">Job #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
+                <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">REF: {String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">{proforma.project_name}</h1>
-              <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">{proforma.project_name}</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-2 text-sm text-muted-foreground font-medium">
                 <div className="flex items-center gap-2">
-                  <UserIcon className="h-3.5 w-3.5" />
-                  <Link href={`/clients/${proforma.clients?.id}`}>
-                    <span>{proforma.clients?.company_name || proforma.clients?.name || 'No name provided'}</span>
+                  <UserIcon className="h-3.5 w-3.5 text-primary/60" />
+                  <Link href={`/clients/${proforma.clients?.id}`} className="hover:text-primary hover:underline transition-colors">
+                    {proforma.clients?.company_name || proforma.clients?.name || 'No name provided'}
                   </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5" />
-                  <span>{proforma.clients?.street_1 || proforma.clients?.address || 'No address provided'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-primary font-medium">
-                  <Mail className="h-3.5 w-3.5" />
-                  <span>{proforma.clients?.email || 'No email'}</span>
+                  <MapPin className="h-3.5 w-3.5 text-primary/60" />
+                  <span className="truncate max-w-[200px]">{proforma.clients?.street_1 || proforma.clients?.address || 'No address provided'}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-12 gap-y-4 w-full md:w-auto">
-            <div>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Job Type</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-6 w-full lg:w-auto pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-border/40 lg:pl-8">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Job Type</p>
               <p className="text-sm font-bold">One-off job</p>
             </div>
-            <div className="relative group">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center justify-between">
+            <div className="space-y-1 relative group">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center gap-2">
                 Started On
                 {!isEditingDates && (
                   <Button
@@ -1103,31 +1099,35 @@ export default function JobView({
                   type="date"
                   value={tempStartDate ? tempStartDate.split('T')[0] : ''}
                   onChange={(e) => setTempStartDate(e.target.value)}
-                  className="h-8 text-xs p-1"
+                  className="h-8 text-xs p-1 mt-1"
                 />
               ) : (
-                <p className="text-sm font-bold">{proforma.job_start_at ? format(new Date(proforma.job_start_at), 'MMM d, yyyy') : '-'}</p>
+                <p className="text-sm font-bold text-foreground">{proforma.job_start_at ? format(new Date(proforma.job_start_at), 'MMM d, yyyy') : '-'}</p>
               )}
             </div>
-            <div className="relative group">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Ends On</p>
+            <div className="space-y-1 relative group">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Ends On</p>
               {isEditingDates ? (
                 <Input
                   type="date"
                   value={tempEndDate ? tempEndDate.split('T')[0] : ''}
                   onChange={(e) => setTempEndDate(e.target.value)}
-                  className="h-8 text-xs p-1"
+                  className="h-8 text-xs p-1 mt-1"
                 />
               ) : (
-                <p className="text-sm font-bold">{proforma.job_end_at ? format(new Date(proforma.job_end_at), 'MMM d, yyyy') : '-'}</p>
+                <p className="text-sm font-bold text-foreground">{proforma.job_end_at ? format(new Date(proforma.job_end_at), 'MMM d, yyyy') : '-'}</p>
               )}
             </div>
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Original Quote</p>
+              <p className="text-sm font-bold text-primary">#{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</p>
+            </div>
             {isEditingDates && (
-              <div className="col-span-2 mt-2 flex justify-end gap-2">
+              <div className="col-span-2 sm:col-span-4 lg:col-span-2 mt-2 flex justify-end gap-2">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 text-xs"
+                  className="h-8 text-xs rounded-lg px-3"
                   onClick={() => {
                     setIsEditingDates(false);
                     setTempStartDate(proforma.job_start_at || '');
@@ -1135,11 +1135,11 @@ export default function JobView({
                   }}
                   disabled={isSavingDates}
                 >
-                  <X className="h-3 w-3 mr-1" /> Cancel
+                  Cancel
                 </Button>
                 <Button
                   size="sm"
-                  className="h-7 text-xs"
+                  className="h-8 text-xs rounded-lg px-4 font-bold"
                   onClick={handleSaveDates}
                   disabled={isSavingDates}
                 >
@@ -1147,10 +1147,6 @@ export default function JobView({
                 </Button>
               </div>
             )}
-            <div>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">From quote</p>
-              <p className="text-sm font-bold text-emerald-600">Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</p>
-            </div>
           </div>
         </div>
 
@@ -1167,68 +1163,72 @@ export default function JobView({
           </div>
 
           {showProfitability && (
-            <div className="p-6">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-                <div className="flex items-center gap-6">
-                  <div className="relative h-24 w-24 flex items-center justify-center">
+            <div className="p-6 md:p-8 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
+                <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+                  <div className="relative h-28 w-28 flex items-center justify-center shrink-0">
                     <svg className="h-full w-full transform -rotate-90">
                       <circle
-                        cx="48"
-                        cy="48"
-                        r="40"
+                        cx="56"
+                        cy="56"
+                        r="48"
                         fill="transparent"
-                        stroke="#E2E0D8"
+                        stroke="currentColor"
+                        className="text-border/40"
                         strokeWidth="10"
                       />
                       <circle
-                        cx="48"
-                        cy="48"
-                        r="40"
+                        cx="56"
+                        cy="56"
+                        r="48"
                         fill="transparent"
-                        stroke="hsl(var(--primary))"
+                        stroke="currentColor"
+                        className="text-primary transition-all duration-1000 ease-in-out"
                         strokeWidth="10"
-                        strokeDasharray={`${(profitMargin / 100) * 251.2} 251.2`}
+                        strokeDasharray={`${(profitMargin / 100) * 301.5} 301.5`}
+                        strokeLinecap="round"
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-lg font-bold">{profitMargin.toFixed(1)}%</span>
+                      <span className="text-xl font-black">{profitMargin.toFixed(1)}%</span>
+                      {/*<span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Margin</span>*/}
                     </div>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">{profitMargin.toFixed(2)}%</h2>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Profit margin</p>
+                    <h2 className="text-3xl font-black tracking-tight">{profitMargin.toFixed(2)}%</h2>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Estimated Profit Margin</p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
-                  <div className="text-center md:text-left">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Total price</p>
+                <div className="flex flex-wrap items-center justify-center lg:justify-end gap-x-10 gap-y-6 w-full">
+                  <div className="text-center md:text-left space-y-1 min-w-[100px]">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Total price</p>
                     <p className="text-xl font-bold font-serif">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
-                  <div className="text-center md:text-left">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <span className="w-2 h-0.5 bg-blue-500" /> Line Item Cost
+                  <div className="text-center md:text-left space-y-1 min-w-[100px]">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center justify-center md:justify-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Items Cost
                     </p>
-                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-bold font-serif italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
-                  <div className="text-center md:text-left">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <span className="w-2 h-0.5 bg-sky-400" /> Labor
+                  <div className="text-center md:text-left space-y-1 min-w-[100px]">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center justify-center md:justify-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Labor
                     </p>
-                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-bold font-serif italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
-                  <div className="text-center md:text-left">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <span className="w-2 h-0.5 bg-purple-400" /> Expenses
+                  <div className="text-center md:text-left space-y-1 min-w-[100px]">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center justify-center md:justify-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400" /> Expenses
                     </p>
-                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-muted-foreground/30 px-1">-</span> ${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-bold font-serif italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
-                  <div className="h-10 w-px bg-border/40 hidden md:block" />
-                  <div className="text-center md:text-left">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-1">
-                      <span className="w-2 h-0.5 bg-emerald-500" /> Profit
+                  <div className="h-12 w-px bg-border/40 hidden xl:block" />
+                  <div className="text-center md:text-left space-y-1 min-w-[120px] bg-emerald-50/50 p-3 rounded-2xl border border-emerald-500/10">
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest flex items-center justify-center md:justify-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Profit
                     </p>
-                    <p className="text-xl font-bold font-serif -ml-3"><span className="text-emerald-600 px-1">=</span> ${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-black font-serif text-emerald-600">${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
               </div>
@@ -1238,21 +1238,20 @@ export default function JobView({
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="items" className="space-y-6">
-          <TabsList className="bg-muted/10 p-1 h-auto grid grid-cols-2 md:flex items-center gap-1 border border-border/40">
-            <TabsTrigger value="items" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+          <TabsList className="bg-muted/20 p-1 h-auto grid grid-cols-2 sm:flex items-center gap-1 border border-border/40 rounded-2xl overflow-hidden shadow-inner">
+            <TabsTrigger value="items" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               Job Items
             </TabsTrigger>
-            <TabsTrigger value="work" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
-              Work Progress
+            <TabsTrigger value="work" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+              Progress
             </TabsTrigger>
-            <TabsTrigger value="finance" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+            <TabsTrigger value="finance" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               Financials
             </TabsTrigger>
-            <TabsTrigger value="materials" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest">
+            <TabsTrigger value="materials" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               Materials
             </TabsTrigger>
           </TabsList>
-
           {/* Tab: Items */}
           <TabsContent value="items" className="space-y-6 mt-0">
             <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
@@ -1461,64 +1460,98 @@ export default function JobView({
                       </tr>
                     </tbody>
                   </table>
-                </div>
-
-                {/* VISTA MOBILE: Se convierte en lista de cards */}
-                <div className="md:hidden divide-y divide-border/30">
+                </div>                {/* VISTA MOBILE: Se convierte en lista de cards con diseño premium */}
+                <div className="md:hidden space-y-4 p-4 bg-muted/5">
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="p-4 space-y-3 active:bg-muted/10 transition-colors"
+                      className={cn(
+                        "bg-card border border-border/40 rounded-[2rem] shadow-sm overflow-hidden active:scale-[0.98] transition-all",
+                        item.is_optional && "opacity-60 bg-muted/5"
+                      )}
                       onClick={() => handleStartEditing(item)}
                     >
-                      <div className="flex justify-between items-start gap-3">
-                        <div className="flex gap-3">
-                          <Checkbox checked={!item.is_optional} className="mt-1" />
-                          <div>
-                            <p className="font-bold text-foreground leading-tight">{item.description}</p>
-                            {item.details && (
-                              <div className="mt-1">
-                                <p className={cn(
-                                  "text-[11px] text-muted-foreground leading-relaxed transition-all duration-300",
-                                  !expandedItems.has(item.id) && "line-clamp-2"
-                                )}>
-                                  {item.details}
-                                </p>
-                                {item.details.length > 60 && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleItemExpansion(item.id);
-                                    }}
-                                    className="text-[9px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 mt-1"
-                                  >
-                                    {expandedItems.has(item.id) ? 'View less' : 'View more'}
-                                  </button>
-                                )}
-                              </div>
-                            )}
+                      <div className="p-5 space-y-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex gap-4">
+                            <div className="mt-1">
+                              <Checkbox checked={!item.is_optional} className="h-5 w-5 rounded-md" />
+                            </div>
+                            <div className="space-y-1">
+                              <h3 className="font-bold text-base text-foreground leading-tight">{item.description}</h3>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                                Unit Price: ${item.unit_price.toLocaleString('en-US')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className={cn(
+                              "text-lg font-black text-primary leading-none",
+                              item.is_optional && "line-through italic text-muted-foreground"
+                            )}>
+                              ${item.total_price.toLocaleString('en-US')}
+                            </p>
+                            <p className="text-[9px] font-black text-muted-foreground uppercase mt-1 tracking-widest">Total</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-sm">${item.total_price.toLocaleString('en-US')}</p>
-                          <p className="text-[10px] text-muted-foreground">Qty: {item.quantity}</p>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center justify-between bg-muted/5 p-2 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          {item.photo_url && (
-                            <img src={item.photo_url} className="h-8 w-8 rounded object-cover border" />
-                          )}
-                          <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Cost:</span>
-                          <span className="text-xs font-medium">${item.cost || 0}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold text-red-600 hover:text-red-700 hover:bg-red-50" onClick={(e) => {
-                            e.stopPropagation();
-                            setItemToDelete(item);
-                          }}>Delete</Button>
-                          <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold">Edit Cost</Button>
+                        {item.details && (
+                          <div className="bg-muted/30 p-3 rounded-2xl">
+                            <p className={cn(
+                              "text-xs text-muted-foreground leading-relaxed transition-all",
+                              !expandedItems.has(item.id) && "line-clamp-2"
+                            )}>
+                              {item.details}
+                            </p>
+                            {item.details.length > 80 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleItemExpansion(item.id);
+                                }}
+                                className="text-[9px] font-black uppercase tracking-widest text-primary mt-2 flex items-center gap-1"
+                              >
+                                {expandedItems.has(item.id) ? 'View Less' : 'View More'}
+                                {expandedItems.has(item.id) ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {item.photo_url ? (
+                              <LineItemImage
+                                src={item.photo_url}
+                                alt={item.description}
+                                className="h-12 w-12 rounded-xl object-cover border border-border/40"
+                              />
+                            ) : (
+                              <div className="h-12 w-12 rounded-xl bg-muted/20 border border-dashed border-border/40 flex items-center justify-center text-muted-foreground/30">
+                                <Plus className="h-4 w-4" />
+                              </div>
+                            )}
+                            <div className="bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
+                              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Qty: {item.quantity}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <div className="text-right mr-2">
+                               <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 leading-none mb-1">Current Cost</p>
+                               <p className="text-sm font-bold text-foreground leading-none">${(item.cost || 0).toLocaleString('en-US')}</p>
+                             </div>
+                             <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-10 w-10 rounded-2xl text-red-600 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setItemToDelete(item);
+                              }}
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1584,7 +1617,8 @@ export default function JobView({
 
                 {paginatedMaterials && paginatedMaterials.length > 0 ? (
                   <>
-                    <div className="overflow-x-auto">
+                    {/* VISTA DESKTOP: Tabla de Materiales */}
+                    <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-black uppercase tracking-widest">
                           <tr>
@@ -1705,6 +1739,87 @@ export default function JobView({
                       </table>
                     </div>
 
+                    {/* VISTA MOBILE: Cards de Materiales */}
+                    <div className="md:hidden divide-y divide-border/20">
+                      {paginatedMaterials.map((mat: any) => (
+                        <div
+                          key={mat.id}
+                          className={cn(
+                            "p-5 space-y-4 active:bg-muted/5 transition-colors",
+                            mat.is_purchased && "opacity-60 bg-muted/5"
+                          )}
+                          onClick={() => editingMaterialId !== mat.id && handleStartEditingMaterial(mat)}
+                        >
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex gap-4">
+                              <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                                <Checkbox
+                                  checked={mat.is_purchased}
+                                  onCheckedChange={() => handleToggleMaterialStatus(mat.id, mat.is_purchased)}
+                                  className="h-5 w-5 rounded-md"
+                                />
+                              </div>
+                              <div className="min-w-0">
+                                {mat.product_url ? (
+                                  <a href={mat.product_url} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-600 hover:underline leading-tight block truncate max-w-[180px]">
+                                    {mat.name}
+                                  </a>
+                                ) : (
+                                  <p className="font-bold text-foreground leading-tight truncate max-w-[180px]">{mat.name}</p>
+                                )}
+                                {mat.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{mat.description}</p>}
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2 opacity-60">
+                                  Unit: ${(mat.unit_price || 0).toLocaleString('en-US')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className={cn("text-base font-black text-emerald-600 leading-none", mat.is_purchased && "line-through italic text-muted-foreground")}>
+                                ${(mat.total_price || 0).toLocaleString('en-US')}
+                              </p>
+                              <div className="bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 mt-2">
+                                <p className="text-[10px] font-black text-emerald-700 leading-none">Qty: {mat.quantity}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {mat.photo_url ? (
+                                <img src={mat.photo_url} className="h-10 w-10 rounded-xl object-cover border" />
+                              ) : (
+                                <div className="h-10 w-10 rounded-xl bg-muted/20 border border-dashed flex items-center justify-center text-muted-foreground/30">
+                                  <ListTodo className="h-4 w-4" />
+                                </div>
+                              )}
+                              <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest ml-1">
+                                {mat.is_purchased ? 'Purchased' : 'Pending'}
+                              </span>
+                            </div>
+                            {!mat.is_purchased && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 rounded-2xl text-red-600 hover:bg-red-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMaterial(mat.id);
+                                }}
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Summary for mobile */}
+                      <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Materials Value</span>
+                        <span className="text-xl font-black text-emerald-600">${totalMaterialsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+
                     {/* Materials Pagination Controls */}
                     {totalMaterialPages > 1 && (
                       <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
@@ -1770,110 +1885,181 @@ export default function JobView({
               </CardHeader>
               <CardContent className="p-0">
                 {tasks.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                        <tr>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left w-10">Done</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Task Description</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Associate</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Due Date</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Assigned To</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/30">
-                        {tasks.map(task => (
-                          <tr key={task.id} className="hover:bg-muted/5 transition-colors group">
-                            <td className="px-6 py-4">
+                  <>
+                    {/* VISTA DESKTOP: Tabla de Tareas */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                          <tr>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left w-10">Done</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Task Description</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Associate</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Due Date</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Assigned To</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/30">
+                          {tasks.map(task => (
+                            <tr key={task.id} className="hover:bg-muted/5 transition-colors group">
+                              <td className="px-6 py-4">
+                                <button
+                                  onClick={() => handleToggleTaskStatus(task.id, task.status)}
+                                  className={cn(
+                                    "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                                    task.status === 'completed'
+                                      ? "bg-emerald-500 border-emerald-500 text-white"
+                                      : "border-muted-foreground/30 hover:border-emerald-500"
+                                  )}
+                                >
+                                  {task.status === 'completed' && <CheckCircle className="h-4 w-4" />}
+                                </button>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <h3 className={cn(
+                                    "font-bold",
+                                    task.status === 'completed' && "line-through text-muted-foreground"
+                                  )}>{task.title}</h3>
+                                  {task.status === 'completed' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 rounded-full text-emerald-600 hover:bg-emerald-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenMediaUpload(task);
+                                      }}
+                                    >
+                                      <Camera className="h-3.5 w-3.5" />
+                                    </Button>
+                                  )}
+                                </div>
+                                {task.description && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+                                )}
+                              </td>
+                              <td className="px-6 py-4">
+                                {task.proforma_item_id ? (
+                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-200">
+                                    Item Associated
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground/40">-</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4">
+                                {task.due_date ? (
+                                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                    <CalendarDays className="h-3.5 w-3.5" />
+                                    <span>{format(new Date(task.due_date), 'MMM d, h:mm a')}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground/40">-</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4">
+                                {task.team_members ? (
+                                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                                    <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span>{task.team_members.name}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground/40">-</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                    <MoreVertical className="h-4 w-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-44">
+                                    <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
+                                      <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingTask(task)}>
+                                      <Pencil className="h-3.5 w-3.5" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
+                                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* VISTA MOBILE: Cards de Tareas */}
+                    <div className="md:hidden divide-y divide-border/20">
+                      {tasks.map(task => (
+                        <div key={task.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex gap-4">
                               <button
                                 onClick={() => handleToggleTaskStatus(task.id, task.status)}
                                 className={cn(
-                                  "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                                  "h-8 w-8 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all",
                                   task.status === 'completed'
-                                    ? "bg-emerald-500 border-emerald-500 text-white"
-                                    : "border-muted-foreground/30 hover:border-emerald-500"
+                                    ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                                    : "border-muted-foreground/20 hover:border-emerald-500"
                                 )}
                               >
-                                {task.status === 'completed' && <CheckCircle className="h-4 w-4" />}
+                                {task.status === 'completed' && <CheckCircle className="h-5 w-5" />}
                               </button>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
+                              <div className="min-w-0">
                                 <h3 className={cn(
-                                  "font-bold",
-                                  task.status === 'completed' && "line-through text-muted-foreground"
+                                  "font-bold text-base leading-tight",
+                                  task.status === 'completed' && "line-through text-muted-foreground/60"
                                 )}>{task.title}</h3>
-                                {task.status === 'completed' && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 rounded-full text-emerald-600 hover:bg-emerald-50"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenMediaUpload(task);
-                                    }}
-                                  >
-                                    <Camera className="h-3.5 w-3.5" />
-                                  </Button>
+                                {task.description && (
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
                                 )}
                               </div>
-                              {task.description && (
-                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              {task.proforma_item_id ? (
-                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-200">
-                                  Item Associated
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground/40">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              {task.due_date ? (
-                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                  <CalendarDays className="h-3.5 w-3.5" />
-                                  <span>{format(new Date(task.due_date), 'MMM d, h:mm a')}</span>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground/40">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              {task.team_members ? (
-                                <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
-                                  <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span>{task.team_members.name}</span>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground/40">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                  <MoreVertical className="h-4 w-4" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-44">
-                                  <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
-                                    <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingTask(task)}>
-                                    <Pencil className="h-3.5 w-3.5" /> Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
-                                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
+                                <MoreVertical className="h-5 w-5" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleOpenMediaUpload(task)}>
+                                  <Camera className="h-4 w-4 text-emerald-600" /> Upload Media
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingTask(task)}>
+                                  <Pencil className="h-4 w-4" /> Edit Task
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
+                                  <Trash2 className="h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3">
+                            {task.due_date && (
+                              <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-xl border border-border/40">
+                                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{format(new Date(task.due_date), 'MMM d')}</span>
+                              </div>
+                            )}
+                            {task.team_members && (
+                              <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
+                                <UserIcon className="h-3.5 w-3.5 text-primary" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-primary">{task.team_members.name}</span>
+                              </div>
+                            )}
+                            {task.proforma_item_id && (
+                              <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">
+                                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-none p-0 text-blue-700">Linked Item</Badge>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
                     <ListTodo className="h-10 w-10 text-muted-foreground" />
@@ -1901,48 +2087,89 @@ export default function JobView({
               </CardHeader>
               <CardContent className="p-0">
                 {payments.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                        <tr>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
-                          <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/30">
-                        {payments.map(payment => (
-                          <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
-                            <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
-                            <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
-                            <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td className="px-6 py-4 text-center">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                  <MoreVertical className="h-4 w-4" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
-                                    <Eye className="h-3.5 w-3.5" /> View Receipt
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
-                                    <Mail className="h-3.5 w-3.5" /> Send by Email
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
-                                    <Pencil className="h-3.5 w-3.5" /> Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
-                                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
+                  <>
+                    {/* VISTA DESKTOP: Tabla de Pagos */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                          <tr>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                            <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-border/30">
+                          {payments.map(payment => (
+                            <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
+                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
+                              <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
+                              <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td className="px-6 py-4 text-center">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                    <MoreVertical className="h-4 w-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-40">
+                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
+                                      <Eye className="h-3.5 w-3.5" /> View Receipt
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
+                                      <Mail className="h-3.5 w-3.5" /> Send by Email
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
+                                      <Pencil className="h-3.5 w-3.5" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
+                                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* VISTA MOBILE: Cards de Pagos */}
+                    <div className="md:hidden divide-y divide-border/20">
+                      {payments.map(payment => (
+                        <div key={payment.id} className="p-5 flex justify-between items-center hover:bg-muted/5 transition-colors">
+                          <div className="space-y-1">
+                            <p className="font-bold text-base text-foreground leading-none">{payment.payment_method}</p>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                              {format(new Date(payment.payment_date), 'MMM d, yyyy')}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <p className="text-lg font-black text-emerald-600 leading-none">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
+                                <MoreVertical className="h-5 w-5" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleViewPaymentPDF(payment)}>
+                                  <Eye className="h-4 w-4" /> View Receipt
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
+                                  <Mail className="h-4 w-4" /> Send Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingPayment(payment)}>
+                                  <Pencil className="h-4 w-4" /> Edit Record
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
+                                  <Trash2 className="h-4 w-4" /> Delete Payment
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
                     <DollarSign className="h-10 w-10 text-muted-foreground" />
@@ -1990,7 +2217,8 @@ export default function JobView({
 
                 {paginatedExpenses.length > 0 ? (
                   <>
-                    <div className="overflow-x-auto">
+                    {/* VISTA DESKTOP: Tabla de Gastos */}
+                    <div className="hidden md:block overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                           <tr>
@@ -2065,35 +2293,105 @@ export default function JobView({
                       </table>
                     </div>
 
-                    {/* Pagination Controls */}
+                    {/* VISTA MOBILE: Cards de Gastos */}
+                    <div className="md:hidden divide-y divide-border/20">
+                      {paginatedExpenses.map(exp => (
+                        <div key={exp.id} className="p-5 space-y-3 hover:bg-muted/5 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <p className="font-bold text-sm text-foreground">{exp.place || 'Supplier'}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                                  {format(new Date(exp.date), 'MMM d, yyyy')}
+                                </p>
+                                <span className="w-1 h-1 rounded-full bg-border" />
+                                <span className="text-[9px] font-black tracking-widest uppercase text-primary/70">{exp.category}</span>
+                              </div>
+                            </div>
+                            <div className="text-right flex items-center gap-3">
+                              <div className="text-right">
+                                <p className="text-lg font-black text-red-600 leading-none">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" />}>
+                                  <MoreVertical className="h-4 w-4" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedExpenseForEdit(exp)}>
+                                    <Pencil className="h-4 w-4" /> Edit Expense
+                                  </DropdownMenuItem>
+                                  {exp.image_url && (
+                                    <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedFileUrl(exp.image_url)}>
+                                      <Eye className="h-4 w-4" /> View File
+                                    </DropdownMenuItem>
+                                  )}
+                                  {qboIntegration && exp.sync_status !== 'synced' && (
+                                    <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleSyncExpenseToQBO(exp)}>
+                                      <RefreshCw className="h-4 w-4 text-orange-500" /> Sync to QBO
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
+                                    <Trash2 className="h-4 w-4" /> Delete Expense
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+
+                          {exp.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 italic">"{exp.description}"</p>
+                          )}
+
+                          <div className="flex items-center justify-between pt-1">
+                            <div className="flex items-center gap-2">
+                               {exp.sync_status === 'synced' ? (
+                                 <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100">
+                                   <CheckCircle2 className="h-3 w-3" />
+                                   <span className="text-[9px] font-black uppercase tracking-widest">QBO Synced</span>
+                                 </div>
+                               ) : (
+                                 <div className="flex items-center gap-1.5 bg-muted/30 text-muted-foreground px-2.5 py-1 rounded-lg border border-border/40">
+                                   <RefreshCw className="h-3 w-3" />
+                                   <span className="text-[9px] font-black uppercase tracking-widest">Not Synced</span>
+                                 </div>
+                               )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination Controls - Responsive */}
                     {totalExpensePages > 1 && (
-                      <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
-                        <p className="text-[10px] text-muted-foreground">
-                          Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} of {filteredExpenses.length}
+                      <div className="p-4 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between bg-card mt-auto gap-4">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                          Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} OF {filteredExpenses.length}
                         </p>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto justify-center">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 w-8 p-0"
+                            className="h-10 px-4 rounded-xl border-border/40"
                             disabled={expenseCurrentPage === 1}
                             onClick={() => setExpenseCurrentPage(prev => prev - 1)}
                           >
-                            <ChevronLeft className="h-4 w-4" />
+                            <ChevronLeft className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Prev</span>
                           </Button>
-                          <div className="flex items-center gap-1.5 px-2">
-                            <span className="text-xs font-bold text-foreground">{expenseCurrentPage}</span>
-                            <span className="text-[10px] text-muted-foreground">/</span>
+                          <div className="flex items-center bg-muted/30 px-4 rounded-xl border border-border/40 min-w-[80px] justify-center">
+                            <span className="text-xs font-black text-foreground">{expenseCurrentPage}</span>
+                            <span className="mx-2 text-[10px] text-muted-foreground">/</span>
                             <span className="text-xs text-muted-foreground">{totalExpensePages}</span>
                           </div>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 w-8 p-0"
+                            className="h-10 px-4 rounded-xl border-border/40"
                             disabled={expenseCurrentPage === totalExpensePages}
                             onClick={() => setExpenseCurrentPage(prev => prev + 1)}
                           >
-                            <ChevronRight className="h-4 w-4" />
+                            <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Next</span>
+                            <ChevronRight className="h-4 w-4 sm:ml-1" />
                           </Button>
                         </div>
                       </div>
@@ -2123,58 +2421,112 @@ export default function JobView({
               </CardHeader>
               <CardContent className="p-0">
                 {timeEntries.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                        <tr>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
-                          <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
-                          <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/30">
-                        {timeEntries.map(entry => (
-                          <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
-                            <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(entry.date), 'dd/MM/yyyy')}</td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                  <UserIcon className="h-3 w-3" />
-                                </div>
-                                <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
-                            <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
-                            <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td className="px-6 py-4 text-center">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
-                                  <MoreVertical className="h-3.5 w-3.5" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-32">
-                                  <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}>
-                                    <Pencil className="h-3.5 w-3.5" /> Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}>
-                                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
+                  <>
+                    {/* VISTA DESKTOP: Tabla de Labor */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                          <tr>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
+                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
+                            <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                           </tr>
-                        ))}
-                        <tr className="bg-muted/5 font-bold">
-                          <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
-                          <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                          <td />
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-border/30">
+                          {timeEntries.map(entry => (
+                            <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
+                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(entry.date), 'dd/MM/yyyy')}</td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <UserIcon className="h-3 w-3" />
+                                  </div>
+                                  <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
+                              <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
+                              <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td className="px-6 py-4 text-center">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
+                                    <MoreVertical className="h-3.5 w-3.5" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-32">
+                                    <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}>
+                                      <Pencil className="h-3.5 w-3.5" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}>
+                                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </td>
+                            </tr>
+                          ))}
+                          <tr className="bg-muted/5 font-bold">
+                            <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
+                            <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            <td />
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* VISTA MOBILE: Cards de Labor */}
+                    <div className="md:hidden divide-y divide-border/20">
+                      {timeEntries.map(entry => (
+                        <div key={entry.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                                <UserIcon className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-sm text-foreground">{entry.user_name || 'Staff Member'}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-60">
+                                  {format(new Date(entry.date), 'MMM d, yyyy')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-black text-foreground leading-none">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Total Cost</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between bg-muted/30 p-3 rounded-2xl border border-border/40">
+                             <div className="space-y-0.5">
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Duration</p>
+                                <p className="text-xs font-bold text-foreground">{entry.duration}</p>
+                             </div>
+                             <div className="h-8 w-px bg-border/40" />
+                             <div className="space-y-0.5 text-right">
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Hourly Rate</p>
+                                <p className="text-xs font-bold text-foreground">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</p>
+                             </div>
+                          </div>
+
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => setEditingLabor(entry)}>
+                               <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-600 hover:bg-red-50" onClick={() => setLaborToDelete(entry)}>
+                               <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Labor Summary Mobile */}
+                      <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Labor Cost</span>
+                        <span className="text-xl font-black text-emerald-600">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
                     <Clock className="h-10 w-10 text-muted-foreground" />
@@ -2268,7 +2620,7 @@ export default function JobView({
                     <label className="text-sm font-medium">Split into multiple invoices with a payment schedule</label>
                   </div>
 
-                  <div className="overflow-x-auto">
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40">
                         <tr>
@@ -2333,6 +2685,80 @@ export default function JobView({
                         ))}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* VISTA MOBILE: Cards de Facturas */}
+                  <div className="md:hidden space-y-4">
+                    {invoices.map(inv => (
+                      <div key={inv.id} className="p-5 rounded-2xl border border-border/40 bg-card hover:shadow-md transition-all space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <h3 className="font-bold text-lg text-emerald-600 leading-none">#{inv.invoice_number}</h3>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                              Due: {format(new Date(inv.due_date || inv.issue_date), 'MMM d, yyyy')}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest",
+                            inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                              inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                "bg-muted text-muted-foreground border-border"
+                          )}>
+                            <span className={cn("w-1.5 h-1.5 rounded-full",
+                              inv.status === 'paid' ? "bg-emerald-500" :
+                                inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")}
+                            />
+                            {inv.status}
+                          </Badge>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-border/30">
+                          <div className="space-y-0.5">
+                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Balance</p>
+                            <p className="text-sm font-bold text-foreground">
+                              ${inv.status === 'paid' ? '0.00' : Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                          <div className="space-y-0.5 text-right font-serif">
+                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Total</p>
+                            <p className="text-lg font-black text-foreground">
+                              ${Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                           <Button
+                             variant="outline"
+                             className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2"
+                             onClick={() => handleViewInvoicePDF(inv)}
+                           >
+                             <Eye className="h-4 w-4" /> View PDF
+                           </Button>
+                           <DropdownMenu>
+                             <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border border-border/40" />}>
+                               <MoreVertical className="h-5 w-5" />
+                             </DropdownMenuTrigger>
+                             <DropdownMenuContent align="end" className="w-56">
+                               <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
+                                 <Mail className="h-4 w-4" /> Send by Email
+                               </DropdownMenuItem>
+                               <DropdownMenuItem className="p-0">
+                                 <Link
+                                   href={`/invoices/${inv.id}/edit`}
+                                   className="flex w-full items-center gap-2 px-3 py-3 text-xs"
+                                 >
+                                   <Pencil className="h-4 w-4" /> Edit Invoice
+                                 </Link>
+                               </DropdownMenuItem>
+                               <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
+                                 <Trash2 className="h-4 w-4" /> Delete Invoice
+                               </DropdownMenuItem>
+                             </DropdownMenuContent>
+                           </DropdownMenu>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   <Link

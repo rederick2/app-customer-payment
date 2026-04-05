@@ -27,6 +27,8 @@ export default async function JobsPage() {
       created_at,
       status,
       number,
+      job_start_at,
+      job_end_at,
       clients ( id, name, street_1, city, province, postal_code )
     `)
     .eq('user_id', user.id)
@@ -38,15 +40,15 @@ export default async function JobsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+    <div className="container mx-auto px-4 py-6 md:py-10 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Jobs</h1>
-          <p className="text-muted-foreground text-sm">List of all in-progress or scheduled jobs.</p>
+          <h1 className="font-serif text-3xl md:text-5xl font-bold tracking-tight mb-2">Jobs</h1>
+          <p className="text-muted-foreground text-sm md:text-base font-medium">List of all in-progress or scheduled jobs.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/proforma/new">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Link href="/proforma/new" className="w-full md:w-auto">
+            <Button className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg px-6 h-11 rounded-xl font-bold transition-all hover:-translate-y-0.5 active:scale-95">
               <PlusCircle className="mr-2 h-4 w-4" />
               New Quote
             </Button>
