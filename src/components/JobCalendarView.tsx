@@ -186,6 +186,9 @@ interface JobVisit {
   assigned_name: string
   status: string
   notes?: string
+  team_members?: {
+    name: string
+  }
   proformas?: {
     id: string
     number: string
@@ -200,6 +203,7 @@ interface JobVisit {
 
 interface CalendarViewProps {
   jobs: Job[]
+  teamMembers: any[]
   tasks: Task[]
   requests: ServiceRequest[]
   visits: JobVisit[]
@@ -207,7 +211,7 @@ interface CalendarViewProps {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
-export default function JobCalendarView({ jobs, tasks, requests, visits }: CalendarViewProps) {
+export default function JobCalendarView({ jobs, teamMembers, tasks, requests, visits }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = React.useState(new Date())
   const [view, setView] = React.useState<'month' | 'week' | 'day'>('week')
   const [isAddingVisit, setIsAddingVisit] = React.useState(false)
@@ -252,11 +256,11 @@ export default function JobCalendarView({ jobs, tasks, requests, visits }: Calen
     let durationMinutes = endMinutes - startMinutes;
     if (durationMinutes < 30) durationMinutes = 30;
 
-    const top = (startMinutes / 60) * 50.3
+    const top = (startMinutes / 60) * 64
     const height = (durationMinutes / 60) * 64
 
     return {
-      top: `${top}px`,
+      top: `${top - 192}px`,
       height: `${height}px`,
       minHeight: '24px'
     }
@@ -349,6 +353,7 @@ export default function JobCalendarView({ jobs, tasks, requests, visits }: Calen
       {isAddingVisit && (
         <VisitFormModal
           jobs={jobs}
+          teamMembers={teamMembers}
           onClose={() => setIsAddingVisit(false)}
           onSuccess={() => {
             setIsAddingVisit(false)
@@ -437,7 +442,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                     <VisitCard key={visit.id} visit={visit} style={{
                       ...getEventStyle(visit.visit_date, new Date(parseISO(visit.visit_date).getTime() + 60 * 60 * 1000).toISOString(), day),
                       left: `${15 + (idx * 5)}%`,
-                      width: '50%',
+                      width: `${80 - (idx * 2)}%`,
                       zIndex: 38
                     }} />
                   ))}
@@ -515,7 +520,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
               <VisitCard key={visit.id} visit={visit} style={{
                 ...getEventStyle(visit.visit_date, new Date(parseISO(visit.visit_date).getTime() + 60 * 60 * 1000).toISOString(), currentDate),
                 left: `${15 + (idx * 5)}%`,
-                width: '50%',
+                width: `${82 - (idx * 2)}%`,
                 zIndex: 38
               }} />
             ))}
@@ -690,7 +695,7 @@ function TaskCard({ task, style }: { task: Task, style: React.CSSProperties }) {
         render={
           <div
             className={cn(
-              "absolute rounded-lg text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer transition-all hover:scale-[1.02] hover:z-50 border border-white/10",
+              "absolute left-1 right-1 rounded-lg text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer transition-all hover:scale-[1.02] hover:z-50 border border-white/10",
               task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
             )}
             style={style}
@@ -751,7 +756,7 @@ function VisitCard({ visit, style }: { visit: JobVisit, style: React.CSSProperti
               <User className="h-2.5 w-2.5" /> Visit
             </div>
             <div className="font-bold truncate leading-tight">
-              {visit.assigned_name}
+              {visit.team_members?.name}
             </div>
             <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
               <Clock className="h-3 w-3 mr-1 shrink-0" />
@@ -795,7 +800,7 @@ function VisitDetailContent({ visit }: { visit: JobVisit }) {
             </div>
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Assigned To</p>
-              <p className="text-sm font-semibold text-foreground">{visit.assigned_name}</p>
+              <p className="text-sm font-semibold text-foreground">{visit.team_members?.name}</p>
             </div>
           </div>
 
@@ -1108,7 +1113,7 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
   )
 }
 
-function VisitFormModal({ jobs, onClose, onSuccess }: { jobs: Job[], onClose: () => void, onSuccess: () => void }) {
+function VisitFormModal({ jobs, teamMembers, onClose, onSuccess }: { jobs: Job[], teamMembers: any[], onClose: () => void, onSuccess: () => void }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [selectedJobId, setSelectedJobId] = React.useState('');
   const [comboboxOpen, setComboboxOpen] = React.useState(false);
@@ -1136,7 +1141,7 @@ function VisitFormModal({ jobs, onClose, onSuccess }: { jobs: Job[], onClose: ()
       .from('job_visits')
       .insert([{
         proforma_id: selectedJobId,
-        assigned_name: formData.get('assigned_name'),
+        assigned_to: formData.get('assigned_to'),
         visit_date: dateToSave,
         status: formData.get('status'),
         notes: formData.get('notes')
@@ -1220,8 +1225,18 @@ function VisitFormModal({ jobs, onClose, onSuccess }: { jobs: Job[], onClose: ()
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="assigned_name">Assign To</Label>
-            <Input id="assigned_name" name="assigned_name" placeholder="Team member name" required />
+            <Label htmlFor="assigned_to">Assign To</Label>
+            <select
+              id="assigned_to"
+              name="assigned_to"
+              defaultValue={''}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Unassigned</option>
+              {teamMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

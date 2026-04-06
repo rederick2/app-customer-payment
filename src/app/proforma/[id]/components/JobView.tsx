@@ -1536,11 +1536,11 @@ export default function JobView({
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                             <div className="text-right mr-2">
-                               <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 leading-none mb-1">Current Cost</p>
-                               <p className="text-sm font-bold text-foreground leading-none">${(item.cost || 0).toLocaleString('en-US')}</p>
-                             </div>
-                             <Button
+                            <div className="text-right mr-2">
+                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60 leading-none mb-1">Current Cost</p>
+                              <p className="text-sm font-bold text-foreground leading-none">${(item.cost || 0).toLocaleString('en-US')}</p>
+                            </div>
+                            <Button
                               variant="ghost"
                               size="icon"
                               className="h-10 w-10 rounded-2xl text-red-600 hover:bg-red-50"
@@ -2344,17 +2344,17 @@ export default function JobView({
 
                           <div className="flex items-center justify-between pt-1">
                             <div className="flex items-center gap-2">
-                               {exp.sync_status === 'synced' ? (
-                                 <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100">
-                                   <CheckCircle2 className="h-3 w-3" />
-                                   <span className="text-[9px] font-black uppercase tracking-widest">QBO Synced</span>
-                                 </div>
-                               ) : (
-                                 <div className="flex items-center gap-1.5 bg-muted/30 text-muted-foreground px-2.5 py-1 rounded-lg border border-border/40">
-                                   <RefreshCw className="h-3 w-3" />
-                                   <span className="text-[9px] font-black uppercase tracking-widest">Not Synced</span>
-                                 </div>
-                               )}
+                              {exp.sync_status === 'synced' ? (
+                                <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest">QBO Synced</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 bg-muted/30 text-muted-foreground px-2.5 py-1 rounded-lg border border-border/40">
+                                  <RefreshCw className="h-3 w-3" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest">Not Synced</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2499,23 +2499,23 @@ export default function JobView({
                           </div>
 
                           <div className="flex items-center justify-between bg-muted/30 p-3 rounded-2xl border border-border/40">
-                             <div className="space-y-0.5">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Duration</p>
-                                <p className="text-xs font-bold text-foreground">{entry.duration}</p>
-                             </div>
-                             <div className="h-8 w-px bg-border/40" />
-                             <div className="space-y-0.5 text-right">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Hourly Rate</p>
-                                <p className="text-xs font-bold text-foreground">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</p>
-                             </div>
+                            <div className="space-y-0.5">
+                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Duration</p>
+                              <p className="text-xs font-bold text-foreground">{entry.duration}</p>
+                            </div>
+                            <div className="h-8 w-px bg-border/40" />
+                            <div className="space-y-0.5 text-right">
+                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Hourly Rate</p>
+                              <p className="text-xs font-bold text-foreground">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</p>
+                            </div>
                           </div>
 
                           <div className="flex justify-end gap-2">
                             <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => setEditingLabor(entry)}>
-                               <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+                              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
                             </Button>
                             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-600 hover:bg-red-50" onClick={() => setLaborToDelete(entry)}>
-                               <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -2728,34 +2728,34 @@ export default function JobView({
                         </div>
 
                         <div className="flex gap-2">
-                           <Button
-                             variant="outline"
-                             className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2"
-                             onClick={() => handleViewInvoicePDF(inv)}
-                           >
-                             <Eye className="h-4 w-4" /> View PDF
-                           </Button>
-                           <DropdownMenu>
-                             <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border border-border/40" />}>
-                               <MoreVertical className="h-5 w-5" />
-                             </DropdownMenuTrigger>
-                             <DropdownMenuContent align="end" className="w-56">
-                               <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
-                                 <Mail className="h-4 w-4" /> Send by Email
-                               </DropdownMenuItem>
-                               <DropdownMenuItem className="p-0">
-                                 <Link
-                                   href={`/invoices/${inv.id}/edit`}
-                                   className="flex w-full items-center gap-2 px-3 py-3 text-xs"
-                                 >
-                                   <Pencil className="h-4 w-4" /> Edit Invoice
-                                 </Link>
-                               </DropdownMenuItem>
-                               <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
-                                 <Trash2 className="h-4 w-4" /> Delete Invoice
-                               </DropdownMenuItem>
-                             </DropdownMenuContent>
-                           </DropdownMenu>
+                          <Button
+                            variant="outline"
+                            className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2"
+                            onClick={() => handleViewInvoicePDF(inv)}
+                          >
+                            <Eye className="h-4 w-4" /> View PDF
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border border-border/40" />}>
+                              <MoreVertical className="h-5 w-5" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
+                                <Mail className="h-4 w-4" /> Send by Email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="p-0">
+                                <Link
+                                  href={`/invoices/${inv.id}/edit`}
+                                  className="flex w-full items-center gap-2 px-3 py-3 text-xs"
+                                >
+                                  <Pencil className="h-4 w-4" /> Edit Invoice
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
+                                <Trash2 className="h-4 w-4" /> Delete Invoice
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     ))}
@@ -2991,6 +2991,7 @@ export default function JobView({
       {isAddingVisit && (
         <VisitFormModal
           proformaId={id}
+          teamMembers={teamMembers}
           onClose={() => setIsAddingVisit(false)}
           onSuccess={() => {
             setIsAddingVisit(false);
@@ -4150,7 +4151,7 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: 
   );
 }
 
-function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string, onClose: () => void, onSuccess: () => void }) {
+function VisitFormModal({ proformaId, teamMembers, onClose, onSuccess }: { proformaId: string, teamMembers: { id: string, name: string }[], onClose: () => void, onSuccess: () => void }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const supabase = createClient();
 
@@ -4163,7 +4164,7 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
       .from('job_visits')
       .insert([{
         proforma_id: proformaId,
-        assigned_name: formData.get('assigned_name'),
+        assigned_to: formData.get('assigned_to'),
         visit_date: formData.get('visit_date'),
         status: formData.get('status'),
         notes: formData.get('notes')
@@ -4187,8 +4188,18 @@ function VisitFormModal({ proformaId, onClose, onSuccess }: { proformaId: string
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
-            <Label htmlFor="assigned_name">Assign To</Label>
-            <Input id="assigned_name" name="assigned_name" placeholder="Full name" required />
+            <Label htmlFor="assigned_to">Assign To</Label>
+            <select
+              id="assigned_to"
+              name="assigned_to"
+              defaultValue={''}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Unassigned</option>
+              {teamMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

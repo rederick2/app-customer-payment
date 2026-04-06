@@ -62,6 +62,7 @@ export default async function CalendarPage() {
     .from('job_visits')
     .select(`
       *,
+      team_members (name),
       proformas (
         id,
         number,
@@ -75,8 +76,14 @@ export default async function CalendarPage() {
     `)
     .order('visit_date', { ascending: true });
 
-  if (error || tasksError || requestsError || visitsError) {
-    console.error('Error fetching calendar data:', error || tasksError || requestsError || visitsError);
+  // Fetch team members
+  const { data: teamMembers, error: teamMembersError } = await supabase
+    .from('team_members')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error || tasksError || requestsError || visitsError || teamMembersError) {
+    console.error('Error fetching calendar data:', error || tasksError || requestsError || visitsError || teamMembersError);
     return <div>Error loading calendar data.</div>;
   }
 
@@ -84,13 +91,14 @@ export default async function CalendarPage() {
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Calendario de Jobs</h1>
-          <p className="text-muted-foreground">Visualiza y gestiona las fechas de tus proyectos programados.</p>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Calendar of Jobs</h1>
+          <p className="text-muted-foreground">Visualize and manage the dates of your scheduled projects.</p>
         </div>
       </div>
 
       <div className="flex-1 min-h-0">
         <JobCalendarView
+          teamMembers={(teamMembers as any) || []}
           jobs={(jobs as any) || []}
           tasks={(tasks as any) || []}
           requests={(requests as any) || []}
