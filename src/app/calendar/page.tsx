@@ -91,7 +91,7 @@ export default async function CalendarPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full mx-auto px-4 py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 shrink-0">
         <div>
-          <h1 className="font-serif text-3xl font-bold tracking-tight mb-1 uppercase tracking-tighter">Calendar</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-1 uppercase tracking-tighter">Calendar</h1>
           <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60">Jobs and Schedule Overview</p>
         </div>
       </div>

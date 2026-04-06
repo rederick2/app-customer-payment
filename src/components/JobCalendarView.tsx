@@ -48,6 +48,12 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
 import {
   format,
@@ -283,13 +289,14 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
 
   return (
     <div className="flex flex-col h-full bg-background border border-border/50 rounded-xl overflow-hidden animate-in fade-in duration-500">
-      <header className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-card border-b border-border/40 gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <h2 className="text-xl font-bold font-serif min-w-[150px]">
+      <header className="flex flex-col p-4 bg-card border-b border-border/40 gap-4">
+        {/* Top Row: Date and Main Controls */}
+        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex items-center gap-2 shrink-0">
+            <h2 className="text-lg md:text-xl font-bold whitespace-nowrap">
               {format(currentDate, 'MMMM yyyy', { locale: enUS }).replace(/^\w/, (c) => c.toUpperCase())}
             </h2>
-            <div className="flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/50">
+            <div className="flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/50 shrink-0">
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md" onClick={prev}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -297,24 +304,50 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-            <Button variant="outline" size="sm" className="ml-2 h-9 font-medium" onClick={goToToday}>
+            <Button variant="outline" size="sm" className="h-8 md:h-9 font-medium px-3" onClick={goToToday}>
               Today
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Desktop Create Button */}
             <Button
-              className="bg-[#306C3E] hover:bg-[#265832] text-white h-9 font-semibold gap-2 hidden lg:flex"
+              className="bg-[#306C3E] hover:bg-[#265832] text-white h-9 font-semibold gap-2 hidden sm:flex"
               onClick={() => setIsAddingVisit(true)}
             >
               <Plus className="h-4 w-4" />
               Create Visit
             </Button>
+
+            {/* Mobile Actions Dropdown */}
+            <div className="sm:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'icon' }),
+                    "h-9 w-9 bg-[#306C3E] text-white border-none shadow-md hover:bg-[#265832] transition-colors"
+                  )}
+                >
+                  <Plus className="h-5 w-5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 p-2 z-[100]">
+                  <DropdownMenuItem onClick={() => setIsAddingVisit(true)} className="font-bold py-2.5 cursor-pointer">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Visit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={goToToday} className="font-bold py-2.5 cursor-pointer">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Go to Today
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/50">
+        {/* View Toggles Section */}
+        <div className="flex items-center justify-center sm:justify-start">
+          <div className="flex items-center bg-muted/30 rounded-xl p-1 border border-border/50 w-full sm:w-auto">
             {[
               { label: 'Month', value: 'month' },
               { label: 'Week', value: 'week' },
@@ -325,8 +358,8 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
                 variant={view === v.value ? 'secondary' : 'ghost'}
                 size="sm"
                 className={cn(
-                  "h-8 px-4 text-xs font-semibold rounded-md transition-all",
-                  view === v.value && "bg-background shadow-sm border border-border/20"
+                  "flex-1 sm:flex-none h-9 px-6 text-xs font-bold rounded-lg transition-all",
+                  view === v.value && "bg-background shadow-sm border border-border/20 text-foreground"
                 )}
                 onClick={() => setView(v.value as any)}
               >
@@ -605,7 +638,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
           <div className="text-[10px] uppercase tracking-wider font-bold mb-1 text-primary">
             {format(currentDate, 'EEEE', { locale: enUS })}
           </div>
-          <div className="text-xl font-serif font-bold">
+          <div className="text-xl font-bold">
             {format(currentDate, 'd MMMM yyyy', { locale: enUS })}
           </div>
         </div>
@@ -615,8 +648,12 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
         <div className="flex">
           <div className="w-16 border-r border-border/40 shrink-0 bg-[#F9F9F7] sticky left-0 z-10">
             {HOURS.map((hour) => (
-              <div key={hour} className="h-16 -mt-3 pr-3 text-right text-[10px] font-bold text-muted-foreground/50 tabular-nums">
-                {hour === 0 ? '' : `${hour}:00`}
+              <div key={hour} className="h-16 relative pr-2 border-b border-border/5">
+                {hour !== 0 && (
+                  <span className="absolute -top-[7px] right-2 text-[10px] font-bold text-muted-foreground/40 tabular-nums">
+                    {hour}:00
+                  </span>
+                )}
               </div>
             ))}
           </div>
