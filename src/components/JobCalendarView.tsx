@@ -117,7 +117,7 @@ const getRequestVirtualDates = (scheduleDate: string, preference?: string) => {
   else if (preference === 'anytime') virtualStart = new Date(year, month - 1, day, 10, 0, 0);
   else virtualStart = new Date(year, month - 1, day, 0, 0, 0);
 
-  const virtualEnd = new Date(virtualStart.getTime() + 60 * 60 * 1000); // 1 hour duration
+  const virtualEnd = new Date(virtualStart.getTime() + 60 * 60 * 4000); // 1 hour duration
   return {
     start: format(virtualStart, "yyyy-MM-dd'T'HH:mm:ss"),
     end: format(virtualEnd, "yyyy-MM-dd'T'HH:mm:ss")
@@ -220,6 +220,21 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
+
+  const dayEvents = [
+    ...jobs.filter(j => {
+      const s = parseISO(j.job_start_at || '');
+      const e = parseISO(j.job_end_at || '');
+      return s <= endOfDay(currentDate) && e >= startOfDay(currentDate);
+    }).map(j => ({ ...j, type: 'job' as const })),
+    ...tasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), currentDate)).map(t => ({ ...t, type: 'task' as const })),
+    ...requests.filter(r => isSameDay(parseISO(r.schedule_date || ''), currentDate)).map(r => ({ ...r, type: 'request' as const })),
+    ...visits.filter(v => isSameDay(parseISO(v.visit_date || ''), currentDate)).map(v => ({ ...v, type: 'visit' as const }))
+  ].sort((a, b) => {
+    const timeA = a.type === 'job' ? a.job_start_at : (a.type === 'task' ? a.due_date : (a.type === 'request' ? a.schedule_date : a.visit_date));
+    const timeB = b.type === 'job' ? b.job_start_at : (b.type === 'task' ? b.due_date : (b.type === 'request' ? b.schedule_date : b.visit_date));
+    return new Date(timeA || '').getTime() - new Date(timeB || '').getTime();
+  });
 
   const next = () => {
     if (view === 'month') setCurrentDate(addMonths(currentDate, 1))
@@ -331,21 +346,74 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
           <DayView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} getEventStyle={getEventStyle} />
         )}
 
-        {/* Right Panel - Unscheduled / Upcoming */}
-        <aside className="hidden xl:flex w-72 flex-col border-l border-border/40 bg-card">
-          <div className="p-4 border-b border-border/40 flex items-center justify-between">
-            <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground/80">Sin Programar</h3>
-            <Badge variant="secondary" className="rounded-full h-5 px-1.5 min-w-[20px] justify-center text-[10px]">
-              0
+        {/* Right Panel - Agenda / Upcoming Events */}
+        <aside className="hidden xl:flex w-72 flex-col border-l border-border/40 bg-card overflow-hidden">
+          <div className="p-4 border-b border-border/40 flex items-center justify-between shrink-0 bg-[#F9F9F7]/50">
+            <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground/80">Upcoming Events</h3>
+            <Badge variant="secondary" className="rounded-full h-5 px-1.5 min-w-[20px] justify-center text-[10px] font-black">
+              {dayEvents.length}
             </Badge>
           </div>
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-muted-foreground/60">
-            <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-              <CalendarIcon className="h-8 w-8 text-muted/30" />
-            </div>
-            <p className="text-sm font-medium leading-relaxed">
-              Arrastra elementos aquí para quitarlos de la programación
-            </p>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+            {dayEvents.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground/60">
+                <div className="h-12 w-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
+                  <CalendarIcon className="h-5 w-5 text-muted/30" />
+                </div>
+                <p className="text-[11px] font-bold uppercase tracking-wider leading-relaxed opacity-60">
+                  Day without scheduled activities
+                </p>
+              </div>
+            ) : (
+              dayEvents.map((event, idx) => {
+                const colors = {
+                  job: 'bg-[#0D3B47] text-white',
+                  task: event.type === 'task' && (event as any).status === 'completed' ? 'bg-emerald-600 text-white' : 'bg-orange-500 text-white',
+                  request: 'bg-purple-600 text-white',
+                  visit: 'bg-teal-600 text-white'
+                }[event.type];
+
+                const time = event.type === 'job' ? (event as any).job_start_at : (event.type === 'task' ? (event as any).due_date : (event.type === 'request' ? (event as any).schedule_date : (event as any).visit_date));
+                const title = event.type === 'job' ? (event as any).project_name : (event.type === 'task' ? (event as any).title : (event.type === 'request' ? ((event as any).proformas?.project_name || 'Request') : ((event as any).team_members?.name || 'Visit')));
+
+                return (
+                  <Popover key={`${event.type}-${(event as any).id}`}>
+                    <PopoverTrigger className="w-full text-left">
+                      <div className={cn(
+                        "p-3 rounded-xl shadow-sm border border-border/50 group transition-all hover:scale-[1.02] cursor-pointer",
+                        "bg-background hover:shadow-md"
+                      )}>
+                        <div className="flex items-start gap-3">
+                          <div className={cn("mt-0.5 h-2 w-2 rounded-full shrink-0",
+                            event.type === 'job' ? 'bg-[#0D3B47]' : (event.type === 'task' ? 'bg-orange-500' : (event.type === 'request' ? 'bg-purple-600' : 'bg-teal-600'))
+                          )} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{event.type}</span>
+                              <span className="text-[10px] font-black tabular-nums text-foreground/80">{format(parseISO(time || ''), 'HH:mm')}</span>
+                            </div>
+                            <h4 className="text-xs font-bold leading-snug truncate group-hover:text-primary transition-colors">
+                              {title}
+                            </h4>
+                            {event.type === 'visit' && (
+                              <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                                Assigned: {(event as any).team_members?.name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="left" align="start" sideOffset={10}>
+                      {event.type === 'job' && <JobDetailContent job={event as any} />}
+                      {event.type === 'task' && <TaskDetailContent task={event as any} />}
+                      {event.type === 'request' && <RequestDetailContent request={event as any} />}
+                      {event.type === 'visit' && <VisitDetailContent visit={event as any} />}
+                    </PopoverContent>
+                  </Popover>
+                );
+              })
+            )}
           </div>
         </aside>
       </div>
@@ -418,7 +486,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                 {format(day, 'eee', { locale: enUS })}
               </div>
               <div className={cn(
-                "text-xl font-serif font-bold h-10 w-10 flex items-center justify-center mx-auto rounded-full transition-all",
+                "text-xl font-bold h-10 w-10 flex items-center justify-center mx-auto rounded-full transition-all",
                 isToday(day) ? "bg-primary text-primary-foreground shadow-md" : (isSameMonth(day, currentDate) ? "text-foreground" : "text-muted-foreground/40")
               )}>
                 {format(day, 'd')}
@@ -476,7 +544,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                       <RequestCard key={request.id} request={request} style={{
                         ...getEventStyle(start, end, day),
                         left: `${10 + (idx * 5)}%`,
-                        width: `${40}%`,
+                        width: `${100}%`,
                         zIndex: 35
                       }} />
                     );
