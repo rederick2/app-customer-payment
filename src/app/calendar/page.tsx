@@ -12,6 +12,7 @@ export default async function CalendarPage() {
     .from('proformas')
     .select(`
       id,
+      number,
       project_name,
       job_start_at,
       job_end_at,
@@ -21,7 +22,7 @@ export default async function CalendarPage() {
         street_1
       )
     `)
-    .eq('status', 'job')
+    .notIn('status', ['job_terminated', 'rejected', 'draft'])
     .order('job_start_at', { ascending: true });
 
   if (error) {
@@ -38,10 +39,45 @@ export default async function CalendarPage() {
     `)
     .order('due_date', { ascending: true });
 
-  //console.log(tasks)
+  // Fetch service requests
+  const { data: requests, error: requestsError } = await supabase
+    .from('service_requests')
+    .select(`
+      *,
+      proformas (
+        id,
+        number,
+        project_name,
+        clients (
+          name,
+          company_name,
+          street_1
+        )
+      )
+    `)
+    .order('schedule_date', { ascending: true });
 
-  if (tasksError) {
-    console.error('Error fetching tasks for calendar:', tasksError);
+  // Fetch job visits
+  const { data: visits, error: visitsError } = await supabase
+    .from('job_visits')
+    .select(`
+      *,
+      proformas (
+        id,
+        number,
+        project_name,
+        clients (
+          name,
+          company_name,
+          street_1
+        )
+      )
+    `)
+    .order('visit_date', { ascending: true });
+
+  if (error || tasksError || requestsError || visitsError) {
+    console.error('Error fetching calendar data:', error || tasksError || requestsError || visitsError);
+    return <div>Error loading calendar data.</div>;
   }
 
   return (
@@ -53,7 +89,14 @@ export default async function CalendarPage() {
         </div>
       </div>
 
-      <JobCalendarView jobs={(jobs as any) || []} tasks={(tasks as any) || []} />
+      <div className="flex-1 min-h-0">
+        <JobCalendarView
+          jobs={(jobs as any) || []}
+          tasks={(tasks as any) || []}
+          requests={(requests as any) || []}
+          visits={(visits as any) || []}
+        />
+      </div>
     </div>
   );
 }
