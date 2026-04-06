@@ -118,7 +118,7 @@ export default function PhotoUploadModal({ proformaId, proformName, proformas = 
       />
 
       <DialogContent className={cn(
-        'p-0 overflow-hidden rounded-xl border-border/40 shadow-2xl',
+        'p-0 flex flex-col rounded-xl border-border/40 shadow-2xl overflow-y-auto max-h-[95vh]',
         stage === 'annotate' ? 'sm:max-w-2xl' : 'sm:max-w-[480px]'
       )}>
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/40">

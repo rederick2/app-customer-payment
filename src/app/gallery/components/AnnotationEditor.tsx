@@ -31,14 +31,15 @@ const COLORS = ['#FFFF00', '#FF3B30', '#34C759', '#007AFF', '#FF9500', '#FFFFFF'
 export default function AnnotationEditor({ imageUrl, onExport, className }: AnnotationEditorProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [activeTool, setActiveTool] = React.useState<Tool>('pen');
-  const [color, setColor] = React.useState('#FFFF00');
-  const [size] = React.useState(3);
+  const [color, setColor] = React.useState('#FF3B30');
+  const [size, setSize] = React.useState(5);
   const [drawing, setDrawing] = React.useState(false);
   const [items, setItems] = React.useState<DrawItem[]>([]);
   const [current, setCurrent] = React.useState<DrawItem | null>(null);
   const [draggingIdx, setDraggingIdx] = React.useState<number | null>(null);
   const [dragOffset, setDragOffset] = React.useState<Point | null>(null);
   const [dimensions, setDimensions] = React.useState({ width: 1080, height: 1440 });
+  const [scaleFactor, setScaleFactor] = React.useState(1);
   const [image, setImage] = React.useState<HTMLImageElement | null>(null);
   const [textInput, setTextInput] = React.useState('');
   const [textPos, setTextPos] = React.useState<Point | null>(null);
@@ -53,6 +54,7 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
     img.onload = () => {
       setImage(img);
       setDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+      setScaleFactor(Math.max(img.naturalWidth, img.naturalHeight) / 1000);
     };
   }, [imageUrl]);
 
@@ -71,9 +73,10 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
   React.useEffect(() => { redraw(); }, [redraw]);
 
   function drawItem(ctx: CanvasRenderingContext2D, item: DrawItem) {
+    const scaledSize = item.size * scaleFactor;
     ctx.strokeStyle = item.color;
     ctx.fillStyle = item.color;
-    ctx.lineWidth = item.size;
+    ctx.lineWidth = scaledSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -102,7 +105,7 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
       }
       case 'arrow': {
         if (!item.start || !item.end) return;
-        drawArrow(ctx, item.start, item.end, item.size);
+        drawArrow(ctx, item.start, item.end, scaledSize);
         break;
       }
       case 'circle': {
@@ -127,7 +130,7 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
       }
       case 'text': {
         if (!item.start || !item.text) return;
-        ctx.font = `bold ${item.size * 8}px Arial`;
+        ctx.font = `bold ${scaledSize * 8}px Arial`;
         ctx.fillStyle = item.color;
         ctx.fillText(item.text, item.start.x, item.start.y);
         break;
@@ -135,8 +138,8 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
     }
   }
 
-  function drawArrow(ctx: CanvasRenderingContext2D, from: Point, to: Point, size: number) {
-    const headLen = size * 8;
+  function drawArrow(ctx: CanvasRenderingContext2D, from: Point, to: Point, scaledSize: number) {
+    const headLen = scaledSize * 8;
     const angle = Math.atan2(to.y - from.y, to.x - from.x);
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
@@ -168,7 +171,7 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
       const item = items[i];
       if (item.tool === 'text' && item.start) {
         // Estimate text area
-        const fontSize = item.size * 8;
+        const fontSize = item.size * scaleFactor * 8;
         const width = (item.text?.length || 0) * (fontSize * 0.6);
         const height = fontSize;
         if (pos.x >= item.start.x && pos.x <= item.start.x + width &&
@@ -177,10 +180,11 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
         }
       } else if (item.start && item.end) {
         // Simple bounding box for shapes
-        const minX = Math.min(item.start.x, item.end.x) - 10;
-        const maxX = Math.max(item.start.x, item.end.x) + 10;
-        const minY = Math.min(item.start.y, item.end.y) - 10;
-        const maxY = Math.max(item.start.y, item.end.y) + 10;
+        const buffer = scaleFactor * 20;
+        const minX = Math.min(item.start.x, item.end.x) - buffer;
+        const maxX = Math.max(item.start.x, item.end.x) + buffer;
+        const minY = Math.min(item.start.y, item.end.y) - buffer;
+        const maxY = Math.max(item.start.y, item.end.y) + buffer;
         if (pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY) {
           return i;
         }
@@ -297,21 +301,22 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
   ];
 
   return (
-    <div className={cn('relative flex bg-black select-none overflow-hidden', className)}>
-      {/* Canvas */}
-      <canvas
-        ref={canvasRef}
-        width={dimensions.width}
-        height={dimensions.height}
-        className="touch-none flex-1 object-contain max-h-[60vh] cursor-crosshair min-w-0"
-        style={{ display: 'block' }}
-        onMouseDown={onStart}
-        onMouseMove={onMove}
-        onMouseUp={onEnd}
-        onTouchStart={onStart}
-        onTouchMove={onMove}
-        onTouchEnd={onEnd}
-      />
+    <div className={cn('relative flex flex-col sm:flex-row bg-black select-none', className)}>
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-2 min-h-[300px]">
+        {/* Canvas */}
+        <canvas
+          ref={canvasRef}
+          width={dimensions.width}
+          height={dimensions.height}
+          className="touch-none block max-w-full max-h-[60vh] h-auto w-auto cursor-crosshair shadow-2xl"
+          onMouseDown={onStart}
+          onMouseMove={onMove}
+          onMouseUp={onEnd}
+          onTouchStart={onStart}
+          onTouchMove={onMove}
+          onTouchEnd={onEnd}
+        />
+      </div>
 
       {/* Text input overlay */}
       {showTextBox && textPos && (
@@ -334,67 +339,80 @@ export default function AnnotationEditor({ imageUrl, onExport, className }: Anno
         </div>
       )}
 
-      {/* Right toolbar */}
-      <div className="flex flex-col items-center gap-2 py-4 px-2 bg-black/60 backdrop-blur-sm flex-shrink-0 z-10 border-l border-white/10">
-        {/* Undo */}
-        <button
-          onClick={undo}
-          className="h-9 w-9 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors"
-          title="Undo"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </button>
-
-        {/* Clear */}
-        <button
-          onClick={clear}
-          className="text-[10px] text-white font-bold hover:text-red-400 transition-colors mb-2"
-          title="Clear all"
-        >
-          Clear
-        </button>
-
-        {/* Color dots */}
-        {COLORS.map(c => (
+      {/* Adaptive Toolbar */}
+      <div className="flex flex-row sm:flex-col items-center gap-4 sm:gap-4 py-4 px-6 sm:py-4 sm:px-2 bg-[#1A1A1A] backdrop-blur-md flex-shrink-0 z-10 border-t sm:border-t-0 sm:border-l border-white/10 overflow-x-auto no-scrollbar min-h-[72px]">
+        {/* Undo/Clear Group */}
+        <div className="flex flex-row sm:flex-col items-center gap-4 sm:gap-2 pr-6 sm:pr-0 border-r sm:border-r-0 sm:border-b border-white/10 shrink-0">
           <button
-            key={c}
-            onClick={() => setColor(c)}
-            className={cn(
-              'h-6 w-6 rounded-full border-2 transition-all',
-              color === c ? 'border-white scale-125' : 'border-transparent'
-            )}
-            style={{ backgroundColor: c }}
-            title={c}
-          />
-        ))}
+            onClick={undo}
+            className="h-9 w-9 flex items-center justify-center rounded-full text-white hover:bg-white/20 transition-colors"
+            title="Undo"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
+          <button
+            onClick={clear}
+            className="h-9 w-9 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/20 transition-colors"
+            title="Clear all"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
 
-        <div className="w-6 h-px bg-white/20 my-2" />
+        {/* Color Dots */}
+        <div className="flex flex-row sm:flex-col items-center gap-3 sm:gap-2 px-1">
+          {COLORS.map(c => (
+            <button
+              key={c}
+              onClick={() => setColor(c)}
+              className={cn(
+                'h-6 w-6 rounded-full border-2 transition-all shrink-0',
+                color === c ? 'border-white scale-125' : 'border-transparent'
+              )}
+              style={{ backgroundColor: c }}
+              title={c}
+            />
+          ))}
+        </div>
+
+        <div className="hidden sm:block w-6 h-px bg-white/20 my-1" />
+
+        {/* Size selection */}
+        <div className="flex flex-row sm:flex-col items-center gap-1 sm:gap-1 px-1 border-l sm:border-l-0 border-white/10 pl-4 sm:pl-0">
+          {[2, 5, 10].map(s => (
+            <button
+              key={s}
+              onClick={() => setSize(s)}
+              className="h-8 w-8 flex items-center justify-center group shrink-0"
+              title={`Size: ${s === 2 ? 'Thin' : s === 5 ? 'Medium' : 'Thick'}`}
+            >
+              <div className={cn(
+                'rounded-full bg-white transition-all',
+                s === 2 ? 'h-1.5 w-1.5' : s === 5 ? 'h-3 w-3' : 'h-4.5 w-4.5',
+                size === s ? 'ring-2 ring-primary ring-offset-2 ring-offset-black scale-110' : 'opacity-40 group-hover:opacity-100'
+              )} />
+            </button>
+          ))}
+        </div>
+
+        <div className="hidden sm:block w-6 h-px bg-white/20 my-1" />
 
         {/* Tools */}
-        {tools.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTool(t.id)}
-            title={t.label}
-            className={cn(
-              'h-9 w-9 flex items-center justify-center rounded-xl transition-colors',
-              activeTool === t.id ? 'bg-primary text-primary-foreground' : 'text-white hover:bg-white/20'
-            )}
-          >
-            {t.icon}
-          </button>
-        ))}
-
-        <div className="w-6 h-px bg-white/20 my-2" />
-
-        {/* Trash */}
-        <button
-          onClick={clear}
-          className="h-9 w-9 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/20 transition-colors"
-          title="Clear"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex flex-row sm:flex-col items-center gap-2 px-1 border-l sm:border-l-0 border-white/10 pl-4 sm:pl-0">
+          {tools.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTool(t.id)}
+              title={t.label}
+              className={cn(
+                'h-9 w-9 flex items-center justify-center rounded-xl transition-colors shrink-0',
+                activeTool === t.id ? 'bg-primary text-primary-foreground' : 'text-white hover:bg-white/20'
+              )}
+            >
+              {t.icon}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Export trigger (hidden, parent calls exportImage imperatively) */}
