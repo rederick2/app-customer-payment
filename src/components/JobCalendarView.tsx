@@ -330,7 +330,7 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
                 <DropdownMenuTrigger
                   className={cn(
                     buttonVariants({ variant: 'outline', size: 'icon' }),
-                    "h-9 w-9 bg-[#306C3E] text-white border-none shadow-md hover:bg-[#265832] transition-colors"
+                    "h-9 w-9 text-white border-none shadow-md hover:bg-[#265832] transition-colors"
                   )}
                 >
                   <Plus className="h-5 w-5" />
@@ -386,7 +386,7 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
 
         {/* Right Panel - Agenda / Upcoming Events */}
         <aside className="hidden xl:flex w-72 flex-col border-l border-border/40 bg-card overflow-hidden">
-          <div className="p-4 border-b border-border/40 flex items-center justify-between shrink-0 bg-[#F9F9F7]/50">
+          <div className="p-4 border-b border-border/40 flex items-center justify-between shrink-0">
             <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground/80">Upcoming Events</h3>
             <Badge variant="secondary" className="rounded-full h-5 px-1.5 min-w-[20px] justify-center text-[10px] font-black">
               {dayEvents.length}
@@ -511,8 +511,8 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
   }, [currentDate])
 
   return (
-    <div className="flex-1 flex flex-col bg-[#F9F9F7]">
-      <div className="flex border-b border-border/40 bg-[#F9F9F7]/95 backdrop-blur-md z-20">
+    <div className="flex-1 flex flex-col">
+      <div className="flex border-b border-border/40 backdrop-blur-md z-20">
         <div className="w-16 border-r border-border/40 shrink-0" />
         <div className="flex-1 grid grid-cols-7 ">
           {days.map((day) => (
@@ -534,9 +534,9 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto relative bg-[#F9F9F7]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto relative">
         <div className="flex">
-          <div className="w-16 border-r border-border/40 shrink-0 bg-[#F9F9F7] sticky left-0 z-10">
+          <div className="w-16 border-r border-border/40 shrink-0 sticky left-0 z-10">
             {HOURS.map((hour) => (
               <div key={hour} className="h-16 relative pr-2 border-b border-border/5">
                 {hour !== 0 && (
@@ -636,8 +636,8 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
   const dayVisits = visits.filter(v => isSameDay(parseISO(v.visit_date || ''), currentDate))
 
   return (
-    <div className="flex-1 flex flex-col bg-[#F9F9F7]">
-      <header className="flex border-b border-border/40 bg-[#F9F9F7]/95 backdrop-blur-md z-20">
+    <div className="flex-1 flex flex-col">
+      <header className="flex border-b border-border/40 backdrop-blur-md z-20">
         <div className="w-16 border-r border-border/40 shrink-0" />
         <div className="flex-1 px-4 py-4">
           <div className="text-[10px] uppercase tracking-wider font-bold mb-1 text-primary">
@@ -649,9 +649,9 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto relative bg-[#F9F9F7]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto relative">
         <div className="flex">
-          <div className="w-16 border-r border-border/40 shrink-0 bg-[#F9F9F7] sticky left-0 z-10">
+          <div className="w-16 border-r border-border/40 shrink-0 sticky left-0 z-10">
             {HOURS.map((hour) => (
               <div key={hour} className="h-16 relative pr-2 border-b border-border/5">
                 {hour !== 0 && (
@@ -708,8 +708,8 @@ function MonthView({ jobs, tasks, requests, visits, currentDate }: { jobs: Job[]
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   return (
-    <div className="flex-1 flex flex-col overflow-auto bg-[#F9F9F7]">
-      <div className="grid grid-cols-7 border-b border-border/40 bg-[#F9F9F7]/95 backdrop-blur-md sticky top-0 z-20">
+    <div className="flex-1 flex flex-col overflow-auto">
+      <div className="grid grid-cols-7 border-b border-border/40 backdrop-blur-md sticky top-0 z-20">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div key={day} className="py-2 text-center text-[10px] uppercase font-bold text-muted-foreground/60 border-r border-border/10 last:border-r-0">
             {day}
@@ -1285,7 +1285,7 @@ function DeleteConfirmModal({ title, description, onConfirm, trigger }: { title:
 
 function VisitDetailContent({ visit }: { visit: JobVisit }) {
   const client = getClientData(visit);
-  
+
   return (
     <div className="bg-card">
       <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
@@ -1483,12 +1483,12 @@ function VisitFormModal({ jobs, teamMembers, onClose, onSuccess }: { jobs: Job[]
 
           <div className="w-full space-y-2">
             <Label htmlFor="assigned_to">Assign To</Label>
-            <Select id="assigned_to" name="assigned_to" defaultValue={''} onValueChange={(value) => { const member = teamMembers.find((member) => member.id === value); setSelectedTeamMember(member?.name || ''); }} disabled={isSubmitting}>
+            <Select id="assigned_to" name="assigned_to" defaultValue={'unassigned'} onValueChange={(value) => { const member = teamMembers.find((member) => member.id === value); setSelectedTeamMember(member?.name || 'Unassigned'); }} disabled={isSubmitting}>
               <SelectTrigger
                 id="proforma_id"
                 className="w-full h-12"
               >
-                <SelectValue placeholder="Select a project...">
+                <SelectValue placeholder="Unassigned">
                   {selectedTeamMember}
                 </SelectValue>
               </SelectTrigger>
