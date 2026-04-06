@@ -88,15 +88,15 @@ export default async function CalendarPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8">
+    <div className="flex flex-col h-[calc(100vh-4rem)] w-full mx-auto px-4 py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 shrink-0">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-2">Calendar of Jobs</h1>
-          <p className="text-muted-foreground">Visualize and manage the dates of your scheduled projects.</p>
+          <h1 className="font-serif text-3xl font-bold tracking-tight mb-1 uppercase tracking-tighter">Calendar</h1>
+          <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60">Jobs and Schedule Overview</p>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 relative">
         <JobCalendarView
           teamMembers={(teamMembers as any) || []}
           jobs={(jobs as any) || []}

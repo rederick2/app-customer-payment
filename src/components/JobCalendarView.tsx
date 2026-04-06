@@ -117,7 +117,7 @@ const getRequestVirtualDates = (scheduleDate: string, preference?: string) => {
   else if (preference === 'anytime') virtualStart = new Date(year, month - 1, day, 10, 0, 0);
   else virtualStart = new Date(year, month - 1, day, 0, 0, 0);
 
-  const virtualEnd = new Date(virtualStart.getTime() + 60 * 60 * 4000); // 1 hour duration
+  const virtualEnd = new Date(virtualStart.getTime() + 60 * 60 * 1000); // 1 hour duration
   return {
     start: format(virtualStart, "yyyy-MM-dd'T'HH:mm:ss"),
     end: format(virtualEnd, "yyyy-MM-dd'T'HH:mm:ss")
@@ -260,14 +260,14 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
     const height = (durationMinutes / 60) * 64
 
     return {
-      top: `${top - 192}px`,
+      top: `${top}px`,
       height: `${height}px`,
       minHeight: '24px'
     }
   }
 
   return (
-    <div className="flex flex-col h-full bg-background border border-border/50 rounded-xl overflow-hidden shadow-xl animate-in fade-in duration-500">
+    <div className="flex flex-col h-full bg-background border border-border/50 rounded-xl overflow-hidden animate-in fade-in duration-500">
       <header className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 bg-card border-b border-border/40 gap-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
@@ -365,7 +365,45 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
   )
 }
 
+function CurrentTimeIndicator() {
+  const [top, setTop] = React.useState(0)
+
+  React.useEffect(() => {
+    const update = () => {
+      const now = new Date()
+      setTop((now.getHours() * 60 + now.getMinutes()) / 60 * 64)
+    }
+    update()
+    const interval = setInterval(update, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div
+      className="absolute left-0 right-0 z-40 flex items-center pointer-events-none"
+      style={{ top: `${top}px` }}
+    >
+      <div className="h-2 w-2 rounded-full bg-red-500 -ml-1 border-2 border-white shadow-sm" />
+      <div className="flex-1 h-[2px] bg-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
+    </div>
+  )
+}
+
 function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventStyle }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, days: Date[], getEventStyle: any }) {
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    const scrollToCurrentTime = () => {
+      if (scrollRef.current) {
+        const hour = new Date().getHours()
+        const scrollOffset = Math.max(0, (hour * 64) - 150)
+        scrollRef.current.scrollTop = scrollOffset
+      }
+    }
+    const timer = setTimeout(scrollToCurrentTime, 100)
+    return () => clearTimeout(timer)
+  }, [currentDate])
+
   return (
     <div className="flex-1 flex flex-col bg-[#F9F9F7]">
       <div className="flex border-b border-border/40 bg-[#F9F9F7]/95 backdrop-blur-md z-20">
@@ -390,18 +428,23 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto relative bg-[#F9F9F7]">
-        <div className="flex min-h-[1536px]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto relative bg-[#F9F9F7]">
+        <div className="flex">
           <div className="w-16 border-r border-border/40 shrink-0 bg-[#F9F9F7] sticky left-0 z-10">
             {HOURS.map((hour) => (
-              <div key={hour} className="h-16 -mt-3 pr-3 text-right text-[10px] font-bold text-muted-foreground/50 tabular-nums">
-                {hour === 0 ? '' : `${hour}:00`}
+              <div key={hour} className="h-16 relative pr-2 border-b border-border/5">
+                {hour !== 0 && (
+                  <span className="absolute -top-[7px] right-2 text-[10px] font-bold text-muted-foreground/40 tabular-nums">
+                    {hour}:00
+                  </span>
+                )}
               </div>
             ))}
           </div>
 
           <div className="flex-1 grid grid-cols-7 relative">
             {days.map((day) => {
+              const isTodayDay = isToday(day)
               const dayJobs = jobs.filter(j => {
                 const s = parseISO(j.job_start_at || '');
                 const e = parseISO(j.job_end_at || '');
@@ -433,7 +476,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                       <RequestCard key={request.id} request={request} style={{
                         ...getEventStyle(start, end, day),
                         left: `${10 + (idx * 5)}%`,
-                        width: '50%',
+                        width: `${40}%`,
                         zIndex: 35
                       }} />
                     );
@@ -446,6 +489,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                       zIndex: 38
                     }} />
                   ))}
+                  {isTodayDay && <CurrentTimeIndicator />}
                 </div>
               )
             })}
@@ -457,6 +501,20 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
 }
 
 function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, getEventStyle: any }) {
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    const scrollToCurrentTime = () => {
+      if (scrollRef.current) {
+        const hour = new Date().getHours()
+        const scrollOffset = Math.max(0, (hour * 64) - 150)
+        scrollRef.current.scrollTop = scrollOffset
+      }
+    }
+    const timer = setTimeout(scrollToCurrentTime, 100)
+    return () => clearTimeout(timer)
+  }, [currentDate])
+
   const dayJobs = jobs.filter(j => {
     const s = parseISO(j.job_start_at || '');
     const e = parseISO(j.job_end_at || '');
@@ -485,8 +543,8 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto relative bg-[#F9F9F7]">
-        <div className="flex min-h-[1536px]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto relative bg-[#F9F9F7]">
+        <div className="flex">
           <div className="w-16 border-r border-border/40 shrink-0 bg-[#F9F9F7] sticky left-0 z-10">
             {HOURS.map((hour) => (
               <div key={hour} className="h-16 -mt-3 pr-3 text-right text-[10px] font-bold text-muted-foreground/50 tabular-nums">
@@ -496,6 +554,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
           </div>
 
           <div className="flex-1 relative">
+            {isToday(currentDate) && <CurrentTimeIndicator />}
             {HOURS.map((hour) => (
               <div key={hour} className="h-16 border-b border-border/40 last:border-b-0" />
             ))}
@@ -510,8 +569,8 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
               return (
                 <RequestCard key={request.id} request={request} style={{
                   ...getEventStyle(start, end, currentDate),
-                  left: `${10 + (idx * 5)}%`,
-                  width: '50%',
+                  left: `${10 + (idx * 15)}%`,
+                  width: '42%',
                   zIndex: 35
                 }} />
               );
@@ -840,6 +899,29 @@ function VisitDetailContent({ visit }: { visit: JobVisit }) {
           )}
         </div>
 
+        <div className="pt-4 border-t border-border/10">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Reminders</p>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={getGoogleCalendarUrl(visit.proformas?.project_name || '', `Job: ${visit.proformas?.project_name}`, visit.visit_date, new Date(new Date(visit.visit_date).getTime() + 60 * 60 * 1000).toISOString(), client?.street_1 || '')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-blue-100 hover:bg-blue-50 hover:text-blue-700 text-blue-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Google Calendar
+            </a>
+            <a
+              href={getAppleCalendarData(visit.proformas?.project_name || '', `Job: ${visit.proformas?.project_name}`, visit.visit_date, new Date(new Date(visit.visit_date).getTime() + 60 * 60 * 1000).toISOString(), client?.street_1 || '')}
+              download={`${visit.proformas?.project_name.replace(/\s+/g, '_')}.ics`}
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-slate-100 hover:bg-slate-50 hover:text-slate-700 text-slate-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Apple Calendar
+            </a>
+          </div>
+        </div>
+
         <div className="pt-3 border-t border-border/10 pt-4">
           <a
             href={`/proforma/${visit.proforma_id}`}
@@ -1098,7 +1180,28 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
             </div>
           </div>
         </div>
-
+        <div className="pt-4 border-t border-border/10">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Reminders</p>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={getGoogleCalendarUrl(request.proformas?.project_name || '', `Job: ${request.proformas?.project_name}`, request.schedule_date, request.schedule_date, client?.street_1 || '')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-blue-100 hover:bg-blue-50 hover:text-blue-700 text-blue-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Google Calendar
+            </a>
+            <a
+              href={getAppleCalendarData(request.proformas?.project_name || '', `Job: ${request.proformas?.project_name}`, request.schedule_date, request.schedule_date, client?.street_1 || '')}
+              download={`${request.proformas?.project_name.replace(/\s+/g, '_')}.ics`}
+              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-slate-100 hover:bg-slate-50 hover:text-slate-700 text-slate-600 transition-colors")}
+            >
+              <CalendarIcon className="h-3 w-3" />
+              Apple Calendar
+            </a>
+          </div>
+        </div>
         <div className="pt-3 border-t border-border/10 pt-4">
           <a
             href={`/proforma/${request.proforma_id}`}
