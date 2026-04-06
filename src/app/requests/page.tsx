@@ -20,7 +20,7 @@ function StatusBadge({ status }: { status: string }) {
     case 'completed':
       return <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20">Completed</Badge>;
     case 'cancelled':
-      return <Badge variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20">Cancelled</Badge>;
+      return <Badge variant="destructive" className="bg-red-500/10 text-red-700 border-red-500/20 shadow-sm">Cancelled</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -70,7 +70,7 @@ export default async function AdminRequestsView() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
       <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold tracking-tight mb-2">Service Requests</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Service Requests</h1>
         <p className="text-muted-foreground">Manage requests sent by your clients.</p>
       </div>
 
@@ -85,20 +85,20 @@ export default async function AdminRequestsView() {
 
             return (
               <Card key={request.id} className="border-border/50 shadow-sm overflow-hidden">
-                <CardHeader className="bg-muted/30 border-b border-border/50 pb-4 flex flex-row items-center justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg font-medium flex items-center gap-2">
-                      {clientName}
-                      <span className="text-muted-foreground text-sm font-normal">/</span>
-                      <Link href={`/proforma/${request.proforma_id}`} className="hover:underline text-primary">
+                <CardHeader className="bg-muted/30 border-b border-border/50 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1.5 min-w-0">
+                    <CardTitle className="text-base sm:text-lg font-bold flex flex-wrap items-center gap-x-2 gap-y-1 text-[#0D3B47]">
+                      <span className="truncate max-w-[200px] sm:max-w-none">{clientName}</span>
+                      <span className="text-muted-foreground/40 font-normal">/</span>
+                      <Link href={`/proforma/${request.proforma_id}`} className="hover:underline text-primary truncate max-w-[200px] sm:max-w-none">
                         {(request.proformas as any).project_name}
                       </Link>
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-tight">
                       Received on {new Date(request.created_at).toLocaleDateString('es-ES')} at {new Date(request.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/10">
                     <StatusBadge status={request.status} />
                     <AdminRequestActions requestId={request.id} currentStatus={request.status} />
                   </div>

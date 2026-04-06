@@ -55,6 +55,7 @@ export default async function CalendarPage() {
         )
       )
     `)
+    .not('status', 'eq', 'cancelled')
     .order('schedule_date', { ascending: true });
 
   // Fetch job visits

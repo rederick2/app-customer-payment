@@ -89,25 +89,25 @@ export default function PhotoCard({ photo, onDelete, onUpdate, onExpand, compact
           {photo.is_public ? 'Public' : 'Private'}
         </div>
 
-        {/* Hover controls */}
+        {/* Action buttons (always visible on mobile) */}
         {!compact && (
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-2 gap-1.5">
+          <div className="absolute inset-0 sm:bg-black/40 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex items-start justify-end p-2 gap-1.5 z-10">
             {onExpand && (
               <button
                 onClick={() => onExpand(photo)}
-                className="h-7 w-7 flex items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 transition-colors"
+                className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/50 backdrop-blur-md text-white hover:bg-black/80 transition-colors shadow-lg"
               >
-                <Maximize2 className="h-3.5 w-3.5" />
+                <Maximize2 className="h-4 w-4" />
               </button>
             )}
             <Dialog open={editing} onOpenChange={setEditing}>
               <DialogTrigger render={
                 <button
-                  className="h-7 w-7 flex items-center justify-center rounded-lg bg-black/60 text-white hover:bg-primary/80 transition-colors"
+                  className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/50 backdrop-blur-md text-white hover:bg-primary/80 transition-colors shadow-lg"
                   title="Edit details"
                 />
               }>
-                <Pencil className="h-3.5 w-3.5" />
+                <Pencil className="h-4 w-4" />
               </DialogTrigger>
 
               <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden rounded-xl">
@@ -186,9 +186,9 @@ export default function PhotoCard({ photo, onDelete, onUpdate, onExpand, compact
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="h-7 w-7 flex items-center justify-center rounded-lg bg-black/60 text-white hover:bg-red-500/80 transition-colors"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/50 backdrop-blur-md text-white hover:bg-red-500/80 transition-colors shadow-lg"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" />
             </button>
           </div>
         )}

@@ -30,3 +30,26 @@ export async function updateRequestStatus(requestId: string, newStatus: string) 
   revalidatePath(`/p/[id]/requests`, 'page');
   return { success: true };
 }
+
+export async function deleteRequest(requestId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const { error } = await supabase
+    .from('service_requests')
+    .delete()
+    .eq('id', requestId);
+
+  if (error) {
+    console.error('Error deleting request:', error);
+    return { error: 'Error al eliminar la solicitud' };
+  }
+
+  revalidatePath('/requests');
+  revalidatePath(`/p/[id]/requests`, 'page');
+  return { success: true };
+}

@@ -26,10 +26,13 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { deleteRequest } from '@/app/requests/components/actions'
+import { deleteJobVisit } from '@/app/calendar/actions'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -55,6 +58,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
+import { Trash2, AlertTriangle } from 'lucide-react'
 import {
   format,
   addDays,
@@ -80,6 +84,7 @@ import {
 } from 'date-fns'
 import { enUS } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
 const getGoogleCalendarUrl = (title: string, description: string, start: string, end: string, address: string) => {
   const formatGoogleDate = (d: string) => format(parseISO(d), "yyyyMMdd'T'HHmmss");
@@ -936,110 +941,6 @@ function VisitCard({ visit, style }: { visit: JobVisit, style: React.CSSProperti
   )
 }
 
-function VisitDetailContent({ visit }: { visit: JobVisit }) {
-  const client = getClientData(visit);
-
-  return (
-    <div className="bg-card">
-      <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-teal-500" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Visit Details</span>
-        </div>
-        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0 h-4.5 bg-teal-50 text-teal-700 border-teal-100">
-          {visit.status}
-        </Badge>
-      </div>
-
-      <div className="p-5 space-y-4">
-        <div>
-          <h4 className="text-lg font-bold text-foreground leading-tight">{visit.proformas?.project_name || 'Customer Visit'}</h4>
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Job #{visit.proformas?.number}</p>
-        </div>
-
-        <div className="space-y-3 pt-2">
-          <div className="flex gap-3">
-            <div className="h-8 w-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
-              <User className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Assigned To</p>
-              <p className="text-sm font-semibold text-foreground">{visit.team_members?.name}</p>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="h-8 w-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
-              <Clock className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Schedule</p>
-              <p className="text-sm font-semibold text-foreground">{format(parseISO(visit.visit_date), 'MMM d, p')}</p>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="h-8 w-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
-              <MapPin className="h-4 w-4 text-teal-600" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Location</p>
-              <p className="text-sm font-semibold text-foreground">{client?.company_name || client?.name || 'Local Site'}</p>
-              {client?.street_1 && (
-                <p className="text-xs text-muted-foreground mt-0.5">{client.street_1}</p>
-              )}
-            </div>
-          </div>
-
-          {visit.notes && (
-            <div className="flex gap-3">
-              <div className="h-8 w-8 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
-                <FileText className="h-4 w-4 text-teal-600" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Notes</p>
-                <p className="text-xs text-muted-foreground mt-0.5 whitespace-pre-wrap">{visit.notes}</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="pt-4 border-t border-border/10">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Reminders</p>
-          <div className="grid grid-cols-2 gap-2">
-            <a
-              href={getGoogleCalendarUrl(visit.proformas?.project_name || '', `Job: ${visit.proformas?.project_name}`, visit.visit_date, new Date(new Date(visit.visit_date).getTime() + 60 * 60 * 1000).toISOString(), client?.street_1 || '')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-blue-100 hover:bg-blue-50 hover:text-blue-700 text-blue-600 transition-colors")}
-            >
-              <CalendarIcon className="h-3 w-3" />
-              Google Calendar
-            </a>
-            <a
-              href={getAppleCalendarData(visit.proformas?.project_name || '', `Job: ${visit.proformas?.project_name}`, visit.visit_date, new Date(new Date(visit.visit_date).getTime() + 60 * 60 * 1000).toISOString(), client?.street_1 || '')}
-              download={`${visit.proformas?.project_name.replace(/\s+/g, '_')}.ics`}
-              className={cn(buttonVariants({ variant: 'outline' }), "h-9 text-[10px] font-bold gap-1.5 border-slate-100 hover:bg-slate-50 hover:text-slate-700 text-slate-600 transition-colors")}
-            >
-              <CalendarIcon className="h-3 w-3" />
-              Apple Calendar
-            </a>
-          </div>
-        </div>
-
-        <div className="pt-3 border-t border-border/10 pt-4">
-          <a
-            href={`/proforma/${visit.proforma_id}`}
-            className={cn(buttonVariants({ variant: 'default' }), "w-full h-10 text-xs font-bold gap-2 bg-teal-600 hover:bg-teal-700")}
-          >
-            Review Job Record
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function JobDetailContent({ job }: { job: Job }) {
   const client = getClientData(job);
@@ -1307,7 +1208,7 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
             </a>
           </div>
         </div>
-        <div className="pt-3 border-t border-border/10 pt-4">
+        <div className="pt-3 border-t border-border/10 flex flex-col gap-2">
           <a
             href={`/proforma/${request.proforma_id}`}
             className={cn(buttonVariants({ variant: 'default' }), "w-full h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
@@ -1315,6 +1216,153 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
             Review Request
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
+
+          <DeleteConfirmModal
+            title="Delete Request?"
+            description="Are you sure you want to delete this service request? This action cannot be undone."
+            onConfirm={async () => {
+              const res = await deleteRequest(request.id);
+              if (res.error) toast.error(res.error);
+              else {
+                toast.success('Request deleted');
+                window.location.reload();
+              }
+            }}
+            trigger={
+              <Button variant="ghost" className="w-full h-9 text-[10px] font-bold text-red-600 hover:text-red-700 hover:bg-red-50 gap-1.5 transition-colors">
+                <Trash2 className="h-3 w-3" />
+                Delete Request
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DeleteConfirmModal({ title, description, onConfirm, trigger }: { title: string, description: string, onConfirm: () => Promise<void>, trigger: React.ReactNode }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <div onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}>
+        {trigger}
+      </div>
+      <DialogContent className="sm:max-w-[400px] z-[2000]" onClick={(e) => e.stopPropagation()}>
+        <DialogHeader>
+          <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+            <AlertTriangle className="h-6 w-6 text-red-600" />
+          </div>
+          <DialogTitle className="text-center text-xl">{title}</DialogTitle>
+          <DialogDescription className="text-center">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
+          <Button variant="outline" className="flex-1" onClick={() => setIsOpen(false)} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex-1 font-bold"
+            disabled={isDeleting}
+            onClick={async () => {
+              setIsDeleting(true);
+              await onConfirm();
+              setIsDeleting(false);
+              setIsOpen(false);
+            }}
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Confirm Delete'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function VisitDetailContent({ visit }: { visit: JobVisit }) {
+  const client = getClientData(visit);
+  
+  return (
+    <div className="bg-card">
+      <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-teal-500" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Visit Details</span>
+        </div>
+        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2 py-0 h-4.5 bg-teal-50 text-teal-700 border-teal-100">
+          {visit.status}
+        </Badge>
+      </div>
+
+      <div className="p-5 space-y-4">
+        <div>
+          <h4 className="text-lg font-bold text-foreground leading-tight">
+            {visit.proformas?.project_name || 'Site Visit'}
+          </h4>
+          {visit.notes && <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{visit.notes}</p>}
+        </div>
+
+        <div className="space-y-3 pt-2">
+          <div className="flex gap-3">
+            <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+              <Clock className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Schedule</p>
+              <p className="text-sm font-semibold text-foreground">{format(parseISO(visit.visit_date), 'MMM d, p')}</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+              <User className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Assigned to</p>
+              <p className="text-sm font-semibold text-foreground">{visit.team_members?.name || 'Unassigned'}</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="h-8 w-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+              <MapPin className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Address</p>
+              <p className="text-sm font-semibold text-foreground">{client?.street_1 || 'Unassigned'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-border/10 flex flex-col gap-2">
+          <a
+            href={`/proforma/${visit.proforma_id}`}
+            className={cn(buttonVariants({ variant: 'default' }), "w-full h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
+          >
+            Go to project
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+
+          <DeleteConfirmModal
+            title="Delete Visit?"
+            description="Are you sure you want to delete this scheduled visit? This action cannot be undone."
+            onConfirm={async () => {
+              const res = await deleteJobVisit(visit.id);
+              if (res.error) toast.error(res.error);
+              else {
+                toast.success('Visit deleted');
+                window.location.reload();
+              }
+            }}
+            trigger={
+              <Button variant="ghost" className="w-full h-9 text-[10px] font-bold text-red-600 hover:text-red-700 hover:bg-red-50 gap-1.5 transition-colors">
+                <Trash2 className="h-3 w-3" />
+                Delete Visit
+              </Button>
+            }
+          />
         </div>
       </div>
     </div>
@@ -1324,6 +1372,7 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
 function VisitFormModal({ jobs, teamMembers, onClose, onSuccess }: { jobs: Job[], teamMembers: any[], onClose: () => void, onSuccess: () => void }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [selectedJobId, setSelectedJobId] = React.useState('');
+  const [selectedTeamMember, setSelectedTeamMember] = React.useState('');
   const [comboboxOpen, setComboboxOpen] = React.useState(false);
   const supabase = createClient();
 
@@ -1432,19 +1481,23 @@ function VisitFormModal({ jobs, teamMembers, onClose, onSuccess }: { jobs: Job[]
             </Popover>
           </div>
 
-          <div className="space-y-2">
+          <div className="w-full space-y-2">
             <Label htmlFor="assigned_to">Assign To</Label>
-            <select
-              id="assigned_to"
-              name="assigned_to"
-              defaultValue={''}
-              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Unassigned</option>
-              {teamMembers.map(member => (
-                <option key={member.id} value={member.id}>{member.name}</option>
-              ))}
-            </select>
+            <Select id="assigned_to" name="assigned_to" defaultValue={''} onValueChange={(value) => { const member = teamMembers.find((member) => member.id === value); setSelectedTeamMember(member?.name || ''); }} disabled={isSubmitting}>
+              <SelectTrigger
+                id="proforma_id"
+                className="w-full h-12"
+              >
+                <SelectValue placeholder="Select a project...">
+                  {selectedTeamMember}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map(member => (
+                  <SelectItem key={member.id} value={member.id}>{member.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

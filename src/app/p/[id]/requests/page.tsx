@@ -34,7 +34,7 @@ export default async function ClientRequestsView({ params }: Props) {
   return (
     <div className="container mx-auto px-6 py-8 md:p-12 max-w-5xl animate-in fade-in duration-500">
       <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-[#0D3B47] mb-2">My Requests</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-[#0D3B47] mb-2">My Requests</h1>
         <p className="text-muted-foreground">
           Requests associated with the proforma <span className="font-medium text-foreground">{proforma.project_name}</span>.
         </p>
@@ -43,10 +43,10 @@ export default async function ClientRequestsView({ params }: Props) {
       <div className="grid gap-6">
         {requests && requests.length > 0 ? (
           requests.map((request) => (
-            <RequestCard 
-              key={request.id} 
-              request={request} 
-              storageUrl={supabase.storage.from('request-images').getPublicUrl('').data.publicUrl} 
+            <RequestCard
+              key={request.id}
+              request={request}
+              storageUrl={supabase.storage.from('request-images').getPublicUrl('').data.publicUrl}
             />
           ))
         ) : (

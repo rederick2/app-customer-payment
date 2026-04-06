@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import PhotoCard, { Photo } from './components/PhotoCard';
 import PhotoUploadModal from './components/PhotoUploadModal';
 import { Combobox } from '@/components/ui/combobox';
+import { Button } from '@/components/ui/button';
 
 interface Proforma { id: string; project_name: string; number: number }
 
@@ -59,41 +60,51 @@ export default function GalleryClient({ initialPhotos, proformas }: GalleryClien
         <PhotoUploadModal
           proformas={proformas}
           onUploaded={() => window.location.reload()}
+          trigger={
+            <Button size="lg" className="w-full md:w-auto h-11 md:h-10 bg-[#A28441] hover:bg-[#8B7137] text-white font-bold gap-2 rounded-xl shadow-lg shadow-[#A28441]/20 transition-all active:scale-[0.98]">
+              <Camera className="h-5 w-5 md:h-4 md:w-4" />
+              Add Photo
+            </Button>
+          }
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-8">
+        <div className="relative w-full sm:flex-1 sm:min-w-[240px] sm:max-w-sm group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search photos..."
-            className="w-full pl-9 pr-3 h-9 text-sm border border-border/40 rounded-xl bg-background outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder="Search by project, caption..."
+            className="w-full pl-11 pr-4 h-11 sm:h-10 text-sm border border-border/60 rounded-xl bg-background outline-none transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary/50 shadow-sm"
           />
         </div>
 
-        <Combobox
-          options={[
-            { value: '', label: 'All Projects' },
-            ...proformas.map(p => ({ value: p.id, label: `#${p.number} – ${p.project_name}` }))
-          ]}
-          value={filterProject}
-          onValueChange={setFilterProject}
-          placeholder="Filter by project..."
-          searchPlaceholder="Search projects..."
-          className="w-[240px]"
-        />
+        <div className="w-full sm:w-[260px]">
+          <Combobox
+            options={[
+              { value: '', label: 'All Projects' },
+              ...proformas.map(p => ({ value: p.id, label: `#${p.number} – ${p.project_name}` }))
+            ]}
+            value={filterProject}
+            onValueChange={setFilterProject}
+            placeholder="Filter by project..."
+            searchPlaceholder="Search projects..."
+            className="w-full h-11 sm:h-10 rounded-xl"
+            modal={true}
+          />
+        </div>
 
-        <div className="flex rounded-xl border border-border/40 overflow-hidden">
+        <div className="flex w-full sm:w-auto bg-muted/30 p-1 rounded-xl border border-border/40 shadow-sm shrink-0">
           {(['all', 'public', 'private'] as const).map(v => (
             <button
               key={v}
               onClick={() => setFilterVisibility(v)}
               className={cn(
-                'flex items-center gap-1.5 px-3 h-9 text-xs font-bold transition-colors',
-                filterVisibility === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted/50'
+                'flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 h-9 sm:h-8 text-xs font-bold transition-all rounded-lg',
+                filterVisibility === v
+                  ? 'bg-white text-primary shadow-sm ring-1 ring-black/5'
+                  : 'text-muted-foreground hover:bg-white/50 hover:text-foreground'
               )}
             >
               {v === 'public' && <Globe className="h-3.5 w-3.5" />}
