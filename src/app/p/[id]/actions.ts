@@ -16,7 +16,7 @@ async function logStatusChange(proformaId: string, newStatus: string, oldStatus?
     });
 }
 
-async function insertNotification(proformaId: string, type: string, message: string) {
+export async function insertNotification(proformaId: string, type: string, message: string) {
   const supabase = createAdminClient();
   const { data: proforma } = await supabase
     .from('proformas')

@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { uploadToFtp } from '@/lib/ftp';
+import { insertNotification } from '../actions';
 
 export async function submitServiceRequest(proformaId: string, formData: FormData) {
   try {
@@ -56,6 +57,9 @@ export async function submitServiceRequest(proformaId: string, formData: FormDat
       console.error('Error inserting service request:', insertError);
       return { success: false, error: 'Ocurrió un error al guardar la solicitud. ' + insertError.message };
     }
+
+    // Inserción en la base de datos de notificaciones para el administrador
+    await insertNotification(proformaId, 'request', `New service request submitted: ${details.substring(0, 50)}${details.length > 50 ? '...' : ''}`);
 
     // Actualizar vista
     revalidatePath(`/p/${proformaId}`);

@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImagePlus, X, CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { enUS, es } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -200,10 +200,10 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
                     <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
                     {date ? (
                       <span className="font-medium text-foreground">
-                        {format(date, 'PPP', { locale: es })}
+                        {format(date, 'PPP', { locale: enUS })}
                       </span>
                     ) : (
-                      <span>Seleccionar una fecha</span>
+                      <span>Select a date</span>
                     )}
                   </Button>
                 }
@@ -217,7 +217,7 @@ export default function ServiceRequestForm({ proformaId, clientName }: { proform
                   selected={date}
                   onSelect={setDate}
                   initialFocus
-                  locale={es}
+                  locale={enUS}
                   disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                   className="rounded-xl"
                 />
