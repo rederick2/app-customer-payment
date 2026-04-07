@@ -70,11 +70,11 @@ export default function QuotePreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-none max-w-[1300px] w-[95vw] h-[92vh] p-0 overflow-hidden flex flex-col bg-[#F8F9FA] rounded-2xl border-none shadow-3xl">
-        <DialogHeader className="p-6 px-8 border-b bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0">
+      <DialogContent className="sm:max-w-none max-w-[1300px] w-[95vw] h-[92vh] p-0 overflow-hidden flex flex-col bg-[#F8F9FA] rounded-[2.5rem] border-none shadow-3xl">
+        <DialogHeader className="p-8 px-10 border-b border-border/40 bg-background flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            <DialogTitle className="text-2xl font-bold text-primary tracking-tight">
-              Vista Previa para Cliente
+            <DialogTitle className="font-['Archivo_Black'] text-xl tracking-tight">
+              CLIENT PREVIEW
             </DialogTitle>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100/50">
                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -89,40 +89,40 @@ export default function QuotePreviewModal({
               size="sm"
               disabled={!isMounted || isGenerating}
               onClick={handleDownloadPDF}
-              className="h-10 gap-2 border-border/60 hover:bg-muted/50 font-bold px-4"
+              className="h-11 gap-2 border-border/60 hover:bg-muted/50 px-6 rounded-xl"
             >
               {isGenerating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {isGenerating ? 'Preparando...' : 'Descargar PDF'}
+              {isGenerating ? 'PREPARING...' : 'DOWNLOAD PDF'}
             </Button>
 
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handlePrint}
-              className="h-10 gap-2 border-border/60 hover:bg-muted/50 font-bold px-4"
+              className="h-11 gap-2 border-border/60 hover:bg-muted/50 px-6 rounded-xl"
             >
               <Printer className="h-4 w-4" />
-              Imprimir
+              PRINT
             </Button>
 
             <Button 
               variant="default" 
               size="sm" 
               onClick={onSendEmail}
-              className="h-10 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 shadow-lg shadow-primary/10"
+              className="h-11 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 shadow-xl shadow-primary/20 rounded-xl"
             >
               <Mail className="h-4 w-4" />
-              Enviar por Email
+              SEND EMAIL
             </Button>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-12 pt-8 scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent">
-          <div className="max-w-5xl mx-auto bg-card shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] rounded-[2rem] overflow-hidden border border-border/10">
+        <div className="flex-1 overflow-y-auto p-12 pt-8 scrollbar-thin scrollbar-thumb-border/40 scrollbar-track-transparent bg-muted/5">
+          <div className="max-w-5xl mx-auto bg-card shadow-[0_32px_64px_-16px_rgba(0,0,0,0.15)] rounded-[2.5rem] overflow-hidden border border-border/10">
             <QuoteView 
                 proforma={proforma} 
                 items={items} 

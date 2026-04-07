@@ -137,7 +137,7 @@ export default function NewClientPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Clients
         </Link>
-        <h1 className="font-serif text-3xl font-bold tracking-tight">New Client</h1>
+        <h1 className=" text-3xl font-bold tracking-tight">New Client</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -145,7 +145,7 @@ export default function NewClientPage() {
         {/* Contact Details */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Contact Details</CardTitle>
+            <CardTitle className="text-lg ">Contact Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -194,7 +194,7 @@ export default function NewClientPage() {
         {/* Extra Phones */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Additional Phones</CardTitle>
+            <CardTitle className="text-lg ">Additional Phones</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -225,7 +225,7 @@ export default function NewClientPage() {
         {/* Property Address */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Address (Property Address)</CardTitle>
+            <CardTitle className="text-lg ">Address (Property Address)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -275,7 +275,7 @@ export default function NewClientPage() {
         {/* Billing Address */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Billing Address</CardTitle>
+            <CardTitle className="text-lg ">Billing Address</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center space-x-2">
@@ -321,7 +321,7 @@ export default function NewClientPage() {
         {/* Preferences */}
         <Card className="shadow-sm border-border/50">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-serif">Preferences</CardTitle>
+            <CardTitle className="text-lg ">Preferences</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">

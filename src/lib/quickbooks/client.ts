@@ -412,4 +412,75 @@ export class QuickBooksClient {
 
     return await this.handleResponse(response, 'Create Purchase');
   }
+
+  async getEmployees() {
+    await this.ensureValidToken();
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/query?query=select * from Employee where Active = true&minorversion=70`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.oauthClient.getToken().access_token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    const data = await this.handleResponse(response, 'Get Employees');
+    return data?.QueryResponse?.Employee || [];
+  }
+
+  async createTimeActivity(timeActivity: {
+    employeeRef?: string;
+    vendorRef?: string;
+    customerRef?: string;
+    date: string; // YYYY-MM-DD
+    startTime?: string; // YYYY-MM-DDTHH:mm:ss
+    endTime?: string;
+    hours?: number;
+    minutes?: number;
+    description?: string;
+    nameOf: 'Employee' | 'Vendor';
+  }) {
+    await this.ensureValidToken();
+    const url = `https://${this.baseUrl}/v3/company/${this.realmId}/timeactivity?minorversion=70`;
+
+    const body: any = {
+      TxnDate: timeActivity.date,
+      NameOf: timeActivity.nameOf,
+    };
+
+    if (timeActivity.nameOf === 'Employee' && timeActivity.employeeRef) {
+      body.EmployeeRef = { value: timeActivity.employeeRef };
+    } else if (timeActivity.nameOf === 'Vendor' && timeActivity.vendorRef) {
+      body.VendorRef = { value: timeActivity.vendorRef };
+    }
+
+    if (timeActivity.customerRef) {
+      body.CustomerRef = { value: timeActivity.customerRef };
+    }
+
+    if (timeActivity.description) {
+      body.Description = timeActivity.description;
+    }
+
+    if (timeActivity.startTime && timeActivity.endTime) {
+      body.StartTime = timeActivity.startTime;
+      body.EndTime = timeActivity.endTime;
+    } else if (timeActivity.hours !== undefined && timeActivity.minutes !== undefined) {
+      body.Hours = timeActivity.hours;
+      body.Minutes = timeActivity.minutes;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.oauthClient.getToken().access_token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    return await this.handleResponse(response, 'Create Time Activity');
+  }
 }

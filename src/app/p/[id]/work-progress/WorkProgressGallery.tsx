@@ -32,7 +32,7 @@ export default function WorkProgressGallery({ mediaByTask }: WorkProgressGallery
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center opacity-60">
         <Camera className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="text-xl font-serif font-bold text-foreground mb-1">No progress photos yet</h2>
+        <h2 className="text-xl  font-bold text-foreground mb-1">No progress photos yet</h2>
         <p className="text-sm text-muted-foreground">Photos and videos will appear here as tasks are completed.</p>
       </div>
     );
@@ -48,7 +48,7 @@ export default function WorkProgressGallery({ mediaByTask }: WorkProgressGallery
               {group.taskTitle}
             </h3>
           </div>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {group.items.map((m) => (
               <div
@@ -78,7 +78,7 @@ export default function WorkProgressGallery({ mediaByTask }: WorkProgressGallery
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 )}
-                
+
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                   <div className="flex items-center justify-between text-white">
@@ -152,7 +152,7 @@ export default function WorkProgressGallery({ mediaByTask }: WorkProgressGallery
                     className="max-w-full max-h-[75vh] object-contain shadow-2xl rounded-xl ring-1 ring-white/10"
                   />
                 )}
-                
+
                 {selectedMedia.caption && (
                   <div className="absolute -bottom-10 left-0 right-0 text-center">
                     <p className="text-white/80 text-sm italic font-medium">
@@ -176,13 +176,13 @@ export default function WorkProgressGallery({ mediaByTask }: WorkProgressGallery
 
 function ZoomInIcon({ className }: { className?: string }) {
   return (
-    <svg 
-      className={className} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2.5" 
-      strokeLinecap="round" 
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
       <circle cx="11" cy="11" r="8" />

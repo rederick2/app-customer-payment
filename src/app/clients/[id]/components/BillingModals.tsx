@@ -420,11 +420,11 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
             <Textarea id="notes" name="notes" placeholder="Additional details..." className="rounded-xl border-border/60 min-h-[80px]" />
           </div>
 
-          <DialogFooter className="pt-6 border-t border-border/40 mt-4 gap-3">
+          <DialogFooter className="">
             <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="bg-secundary hover:bg-secundary/90 text-secundary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-8 h-11 shadow-md transition-all hover:scale-105 active:scale-95">
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-8 h-11 shadow-md transition-all hover:scale-105 active:scale-95" disabled={isSubmitting}>
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-8 h-11 shadow-md transition-all" disabled={isSubmitting}>
               {isSubmitting ? 'Saving...' : 'Confirm Record'}
             </Button>
           </DialogFooter>

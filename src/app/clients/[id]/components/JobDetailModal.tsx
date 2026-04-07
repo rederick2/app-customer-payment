@@ -37,7 +37,7 @@ export function JobDetailModal({ isOpen, onClose, proforma, payments, expenses, 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-none shadow-lg border-border/40">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-lg border-border/40">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase text-[10px] rounded-none">

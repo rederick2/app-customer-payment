@@ -149,7 +149,7 @@ function EmptyState({ icon, title, description }: { icon: React.ReactNode, title
       <div className="bg-muted/30 p-6 rounded-full mb-6">
         {icon}
       </div>
-      <h3 className="text-xl font-serif font-black text-[#0D3B47] tracking-tight">{title}</h3>
+      <h3 className="text-xl  font-black text-[#0D3B47] tracking-tight">{title}</h3>
       <p className="text-muted-foreground mt-2 max-w-sm text-center font-medium opacity-70 italic">
         {description}
       </p>

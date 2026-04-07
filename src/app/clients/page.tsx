@@ -121,7 +121,7 @@ export default async function ClientsPage(
           <p className="text-muted-foreground text-sm">Manage your contacts and their information.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-stretch sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-10 w-full sm:w-auto items-stretch sm:items-center">
           <div className="flex-1 sm:w-64">
             <ClientSearchInput />
           </div>
@@ -130,7 +130,7 @@ export default async function ClientsPage(
               <ImportClientsModal />
             </div>*/}
             <Link href="/clients/new" className="flex-1 sm:flex-initial">
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-1 whitespace-nowrap">
+              <Button className="w-full bg-primary">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New Client
               </Button>
@@ -258,7 +258,7 @@ export default async function ClientsPage(
       {!clients || clients.length === 0 ? (
         <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
           <Users className="h-16 w-16 text-muted/20 mb-4" />
-          <p className="text-lg font-serif italic text-foreground/70">No clients found in directory.</p>
+          <p className="text-lg  italic text-foreground/70">No clients found in directory.</p>
           <Link href="/clients/new" className="mt-6">
             <Button variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/5 px-8">
               Add your first client

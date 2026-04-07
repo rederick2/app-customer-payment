@@ -166,7 +166,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
             Client Directory
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">{clientName}</h1>
+            <h1 className=" text-3xl md:text-4xl font-bold tracking-tight">{clientName}</h1>
             {client.company_name && (
               <Badge variant="secondary" className="mt-1">Company</Badge>
             )}
@@ -406,7 +406,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                                           </DropdownMenuItem>
                                           <DropdownMenuSeparator />
                                           <DropdownMenuItem className="p-0">
-                                            <Link 
+                                            <Link
                                               href={`/invoices/${inv.id}/edit`}
                                               className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-muted"
                                             >
@@ -604,7 +604,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                   </DropdownMenuItem>
                   <div className="h-px bg-muted my-1" />
                   <DropdownMenuItem className="p-0">
-                    <Link 
+                    <Link
                       href={`/clients/${client.id}/invoices/new`}
                       className="flex w-full items-center gap-2 px-3 py-2 font-medium rounded-xl transition-colors hover:bg-muted"
                     >
@@ -680,7 +680,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                 </div>
                 <div className="flex justify-between items-end">
                   <div className={cn(
-                    "text-3xl font-bold font-serif tabular-nums tracking-tight",
+                    "text-3xl font-bold  tabular-nums tracking-tight",
                     balance > 0 ? "text-destructive" : "text-primary"
                   )}>
                     ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}

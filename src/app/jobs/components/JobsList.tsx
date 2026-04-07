@@ -128,7 +128,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
           ) : (
             <div className="p-20 text-center text-muted-foreground flex flex-col items-center">
               <FileText className="h-20 w-20 text-muted/20 mb-4" />
-              <p className="text-xl font-serif italic text-muted-foreground/60">No matching jobs found.</p>
+              <p className="text-xl  italic text-muted-foreground/60">No matching jobs found.</p>
               {searchTerm && (
                 <Button
                   variant="link"
@@ -256,7 +256,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
           ))
         ) : (
           <div className="py-20 text-center text-muted-foreground">
-            <p className="font-serif italic opacity-60">No jobs found matching your criteria.</p>
+            <p className=" italic opacity-60">No jobs found matching your criteria.</p>
           </div>
         )}
 

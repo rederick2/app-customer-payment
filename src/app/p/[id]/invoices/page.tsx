@@ -65,16 +65,16 @@ export default async function ClientInvoicesView({ params }: Props) {
     <div className="container mx-auto px-6 py-8 md:p-12 max-w-5xl animate-in fade-in duration-500">
       <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
         <div className="space-y-2 text-left">
-           <h1 className="font-serif text-3xl md:text-4xl font-black tracking-tight text-[#0D3B47]">
-             Billing & Payments
-           </h1>
-           <p className="text-muted-foreground font-medium text-sm md:text-base max-w-2xl">
-              Access all your finalized invoices and payment receipts for your projects.
-           </p>
+          <h1 className=" text-3xl md:text-4xl font-black tracking-tight text-[#0D3B47]">
+            Billing & Payments
+          </h1>
+          <p className="text-muted-foreground font-medium text-sm md:text-base max-w-2xl">
+            Access all your finalized invoices and payment receipts for your projects.
+          </p>
         </div>
       </div>
 
-      <InvoicesPaymentsView 
+      <InvoicesPaymentsView
         invoices={invoices || []}
         payments={payments || []}
         client={clientData}

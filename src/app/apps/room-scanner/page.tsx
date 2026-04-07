@@ -204,7 +204,7 @@ export default function RoomScannerPage() {
   React.useEffect(() => {
     if (phase === 'preview' && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(() => { });
     }
   }, [phase]);
 
@@ -283,11 +283,11 @@ export default function RoomScannerPage() {
               <Camera className="h-14 w-14 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold font-serif mb-2">Room Scanner</h1>
+              <h1 className="text-3xl font-bold  mb-2">Room Scanner</h1>
               <p className="text-white/60 max-w-sm leading-relaxed text-sm">Toma una foto, marca las esquinas del piso y luego ingresa la medida real de cada pared para generar un plano 2D exacto.</p>
             </div>
             <div className="w-full max-w-sm bg-card/5 border border-white/10 rounded-2xl p-4 text-left space-y-3">
-              {[['📸','Toma o sube una foto de la habitación'],['📍','Marca las esquinas del piso en la foto'],['📏','Indica la longitud real de cada pared'],['📐','Descarga el plano 2D con medidas exactas']].map(([icon, text], i) => (
+              {[['📸', 'Toma o sube una foto de la habitación'], ['📍', 'Marca las esquinas del piso en la foto'], ['📏', 'Indica la longitud real de cada pared'], ['📐', 'Descarga el plano 2D con medidas exactas']].map(([icon, text], i) => (
                 <div key={i} className="flex items-start gap-3"><div className="text-xl shrink-0">{icon}</div><p className="text-sm text-white/70">{text}</p></div>
               ))}
             </div>
@@ -319,7 +319,7 @@ export default function RoomScannerPage() {
             <div className="relative rounded-2xl overflow-hidden bg-black border border-white/10 shadow-2xl" style={{ aspectRatio: '4/3' }}>
               <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted playsInline autoPlay />
               <div className="absolute inset-0 pointer-events-none">
-                {[['top-3 left-3','border-t-2 border-l-2'],['top-3 right-3','border-t-2 border-r-2'],['bottom-12 left-3','border-b-2 border-l-2'],['bottom-12 right-3','border-b-2 border-r-2']].map(([pos,b],i) => (
+                {[['top-3 left-3', 'border-t-2 border-l-2'], ['top-3 right-3', 'border-t-2 border-r-2'], ['bottom-12 left-3', 'border-b-2 border-l-2'], ['bottom-12 right-3', 'border-b-2 border-r-2']].map(([pos, b], i) => (
                   <div key={i} className={`absolute ${pos} ${b} border-white/50 w-6 h-6 rounded-sm`} />
                 ))}
               </div>
@@ -346,7 +346,7 @@ export default function RoomScannerPage() {
               <span className="text-indigo-200">
                 {points.length === 0 ? 'Toca la primera esquina del piso en la foto'
                   : points.length < MIN_PTS ? `${points.length} esquinas — agrega ${MIN_PTS - points.length} más como mínimo`
-                  : `${points.length} esquinas marcadas • Agrega más o presiona Continuar`}
+                    : `${points.length} esquinas marcadas • Agrega más o presiona Continuar`}
               </span>
             </div>
 
@@ -420,9 +420,11 @@ export default function RoomScannerPage() {
                   const pts = points.map(p => ({ x: 20 + (p.x - minX) * sc, y: 20 + (p.y - minY) * sc }));
                   return (<>
                     <polygon points={pts.map(p => `${p.x},${p.y}`).join(' ')} fill="rgba(99,102,241,0.2)" stroke="#818cf8" strokeWidth="1.5" />
-                    {pts.map((p, i) => { const n = pts[(i + 1) % pts.length]; return (
-                      <text key={i} x={(p.x + n.x) / 2} y={(p.y + n.y) / 2 - 4} textAnchor="middle" fontSize="8" fill="#818cf8" fontWeight="bold">P{i + 1}</text>
-                    ); })}
+                    {pts.map((p, i) => {
+                      const n = pts[(i + 1) % pts.length]; return (
+                        <text key={i} x={(p.x + n.x) / 2} y={(p.y + n.y) / 2 - 4} textAnchor="middle" fontSize="8" fill="#818cf8" fontWeight="bold">P{i + 1}</text>
+                      );
+                    })}
                     {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill={i === 0 ? '#34d399' : '#6366f1'} stroke="white" strokeWidth="1" />)}
                   </>);
                 })()}

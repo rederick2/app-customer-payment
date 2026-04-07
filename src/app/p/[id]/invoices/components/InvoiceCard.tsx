@@ -48,7 +48,7 @@ export default function InvoiceCard({ invoice, currentProformaId, onViewPDF }: I
                   <Badge variant="outline" className="text-[10px] font-bold bg-primary text-primary-foreground border-none px-2 h-5">Current</Badge>
                 )}
               </div>
-              <h3 className="text-xl font-serif font-black text-[#0D3B47] group-hover:text-primary transition-colors leading-tight">
+              <h3 className="text-xl  font-black text-[#0D3B47] group-hover:text-primary transition-colors leading-tight">
                 {invoice.proformas?.project_name || 'Project without Name'}
               </h3>
             </div>
@@ -84,7 +84,7 @@ export default function InvoiceCard({ invoice, currentProformaId, onViewPDF }: I
           <div className="sm:w-64 bg-[#F4F2EC] sm:bg-[#F4F2EC]/50 p-6 flex flex-col items-stretch justify-center gap-3 sm:border-l border-border/30">
             <div className="text-right sm:text-center mb-1">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Total Amount</p>
-              <p className="text-2xl font-serif font-black text-primary tabular-nums tracking-tighter">
+              <p className="text-2xl  font-black text-primary tabular-nums tracking-tighter">
                 ${invoice.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>

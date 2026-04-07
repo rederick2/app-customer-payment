@@ -1410,7 +1410,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
 
           <div className="flex justify-between items-center w-full md:w-96 pt-6 border-t-2 border-primary/10 mt-6 pb-2">
             <span className="uppercase text-[12px] tracking-[0.3em] font-black text-primary/40">Total</span>
-            <span className="text-2xl md:text-3xl font-serif font-black text-primary tabular-nums tracking-tight whitespace-nowrap ml-4">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            <span className="text-2xl md:text-3xl  font-black text-primary tabular-nums tracking-tight whitespace-nowrap ml-4">${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
 
           <div className="flex flex-col items-end gap-2 w-full md:w-96">
@@ -1449,7 +1449,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         <Dialog open={isTaxDialogOpen} onOpenChange={setIsTaxDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-serif text-xl">Create New Tax Rate</DialogTitle>
+              <DialogTitle className=" text-xl">Create New Tax Rate</DialogTitle>
               <DialogDescription>Add a new tax name and percentage to your catalog.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -1526,7 +1526,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         <Dialog open={isDepositDialogOpen} onOpenChange={setIsDepositDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="font-serif text-xl">Deposit & Payment Schedule</DialogTitle>
+              <DialogTitle className=" text-xl">Deposit & Payment Schedule</DialogTitle>
               <DialogDescription>Define the upfront payment required and terms.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">

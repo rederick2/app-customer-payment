@@ -17,7 +17,7 @@ export default async function InvoicesPage() {
       </div>
     );
   }
-  
+
   // 1. Fetch invoices with full project and client info
   // We use !inner on proformas to filter the entire result by project owner
   const { data: invoices, error: invError } = await supabase
@@ -81,11 +81,11 @@ export default async function InvoicesPage() {
 
   // 3. Fetch all payments for the active proformas
   const proformaIds = Array.from(new Set((invoices || []).map(i => i.proforma_id)));
-  const { data: allPayments, error: payError } = proformaIds.length > 0 
+  const { data: allPayments, error: payError } = proformaIds.length > 0
     ? await supabase
-        .from('payments')
-        .select('*')
-        .in('proforma_id', proformaIds)
+      .from('payments')
+      .select('*')
+      .in('proforma_id', proformaIds)
     : { data: [], error: null };
 
   if (payError) {
@@ -102,7 +102,7 @@ export default async function InvoicesPage() {
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Invoices</h1>
+          <h1 className=" text-3xl md:text-4xl font-bold tracking-tight mb-1">Invoices</h1>
           <p className="text-muted-foreground text-sm">Manage and view all your generated invoices.</p>
         </div>
         <div className="flex items-center gap-2">

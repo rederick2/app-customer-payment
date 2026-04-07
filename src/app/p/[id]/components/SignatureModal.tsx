@@ -44,7 +44,7 @@ export default function SignatureModal({ isOpen, onClose, onConfirm, isLoading }
     <Dialog open={isOpen} onOpenChange={(val) => { if (!val && !isLoading) onClose(); }}>
       <DialogContent className="sm:max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-serif">Signature Required</DialogTitle>
+          <DialogTitle className="text-xl ">Signature Required</DialogTitle>
           <DialogDescription>
             Please, register your signature below to formally approve the quote.
           </DialogDescription>
@@ -97,7 +97,7 @@ export default function SignatureModal({ isOpen, onClose, onConfirm, isLoading }
                   value={typedName}
                   onChange={(e) => setTypedName(e.target.value)}
                   autoFocus
-                  className="text-center font-serif text-2xl h-16 border-dashed shadow-inner focus-visible:ring-1 bg-secondary/10"
+                  className="text-center  text-2xl h-16 border-dashed shadow-inner focus-visible:ring-1 bg-secondary/10"
                 />
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                   Your name will replace the signature in the final PDF document.

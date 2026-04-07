@@ -52,9 +52,10 @@ interface TopBarProps {
     phone: string | null;
   } | null;
   unreadCount?: number;
+  isTeamMember?: boolean;
 }
 
-export function TopBar({ userProfile, unreadCount = 0 }: TopBarProps) {
+export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: TopBarProps) {
   const { theme, setTheme } = useTheme();
   const [query, setQuery] = React.useState('');
   const [results, setResults] = React.useState<SearchResult[]>([]);
@@ -115,130 +116,132 @@ export function TopBar({ userProfile, unreadCount = 0 }: TopBarProps) {
     <header className="hidden md:flex h-14 items-center bg-background/95 backdrop-blur-sm border-b border-border/40 px-6 gap-4 print:hidden">
 
       {/* Search */}
-      <div ref={containerRef} className="relative flex-1 max-w-xl">
-        <div className="relative flex items-center">
-          <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={handleChange}
-            onFocus={() => results.length > 0 && setOpen(true)}
-            placeholder="Search clients, quotes, jobs..."
-            className="w-full pl-9 pr-8 h-9 text-sm bg-muted/30 border border-border/40 rounded-xl outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/60"
-          />
-          {query && (
-            <button
-              onClick={clear}
-              className="absolute right-2.5 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Dropdown */}
-        {open && (
-          <div className="absolute top-full mt-2 left-0 w-full bg-popover border border-border/40 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-2 duration-150">
-            {loading ? (
-              <div className="flex items-center justify-center py-6 text-sm text-muted-foreground gap-2">
-                <span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                Searching...
-              </div>
-            ) : results.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">No results found for &ldquo;{query}&rdquo;</div>
-            ) : (
-              <div>
-                {results.map((client, idx) => (
-                  <div key={client.id} className={cn('border-border/40', idx < results.length - 1 && 'border-b')}>
-                    {/* Client row */}
-                    <Link
-                      href={`/clients/${client.id}`}
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
-                    >
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        {client.company_name
-                          ? <Building2 className="h-4 w-4 text-primary" />
-                          : <User className="h-4 w-4 text-primary" />
-                        }
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground truncate">{clientName(client)}</p>
-                        {client.company_name && client.first_name && (
-                          <p className="text-xs text-muted-foreground truncate">{client.company_name}</p>
-                        )}
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                    </Link>
-
-                    {/* Related items */}
-                    <div className="pb-2">
-                      {/* Address */}
-                      {address(client) && (
-                        <Link
-                          href={`/clients/${client.id}`}
-                          onClick={() => setOpen(false)}
-                          className="flex items-center gap-3 px-4 py-1.5 hover:bg-muted/30 transition-colors"
-                        >
-                          <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-0.5" />
-                          <div>
-                            <p className="text-xs text-muted-foreground truncate">{address(client)}</p>
-                            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">{clientName(client)}</p>
-                          </div>
-                        </Link>
-                      )}
-
-                      {/* Quotes / Jobs */}
-                      {client.proformas.map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`/proforma/${p.id}`}
-                          onClick={() => setOpen(false)}
-                          className="flex items-center gap-3 px-4 py-1.5 hover:bg-muted/30 transition-colors"
-                        >
-                          <FileText className={cn('h-3.5 w-3.5 shrink-0 ml-0.5', statusColor[p.status] || 'text-muted-foreground')} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-foreground/80 truncate">{p.status === 'job' ? `Job #${p.number || '-'}` : `Quote #${p.number || '-'}`} — {p.project_name}</p>
-                            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">{clientName(client)}</p>
-                          </div>
-                          <span className="text-xs font-bold text-foreground/70 shrink-0">${p.total?.toLocaleString('en-US', { minimumFractionDigits: 0 })}</span>
-                        </Link>
-                      ))}
-
-                      {/* Payments / Deposits */}
-                      {client.payments.map((pay) => (
-                        <Link
-                          key={pay.id}
-                          href={`/clients/${client.id}`}
-                          onClick={() => setOpen(false)}
-                          className="flex items-center gap-3 px-4 py-1.5 hover:bg-muted/30 transition-colors"
-                        >
-                          <CreditCard className="h-3.5 w-3.5 text-emerald-600 shrink-0 ml-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-foreground/80">{pay.type === 'deposit' ? 'Deposit' : 'Payment'} — ${pay.amount?.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">{clientName(client)}</p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Footer */}
-                <div className="border-t border-border/40 px-4 py-2 bg-muted/10">
-                  <button
-                    onClick={() => { router.push(`/clients?q=${encodeURIComponent(query)}`); setOpen(false); }}
-                    className="text-xs text-primary font-semibold hover:underline"
-                  >
-                    See all results for &ldquo;{query}&rdquo; →
-                  </button>
-                </div>
-              </div>
+      {!isTeamMember && (
+        <div ref={containerRef} className="relative flex-1 max-w-xl">
+          <div className="relative flex items-center">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={handleChange}
+              onFocus={() => results.length > 0 && setOpen(true)}
+              placeholder="Search clients, quotes, jobs..."
+              className="w-full pl-9 pr-8 h-9 text-sm bg-muted/30 border border-border/40 rounded-xl outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all placeholder:text-muted-foreground/60"
+            />
+            {query && (
+              <button
+                onClick={clear}
+                className="absolute right-2.5 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
-        )}
-      </div>
+
+          {/* Dropdown */}
+          {open && (
+            <div className="absolute top-full mt-2 left-0 w-full bg-popover border border-border/40 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in-0 slide-in-from-top-2 duration-150">
+              {loading ? (
+                <div className="flex items-center justify-center py-6 text-sm text-muted-foreground gap-2">
+                  <span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Searching...
+                </div>
+              ) : results.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">No results found for &ldquo;{query}&rdquo;</div>
+              ) : (
+                <div>
+                  {results.map((client, idx) => (
+                    <div key={client.id} className={cn('border-border/40', idx < results.length - 1 && 'border-b')}>
+                      {/* Client row */}
+                      <Link
+                        href={`/clients/${client.id}`}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          {client.company_name
+                            ? <Building2 className="h-4 w-4 text-primary" />
+                            : <User className="h-4 w-4 text-primary" />
+                          }
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">{clientName(client)}</p>
+                          {client.company_name && client.first_name && (
+                            <p className="text-xs text-muted-foreground truncate">{client.company_name}</p>
+                          )}
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </Link>
+
+                      {/* Related items */}
+                      <div className="pb-2">
+                        {/* Address */}
+                        {address(client) && (
+                          <Link
+                            href={`/clients/${client.id}`}
+                            onClick={() => setOpen(false)}
+                            className="flex items-center gap-3 px-4 py-1.5 hover:bg-muted/30 transition-colors"
+                          >
+                            <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-0.5" />
+                            <div>
+                              <p className="text-xs text-muted-foreground truncate">{address(client)}</p>
+                              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">{clientName(client)}</p>
+                            </div>
+                          </Link>
+                        )}
+
+                        {/* Quotes / Jobs */}
+                        {client.proformas.map((p) => (
+                          <Link
+                            key={p.id}
+                            href={`/proforma/${p.id}`}
+                            onClick={() => setOpen(false)}
+                            className="flex items-center gap-3 px-4 py-1.5 hover:bg-muted/30 transition-colors"
+                          >
+                            <FileText className={cn('h-3.5 w-3.5 shrink-0 ml-0.5', statusColor[p.status] || 'text-muted-foreground')} />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground/80 truncate">{p.status === 'job' ? `Job #${p.number || '-'}` : `Quote #${p.number || '-'}`} — {p.project_name}</p>
+                              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">{clientName(client)}</p>
+                            </div>
+                            <span className="text-xs font-bold text-foreground/70 shrink-0">${p.total?.toLocaleString('en-US', { minimumFractionDigits: 0 })}</span>
+                          </Link>
+                        ))}
+
+                        {/* Payments / Deposits */}
+                        {client.payments.map((pay) => (
+                          <Link
+                            key={pay.id}
+                            href={`/clients/${client.id}`}
+                            onClick={() => setOpen(false)}
+                            className="flex items-center gap-3 px-4 py-1.5 hover:bg-muted/30 transition-colors"
+                          >
+                            <CreditCard className="h-3.5 w-3.5 text-emerald-600 shrink-0 ml-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-foreground/80">{pay.type === 'deposit' ? 'Deposit' : 'Payment'} — ${pay.amount?.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">{clientName(client)}</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Footer */}
+                  <div className="border-t border-border/40 px-4 py-2 bg-muted/10">
+                    <button
+                      onClick={() => { router.push(`/clients?q=${encodeURIComponent(query)}`); setOpen(false); }}
+                      className="text-xs text-primary font-semibold hover:underline"
+                    >
+                      See all results for &ldquo;{query}&rdquo; →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Right icons */}
       <div className="flex items-center gap-1 ml-auto shrink-0">
@@ -266,13 +269,15 @@ export function TopBar({ userProfile, unreadCount = 0 }: TopBarProps) {
         </button>
 
         {/* Settings */}
-        <Link
-          href="/settings"
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-          title="Settings"
-        >
-          <Settings className="h-4.5 w-4.5" />
-        </Link>
+        {!isTeamMember && (
+          <Link
+            href="/settings"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            title="Settings"
+          >
+            <Settings className="h-4.5 w-4.5" />
+          </Link>
+        )}
 
         {/* Avatar & Profile Dropdown */}
         {userProfile && (

@@ -53,7 +53,7 @@ export default async function AdminMessagesPage() {
       <div className="mb-8 flex items-center gap-3">
         <MessageSquare className="h-7 w-7 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold font-serif text-foreground">Messages</h1>
+          <h1 className="text-2xl font-bold  text-foreground">Messages</h1>
           <p className="text-sm text-muted-foreground mt-0.5">All client communications by quote</p>
         </div>
         {proformasWithMessages.length > 0 && (
@@ -85,15 +85,13 @@ export default async function AdminMessagesPage() {
               <Link
                 key={proforma.id}
                 href={`/proforma/${proforma.id}/messages`}
-                className={`group flex items-start gap-4 p-4 rounded-lg border bg-card hover:border-primary/30 hover:shadow-sm transition-all ${
-                  hasUnread ? 'border-primary/40 shadow-sm bg-primary/[0.02]' : 'border-border/50'
-                }`}
+                className={`group flex items-start gap-4 p-4 rounded-lg border bg-card hover:border-primary/30 hover:shadow-sm transition-all ${hasUnread ? 'border-primary/40 shadow-sm bg-primary/[0.02]' : 'border-border/50'
+                  }`}
               >
                 {/* Avatar with unread indicator */}
                 <div className="relative flex-shrink-0">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                    hasUnread ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${hasUnread ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+                    }`}>
                     {clientName.charAt(0).toUpperCase()}
                   </div>
                   {hasUnread && (

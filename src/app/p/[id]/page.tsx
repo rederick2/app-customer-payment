@@ -112,14 +112,14 @@ export default async function PublicProformaView({ params, searchParams }: Props
         {/* Invalid watermark if rejected */}
         {proforma.status === 'rejected' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 rotate-[-30deg] z-10">
-            <span className="text-9xl font-bold font-serif uppercase tracking-widest text-red-500">Rejected</span>
+            <span className="text-9xl font-bold  uppercase tracking-widest text-red-500">Rejected</span>
           </div>
         )}
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-border pb-8 mb-8 relative z-20">
           <div>
-            <h1 className="font-serif text-3xl font-bold tracking-tight uppercase text-primary">{userData?.display_name}</h1>
+            <h1 className=" text-3xl font-bold tracking-tight uppercase text-primary">{userData?.display_name}</h1>
             {userData?.business_license && (
               <p className="text-sm font-medium mt-0.5 mb-1">
                 {userData.business_license}
@@ -142,7 +142,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
             )}
           </div>
           <div className="mt-6 sm:mt-0 text-right">
-            <h2 className="text-2xl font-bold text-foreground font-serif uppercase tracking-widest text-muted-foreground/40 print:text-muted-foreground/80">{displayTitle}</h2>
+            <h2 className="text-2xl font-bold text-foreground  uppercase tracking-widest text-muted-foreground/40 print:text-muted-foreground/80">{displayTitle}</h2>
             <p className="text-sm font-medium mt-2">Nº: <span className="font-mono">{displayNumber}</span></p>
             <p className="text-sm">Date: {new Date(displayDate).toLocaleDateString('en-US')}</p>
           </div>
@@ -206,7 +206,8 @@ export default async function PublicProformaView({ params, searchParams }: Props
             <p className="font-medium text-lg text-foreground">{proforma.project_name}</p>
           </div>
         </div>
-        {/* Items View - Desktop (Table) */}
+
+        {/* Items View - Desktop (Table) */}
         <div className="mb-12 relative z-20 hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/30 print:bg-transparent print:border-b-2 print:border-foreground/20 text-muted-foreground border-y border-border/50">
@@ -274,7 +275,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
         {/* Items View - Mobile (Cards) */}
         <div className="mb-12 space-y-4 md:hidden relative z-20">
           <div className="border-b border-border/50 pb-2 mb-4">
-             <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Items & Scope</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Items & Scope</h3>
           </div>
           {items && items.map((item) => (
             <div key={item.id} className={cn(
@@ -287,8 +288,8 @@ export default async function PublicProformaView({ params, searchParams }: Props
                 <div>
                   {item.is_optional ? (
                     <div className="flex items-center gap-2">
-                       <Checkbox checked={!item.is_excluded} className="h-5 w-5" />
-                       <span className="text-[10px] font-black uppercase tracking-tighter text-primary">Optional</span>
+                      <Checkbox checked={!item.is_excluded} className="h-5 w-5" />
+                      <span className="text-[10px] font-black uppercase tracking-tighter text-primary">Optional</span>
                     </div>
                   ) : (
                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 bg-muted/10 px-2 py-1 rounded-md">Fixed</span>
@@ -316,26 +317,26 @@ export default async function PublicProformaView({ params, searchParams }: Props
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                   <h4 className="font-bold text-foreground text-base leading-tight tracking-tight break-words">{item.description}</h4>
+                  <h4 className="font-bold text-foreground text-base leading-tight tracking-tight break-words">{item.description}</h4>
                 </div>
               </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4 py-3 border-y border-border/10 mb-4 bg-muted/5 rounded-lg px-3">
-                 <div>
-                    <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Quantity</p>
-                    <p className="font-mono text-sm font-bold">{item.quantity}</p>
-                 </div>
-                 <div className="text-right">
-                    <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Rate</p>
-                    <p className="font-mono text-sm font-bold">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                 </div>
+                <div>
+                  <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Quantity</p>
+                  <p className="font-mono text-sm font-bold">{item.quantity}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Rate</p>
+                  <p className="font-mono text-sm font-bold">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                </div>
               </div>
 
               {/* Details */}
               {item.details && (
                 <div className="mt-2">
-                   <ExpandableText
+                  <ExpandableText
                     text={item.details}
                     initialLines={2}
                     className="text-sm text-muted-foreground"
@@ -345,7 +346,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
             </div>
           ))}
         </div>
-        
+
         {/* Work Progress Photos (Public Only) */}
         <PublicWorkProgress proformaId={proforma.id} />
 
@@ -466,7 +467,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
                     />
                   </div>
                 ) : proforma.client_signed_name ? (
-                  <div className="px-6 py-4 bg-primary/5 rounded-xl border-b-2 border-primary/20">
+                  <div className="bg-primary/5 rounded-xl border-b-2 border-primary/20">
                     <p className="font-serif text-3xl italic text-foreground tracking-tight">
                       {proforma.client_signed_name}
                     </p>

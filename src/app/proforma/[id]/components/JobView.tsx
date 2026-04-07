@@ -1203,32 +1203,32 @@ export default function JobView({
                 <div className="flex flex-wrap items-center justify-center lg:justify-end gap-x-10 gap-y-6 w-full">
                   <div className="text-center md:text-left space-y-1 min-w-[100px]">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Total price</p>
-                    <p className="text-xl font-bold font-serif">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-bold ">${totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                   <div className="text-center md:text-left space-y-1 min-w-[100px]">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center justify-center md:justify-start gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Items Cost
                     </p>
-                    <p className="text-xl font-bold font-serif italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-bold  italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                   <div className="text-center md:text-left space-y-1 min-w-[100px]">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center justify-center md:justify-start gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-sky-400" /> Labor
                     </p>
-                    <p className="text-xl font-bold font-serif italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-bold  italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                   <div className="text-center md:text-left space-y-1 min-w-[100px]">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center justify-center md:justify-start gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-400" /> Expenses
                     </p>
-                    <p className="text-xl font-bold font-serif italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-bold  italic text-muted-foreground"><span className="text-muted-foreground/30 px-1">-</span>${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                   <div className="h-12 w-px bg-border/40 hidden xl:block" />
                   <div className="text-center md:text-left space-y-1 min-w-[120px] bg-emerald-50/50 p-3 rounded-2xl border border-emerald-500/10">
                     <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest flex items-center justify-center md:justify-start gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Profit
                     </p>
-                    <p className="text-xl font-black font-serif text-emerald-600">${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    <p className="text-xl font-black  text-emerald-600">${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   </div>
                 </div>
               </div>
@@ -2719,7 +2719,7 @@ export default function JobView({
                               ${inv.status === 'paid' ? '0.00' : Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                             </p>
                           </div>
-                          <div className="space-y-0.5 text-right font-serif">
+                          <div className="space-y-0.5 text-right ">
                             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Total</p>
                             <p className="text-lg font-black text-foreground">
                               ${Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -2782,7 +2782,7 @@ export default function JobView({
               </CardHeader>
               <CardContent className="p-6">
                 <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 font-serif">Note details</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ">Note details</p>
                   <textarea
                     className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none"
                     placeholder="Click here to add a note..."
@@ -3502,7 +3502,7 @@ function RecordPaymentModal({ proformaId, clientId, onClose, onSuccess, payment 
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{payment ? 'Edit Payment' : 'Record Payment'}</DialogTitle>
           <DialogDescription>{payment ? 'Update the details of this payment.' : 'Log a payment received for this job.'}</DialogDescription>
@@ -3634,7 +3634,7 @@ function ExpenseFormModal({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Expense</DialogTitle>
           <DialogDescription>Log a purchase or cost for this job.</DialogDescription>
@@ -3822,7 +3822,7 @@ function EditExpenseModal({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" /> Edit Expense</DialogTitle>
           <DialogDescription>Update the details of this expense.</DialogDescription>
@@ -4008,7 +4008,7 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: 
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{entry ? 'Edit Labor Entry' : 'Time Entry'}</DialogTitle>
           <DialogDescription>{entry ? 'Update the details of this labor entry.' : 'Record a new shift or labor assignment.'}</DialogDescription>
@@ -4139,12 +4139,12 @@ function LaborFormModal({ proformaId, teamMembers, onClose, onSuccess, entry }: 
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : entry ? 'Update Labor' : 'Log Time Entry'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -4181,7 +4181,7 @@ function VisitFormModal({ proformaId, teamMembers, onClose, onSuccess }: { profo
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Schedule New Visit</DialogTitle>
           <DialogDescription>Plan an on-site visit for this job.</DialogDescription>
@@ -4232,12 +4232,12 @@ function VisitFormModal({ proformaId, teamMembers, onClose, onSuccess }: { profo
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 font-bold" disabled={isSubmitting}>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Schedule Visit'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -4286,7 +4286,7 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess, tas
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
           <DialogDescription>
@@ -4361,12 +4361,12 @@ function TaskFormModal({ proformaId, items, teamMembers, onClose, onSuccess, tas
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : task ? 'Update Task' : 'Create Task'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -4493,7 +4493,7 @@ function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, 
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md rounded-3xl shadow-2xl border-border/40 bg-background/95 backdrop-blur-xl p-8 overflow-visible">
+      <DialogContent className="overflow-visible">
         <DialogHeader>
           <DialogTitle>NEW ITEM</DialogTitle>
           <DialogDescription>Add a product or service line item to this quote.</DialogDescription>
@@ -4637,11 +4637,11 @@ function LineItemFormModal({ proformaId, itemsCount, itemPresets = [], onClose, 
             </div>
           </div>
 
-          <DialogFooter className="pt-8 border-t border-border/40 mt-6 gap-3">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-10 h-11 shadow-lg transition-all hover:scale-105 active:scale-95">
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] rounded-xl px-10 h-11 shadow-lg transition-all hover:scale-105 active:scale-95" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Item to Job'}
             </Button>
           </DialogFooter>
@@ -4730,14 +4730,14 @@ function ManualMaterialFormModal({ proformaId, onClose, onSuccess }: {
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={isSubmitting}>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Material'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

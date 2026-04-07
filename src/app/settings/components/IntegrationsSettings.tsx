@@ -45,7 +45,7 @@ export default function IntegrationsSettings() {
               <ArrowRightLeft className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl font-serif">QuickBooks Online</CardTitle>
+              <CardTitle className="text-xl ">QuickBooks Online</CardTitle>
               <CardDescription>Sync your customers and invoices automatically.</CardDescription>
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function IntegrationsSettings() {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  Connect your QuickBooks account to synchronize all your project estimates and invoices. 
+                  Connect your QuickBooks account to synchronize all your project estimates and invoices.
                   Once connected, you can push data directly to your accounting software.
                 </p>
                 {qbo?.last_sync_at && (

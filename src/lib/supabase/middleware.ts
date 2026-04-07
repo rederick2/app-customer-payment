@@ -48,8 +48,22 @@ export async function updateSession(request: NextRequest) {
   // Si está logueado e intenta ir a login, enviarlo al home
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    const isTeamRole = user.user_metadata?.role === 'team';
+    url.pathname = isTeamRole ? '/team' : '/'
     return NextResponse.redirect(url)
+  }
+
+  // Restringir accesos para los miembros del equipo
+  if (user) {
+    const isTeamRole = user.user_metadata?.role === 'team';
+    const isTeamRoute = request.nextUrl.pathname.startsWith('/team');
+    
+    // Si es un team member y asiste a una ruta que no es de equipo, redirigir a /team
+    if (isTeamRole && !isTeamRoute && !isPublicSharedPage && !isWebhook && !isPublicFile && request.nextUrl.pathname !== '/logout') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/team'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

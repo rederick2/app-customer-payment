@@ -43,7 +43,7 @@ export default async function AdminProformaMessagesPage({ params }: Props) {
           All Messages
         </Link>
         <div>
-          <h1 className="text-xl font-bold font-serif text-foreground">{clientName}</h1>
+          <h1 className="text-xl font-bold  text-foreground">{clientName}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()} · {proforma.project_name}
           </p>

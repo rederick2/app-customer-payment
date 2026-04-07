@@ -1,0 +1,14 @@
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\calendar\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\clients\[id]\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\gallery\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\invoices\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\login\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\p\[id]\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\p\[id]\request\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\proforma\[id]\components\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\register\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\register\team\[token]\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\requests\components\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\settings\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\team\tasks\actions.ts
+c:\Users\E758063\Documents\Cursor\app-customer-payment\src\app\timesheets\actions.ts

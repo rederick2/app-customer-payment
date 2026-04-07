@@ -748,17 +748,11 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
     <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
       {/* Action Bar */}
       {!hideActionBar && (
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
+        <div className="mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-3">
-            <Link href="/quotes" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Quotes
-            </Link>
-            <span className="text-muted-foreground/40">·</span>
             <div className="flex items-center gap-2">
               {!proforma.is_template && (
                 <>
-                  <span className="text-sm font-medium text-muted-foreground">Status:</span>
                   <StatusBadge status={proformaStatus || 'draft'} />
                   <Dialog>
                     <DialogTrigger render={
@@ -1162,7 +1156,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                     </div>
                   ) : proforma.client_signed_name ? (
                     <div className="px-6 py-4 bg-primary/5 rounded-xl border-b-2 border-primary/20">
-                      <p className="font-serif text-3xl italic text-foreground tracking-tight">
+                      <p className=" text-3xl italic text-foreground tracking-tight">
                         {proforma.client_signed_name}
                       </p>
                     </div>

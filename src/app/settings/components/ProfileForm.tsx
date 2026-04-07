@@ -35,10 +35,10 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    
+
     const formData = new FormData(e.currentTarget);
     formData.set('address', address); // Ensure we use the autocomplete value
-    
+
     if (logoFile) {
       let fileToUpload = logoFile;
       if (fileToUpload.size > 5 * 1024 * 1024) {
@@ -73,7 +73,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
   return (
     <Card className="border-border/50 shadow-sm">
       <CardHeader>
-        <CardTitle className="font-serif">Profile Information</CardTitle>
+        <CardTitle className="">Profile Information</CardTitle>
         <CardDescription>
           Update your personal details that will appear on your proformas.
         </CardDescription>
@@ -89,24 +89,24 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                   <>
                     <img src={logoPreview} alt="Logo" className="h-full w-full object-contain p-3" />
                     <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all p-2 flex items-center justify-center gap-3">
-                       <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="p-1.5 rounded-lg text-white hover:bg-card/20 transition-colors"
                         onClick={() => document.getElementById('logo-upload')?.click()}
-                       >
+                      >
                         <Camera className="h-4 w-4" />
-                       </button>
-                       <button 
-                        type="button" 
+                      </button>
+                      <button
+                        type="button"
                         className="p-1.5 rounded-lg text-white hover:bg-red-500/40 hover:text-red-200 transition-colors"
                         onClick={removeLogo}
-                       >
+                      >
                         <Trash2 className="h-4 w-4" />
-                       </button>
+                      </button>
                     </div>
                   </>
                 ) : (
-                  <div 
+                  <div
                     className="flex flex-col items-center gap-2 cursor-pointer text-muted-foreground/30 hover:text-primary/40 transition-colors"
                     onClick={() => document.getElementById('logo-upload')?.click()}
                   >
@@ -114,11 +114,11 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                     <span className="text-[10px] font-black uppercase tracking-tighter">Upload Logo</span>
                   </div>
                 )}
-                <input 
-                  id="logo-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
                   onChange={handleLogoChange}
                 />
               </div>
@@ -232,14 +232,14 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
             </div>
             <div className="flex flex-col gap-6">
               <div className="px-2">
-                <input 
-                  type="range" 
+                <input
+                  type="range"
                   id="pdfFontSize"
                   name="pdfFontSize"
-                  min="8" 
-                  max="16" 
-                  step="1" 
-                  value={pdfFontSize} 
+                  min="8"
+                  max="16"
+                  step="1"
+                  value={pdfFontSize}
                   onChange={(e) => setPdfFontSize(parseInt(e.target.value))}
                   className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary transition-all hover:accent-primary/80"
                 />
@@ -249,7 +249,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                   <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Large (16px)</span>
                 </div>
               </div>
-              
+
               <div className="rounded-2xl border border-dashed border-border/60 bg-muted/5 p-4 md:p-8 transition-all relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="text-[10px] bg-primary/10 text-primary-foreground px-2 py-1 rounded-full font-bold uppercase tracking-widest">PDF Preview</div>
@@ -263,10 +263,10 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                       Date: {new Date().toLocaleDateString()}
                     </p>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <p style={{ fontSize: `${pdfFontSize}px` }} className="text-foreground/80 leading-relaxed transition-all duration-300 font-medium">
-                      This is a sample of how your item descriptions and notes will look in your generated PDFs. 
+                      This is a sample of how your item descriptions and notes will look in your generated PDFs.
                       You can adjust the slider above to reach the perfect legibility for your brand.
                     </p>
                     <div className="pt-4 border-t border-border/20">
@@ -281,8 +281,8 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
           </div>
         </CardContent>
         <CardFooter className="bg-muted/30 pt-6 border-t border-border/50">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={loading}
             className="w-full sm:w-auto px-10 h-12 bg-primary hover:bg-primary/90 rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
           >

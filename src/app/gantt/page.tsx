@@ -53,7 +53,7 @@ export default async function GanttPage() {
               <GanttChart className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Diagrama de Gantt</h1>
+              <h1 className=" text-3xl md:text-4xl font-bold tracking-tight mb-1">Diagrama de Gantt</h1>
               <p className="text-muted-foreground text-sm">Visualiza y planifica la línea de tiempo de todas las tareas y proyectos.</p>
             </div>
           </div>

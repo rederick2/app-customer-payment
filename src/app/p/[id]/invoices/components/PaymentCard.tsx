@@ -32,7 +32,7 @@ export default function PaymentCard({ payment, onViewPDF }: PaymentCardProps) {
                   {payment.status}
                 </Badge>
               </div>
-              <h3 className="text-xl font-serif font-black text-[#0D3B47] group-hover:text-primary transition-colors leading-tight">
+              <h3 className="text-xl  font-black text-[#0D3B47] group-hover:text-primary transition-colors leading-tight">
                 {payment.proformas?.project_name || 'Payment for Project'}
               </h3>
             </div>
@@ -80,7 +80,7 @@ export default function PaymentCard({ payment, onViewPDF }: PaymentCardProps) {
           <div className="sm:w-64 bg-[#F4F2EC] sm:bg-[#F4F2EC]/50 p-6 flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-4 sm:border-l border-border/30">
             <div className="text-right sm:text-center">
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Amount Received</p>
-              <p className="text-2xl font-serif font-black text-emerald-600 tabular-nums tracking-tighter">
+              <p className="text-2xl  font-black text-emerald-600 tabular-nums tracking-tighter">
                 ${payment.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>

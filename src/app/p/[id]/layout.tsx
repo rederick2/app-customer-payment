@@ -69,7 +69,7 @@ export default async function PublicProformaLayout({
           {userData?.logo_url ? (
             <img src={userData.logo_url} alt="Logo" className="h-12 w-auto" />
           ) : (
-            <h1 className="font-serif text-3xl font-bold tracking-tight uppercase text-primary">{userData?.display_name}</h1>
+            <h1 className=" text-3xl font-bold tracking-tight uppercase text-primary">{userData?.display_name}</h1>
           )}
         </div>
 

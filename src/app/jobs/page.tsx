@@ -43,7 +43,7 @@ export default async function JobsPage() {
     <div className="container mx-auto px-4 py-6 md:py-10 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-5xl font-bold tracking-tight mb-2">Jobs</h1>
+          <h1 className=" text-3xl md:text-5xl font-bold tracking-tight mb-2">Jobs</h1>
           <p className="text-muted-foreground text-sm md:text-base font-medium">List of all in-progress or scheduled jobs.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">

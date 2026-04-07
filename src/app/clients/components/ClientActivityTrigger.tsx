@@ -3,21 +3,21 @@
 import { useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
 } from '@/components/ui/dialog';
-import { 
-  Briefcase, 
-  CheckCircle, 
-  CheckSquare, 
-  DollarSign, 
-  FileText, 
-  History, 
-  Receipt, 
+import {
+  Briefcase,
+  CheckCircle,
+  CheckSquare,
+  DollarSign,
+  FileText,
+  History,
+  Receipt,
   User,
   FileOutput,
   Clock
@@ -53,7 +53,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
             color: 'bg-slate-500/10 text-slate-600 border-slate-200'
           });
         }
-        
+
         if (p.approved_at) {
           activities.push({
             date: new Date(p.approved_at),
@@ -133,63 +133,63 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
       <button onClick={() => setIsOpen(true)} className="flex items-center gap-2 group w-full px-6 py-4 transition-all hover:bg-primary/5 text-left border-none bg-transparent">
         <Clock className="h-4 w-4 text-primary/40 group-hover:text-primary transition-colors" />
         <span className="text-muted-foreground font-medium group-hover:text-primary transition-colors">
-          {latestActivity 
+          {latestActivity
             ? formatDistanceToNow(latestActivity, { addSuffix: true, locale: es })
             : 'Nunca'}
         </span>
       </button>
-      
+
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-3xl border-border/50 shadow-2xl">
           <DialogHeader className="p-8 pb-4 bg-muted/20 border-b border-border/50">
-          <DialogTitle className="text-2xl font-serif tracking-tight flex items-center gap-3">
-            <History className="h-6 w-6 text-primary" />
-            Línea de Tiempo del Cliente
-          </DialogTitle>
-          <p className="text-sm text-muted-foreground mt-2">
-            Registro cronológico de todas las interacciones, cotizaciones, pagos y tareas generadas para{' '}
-            <span className="font-bold text-foreground">
-              {client.company_name || [client.first_name, client.last_name].filter(Boolean).join(' ') || client.name}
-            </span>.
-          </p>
-        </DialogHeader>
+            <DialogTitle className="text-2xl  tracking-tight flex items-center gap-3">
+              <History className="h-6 w-6 text-primary" />
+              Línea de Tiempo del Cliente
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-2">
+              Registro cronológico de todas las interacciones, cotizaciones, pagos y tareas generadas para{' '}
+              <span className="font-bold text-foreground">
+                {client.company_name || [client.first_name, client.last_name].filter(Boolean).join(' ') || client.name}
+              </span>.
+            </p>
+          </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-8 relative scroll-smooth">
-          {timeline.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              <p>No hay actividades registradas aún.</p>
-            </div>
-          ) : (
-            <div className="relative border-l-2 border-primary/10 pl-6 space-y-8 pb-8">
-              {timeline.map((act, idx) => {
-                const Icon = act.icon;
-                return (
-                  <div key={idx} className="relative group animate-in slide-in-from-left-4 fade-in duration-500" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}>
-                    {/* Activity Bullet / Icon Center */}
-                    <div className={`absolute -left-[39px] h-8 w-8 rounded-full border shadow-sm flex items-center justify-center bg-card ${act.color} transition-transform group-hover:scale-110`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-
-                    {/* Content Card */}
-                    <div className="bg-card border border-border/40 rounded-2xl p-4 shadow-sm group-hover:shadow-md transition-all group-hover:border-primary/20 hover:bg-muted/10">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-bold text-foreground text-sm">{act.label}</h4>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 whitespace-nowrap ml-4">
-                          {formatDistanceToNow(act.date, { addSuffix: true, locale: es })}
-                        </span>
+          <div className="flex-1 overflow-y-auto p-8 relative scroll-smooth">
+            {timeline.length === 0 ? (
+              <div className="text-center text-muted-foreground py-12">
+                <p>No hay actividades registradas aún.</p>
+              </div>
+            ) : (
+              <div className="relative border-l-2 border-primary/10 pl-6 space-y-8 pb-8">
+                {timeline.map((act, idx) => {
+                  const Icon = act.icon;
+                  return (
+                    <div key={idx} className="relative group animate-in slide-in-from-left-4 fade-in duration-500" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}>
+                      {/* Activity Bullet / Icon Center */}
+                      <div className={`absolute -left-[39px] h-8 w-8 rounded-full border shadow-sm flex items-center justify-center bg-card ${act.color} transition-transform group-hover:scale-110`}>
+                        <Icon className="h-4 w-4" />
                       </div>
-                      <time className="text-xs text-muted-foreground opacity-80 font-mono">
-                        {format(act.date, "EEEE d 'de' MMMM, yyyy - h:mm a", { locale: es })}
-                      </time>
+
+                      {/* Content Card */}
+                      <div className="bg-card border border-border/40 rounded-2xl p-4 shadow-sm group-hover:shadow-md transition-all group-hover:border-primary/20 hover:bg-muted/10">
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-bold text-foreground text-sm">{act.label}</h4>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 whitespace-nowrap ml-4">
+                            {formatDistanceToNow(act.date, { addSuffix: true, locale: es })}
+                          </span>
+                        </div>
+                        <time className="text-xs text-muted-foreground opacity-80 font-mono">
+                          {format(act.date, "EEEE d 'de' MMMM, yyyy - h:mm a", { locale: es })}
+                        </time>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

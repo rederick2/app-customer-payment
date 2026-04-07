@@ -56,15 +56,15 @@ export default async function PublicWorkProgressPage({ params }: Props) {
               <Camera className="h-4 w-4" />
               <span className="text-[10px] font-black uppercase tracking-widest">Live Updates</span>
             </div>
-            <h1 className="text-4xl font-serif font-bold text-[#0D3B47] tracking-tight">
+            <h1 className="text-4xl  font-bold text-[#0D3B47] tracking-tight">
               Work Progress
             </h1>
             <p className="text-muted-foreground text-sm max-w-md">
-              Real-time documentation of the progress for <span className="text-foreground font-bold">"{proforma.project_name}"</span>. 
+              Real-time documentation of the progress for <span className="text-foreground font-bold">"{proforma.project_name}"</span>.
               Scroll through photos and videos from completed milestones.
             </p>
           </div>
-          
+
           {userData?.logo_url && (
             <div className="hidden sm:block">
               <img src={userData.logo_url} alt="Logo" className="h-16 w-auto opacity-80 grayscale hover:grayscale-0 transition-all duration-500" />

@@ -12,16 +12,16 @@ import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-function TemplateSelectorModal({ 
-  isOpen, 
-  onClose, 
-  onSelect, 
+function TemplateSelectorModal({
+  isOpen,
+  onClose,
+  onSelect,
   mode,
   onCreateBlankTemplate
-}: { 
-  isOpen: boolean, 
-  onClose: () => void, 
-  onSelect: (data: any) => void, 
+}: {
+  isOpen: boolean,
+  onClose: () => void,
+  onSelect: (data: any) => void,
   mode: 'template' | 'quote',
   onCreateBlankTemplate: () => void
 }) {
@@ -32,21 +32,21 @@ function TemplateSelectorModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     async function fetchItems() {
       setLoading(true);
-      
+
       let query = supabase.from('proformas')
         .select(`id, project_name, created_at, number, clients(name)`)
         .order('created_at', { ascending: false })
         .limit(20);
-        
+
       if (mode === 'template') {
         query = query.eq('is_template', true);
       } else {
         query = query.eq('is_template', false);
       }
-      
+
       if (search) {
         query = query.or(`project_name.ilike.%${search}%,number.ilike.%${search}%`);
       }
@@ -59,7 +59,7 @@ function TemplateSelectorModal({
     const timer = setTimeout(() => {
       fetchItems();
     }, 300); // debounce
-    
+
     return () => clearTimeout(timer);
   }, [isOpen, search, mode, supabase]);
 
@@ -74,7 +74,7 @@ function TemplateSelectorModal({
     if (proformaRes.data && itemsRes.data) {
       // Strip IDs and specific fields to make a clean clone
       const { id: _, created_at, updated_at, number, status, approved_at, client_signature_data, client_signed_name, ...cleanProforma } = proformaRes.data;
-      
+
       const cleanItems = itemsRes.data.map((item: any) => {
         const { id, proforma_id, created_at, updated_at, ...cleanItem } = item;
         return cleanItem;
@@ -111,8 +111,8 @@ function TemplateSelectorModal({
 
         <div className="relative mb-4">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search by project name or number..." 
+          <Input
+            placeholder="Search by project name or number..."
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -126,8 +126,8 @@ function TemplateSelectorModal({
             <div className="text-center p-8 text-muted-foreground text-sm">No items found.</div>
           ) : (
             items.map((item) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 onClick={() => handleSelect(item.id)}
                 className="flex flex-col p-3 rounded-lg border border-border/40 hover:bg-muted/50 hover:border-primary/20 cursor-pointer transition-colors group"
               >
@@ -152,10 +152,10 @@ function TemplateSelectorModal({
 function NewProformaContent() {
   const searchParams = useSearchParams();
   const clientId = searchParams.get('clientId');
-  
+
   const [view, setView] = useState<'select' | 'form'>('select');
   const [initialData, setInitialData] = useState<any>(clientId ? { client: { id: clientId } } : undefined);
-  
+
   const [modalMode, setModalMode] = useState<'template' | 'quote' | null>(null);
 
   // If clientId is provided in URL, we assume they want a blank quote for that client
@@ -196,7 +196,7 @@ function NewProformaContent() {
           <Link href="/quotes" className="text-muted-foreground hover:text-primary transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="font-serif text-3xl font-bold tracking-tight">Create Quote</h1>
+          <h1 className=" text-3xl font-bold tracking-tight">Create Quote</h1>
         </div>
 
         <div className="bg-card border border-border/40 rounded-xl p-8 mb-8 shadow-sm">
@@ -204,7 +204,7 @@ function NewProformaContent() {
           <p className="text-muted-foreground mb-8 text-sm">Choose a starting point for your new quote or proforma.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
+
             <Card className="hover:border-primary/40 hover:shadow-md transition-all cursor-pointer group" onClick={handleStartBlank}>
               <CardContent className="p-6 flex flex-col items-center text-center space-y-4 h-full pt-8">
                 <div className="h-14 w-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -240,13 +240,13 @@ function NewProformaContent() {
                 </div>
               </CardContent>
             </Card>
-            
+
           </div>
         </div>
 
-        <TemplateSelectorModal 
-          isOpen={modalMode !== null} 
-          onClose={() => setModalMode(null)} 
+        <TemplateSelectorModal
+          isOpen={modalMode !== null}
+          onClose={() => setModalMode(null)}
           onSelect={handleSelectTemplateOrQuote}
           mode={modalMode || 'template'}
           onCreateBlankTemplate={handleStartBlankTemplate}
@@ -256,9 +256,9 @@ function NewProformaContent() {
   }
 
   return (
-    <ProformaForm 
-      mode="create" 
-      initialData={initialData} 
+    <ProformaForm
+      mode="create"
+      initialData={initialData}
       onBack={() => setView('select')}
     />
   );

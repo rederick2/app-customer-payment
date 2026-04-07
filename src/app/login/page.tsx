@@ -17,7 +17,7 @@ export default function LoginPage() {
                 <Sparkles className="w-6 h-6 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-serif text-center bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl  text-center bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
               EstudioPro
             </CardTitle>
             <CardDescription className="text-center text-base">

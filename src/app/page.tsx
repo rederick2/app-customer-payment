@@ -156,7 +156,7 @@ export default async function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mb-1">Dashboard</h1>
+          <h1 className=" text-3xl md:text-4xl font-bold tracking-tight mb-1">Dashboard</h1>
           <p className="text-muted-foreground text-sm">Overview of your business performance.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export default async function Dashboard() {
               <RecentlyVisitedJobs />
 
               <div>
-                <h2 className="font-serif text-xl font-semibold tracking-tight mb-3">Quick Actions</h2>
+                <h2 className=" text-xl font-semibold tracking-tight mb-3">Quick Actions</h2>
                 <Card className="shadow-sm border-border/40">
                   <CardContent className="p-3 space-y-1">
                     {[
@@ -228,7 +228,7 @@ export default async function Dashboard() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label}</p>
-                          <p className="text-3xl font-bold font-serif truncate">{value}</p>
+                          <p className="text-3xl font-bold  truncate">{value}</p>
                           <p className="text-xs text-muted-foreground mt-2">{sub}</p>
                         </div>
                         <div className={`${bg} ${color} p-3 rounded-2xl shrink-0 ml-4 shadow-sm`}>
@@ -294,7 +294,7 @@ export default async function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-serif text-xl font-semibold tracking-tight">Recent Quotes</h2>
+                <h2 className=" text-xl font-semibold tracking-tight">Recent Quotes</h2>
                 <Link href="/quotes" className="text-xs text-primary hover:underline flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-full">
                   All Quotes <ArrowRight className="h-3 w-3" />
                 </Link>
@@ -339,7 +339,7 @@ export default async function Dashboard() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-serif text-xl font-semibold tracking-tight">Recent Clients</h2>
+                <h2 className=" text-xl font-semibold tracking-tight">Recent Clients</h2>
                 <Link href="/clients" className="text-xs text-primary hover:underline flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-full">
                   All Clients <ArrowRight className="h-3 w-3" />
                 </Link>

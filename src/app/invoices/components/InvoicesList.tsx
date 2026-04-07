@@ -393,7 +393,7 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
           ) : (
             <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
               <FileText className="h-16 w-16 text-muted/20 mb-4" />
-              <p className="text-lg font-serif italic">No invoices found.</p>
+              <p className="text-lg  italic">No invoices found.</p>
             </div>
           )}
         </div>
@@ -408,8 +408,8 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
                 const isExpanded = !!expandedInvoices[invoice.id];
 
                 return (
-                  <Card 
-                    key={invoice.id} 
+                  <Card
+                    key={invoice.id}
                     className={cn(
                       "overflow-hidden border-border/40 shadow-sm transition-all bg-card/50 backdrop-blur-sm",
                       isExpanded && "ring-1 ring-primary/20 bg-primary/5"
@@ -417,18 +417,17 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
                   >
                     <div className="p-4 space-y-4">
                       <div className="flex justify-between items-start">
-                        <div 
+                        <div
                           className="flex-1 cursor-pointer"
                           onClick={() => router.push(`/proforma/${invoice.proforma_id}?view=quote`)}
                         >
                           <h3 className="font-bold text-base leading-tight">{(invoice.proformas as any)?.project_name || 'Sin Proyecto'}</h3>
                           <p className="text-[10px] font-mono text-muted-foreground/60 uppercase mt-1">NRO: {invoice.invoice_number}</p>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                          invoice.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                          invoice.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                          'bg-muted/50 text-muted-foreground border-border/40'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${invoice.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            invoice.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              'bg-muted/50 text-muted-foreground border-border/40'
+                          }`}>
                           {invoice.status || 'draft'}
                         </span>
                       </div>
@@ -446,7 +445,7 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
 
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
-                           <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1">
                             <div className="h-1.5 flex-1 bg-muted rounded-full overflow-hidden">
                               <div
                                 className={cn(
@@ -487,26 +486,26 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
 
                     {isExpanded && (
                       <div className="bg-muted/30 border-t border-border/20 p-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
-                         <div className="flex flex-wrap gap-2">
-                           <Button
-                              variant="outline"
-                              size="sm"
-                              className={cn(
-                                "flex-1 h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest",
-                                invoice.qbo_invoice_id ? "bg-emerald-50/50 text-emerald-700" : "bg-background"
-                              )}
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                if (invoice.qbo_invoice_id) return;
-                                const loadingToast = toast.loading('Sync...');
-                                const res = await syncInvoiceToQuickBooks(invoice.id);
-                                toast.dismiss(loadingToast);
-                                if (res.success) toast.success('Sync OK!');
-                              }}
-                            >
-                              {invoice.qbo_invoice_id ? 'Synced' : 'QuickBooks'}
-                           </Button>
-                         </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={cn(
+                              "flex-1 h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest",
+                              invoice.qbo_invoice_id ? "bg-emerald-50/50 text-emerald-700" : "bg-background"
+                            )}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (invoice.qbo_invoice_id) return;
+                              const loadingToast = toast.loading('Sync...');
+                              const res = await syncInvoiceToQuickBooks(invoice.id);
+                              toast.dismiss(loadingToast);
+                              if (res.success) toast.success('Sync OK!');
+                            }}
+                          >
+                            {invoice.qbo_invoice_id ? 'Synced' : 'QuickBooks'}
+                          </Button>
+                        </div>
 
                         <div className="space-y-3">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Payments</h4>
@@ -545,7 +544,7 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
           ) : (
             <div className="p-16 text-center text-muted-foreground flex flex-col items-center">
               <FileText className="h-16 w-16 text-muted/20 mb-4" />
-              <p className="text-lg font-serif italic">No se encontraron facturas.</p>
+              <p className="text-lg  italic">No se encontraron facturas.</p>
             </div>
           )}
         </div>

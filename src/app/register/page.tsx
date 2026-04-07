@@ -11,7 +11,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md shadow-lg border-border/50 bg-card/50 backdrop-blur-sm">
         <form action={signup}>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-serif text-center">Registro en EstudioPro</CardTitle>
+            <CardTitle className="text-2xl  text-center">Registro en EstudioPro</CardTitle>
             <CardDescription className="text-center">
               Crea tu cuenta para empezar a generar proformas
             </CardDescription>

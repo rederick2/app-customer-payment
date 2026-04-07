@@ -274,7 +274,7 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
           ) : (
             <FileText className="h-16 w-16 text-muted/20 mb-4" />
           )}
-          <p className="text-lg font-serif italic">
+          <p className="text-lg  italic">
             {activeTab === 'templates' ? 'No templates found.' : 'No quotes found.'}
           </p>
         </div>

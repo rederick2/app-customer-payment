@@ -27,13 +27,14 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface DashboardMobileNavProps {
   unreadCount: number;
+  isTeamMember?: boolean;
 }
 
-export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavProps) {
+export default function DashboardMobileNav({ unreadCount, isTeamMember }: DashboardMobileNavProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const pathname = usePathname();
 
-  const links = [
+  const adminLinks = [
     { href: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/clients', icon: Users, label: 'Clients' },
     { href: '/quotes', icon: FileText, label: 'Quotes' },
@@ -51,6 +52,13 @@ export default function DashboardMobileNav({ unreadCount }: DashboardMobileNavPr
     },
     { href: '/settings', icon: Settings, label: 'Settings' },
   ];
+
+  const teamLinks = [
+    { href: '/team', icon: Calendar, label: 'My Visits', badge: 0 },
+    { href: '/team/tasks', icon: ListTodo, label: 'My Tasks', badge: 0 },
+  ];
+
+  const links = isTeamMember ? teamLinks : adminLinks;
 
   // Close menu when route changes
   React.useEffect(() => {
