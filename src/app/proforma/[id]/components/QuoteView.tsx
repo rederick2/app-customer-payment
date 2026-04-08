@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download, AlertTriangle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download, AlertTriangle, ExternalLink, FilePen, Building } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import ProformaDropdownActions from './ProformaDropdownActions';
@@ -128,7 +128,7 @@ function StatusBadge({ status }: { status: string }) {
     case 'job':
       return <Badge className="bg-purple-500/10 text-purple-700 hover:bg-purple-500/20 border-purple-500/20 text-sm py-1 px-3">Job</Badge>;
     case 'job_terminated':
-      return <Badge className="bg-slate-500/10 text-slate-700 hover:bg-slate-500/20 border-slate-500/20 text-sm py-1 px-3">Terminado</Badge>;
+      return <Badge className="bg-slate-500/10 text-slate-700 hover:bg-slate-500/20 border-slate-500/20 text-sm py-1 px-3">Terminated</Badge>;
     default:
       return <Badge variant="outline" className="text-sm py-1 px-3">Draft</Badge>;
   }
@@ -745,7 +745,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
+    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
       {/* Action Bar */}
       {!hideActionBar && (
         <div className="mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 print:hidden">
@@ -779,13 +779,11 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
           </div>
           <div className="flex gap-2 items-center flex-wrap">
             {!isReadOnly && (
-              <Link
-                href={`/proforma/${id}/edit`}
-                onClick={attemptFullEditor}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-primary/20 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-all"
-              >
-                <Pencil className="h-4 w-4" />
-                Full Editor
+              <Link href={`/proforma/${id}/edit`}>
+                <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground transition-all">
+                  <FilePen className="mr-2 h-4 w-4" />
+                  Full Editor
+                </Button>
               </Link>
             )}
             {!proforma.is_template && (
@@ -849,18 +847,21 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         {/* Company Header */}
         <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-10 relative z-10">
           <div className="flex-1 space-y-2">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground leading-tight uppercase">
-                {proforma.users?.display_name}
-              </h1>
-              {proforma.users?.business_license && (
-                <p className="text-[10px] font-semibold text-[#ac8e68] mt-1 tracking-widest uppercase">
-                  {proforma.users.business_license}
-                </p>
-              )}
+            <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Building className="h-8 w-8" />
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                  {proforma.users?.display_name}
+                </h1>
+              </div>
             </div>
 
             <div className="space-y-1 text-sm text-muted-foreground/80 font-medium">
+              {proforma.users?.business_license && (
+                <p className="font-bold text-[#ac8e68] mt-1 tracking-widest uppercase">
+                  {proforma.users.business_license}
+                </p>
+              )}
               <p className="flex items-center gap-2">{proforma.users?.address}</p>
               {proforma.users?.phone && <p>{proforma.users.phone}</p>}
               {proforma.users?.email && <p className="text-primary/70">{proforma.users.email}</p>}
@@ -903,8 +904,8 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                   Prepared For
                 </h3>
                 <div className="space-y-2">
-                  <Link href={`/clients/${proforma.client_id}`}>
-                    <p className="text-1xl font-bold text-foreground">
+                  <Link href={`/clients/${proforma.client_id}`} className='hover:underline'>
+                    <p className="text-2xl font-bold text-foreground">
                       {(() => {
                         const c = proforma.clients as any;
                         if (!c) return 'No Client';
@@ -914,7 +915,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                     </p>
                   </Link>
 
-                  <div className="text-muted-foreground/80 leading-relaxed">
+                  <div className="text-sm text-muted-foreground/80 font-medium">
                     {(() => {
                       const c = proforma.clients as any;
                       if (!c) return null;

@@ -983,28 +983,14 @@ export default function JobView({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl animate-in fade-in duration-500">
+    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
 
       {/* Action Bar */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link href="/clients" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Directory
-          </Link>
-          <span className="text-muted-foreground/40">·</span>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground mr-1">Job for</span>
-            <span className="text-sm font-bold text-foreground">
-              {(() => {
-                const c = proforma.clients as any;
-                return c?.company_name || [c?.first_name, c?.last_name].filter(Boolean).join(' ') || c?.name || 'Client';
-              })()}
-            </span>
-          </div>
         </div>
         <div className="flex gap-2 items-center">
-          <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm">
+          <Button variant="outline" size="sm" className="h-9 gap-2 ">
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Search</span>
           </Button>

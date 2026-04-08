@@ -181,7 +181,7 @@ export default async function RootLayout({
               </aside>
               <DashboardMobileNav unreadCount={unreadCount} isTeamMember={isTeamMember} />
               {/* Fixed top bar — sits above main, outside scroll container */}
-              <div className="hidden md:block fixed top-0 left-64 right-0 z-40 print:hidden">
+              <div className="hidden md:block fixed top-0 left-48 right-0 z-40 print:hidden">
                 <TopBar userProfile={userProfile} unreadCount={unreadCount} isTeamMember={isTeamMember} />
               </div>
               <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden pt-16 md:pt-14">

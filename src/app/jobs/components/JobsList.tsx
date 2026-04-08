@@ -2,12 +2,13 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { FileText, Search, ChevronLeft, ChevronRight, CalendarDays, MapPin, User, Clock, ArrowRight } from 'lucide-react';
+import { FileText, Search, ChevronLeft, ChevronRight, CalendarDays, MapPin, User, Clock, ArrowRight, PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import Link from 'next/link';
 
 interface JobsListProps {
   initialProformas: any[];
@@ -40,20 +41,32 @@ export function JobsList({ initialProformas }: JobsListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 max-w-md w-full md:ml-auto">
-        <div className="relative w-full group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input
-            placeholder="Search by project or client..."
-            className="pl-11 h-12 border-border/40 bg-card/60 backdrop-blur-sm focus-visible:ring-primary/20 transition-all rounded-2xl shadow-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div>
+          <h1 className="font-bold text-3xl md:text-4xl font-bold tracking-tight mb-1">Jobs</h1>
+          <p className="text-muted-foreground text-sm">List of all in-progress or scheduled jobs.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by project or client..."
+              className="pl-8 bg-background shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Link href="/proforma/new" className="w-full md:w-auto">
+            <Button className="flex-1 sm:flex-initial">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Quote
+            </Button>
+          </Link>
         </div>
       </div>
 
       {/* Desktop View: Table */}
-      <Card className="hidden md:block shadow-xl border-border/40 overflow-hidden bg-card/40 backdrop-blur-md rounded-2xl">
+      <Card className="hidden md:block border-border/40 overflow-hidden bg-card/40 backdrop-blur-md rounded-2xl">
         <div className="overflow-x-auto">
           {filteredProformas.length > 0 ? (
             <table className="w-full text-sm text-left">

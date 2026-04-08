@@ -100,21 +100,6 @@ export default async function InvoicesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-        <div>
-          <h1 className=" text-3xl md:text-4xl font-bold tracking-tight mb-1">Invoices</h1>
-          <p className="text-muted-foreground text-sm">Manage and view all your generated invoices.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/proforma/new">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Quote
-            </Button>
-          </Link>
-        </div>
-      </div>
-
       <InvoicesList initialInvoices={enrichedInvoices} userProfile={userProfile} />
     </div>
   );

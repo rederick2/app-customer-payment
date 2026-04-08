@@ -27,8 +27,8 @@ export default async function TimesheetsAdminPage() {
     .single();
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto flex flex-col space-y-6">
-      <div className="flex justify-between items-center bg-card p-6 rounded-xl border border-border/50 shadow-sm">
+    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex justify-between items-center p-6">
         <div>
           <h1 className="text-3xl  text-[#0D3B47] mb-1">Timesheets</h1>
           <p className="text-muted-foreground text-sm">Review your team's hours and sync them securely to QuickBooks.</p>

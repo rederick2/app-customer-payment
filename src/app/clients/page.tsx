@@ -139,7 +139,7 @@ export default async function ClientsPage(
         </div>
       </div>
 
-      <Card className="shadow-sm border-border/50 overflow-hidden bg-transparent hidden md:block">
+      <Card className="border-border/50 overflow-hidden bg-transparent hidden md:block">
         <div className="hidden md:block">
           {clients && clients.length > 0 ? (
             <table className="w-full text-sm text-left border-collapse">

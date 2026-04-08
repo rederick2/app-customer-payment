@@ -173,7 +173,7 @@ export default function PhotoCard({ photo, onDelete, onUpdate, onExpand, compact
                   </button>
                 </div>
 
-                <DialogFooter className="p-5 pt-0 gap-3">
+                <DialogFooter className="p-10 pt-0 gap-3">
                   <Button variant="outline" onClick={() => setEditing(false)} className="flex-1 rounded-xl">
                     Cancel
                   </Button>

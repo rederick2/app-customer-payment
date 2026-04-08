@@ -23,7 +23,8 @@ import {
   Trash2,
   FileDown,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  IdCardIcon
 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -161,11 +162,8 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
       {/* Header */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <Link href="/clients" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-2 transition-colors">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Client Directory
-          </Link>
           <div className="flex items-center gap-3">
+            <IdCardIcon className="w-8 h-8" />
             <h1 className=" text-3xl md:text-4xl font-bold tracking-tight">{clientName}</h1>
             {client.company_name && (
               <Badge variant="secondary" className="mt-1">Company</Badge>

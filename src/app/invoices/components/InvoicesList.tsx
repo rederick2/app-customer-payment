@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { FileText, Search, ChevronLeft, ChevronRight, RotateCw, Cloud, CheckCircle2 } from 'lucide-react';
+import { FileText, Search, ChevronLeft, ChevronRight, RotateCw, Cloud, CheckCircle2, PlusCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import InvoicePDF from '@/lib/pdf/InvoicePDF';
 import PaymentPDF from '@/lib/pdf/PaymentPDF';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { Eye } from 'lucide-react';
+import Link from 'next/link';
 
 export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps) {
   const router = useRouter();
@@ -144,18 +145,31 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 max-w-md w-full ml-auto">
-        <div className="relative w-full group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input
-            placeholder="Buscar por proyecto o cliente..."
-            className="pl-10 h-10 border-border/40 bg-card/50 backdrop-blur-sm focus-visible:ring-primary/20 transition-all rounded-xl"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div>
+          <h1 className="font-bold text-3xl md:text-4xl font-bold tracking-tight mb-1">Invoices</h1>
+          <p className="text-muted-foreground text-sm">Manage and view all your generated invoices.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by project or client..."
+              className="pl-8 bg-background shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/proforma/new">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Quote
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
-
       <Card className="shadow-sm border-border/50 overflow-hidden bg-transparent md:bg-card">
         {/* Desktop View */}
         <div className="hidden md:block">
@@ -425,8 +439,8 @@ export function InvoicesList({ initialInvoices, userProfile }: InvoicesListProps
                           <p className="text-[10px] font-mono text-muted-foreground/60 uppercase mt-1">NRO: {invoice.invoice_number}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${invoice.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                            invoice.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              'bg-muted/50 text-muted-foreground border-border/40'
+                          invoice.status === 'sent' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                            'bg-muted/50 text-muted-foreground border-border/40'
                           }`}>
                           {invoice.status || 'draft'}
                         </span>

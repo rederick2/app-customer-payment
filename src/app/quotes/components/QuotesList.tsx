@@ -46,18 +46,32 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 max-w-md w-full ml-auto">
-        <div className="relative w-full group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input
-            placeholder="Search by project or client..."
-            className="pl-10 h-10 border-border/40 bg-card/50 backdrop-blur-sm focus-visible:ring-primary/20 transition-all rounded-xl"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div>
+          <h1 className="font-bold text-3xl md:text-4xl font-bold tracking-tight mb-1">Quotes</h1>
+          <p className="text-muted-foreground text-sm">List of all quotes.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by project or client..."
+              className="pl-8 bg-background shadow-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            {/*<ImportQuotesModal />*/}
+            <Link href="/proforma/new">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground transition-all">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Quote
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
-
       <div className="w-full mb-6">
         <div className="flex bg-muted/50 p-1 w-max rounded-xl">
           <button
