@@ -11,37 +11,40 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md shadow-lg border-border/50 bg-card/50 backdrop-blur-sm">
         <form action={signup}>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl  text-center">Registro en EstudioPro</CardTitle>
+            <div className="flex justify-center mb-2">
+              <img src="/logo.png" alt="Logo" className="w-54 h-24" />
+            </div>
+            <CardTitle className="text-2xl  text-center">Register</CardTitle>
             <CardDescription className="text-center">
-              Crea tu cuenta para empezar a generar proformas
+              Create your account to start generating Quotes
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input id="email" name="email" type="email" placeholder="tu@correo.com" required />
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" placeholder="your@email.com" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" name="password" type="password" required minLength={6} />
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" name="password" type="password" placeholder="***************" required minLength={6} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Teléfono</Label>
+              <Label htmlFor="phone">Phone</Label>
               <Input id="phone" name="phone" type="tel" placeholder="+123456789" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address">Dirección</Label>
-              <Input id="address" name="address" type="text" placeholder="Calle Falsa 123" />
+              <Label htmlFor="address">Address</Label>
+              <Input id="address" name="address" type="text" placeholder="123 Fake St" />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full">
-              Crear Cuenta
+              Create Account
             </Button>
             <div className="text-center text-sm text-muted-foreground">
-              ¿Ya tienes una cuenta?{' '}
+              Already have an account?{' '}
               <Link href="/login" className="text-primary hover:underline">
-                Inicia sesión aquí
+                Login here
               </Link>
             </div>
           </CardFooter>
