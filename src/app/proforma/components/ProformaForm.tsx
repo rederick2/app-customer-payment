@@ -9,10 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { generateAndSaveVisits } from './job-actions';
 import Autocomplete from 'react-google-autocomplete';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -552,8 +553,22 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
   const isJobMode = initialData?.proforma?.status === 'job';
   const [jobType, setJobType] = useState<'one-off' | 'recurring'>(initialData?.proforma?.job_type || 'one-off');
   const [recurringInterval, setRecurringInterval] = useState<string>(initialData?.proforma?.recurring_interval || 'monthly');
-  const [jobStartAt, setJobStartAt] = useState<string>(initialData?.proforma?.job_start_at ? new Date(initialData.proforma.job_start_at).toISOString().split('T')[0] : '');
+  const [jobStartAt, setJobStartAt] = useState<string>(initialData?.proforma?.job_start_at ? new Date(initialData.proforma.job_start_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
   const [jobEndAt, setJobEndAt] = useState<string>(initialData?.proforma?.job_end_at ? new Date(initialData.proforma.job_end_at).toISOString().split('T')[0] : '');
+
+  // Advanced Scheduling States
+  const [scheduleLater, setScheduleLater] = useState(false);
+  const [anytime, setAnytime] = useState(true);
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
+  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([]); // 0-6 for weekly
+  const [endCondition, setEndCondition] = useState<'after' | 'on'>('after');
+  const [endConditionValue, setEndConditionValue] = useState<number | string>(6);
+  const [endConditionPeriod, setEndConditionPeriod] = useState<'months' | 'visits'>('months');
+  const [assignedTeamMembers, setAssignedTeamMembers] = useState<string[]>([]);
+  const [emailTeamAssignment, setEmailTeamAssignment] = useState(false);
+  const [visitInstructions, setVisitInstructions] = useState('');
+  const [billingType, setBillingType] = useState<'per_visit' | 'fixed'>(initialData?.proforma?.billing_type || 'fixed');
 
   // Line Items
   const [items, setItems] = useState<LineItem[]>(
@@ -576,6 +591,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
 
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [availableTaxes, setAvailableTaxes] = useState<Tax[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [adjustments, setAdjustments] = useState<Adjustment[]>(
     initialData?.proforma?.adjustments || []
   );
@@ -583,6 +599,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
   // New States for Dialogs
   const [isTaxDialogOpen, setIsTaxDialogOpen] = useState(false);
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false);
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [newTaxName, setNewTaxName] = useState("");
   const [newTaxPercent, setNewTaxPercent] = useState("");
   const [depositAmount, setDepositAmount] = useState<number>(initialData?.proforma?.deposit_amount || 0);
@@ -604,6 +621,12 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           .select('*')
           .eq('user_id', user.id);
         if (taxesData) setAvailableTaxes(taxesData);
+
+        const { data: teamData } = await supabase
+          .from('team_members')
+          .select('*')
+          .order('name', { ascending: true });
+        if (teamData) setTeamMembers(teamData);
 
         const { data: clientsData } = await supabase
           .from('clients')
@@ -645,6 +668,72 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
     };
     fetchData();
   }, [supabase]);
+
+  const calculateVisitsSummary = () => {
+    /*if (jobType === 'one-off') {
+      return { total: 1, lastDate: jobEndAt || jobStartAt || '---' };
+    }*/
+
+    if (!jobStartAt) return { total: '---', lastDate: '---' };
+
+    const start = new Date(jobStartAt + 'T00:00:00');
+    const end = jobEndAt ? new Date(jobEndAt + 'T23:59:59') : null;
+
+    if (!end) return { total: '---', lastDate: '---' };
+
+    let count = 0;
+    let current = new Date(start);
+    let lastVisitDate: Date | null = null;
+
+    // Safety limit to prevent infinite loops
+    const MAX_ITER = 10000;
+    let iter = 0;
+
+    while (current <= end && iter < MAX_ITER) {
+      iter++;
+      let qualifies = true;
+
+      if (recurringInterval === 'weekly') {
+        // For weekly, if specific days selected, only count those days
+        if (daysOfWeek.length > 0) {
+          qualifies = daysOfWeek.includes(current.getDay());
+        }
+      }
+
+      if (qualifies) {
+        count++;
+        lastVisitDate = new Date(current);
+      }
+
+      // Advance date
+      if (recurringInterval === 'daily') {
+        current.setDate(current.getDate() + 1);
+      } else if (recurringInterval === 'weekly') {
+        if (daysOfWeek.length > 0) {
+          // Day-by-day for multi-day weekly selection
+          current.setDate(current.getDate() + 1);
+        } else {
+          current.setDate(current.getDate() + 7);
+        }
+      } else if (recurringInterval === 'biweekly') {
+        current.setDate(current.getDate() + 14);
+      } else if (recurringInterval === 'monthly') {
+        current.setMonth(current.getMonth() + 1);
+      } else if (recurringInterval === 'quarterly') {
+        current.setMonth(current.getMonth() + 3);
+      } else {
+        break;
+      }
+    }
+
+    const lastDateStr = lastVisitDate
+      ? lastVisitDate.toISOString().split('T')[0]
+      : '---';
+
+    return { total: count, lastDate: lastDateStr };
+  };
+
+  const visitsSummary = calculateVisitsSummary();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -689,16 +778,16 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
     setPostalCode(code);
   };
 
-  const handleClientSelect = (value: string | null) => {
-    if (!value) return;
-    setSelectedClientId(value);
+  const handleClientSelect = (clientId: string) => {
+    setSelectedClientId(clientId);
     setComboboxOpen(false);
 
-    if (value === 'new') {
+    if (clientId === 'new') {
+      setIsNewClientModalOpen(true);
+      setCompanyName('');
       setTitle('');
       setFirstName('');
       setLastName('');
-      setCompanyName('');
       setClientEmail('');
       setClientPhone('');
       setStreet1('');
@@ -708,12 +797,12 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       setPostalCode('');
       setCountry('');
     } else {
-      const client = clients.find(c => c.id === value);
+      const client = clients.find(c => c.id === clientId);
       if (client) {
+        setCompanyName(client.company_name || '');
         setTitle(client.title || '');
         setFirstName(client.first_name || '');
         setLastName(client.last_name || '');
-        setCompanyName(client.company_name || '');
         setClientEmail(client.email || '');
         setClientPhone(client.phone || '');
         setStreet1(client.street_1 || '');
@@ -725,6 +814,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       }
     }
   };
+
 
   const addItem = () => {
     setItems([...items, { id: crypto.randomUUID(), description: '', details: '', quantity: 1, unit_price: 0, is_optional: false, photo: null, sort_order: items.length }]);
@@ -951,9 +1041,22 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       if (isJobMode) {
         proformaPayload.status = 'job';
         proformaPayload.job_type = jobType;
+        proformaPayload.billing_type = billingType;
         proformaPayload.recurring_interval = jobType === 'recurring' ? recurringInterval : null;
         proformaPayload.job_start_at = jobStartAt ? new Date(jobStartAt + 'T00:00:00').toISOString() : null;
-        proformaPayload.job_end_at = (jobType === 'one-off' && jobEndAt) ? new Date(jobEndAt + 'T23:59:59').toISOString() : null;
+        proformaPayload.job_end_at = jobEndAt ? new Date(jobEndAt + 'T23:59:59').toISOString() : null;
+
+        // Advanced scheduling config
+        proformaPayload.schedule_config = {
+          scheduleLater,
+          anytime,
+          startTime,
+          endTime,
+          daysOfWeek,
+          assignedTeamMembers,
+          emailTeamAssignment,
+          visitInstructions
+        };
       }
 
       let proformaData;
@@ -1017,6 +1120,26 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       const { error: itemsError } = await supabase.from('proforma_items').insert(itemsToInsert);
       if (itemsError) throw itemsError;
 
+      // Generate visits if in job mode
+      if (isJobMode) {
+        await generateAndSaveVisits(
+          proformaData.id,
+          jobStartAt,
+          jobEndAt || null,
+          recurringInterval,
+          {
+            scheduleLater,
+            anytime,
+            startTime,
+            endTime,
+            daysOfWeek,
+            assignedTeamMembers,
+            visitInstructions
+          },
+          teamMembers
+        );
+      }
+
       toast.success(isJobMode ? 'Job created successfully!' : (mode === 'edit' ? 'Proforma updated' : 'Proforma created'));
       router.push(`/proforma/${proformaData.id}`);
       router.refresh();
@@ -1029,7 +1152,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
+    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <Button
@@ -1064,16 +1187,6 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {isJobMode && (
-          <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <div>
-              <p className="text-sm font-bold text-emerald-800">Creating a Job</p>
-              <p className="text-xs text-emerald-600">This will be saved directly as an active job (no quote process needed).</p>
-            </div>
-          </div>
-        )}
-
         {!isJobMode && mode === 'create' && (
           <div className="flex items-center space-x-3 bg-muted/40 p-4 rounded-xl border border-border/50 shadow-sm max-w-max">
             <Checkbox
@@ -1091,199 +1204,197 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </div>
         )}
 
-        <div className={cn("grid gap-6", isTemplate ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2")}>
+        <div className="space-y-2">
+          <Label htmlFor="projectName" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">
+            {isTemplate ? 'Template Name *' : isJobMode ? 'Job Name *' : 'Project Name *'}
+          </Label>
+          <Input
+            id="projectName"
+            required
+            placeholder={isTemplate ? 'e.g. Standard Bathroom Remodel' : isJobMode ? 'e.g. Pool Cleaning - Monthly' : 'e.g. Living Room Remodel'}
+            value={projectName}
+            onChange={e => setProjectName(e.target.value)}
+            className="h-12 rounded-xl font-bold bg-white border focus:ring-2 focus:ring-primary/10 transition-all"
+          />
+        </div>
+        <div className="space-y-10">
           {!isTemplate && (
-            <Card className="shadow-sm border-border/50">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg uppercase font-bold">Client Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {mode === 'create' && (
-                  <div className="space-y-2">
-                    <Label>Select Client</Label>
-                    <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-                      <PopoverTrigger
-                        role="combobox"
-                        aria-expanded={comboboxOpen}
-                        className="w-full justify-between h-auto py-3 font-normal bg-background inline-flex items-center px-4 rounded-md border border-input ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        {selectedClientId === 'new' ? (
-                          <span className="text-muted-foreground text-left flex-1">Select a client...</span>
-                        ) : (() => {
-                          const selectedClient = clients.find(c => c.id === selectedClientId);
-                          return selectedClient ? (
-                            <div className="text-left flex-1 min-w-0">
-                              <div className="font-bold text-foreground truncate">
-                                {selectedClient.company_name || selectedClient.first_name || selectedClient.name}
+            <div className="space-y-4">
+              <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">Client Details</h2>
+              <Card className="shadow-sm border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
+                <CardContent className="p-6 space-y-4">
+                  {mode === 'create' && (
+                    <div className="space-y-2">
+                      <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Select Client</Label>
+                      <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                        <PopoverTrigger
+                          role="combobox"
+                          aria-expanded={comboboxOpen}
+                          className="w-full justify-between h-12 py-3 font-normal bg-background inline-flex items-center px-4 rounded-xl border border-border/40 hover:bg-muted/5 transition-all focus:ring-2 focus:ring-primary/10"
+                        >
+                          {selectedClientId === 'new' ? (
+                            <span className="text-muted-foreground text-left flex-1 font-medium">Select a Client from the list...</span>
+                          ) : (() => {
+                            const selectedClient = clients.find(c => c.id === selectedClientId);
+                            return selectedClient ? (
+                              <div className="text-left flex-1 min-w-0">
+                                <div className="font-bold text-foreground truncate">
+                                  {selectedClient.company_name || [selectedClient.first_name, selectedClient.last_name].filter(Boolean).join(' ') || selectedClient.name}
+                                </div>
                               </div>
-                              <div className="text-sm text-muted-foreground truncate">
-                                {selectedClient.first_name && selectedClient.company_name && <span>Attn: {selectedClient.first_name} {selectedClient.last_name} &bull; </span>}
-                                {selectedClient.street_1 || selectedClient.email || 'No additional details'}
-                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-left flex-1 font-medium italic">Search or select a client...</span>
+                            );
+                          })()}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-40" />
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0 rounded-2xl border-border/40 shadow-2xl overflow-hidden" align="start" side="bottom" sideOffset={4}>
+                          <Command className="rounded-2xl">
+                            <CommandInput placeholder="Search name, company or email..." className="h-12 border-none focus:ring-0 font-manrope" />
+                            <CommandList className="max-h-[300px] custom-scrollbar">
+                              <CommandEmpty className="p-4 text-sm text-muted-foreground italic">No clients found.</CommandEmpty>
+                              <CommandGroup heading="Existing Clients" className="p-2 text-[10px] font-black tracking-widest text-muted-foreground/50">
+                                {clients.map((client) => {
+                                  const nameDisplay = [client.title, client.first_name, client.last_name].filter(Boolean).join(' ') || client.name;
+                                  return (
+                                    <CommandItem
+                                      key={client.id}
+                                      value={`${client.company_name} ${nameDisplay} ${client.email}`}
+                                      onSelect={() => handleClientSelect(client.id)}
+                                      className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer rounded-xl"
+                                    >
+                                      <div className="flex w-full items-center justify-between">
+                                        <span className="font-bold text-foreground">{client.company_name || nameDisplay}</span>
+                                        {selectedClientId === client.id && <Check className="h-4 w-4 text-primary" />}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground w-full truncate space-x-1 font-medium">
+                                        {client.company_name && <span>Attn: {nameDisplay}</span>}
+                                        {client.company_name && client.street_1 && <span>&bull;</span>}
+                                        {client.street_1 && <span>{client.street_1}</span>}
+                                        {client.street_1 && client.email && <span>&bull;</span>}
+                                        {client.email && <span>{client.email}</span>}
+                                      </div>
+                                    </CommandItem>
+                                  )
+                                })}
+                              </CommandGroup>
+                            </CommandList>
+                            <div className="border-t border-border/40 p-2 bg-muted/5">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className="w-full justify-start text-primary font-bold hover:text-primary hover:bg-primary/10 rounded-xl h-11"
+                                onClick={() => handleClientSelect('new')}
+                              >
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                <span className="uppercase tracking-widest text-[10px]">Create brand new client</span>
+                              </Button>
                             </div>
-                          ) : (
-                            <span className="text-muted-foreground text-left flex-1">Select a client...</span>
-                          );
-                        })()}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search clients..." />
-                          <CommandList>
-                            <CommandEmpty>No clients found.</CommandEmpty>
-                            <CommandGroup>
-                              {clients.map((client) => {
-                                const nameDisplay = [client.title, client.first_name, client.last_name].filter(Boolean).join(' ') || client.name;
-                                return (
-                                  <CommandItem
-                                    key={client.id}
-                                    value={`${client.company_name} ${nameDisplay} ${client.email}`}
-                                    onSelect={() => handleClientSelect(client.id)}
-                                    className="flex flex-col items-start gap-1 py-3 px-4 cursor-pointer"
-                                  >
-                                    <div className="flex w-full items-center justify-between">
-                                      <span className="font-bold">{client.company_name || nameDisplay}</span>
-                                      {selectedClientId === client.id && <Check className="h-4 w-4 text-primary" />}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground w-full truncate space-x-1">
-                                      {client.company_name && <span>Attn: {nameDisplay}</span>}
-                                      {client.company_name && client.street_1 && <span>&bull;</span>}
-                                      {client.street_1 && <span>{client.street_1}</span>}
-                                      {client.street_1 && client.email && <span>&bull;</span>}
-                                      {client.email && <span>{client.email}</span>}
-                                    </div>
-                                  </CommandItem>
-                                )
-                              })}
-                            </CommandGroup>
-                          </CommandList>
-                          <div className="border-t p-2">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className="w-full justify-start text-primary font-medium hover:text-primary hover:bg-primary/10"
-                              onClick={() => handleClientSelect('new')}
-                            >
-                              <PlusCircle className="mr-2 h-4 w-4" />
-                              Create new client
-                            </Button>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+
+                  {/* Client Preview Card */}
+                  {((selectedClientId !== 'new' && selectedClientId) || (selectedClientId === 'new' && (firstName || lastName || companyName || street1))) && (
+                    <div className="mt-4 p-5 rounded-xl border bg-muted/50 space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                              {selectedClientId === 'new' ? 'New Client (Draft)' : 'Selected Client'}
+                            </p>
                           </div>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
+                          <h3 className="text-2xl font-black tracking-tight font-archivo">
+                            {selectedClientId === 'new'
+                              ? (companyName || `${firstName} ${lastName}` || 'Unnamed Client')
+                              : (clients.find(c => c.id === selectedClientId)?.company_name || [clients.find(c => c.id === selectedClientId)?.first_name, clients.find(c => c.id === selectedClientId)?.last_name].filter(Boolean).join(' ') || 'Loading...')
+                            }
+                          </h3>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-9 gap-2 text-xs font-bold rounded-xl border border-border/40 shadow-sm hover:translate-y-[-1px] transition-all"
+                          onClick={() => setIsNewClientModalOpen(true)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit Info
+                        </Button>
+                      </div>
 
-                {(selectedClientId === 'new' || mode === 'edit') && (
-                  <div className={cn("space-y-4 pt-4 border-t mt-4 border-border/50", mode === 'edit' && "border-t-0 pt-0 mt-0")}>
-                    <div className="space-y-2">
-                      <Label htmlFor="companyName">Company Name (Optional)</Label>
-                      <Input id="companyName" placeholder="e.g. Acme Corp" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Title</Label>
-                        <Input id="title" placeholder="Mr., Mrs., Dr." value={title} onChange={e => setTitle(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name *</Label>
-                        <Input id="firstName" required placeholder="e.g. John" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name *</Label>
-                        <Input id="lastName" required placeholder="e.g. Doe" value={lastName} onChange={e => setLastName(e.target.value)} />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-border/10">
-                      <Label htmlFor="street1">Address Line 1 (Search with Google) *</Label>
-                      <Autocomplete
-                        apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-                        onPlaceSelected={handlePlaceSelected}
-                        options={{ types: ["address"] }}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder="Start typing an address..."
-                        defaultValue={street1}
-                        onChange={(e: any) => setStreet1(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="street2">Address Line 2 (Optional)</Label>
-                      <Input id="street2" placeholder="Apt, Suite, Floor..." value={street2} onChange={e => setStreet2(e.target.value)} />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input id="city" placeholder="e.g. New York" value={city} onChange={e => setCity(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="province">State / Province</Label>
-                        <Input id="province" placeholder="e.g. NY" value={province} onChange={e => setProvince(e.target.value)} />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 pt-4 border-t border-border/10">
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40 flex items-center gap-1.5">
+                            Contact
+                          </p>
+                          <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                            <span className="w-1 h-1 rounded-full bg-primary" />
+                            {selectedClientId === 'new' ? (clientEmail || 'No email provided') : (clients.find(c => c.id === selectedClientId)?.email || 'No email')}
+                          </p>
+                          <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                            <span className="w-1 h-1 rounded-full bg-primary" />
+                            {selectedClientId === 'new' ? (clientPhone || 'No phone provided') : (clients.find(c => c.id === selectedClientId)?.phone || 'No phone')}
+                          </p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-40">Service Address</p>
+                          <p className="text-sm font-bold text-foreground">
+                            {selectedClientId === 'new' ? (street1 || 'No address set') : (clients.find(c => c.id === selectedClientId)?.street_1 || 'No address')}
+                          </p>
+                          <p className="text-sm font-medium text-muted-foreground">
+                            {selectedClientId === 'new'
+                              ? [city, province, postalCode].filter(Boolean).join(', ')
+                              : [clients.find(c => c.id === selectedClientId)?.city, clients.find(c => c.id === selectedClientId)?.province, clients.find(c => c.id === selectedClientId)?.postal_code].filter(Boolean).join(', ')
+                            }
+                          </p>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="postalCode">Postal Code</Label>
-                        <Input id="postalCode" placeholder="10001" value={postalCode} onChange={e => setPostalCode(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
-                        <Input id="country" placeholder="USA" value={country} onChange={e => setCountry(e.target.value)} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/10">
-                      <div className="space-y-2">
-                        <Label htmlFor="clientEmail">Email (Optional)</Label>
-                        <Input id="clientEmail" type="email" placeholder="email@example.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="clientPhone">Phone (Optional)</Label>
-                        <Input id="clientPhone" placeholder="+123456789" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
 
-            <Card className="shadow-sm border-border/50">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg uppercase font-bold">
-                  {isJobMode ? 'Job Details' : 'Project Details'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="projectName">{isTemplate ? 'Template Name *' : isJobMode ? 'Job Name *' : 'Project Name *'}</Label>
-                  <Input id="projectName" required placeholder={isTemplate ? 'e.g. Standard Bathroom Remodel' : isJobMode ? 'e.g. Pool Cleaning - Monthly' : 'e.g. Living Room Remodel'} value={projectName} onChange={e => setProjectName(e.target.value)} />
-                </div>
+          <div className="space-y-4">
+            <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">
+              {isJobMode ? 'Schedule' : 'Project Details'}
+            </h2>
+            <Card className="border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
+              <CardContent className="p-8 space-y-8">
                 {!isTemplate && !isJobMode && (
                   <div className="space-y-2">
-                    <Label htmlFor="validUntil">Valid Until *</Label>
-                    <Input id="validUntil" type="date" required value={validUntil} onChange={e => setValidUntil(e.target.value)} />
+                    <Label htmlFor="validUntil" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Valid Until *</Label>
+                    <Input
+                      id="validUntil"
+                      type="date"
+                      required
+                      value={validUntil}
+                      onChange={e => setValidUntil(e.target.value)}
+                      className="h-12 rounded-xl border-border/40 font-bold"
+                    />
                   </div>
                 )}
 
                 {isJobMode && (
-                  <>
+                  <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
                     {/* Job Type Toggle */}
-                    <div className="space-y-2">
-                      <Label>Job Type *</Label>
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-3">
+                      <Label className="flex items-center gap-2 font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">
+                        Job Type <span className="h-5 w-5 rounded-full border border-border/60 flex items-center justify-center text-[10px] font-black">?</span>
+                      </Label>
+                      <div className="flex p-1.5 bg-muted/20 border border-border/40 rounded-xl max-w-sm">
                         <button
                           type="button"
-                          onClick={() => setJobType('one-off')}
+                          onClick={() => { setJobType('one-off'); setBillingType('fixed'); }}
                           className={cn(
-                            "h-11 rounded-xl border-2 text-sm font-bold transition-all",
+                            "flex-1 h-11 rounded-lg text-xs font-black uppercase tracking-wider transition-all",
                             jobType === 'one-off'
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-background border-border/50 text-muted-foreground hover:border-primary/40"
+                              ? "bg-white text-primary border shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
                           )}
                         >
                           One-off
@@ -1292,10 +1403,10 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
                           type="button"
                           onClick={() => setJobType('recurring')}
                           className={cn(
-                            "h-11 rounded-xl border-2 text-sm font-bold transition-all",
+                            "flex-1 h-11 rounded-lg text-xs font-black uppercase tracking-wider transition-all",
                             jobType === 'recurring'
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-background border-border/50 text-muted-foreground hover:border-primary/40"
+                              ? "bg-white text-primary border shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
                           )}
                         >
                           Recurring
@@ -1303,119 +1414,361 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
                       </div>
                     </div>
 
-                    {/* Recurring Interval */}
-                    {jobType === 'recurring' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="recurringInterval">Recurrence Interval *</Label>
-                        <select
-                          id="recurringInterval"
-                          value={recurringInterval}
-                          onChange={e => setRecurringInterval(e.target.value)}
-                          className="h-10 w-full pl-3 pr-10 border border-input rounded-xl bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                    {/* Billing Type */}
+                    <div className="space-y-3">
+                      <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Billing Type</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {/* Fixed Amount — available for both */}
+                        <button
+                          type="button"
+                          onClick={() => setBillingType('fixed')}
+                          className={cn(
+                            "flex flex-col items-start gap-1.5 p-4 rounded-xl border-2 transition-all text-left",
+                            billingType === 'fixed'
+                              ? "border-primary bg-primary/5"
+                              : "border-border/30 bg-muted/5 hover:border-border/60"
+                          )}
                         >
-                          <option value="daily">Daily</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="biweekly">Biweekly (every 2 weeks)</option>
-                          <option value="monthly">Monthly</option>
-                          <option value="quarterly">Quarterly</option>
-                        </select>
-                      </div>
-                    )}
+                          <span className={cn("text-xs font-black uppercase tracking-widest", billingType === 'fixed' ? "text-primary" : "text-muted-foreground")}>Fixed Amount</span>
+                          <span className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                            {jobType === 'recurring'
+                              ? 'Issue a fixed-price invoice for each billing cycle, regardless of number of visits.'
+                              : 'Invoice a single fixed amount for the entire job.'}
+                          </span>
+                        </button>
 
-                    {/* Job Start Date */}
-                    <div className="space-y-2">
-                      <Label htmlFor="jobStartAt">Start Date *</Label>
-                      <Input
-                        id="jobStartAt"
-                        type="date"
-                        required={isJobMode}
-                        value={jobStartAt}
-                        onChange={e => setJobStartAt(e.target.value)}
-                      />
+                        {/* Per Visit — only for recurring */}
+                        {jobType === 'recurring' && (
+                          <button
+                            type="button"
+                            onClick={() => setBillingType('per_visit')}
+                            className={cn(
+                              "flex flex-col items-start gap-1.5 p-4 rounded-xl border-2 transition-all text-left",
+                              billingType === 'per_visit'
+                                ? "border-primary bg-primary/5"
+                                : "border-border/30 bg-muted/5 hover:border-border/60"
+                            )}
+                          >
+                            <span className={cn("text-xs font-black uppercase tracking-widest", billingType === 'per_visit' ? "text-primary" : "text-muted-foreground")}>Per Visit</span>
+                            <span className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                              Each visit becomes a billable line item, all consolidated into a single invoice per cycle.
+                            </span>
+                          </button>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Job End Date — only for one-off */}
-                    {jobType === 'one-off' && (
-                      <div className="space-y-2">
-                        <Label htmlFor="jobEndAt">End Date</Label>
-                        <Input
-                          id="jobEndAt"
-                          type="date"
-                          value={jobEndAt}
-                          onChange={e => setJobEndAt(e.target.value)}
-                        />
+                    {/* Schedule Summary (Visual only for now) */}
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 py-3 border-y border-border/10 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <div className="flex items-center gap-2">
+                        <span className="text-foreground/40 font-black">Total visits</span>
+                        <span className="text-foreground">{visitsSummary.total}</span>
                       </div>
-                    )}
-                  </>
+                      <div className="flex items-center gap-2">
+                        <span className="text-foreground/40 font-black">First</span>
+                        <span className="text-foreground">{jobStartAt || '---'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-foreground/40 font-black">Last</span>
+                        <span className="text-foreground">{visitsSummary.lastDate}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-foreground/40 font-black">Repeats</span>
+                        <span className="text-foreground">{recurringInterval}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Left Column: Dates and Timing */}
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="jobStartAt" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Start Date *</Label>
+                            <Input
+                              id="jobStartAt"
+                              type="date"
+                              required={isJobMode}
+                              value={jobStartAt}
+                              onChange={e => setJobStartAt(e.target.value)}
+                              disabled={scheduleLater}
+                              className={cn("h-12 rounded-xl font-bold transition-all", scheduleLater && "opacity-50 grayscale")}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="jobEndAt" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">End Date</Label>
+                            <Input
+                              id="jobEndAt"
+                              type="date"
+                              value={jobEndAt}
+                              onChange={e => setJobEndAt(e.target.value)}
+                              disabled={scheduleLater}
+                              className={cn("h-12 rounded-xl font-bold transition-all", scheduleLater && "opacity-50 grayscale")}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setScheduleLater(!scheduleLater)}>
+                          <Checkbox
+                            id="scheduleLater"
+                            checked={scheduleLater}
+                            onCheckedChange={(checked) => setScheduleLater(!!checked)}
+                            className="h-5 w-5 rounded-md border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                          <Label htmlFor="scheduleLater" className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">Schedule later</Label>
+                        </div>
+
+                        {!scheduleLater && (
+                          <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                              <div className={cn("grid grid-cols-2 border border-border/40 rounded-xl overflow-hidden transition-all", anytime && "opacity-50 grayscale")}>
+                                <div className="space-y-1 p-3 bg-muted/5 border-r border-border/20">
+                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">Start time</Label>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-3 w-3 text-primary/40" />
+                                    <input
+                                      type="time"
+                                      value={startTime}
+                                      onChange={e => setStartTime(e.target.value)}
+                                      disabled={anytime}
+                                      className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 w-full"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-1 p-3 bg-muted/5">
+                                  <Label className="text-[9px] font-black uppercase text-muted-foreground">End time</Label>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-3 w-3 text-primary/40" />
+                                    <input
+                                      type="time"
+                                      value={endTime}
+                                      onChange={e => setEndTime(e.target.value)}
+                                      disabled={anytime}
+                                      className="bg-transparent border-none text-xs font-bold focus:ring-0 p-0 w-full"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center pb-4">
+                                <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setAnytime(!anytime)}>
+                                  <Checkbox
+                                    id="anytime"
+                                    checked={anytime}
+                                    onCheckedChange={(checked) => setAnytime(!!checked)}
+                                    className="h-5 w-5 rounded-md border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                  />
+                                  <Label htmlFor="anytime" className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">Anytime</Label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Repeats — shown for both one-off and recurring */}
+                        <div className="space-y-2 animate-in fade-in duration-300">
+                          <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Repeats</Label>
+                          <select
+                            id="recurringInterval"
+                            value={recurringInterval}
+                            onChange={e => setRecurringInterval(e.target.value)}
+                            className="h-12 w-full px-4 border border-border/40 rounded-xl bg-background text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer transition-all hover:border-primary/20"
+                          >
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biweekly">Biweekly (every 2 weeks)</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                          </select>
+                        </div>
+
+                        {recurringInterval === 'weekly' && (
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setDaysOfWeek(prev =>
+                                    prev.includes(idx) ? prev.filter(d => d !== idx) : [...prev, idx]
+                                  );
+                                }}
+                                className={cn(
+                                  "h-10 w-10 rounded-lg text-[10px] font-black transition-all",
+                                  daysOfWeek.includes(idx)
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
+                                )}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Column: Assignments and Instructions */}
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                          <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Assigned Team Members</Label>
+                          <Popover>
+                            <PopoverTrigger>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="min-h-[3rem] w-full p-2 border border-border/40 rounded-xl bg-background cursor-pointer hover:border-primary/20 transition-all flex flex-wrap gap-1.5 justify-start h-auto"
+                              >
+                                {assignedTeamMembers.length === 0 ? (
+                                  <span className="text-muted-foreground text-xs font-medium px-2 py-1">Choose members...</span>
+                                ) : (
+                                  assignedTeamMembers.map(id => {
+                                    const member = teamMembers.find(m => m.id === id);
+                                    return (
+                                      <div key={id} className="bg-primary text-primary-foreground text-[10px] font-black flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/20 group/tag">
+                                        <span className="text-white">{member?.name || 'Unknown'}</span>
+                                        <X
+                                          className="h-3 w-3 text-white/60 hover:text-white cursor-pointer"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAssignedTeamMembers(prev => prev.filter(mid => mid !== id));
+                                          }}
+                                        />
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[300px] p-0 rounded-2xl border-border/40" align="start" side="bottom" sideOffset={4}>
+                              <Command>
+                                <CommandInput placeholder="Search team members..." className="h-11 font-manrope" />
+                                <CommandList>
+                                  <CommandEmpty>No results found.</CommandEmpty>
+                                  <CommandGroup className="p-2">
+                                    {teamMembers.map((member) => (
+                                      <CommandItem
+                                        key={member.id}
+                                        onSelect={() => {
+                                          setAssignedTeamMembers(prev =>
+                                            prev.includes(member.id)
+                                              ? prev.filter(id => id !== member.id)
+                                              : [...prev, member.id]
+                                          );
+                                        }}
+                                        className="rounded-lg py-2.5 px-3 cursor-pointer mb-1 last:mb-0"
+                                      >
+                                        <div className="flex items-center gap-3 w-full">
+                                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary">
+                                            {member.name?.substring(0, 2).toUpperCase()}
+                                          </div>
+                                          <div className="flex-1 flex flex-col">
+                                            <span className="font-bold text-sm">{member.name}</span>
+                                            <span className="text-[10px] text-muted-foreground font-medium">{member.role || 'Member'}</span>
+                                          </div>
+                                          {assignedTeamMembers.includes(member.id) && <Check className="h-4 w-4 text-primary" />}
+                                        </div>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        <div className="flex items-center gap-2 group cursor-pointer" onClick={() => setEmailTeamAssignment(!emailTeamAssignment)}>
+                          <Checkbox
+                            id="emailTeam"
+                            checked={emailTeamAssignment}
+                            onCheckedChange={(checked) => setEmailTeamAssignment(!!checked)}
+                            className="h-5 w-5 rounded-md border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                          <Label htmlFor="emailTeam" className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">Email team about assignment</Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-border/10">
+                      <Label htmlFor="visitInstructions" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Visit instructions</Label>
+                      <Textarea
+                        id="visitInstructions"
+                        placeholder="Directions, gate codes, pet info, etc..."
+                        value={visitInstructions}
+                        onChange={e => setVisitInstructions(e.target.value)}
+                        className="min-h-[120px] rounded-2xl bg-muted/5 border-border/40 font-manrope font-bold text-sm p-4 tracking-tight focus:ring-2 focus:ring-primary/10"
+                      />
+                    </div>
+                  </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes (Visible to Customer)</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="Additional information, special conditions, or thank you note..."
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    className="min-h-[80px] rounded-xl"
-                  />
-                </div>
+                {/* General Notes for Non-Job Mode or Shared */}
+                {!isJobMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="notes" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">Notes (Visible to Customer)</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Additional information, special conditions, or thank you note..."
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      className="min-h-[80px] rounded-xl font-bold"
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
+        </div>
 
-        <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
-          <CardHeader className="pb-6 px-4 md:px-10 pt-6 md:pt-10 flex flex-row items-center justify-between">
-            <CardTitle className="text-xl md:text-2xl uppercase font-bold tracking-tight">
-              {isJobMode ? 'Job Items' : 'Quote Items'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 md:px-10 pb-10">
-            <datalist id="catalog-descriptions">
-              {catalog.map(c => <option key={c.description} value={c.description} />)}
-            </datalist>
+        <div className="space-y-4">
+          <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">
+            {isJobMode ? 'Job Items' : 'Quote Items'}
+          </h2>
+          <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
+            <CardContent className="px-4 md:px-10 py-10">
+              <datalist id="catalog-descriptions">
+                {catalog.map(c => <option key={c.description} value={c.description} />)}
+              </datalist>
 
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-              modifiers={[restrictToVerticalAxis]}
-            >
-              <div className="space-y-4">
-                <SortableContext
-                  items={items.map(i => i.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {items.map((item, index) => (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      index={index}
-                      catalog={catalog}
-                      updateItem={updateItem}
-                      updateItemFields={updateItemFields}
-                      handlePhotoUpload={handlePhotoUpload}
-                      removePhoto={removePhoto}
-                      removeItem={removeItem}
-                      showRemoveButton={items.length > 1}
-                    />
-                  ))}
-                </SortableContext>
-              </div>
-            </DndContext>
-
-            {/* List Footer Actions (Matching reference image) */}
-            <div className="mt-8 flex gap-4">
-              <Button
-                type="button"
-                onClick={addItem}
-                className="bg-primary text-white font-bold px-10 h-14 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]"
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+                modifiers={[restrictToVerticalAxis]}
               >
-                <PlusCircle className="h-4 w-4" />
-                Add Item
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="space-y-4">
+                  <SortableContext
+                    items={items.map(i => i.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {items.map((item, index) => (
+                      <SortableItem
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        catalog={catalog}
+                        updateItem={updateItem}
+                        updateItemFields={updateItemFields}
+                        handlePhotoUpload={handlePhotoUpload}
+                        removePhoto={removePhoto}
+                        removeItem={removeItem}
+                        showRemoveButton={items.length > 1}
+                      />
+                    ))}
+                  </SortableContext>
+                </div>
+              </DndContext>
+
+              {/* List Footer Actions (Matching reference image) */}
+              <div className="mt-8 flex gap-4">
+                <Button
+                  type="button"
+                  onClick={addItem}
+                  className="bg-primary text-white font-bold px-10 h-14 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Add Item
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
           {/* Subtotal */}
@@ -1781,12 +2134,115 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
             {isSubmitting
               ? (isJobMode ? 'Creating Job...' : (mode === 'edit' ? 'Updating...' : 'Saving...'))
               : isJobMode ? 'Create Job'
-              : isTemplate ? 'Save Template'
-              : mode === 'edit' ? 'Update Quote'
-              : 'Generate and Save Quote'}
+                : isTemplate ? 'Save Template'
+                  : mode === 'edit' ? 'Update Quote'
+                    : 'Generate and Save Quote'}
           </Button>
         </div>
       </form>
+      {/* New Client Modal */}
+      <Dialog open={isNewClientModalOpen} onOpenChange={setIsNewClientModalOpen}>
+        <DialogContent className="max-w-2xl rounded-3xl border-none p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="p-8 bg-muted/5 border-b border-border/10">
+            <DialogTitle className="text-2xl uppercase font-black tracking-tight font-archivo">
+              {selectedClientId === 'new' ? 'New Client Information' : 'Edit Client Information'}
+            </DialogTitle>
+            <DialogDescription className="font-manrope font-bold text-muted-foreground">
+              Enter the client's contact and address details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar font-manrope">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="companyNameModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Company Name (Optional)</Label>
+                <Input id="companyNameModal" placeholder="e.g. Acme Corp" value={companyName} onChange={e => setCompanyName(e.target.value)} className="h-12 rounded-xl font-bold bg-background border-border/40" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="titleModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Title</Label>
+                  <Input id="titleModal" placeholder="Mr., Mrs., Dr." value={title} onChange={e => setTitle(e.target.value)} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="firstNameModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">First Name *</Label>
+                  <Input id="firstNameModal" required placeholder="e.g. John" value={firstName} onChange={e => setFirstName(e.target.value)} className="h-12 rounded-xl font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastNameModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name *</Label>
+                  <Input id="lastNameModal" required placeholder="e.g. Doe" value={lastName} onChange={e => setLastName(e.target.value)} className="h-12 rounded-xl font-bold" />
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-border/10">
+                <Label htmlFor="street1Modal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Address Line 1 (Search with Google) *</Label>
+                <Autocomplete
+                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+                  onPlaceSelected={handlePlaceSelected}
+                  options={{ types: ["address"] }}
+                  className="flex h-12 w-full rounded-xl border border-border/40 bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-bold transition-all focus:border-primary/50"
+                  placeholder="Start typing an address..."
+                  defaultValue={street1}
+                  onChange={(e: any) => setStreet1(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="street2Modal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Address Line 2 (Optional)</Label>
+                <Input id="street2Modal" placeholder="Apt, Suite, Floor..." value={street2} onChange={e => setStreet2(e.target.value)} className="h-12 rounded-xl" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cityModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">City</Label>
+                  <Input id="cityModal" placeholder="e.g. New York" value={city} onChange={e => setCity(e.target.value)} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="provinceModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">State / Province</Label>
+                  <Input id="provinceModal" placeholder="e.g. NY" value={province} onChange={e => setProvince(e.target.value)} className="h-12 rounded-xl" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="postalCodeModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Postal Code</Label>
+                  <Input id="postalCodeModal" placeholder="10001" value={postalCode} onChange={e => setPostalCode(e.target.value)} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="countryModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Country</Label>
+                  <Input id="countryModal" placeholder="USA" value={country} onChange={e => setCountry(e.target.value)} className="h-12 rounded-xl" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/10">
+                <div className="space-y-2">
+                  <Label htmlFor="clientEmailModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email (Optional)</Label>
+                  <Input id="clientEmailModal" type="email" placeholder="email@example.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="clientPhoneModal" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Phone (Optional)</Label>
+                  <Input id="clientPhoneModal" placeholder="+123456789" value={clientPhone} onChange={e => setClientPhone(e.target.value)} className="h-12 rounded-xl" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="p-8 bg-muted/5 border-t border-border/10 flex sm:justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsNewClientModalOpen(false)}
+              className="rounded-xl h-12 px-6 font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setIsNewClientModalOpen(false)}
+              className="rounded-xl h-12 px-8 font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_10px_20px_-10px_rgba(var(--primary),0.5)] border-none"
+            >
+              Save Information
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

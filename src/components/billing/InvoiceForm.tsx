@@ -130,7 +130,7 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-top-1 duration-300">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => onCancel ? onCancel() : router.back()} className="rounded-xl">
           <ArrowLeft className="mr-2 h-4 w-4" />
