@@ -548,6 +548,13 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
   const [notes, setNotes] = useState(initialData?.proforma?.notes || '');
   const [isTemplate, setIsTemplate] = useState(initialData?.proforma?.is_template || false);
 
+  // Job mode fields
+  const isJobMode = initialData?.proforma?.status === 'job';
+  const [jobType, setJobType] = useState<'one-off' | 'recurring'>(initialData?.proforma?.job_type || 'one-off');
+  const [recurringInterval, setRecurringInterval] = useState<string>(initialData?.proforma?.recurring_interval || 'monthly');
+  const [jobStartAt, setJobStartAt] = useState<string>(initialData?.proforma?.job_start_at ? new Date(initialData.proforma.job_start_at).toISOString().split('T')[0] : '');
+  const [jobEndAt, setJobEndAt] = useState<string>(initialData?.proforma?.job_end_at ? new Date(initialData.proforma.job_end_at).toISOString().split('T')[0] : '');
+
   // Line Items
   const [items, setItems] = useState<LineItem[]>(
     initialData?.items?.map(item => ({
@@ -923,7 +930,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         }*/
       }
 
-      const proformaPayload = {
+      const proformaPayload: any = {
         user_id: user.id,
         client_id: finalClientId,
         project_name: projectName,
@@ -939,6 +946,15 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         is_template: isTemplate,
         ...(nextNumber !== undefined && { number: nextNumber })
       };
+
+      // If creating a job, set job-specific fields
+      if (isJobMode) {
+        proformaPayload.status = 'job';
+        proformaPayload.job_type = jobType;
+        proformaPayload.recurring_interval = jobType === 'recurring' ? recurringInterval : null;
+        proformaPayload.job_start_at = jobStartAt ? new Date(jobStartAt + 'T00:00:00').toISOString() : null;
+        proformaPayload.job_end_at = (jobType === 'one-off' && jobEndAt) ? new Date(jobEndAt + 'T23:59:59').toISOString() : null;
+      }
 
       let proformaData;
       if (mode === 'edit' && initialData?.proforma?.id) {
@@ -1001,7 +1017,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       const { error: itemsError } = await supabase.from('proforma_items').insert(itemsToInsert);
       if (itemsError) throw itemsError;
 
-      toast.success(mode === 'edit' ? 'Proforma updated' : 'Proforma created');
+      toast.success(isJobMode ? 'Job created successfully!' : (mode === 'edit' ? 'Proforma updated' : 'Proforma created'));
       router.push(`/proforma/${proformaData.id}`);
       router.refresh();
 
@@ -1027,10 +1043,10 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </Button>
           <div>
             <h1 className="text-2xl uppercase md:text-3xl font-bold tracking-tight">
-              {mode === 'edit' ? 'Edit Quote' : 'New Quote'}
+              {isJobMode ? 'New Job' : (mode === 'edit' ? 'Edit Quote' : 'New Quote')}
             </h1>
             <p className="text-muted-foreground text-xs md:text-sm">
-              {mode === 'create' ? 'Create a professional proposal.' : 'Update your project details.'}
+              {isJobMode ? 'Create a direct service job.' : (mode === 'create' ? 'Create a professional proposal.' : 'Update your project details.')}
             </p>
           </div>
         </div>
@@ -1048,7 +1064,17 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {mode === 'create' && (
+        {isJobMode && (
+          <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div>
+              <p className="text-sm font-bold text-emerald-800">Creating a Job</p>
+              <p className="text-xs text-emerald-600">This will be saved directly as an active job (no quote process needed).</p>
+            </div>
+          </div>
+        )}
+
+        {!isJobMode && mode === 'create' && (
           <div className="flex items-center space-x-3 bg-muted/40 p-4 rounded-xl border border-border/50 shadow-sm max-w-max">
             <Checkbox
               id="saveAsTemplateTop"
@@ -1226,38 +1252,122 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
             </Card>
           )}
 
-          <Card className="shadow-sm border-border/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg uppercase font-bold">Project Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="projectName">{isTemplate ? 'Template Name *' : 'Project Name *'}</Label>
-                <Input id="projectName" required placeholder={isTemplate ? 'e.g. Standard Bathroom Remodel' : 'e.g. Living Room Remodel'} value={projectName} onChange={e => setProjectName(e.target.value)} />
-              </div>
-              {!isTemplate && (
+            <Card className="shadow-sm border-border/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg uppercase font-bold">
+                  {isJobMode ? 'Job Details' : 'Project Details'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="validUntil">Valid Until *</Label>
-                  <Input id="validUntil" type="date" required value={validUntil} onChange={e => setValidUntil(e.target.value)} />
+                  <Label htmlFor="projectName">{isTemplate ? 'Template Name *' : isJobMode ? 'Job Name *' : 'Project Name *'}</Label>
+                  <Input id="projectName" required placeholder={isTemplate ? 'e.g. Standard Bathroom Remodel' : isJobMode ? 'e.g. Pool Cleaning - Monthly' : 'e.g. Living Room Remodel'} value={projectName} onChange={e => setProjectName(e.target.value)} />
                 </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes (Visible to Customer)</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Additional information, special conditions, or thank you note..."
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  className="min-h-[80px] rounded-xl"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                {!isTemplate && !isJobMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="validUntil">Valid Until *</Label>
+                    <Input id="validUntil" type="date" required value={validUntil} onChange={e => setValidUntil(e.target.value)} />
+                  </div>
+                )}
+
+                {isJobMode && (
+                  <>
+                    {/* Job Type Toggle */}
+                    <div className="space-y-2">
+                      <Label>Job Type *</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setJobType('one-off')}
+                          className={cn(
+                            "h-11 rounded-xl border-2 text-sm font-bold transition-all",
+                            jobType === 'one-off'
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background border-border/50 text-muted-foreground hover:border-primary/40"
+                          )}
+                        >
+                          One-off
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setJobType('recurring')}
+                          className={cn(
+                            "h-11 rounded-xl border-2 text-sm font-bold transition-all",
+                            jobType === 'recurring'
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background border-border/50 text-muted-foreground hover:border-primary/40"
+                          )}
+                        >
+                          Recurring
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Recurring Interval */}
+                    {jobType === 'recurring' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="recurringInterval">Recurrence Interval *</Label>
+                        <select
+                          id="recurringInterval"
+                          value={recurringInterval}
+                          onChange={e => setRecurringInterval(e.target.value)}
+                          className="h-10 w-full pl-3 pr-10 border border-input rounded-xl bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                        >
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="biweekly">Biweekly (every 2 weeks)</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="quarterly">Quarterly</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Job Start Date */}
+                    <div className="space-y-2">
+                      <Label htmlFor="jobStartAt">Start Date *</Label>
+                      <Input
+                        id="jobStartAt"
+                        type="date"
+                        required={isJobMode}
+                        value={jobStartAt}
+                        onChange={e => setJobStartAt(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Job End Date — only for one-off */}
+                    {jobType === 'one-off' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="jobEndAt">End Date</Label>
+                        <Input
+                          id="jobEndAt"
+                          type="date"
+                          value={jobEndAt}
+                          onChange={e => setJobEndAt(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes (Visible to Customer)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Additional information, special conditions, or thank you note..."
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    className="min-h-[80px] rounded-xl"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
         <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
           <CardHeader className="pb-6 px-4 md:px-10 pt-6 md:pt-10 flex flex-row items-center justify-between">
-            <CardTitle className="text-xl md:text-2xl uppercase font-bold tracking-tight">Quote Items</CardTitle>
+            <CardTitle className="text-xl md:text-2xl uppercase font-bold tracking-tight">
+              {isJobMode ? 'Job Items' : 'Quote Items'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="px-4 md:px-10 pb-10">
             <datalist id="catalog-descriptions">
@@ -1668,7 +1778,12 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         <div className="flex flex-col sm:flex-row items-center justify-end gap-6 pt-4 pb-64">
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:-translate-y-1">
             <Save className="mr-2 h-5 w-5" />
-            {isSubmitting ? 'Saving Quote...' : isTemplate ? 'Save Template' : mode === 'edit' ? 'Update Quote' : 'Generate and Save Quote'}
+            {isSubmitting
+              ? (isJobMode ? 'Creating Job...' : (mode === 'edit' ? 'Updating...' : 'Saving...'))
+              : isJobMode ? 'Create Job'
+              : isTemplate ? 'Save Template'
+              : mode === 'edit' ? 'Update Quote'
+              : 'Generate and Save Quote'}
           </Button>
         </div>
       </form>

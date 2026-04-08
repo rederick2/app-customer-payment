@@ -70,13 +70,13 @@ export default function ProformaDropdownActions({
 
         {/* Status Actions */}
         <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">Mark as...</div>
-        {currentStatus !== 'approved' && (
+        {currentStatus !== 'approved' && currentStatus !== 'job' && currentStatus !== 'job_terminated' && (
           <DropdownMenuItem onClick={() => handleStatusUpdate('approved')} className="cursor-pointer text-green-700 focus:text-green-800">
             <Check className="mr-2 h-4 w-4" />
             Approved
           </DropdownMenuItem>
         )}
-        {currentStatus !== 'rejected' && (
+        {currentStatus !== 'rejected' && currentStatus !== 'job' && currentStatus !== 'job_terminated' && (
           <DropdownMenuItem onClick={() => handleStatusUpdate('rejected')} className="cursor-pointer text-red-700 focus:text-red-800">
             <X className="mr-2 h-4 w-4" />
             Rejected
@@ -97,20 +97,23 @@ export default function ProformaDropdownActions({
           </DropdownMenuItem>
         )}
 
-        <DropdownMenuSeparator />
+        {currentStatus !== 'job' && currentStatus !== 'job_terminated' && (
+          <>
+            <DropdownMenuSeparator />
+            {/* General Actions */}
+            <DropdownMenuItem onClick={copyClientLink} className="cursor-pointer">
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Copy Client Link
+            </DropdownMenuItem>
 
-        {/* General Actions */}
-        <DropdownMenuItem onClick={copyClientLink} className="cursor-pointer">
-          <LinkIcon className="mr-2 h-4 w-4" />
-          Copy Client Link
-        </DropdownMenuItem>
-
-        <DropdownMenuItem>
-          <a href={`/p/${proformaId}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer w-full flex items-center">
-            <Eye className="mr-2 h-4 w-4" />
-            Preview as Client
-          </a>
-        </DropdownMenuItem>
+            <DropdownMenuItem>
+              <a href={`/p/${proformaId}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer w-full flex items-center">
+                <Eye className="mr-2 h-4 w-4" />
+                Preview as Client
+              </a>
+            </DropdownMenuItem>
+          </>
+        )}
 
       </DropdownMenuContent>
 

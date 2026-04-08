@@ -137,6 +137,12 @@ const getRequestVirtualDates = (scheduleDate: string, preference?: string) => {
   };
 };
 
+const getFullAddress = (client: any) => {
+  if (!client) return '';
+  const parts = [client.street_1, client.city, client.province].filter(Boolean);
+  return parts.join(', ');
+};
+
 const getClientData = (item: any) => {
   const clients = item?.clients || item?.proformas?.clients;
   if (Array.isArray(clients)) return clients[0];
@@ -152,7 +158,9 @@ interface Job {
   clients: {
     name: string
     company_name?: string,
-    street_1?: string
+    street_1?: string,
+    city?: string,
+    province?: string
   }
 }
 
@@ -171,7 +179,9 @@ interface Task {
   },
   proformas?: {
     clients?: {
-      street_1?: string
+      street_1?: string,
+      city?: string,
+      province?: string
     }
   }
 }
@@ -189,7 +199,9 @@ interface ServiceRequest {
       name: string
       company_name?: string
       street_1?: string
-    } | { name: string, company_name?: string, street_1?: string }[]
+      city?: string
+      province?: string
+    } | { name: string, company_name?: string, street_1?: string, city?: string, province?: string }[]
   }
 }
 
@@ -212,7 +224,9 @@ interface JobVisit {
       name: string
       company_name?: string
       street_1?: string
-    } | { name: string, company_name?: string, street_1?: string }[]
+      city?: string
+      province?: string
+    } | { name: string, company_name?: string, street_1?: string, city?: string, province?: string }[]
   }
 }
 
@@ -1182,7 +1196,21 @@ function JobDetailContent({ job }: { job: Job }) {
             </div>
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Address</p>
-              <p className="text-sm font-semibold text-foreground">{client?.street_1 || 'No address provided'}</p>
+              <div>
+                {getFullAddress(client) ? (
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getFullAddress(client))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+                  >
+                    {getFullAddress(client)}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <p className="text-sm font-semibold text-foreground">No address provided</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1388,7 +1416,19 @@ function TaskDetailContent({ task, teamMembers }: { task: Task, teamMembers: any
             </div>
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Address</p>
-              <p className="text-sm font-semibold text-foreground">{client?.street_1 || 'Unassigned'}</p>
+              {getFullAddress(client) ? (
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getFullAddress(client))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+                >
+                  {getFullAddress(client)}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <p className="text-sm font-semibold text-foreground">Unassigned</p>
+              )}
             </div>
           </div>
         </div>
@@ -1549,7 +1589,19 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
             </div>
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Address</p>
-              <p className="text-sm font-semibold text-foreground">{client?.street_1 || 'No address provided'}</p>
+              {getFullAddress(client) ? (
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getFullAddress(client))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+                >
+                  {getFullAddress(client)}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <p className="text-sm font-semibold text-foreground">No address provided</p>
+              )}
             </div>
           </div>
         </div>
@@ -1792,7 +1844,19 @@ function VisitDetailContent({ visit, teamMembers }: { visit: JobVisit, teamMembe
             </div>
             <div>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Address</p>
-              <p className="text-sm font-semibold text-foreground">{client?.street_1 || 'Unassigned'}</p>
+              {getFullAddress(client) ? (
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getFullAddress(client))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1"
+                >
+                  {getFullAddress(client)}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <p className="text-sm font-semibold text-foreground">Unassigned</p>
+              )}
             </div>
           </div>
         </div>

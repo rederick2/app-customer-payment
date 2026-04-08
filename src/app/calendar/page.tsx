@@ -19,7 +19,9 @@ export default async function CalendarPage() {
       clients (
         name,
         company_name,
-        street_1
+        street_1,
+        city,
+        province
       )
     `)
     .notIn('status', ['job_terminated', 'rejected', 'draft'])
@@ -35,7 +37,7 @@ export default async function CalendarPage() {
     .select(`
       *,
       team_members (name),
-      proformas (clients (street_1))
+      proformas (clients (street_1, city, province))
     `)
     .order('due_date', { ascending: true });
 
@@ -51,7 +53,9 @@ export default async function CalendarPage() {
         clients (
           name,
           company_name,
-          street_1
+          street_1,
+          city,
+          province
         )
       )
     `)
@@ -71,7 +75,9 @@ export default async function CalendarPage() {
         clients (
           name,
           company_name,
-          street_1
+          street_1,
+          city,
+          province
         )
       )
     `)

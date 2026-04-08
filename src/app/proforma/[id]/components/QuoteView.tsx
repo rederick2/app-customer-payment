@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download, AlertTriangle, ExternalLink, FilePen, Building } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download, AlertTriangle, ExternalLink, FilePen, Building, PenLine } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import ProformaDropdownActions from './ProformaDropdownActions';
@@ -12,6 +12,8 @@ import { LineItemImage } from '@/components/LineItemImage';
 import { ExpandableText } from '@/components/ExpandableText';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toggleItemOptional, updateItemsOrder, updateProformaItem, unlockApprovedProforma } from './actions';
+import { approveProforma } from '@/app/p/[id]/actions';
+import SignatureModal from '@/app/p/[id]/components/SignatureModal';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -552,6 +554,29 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
   const isReadOnly = proformaStatus === 'job';
   const isApproved = proformaStatus === 'approved';
 
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = React.useState(false);
+  const [isSigningJob, setIsSigningJob] = React.useState(false);
+  const [jobSignatureData, setJobSignatureData] = React.useState<string | null>(proforma.client_signature_data || null);
+
+  const handleCollectSignature = async (signatureData: string | null, signatureName: string | null) => {
+    setIsSigningJob(true);
+    try {
+      const result = await approveProforma(id, signatureData || undefined, signatureName || undefined);
+      if (result.success) {
+        setJobSignatureData(signatureData);
+        setProformaStatus('approved');
+        setIsSignatureModalOpen(false);
+        toast.success('Signature collected. Job approved!');
+      } else {
+        toast.error('Error saving signature');
+      }
+    } catch (err) {
+      toast.error('Error saving signature');
+    } finally {
+      setIsSigningJob(false);
+    }
+  };
+
   const [isUnlocking, setIsUnlocking] = React.useState(false);
   const [showUnlockModal, setShowUnlockModal] = React.useState(false);
   const [postUnlockAction, setPostUnlockAction] = React.useState<{
@@ -778,6 +803,23 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
             </div>
           </div>
           <div className="flex gap-2 items-center flex-wrap">
+            {/* Collect Signature button for jobs */}
+            {/*proformaStatus === 'job' && (
+              jobSignatureData || proforma.client_signature_data ? (
+                <div className="flex items-center gap-2 px-4 h-10 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <Check className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs font-bold text-emerald-700">Signed</span>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => setIsSignatureModalOpen(true)}
+                  className="h-10 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 rounded-xl transition-all"
+                >
+                  <PenLine className="h-4 w-4" />
+                  Collect Signature
+                </Button>
+              )
+            )*/}
             {!isReadOnly && (
               <Link href={`/proforma/${id}/edit`}>
                 <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground transition-all">
@@ -835,6 +877,13 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         }}
         onConfirm={handleUnlockAndProceed}
         isPending={isUnlocking}
+      />
+
+      <SignatureModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onConfirm={handleCollectSignature}
+        isLoading={isSigningJob}
       />
 
 

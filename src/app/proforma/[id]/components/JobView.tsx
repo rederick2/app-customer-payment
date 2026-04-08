@@ -38,7 +38,11 @@ import {
   ZoomIn,
   History as HistoryIcon,
   Save,
-  RefreshCw
+  RefreshCw,
+  PenLine,
+  Download,
+  Check,
+  XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -99,6 +103,8 @@ import { pdf } from '@react-pdf/renderer';
 import InvoicePDF from '@/lib/pdf/InvoicePDF';
 import PaymentPDF from '@/lib/pdf/PaymentPDF';
 import { deleteInvoice, deleteProformaItem, updateJobDates, getQuickBooksVendors, getQuickBooksAccounts, syncExpenseToQuickBooks } from './actions';
+import { approveProforma } from '@/app/p/[id]/actions';
+import SignatureModal from '@/app/p/[id]/components/SignatureModal';
 
 interface JobViewProps {
   proforma: any;
@@ -189,6 +195,67 @@ export default function JobView({
   const [isSavingDates, setIsSavingDates] = React.useState(false);
   const [user, setUser] = React.useState<any>(null);
   const [qboIntegration, setQboIntegration] = React.useState<any>(null);
+
+  // Signature state
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = React.useState(false);
+  const [isSigningJob, setIsSigningJob] = React.useState(false);
+  const [jobStatus, setJobStatus] = React.useState(proforma.status);
+  const [hasSignature, setHasSignature] = React.useState(!!(proforma.client_signature_data || proforma.client_signed_name));
+  const [isGeneratingPDF, setIsGeneratingPDF] = React.useState(false);
+
+  const handleCollectSignature = async (signatureData: string | null, signatureName: string | null) => {
+    setIsSigningJob(true);
+    try {
+      const result = await approveProforma(id, signatureData || undefined, signatureName || undefined);
+      if (result.success) {
+        setHasSignature(true);
+        setJobStatus('approved');
+        setIsSignatureModalOpen(false);
+        toast.success('Signature collected. Job approved!');
+      } else {
+        toast.error('Error saving signature');
+      }
+    } catch (err) {
+      toast.error('Error saving signature');
+    } finally {
+      setIsSigningJob(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const { pdf: renderPdf } = await import('@react-pdf/renderer');
+      const ProformaPDFModule = await import('@/lib/pdf/ProformaPDF');
+      const ProformaPDFComponent = ProformaPDFModule.default;
+      const blob = await renderPdf(
+        <ProformaPDFComponent proforma={proforma} items={items} client={proforma.clients} />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `job_${String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      toast.error('Error generating PDF');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleEndJob = async () => {
+    const { updateProformaStatus } = await import('./actions');
+    const result = await updateProformaStatus(id, 'job_terminated');
+    if (result.error) {
+      toast.error('Error ending job');
+    } else {
+      setJobStatus('job_terminated');
+      toast.success('Job ended');
+      router.refresh();
+    }
+  };
 
   const toggleItemExpansion = (itemId: string) => {
     setExpandedItems(prev => {
@@ -989,12 +1056,52 @@ export default function JobView({
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
         </div>
-        <div className="flex gap-2 items-center">
-          <Button variant="outline" size="sm" className="h-9 gap-2 ">
-            <Search className="h-4 w-4" />
-            <span className="hidden sm:inline">Search</span>
+        <div className="flex gap-2 items-center flex-wrap">
+
+          {/* Collect Signature — only when job is active and unsigned */}
+          {jobStatus === 'job' && (
+            hasSignature ? (
+              <div className="flex items-center gap-2 px-4 h-9 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-700">
+                <Check className="h-3.5 w-3.5" />
+                Signed
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => setIsSignatureModalOpen(true)}
+                className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 rounded-xl"
+              >
+                <PenLine className="h-4 w-4" />
+                <span className="hidden sm:inline">Collect Signature</span>
+                <span className="sm:hidden">Sign</span>
+              </Button>
+            )
+          )}
+
+          {/* Download PDF */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2"
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
+          >
+            {isGeneratingPDF ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            <span className="hidden sm:inline">Download PDF</span>
           </Button>
 
+          {/* Create Invoice */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2"
+            onClick={() => router.push(`/clients/${proforma.client_id}/invoices/new?proformaId=${id}`)}
+          >
+            <Receipt className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Invoice</span>
+          </Button>
+
+          {/* History */}
           <Dialog>
             <DialogTrigger render={
               <Button variant="outline" size="sm" className="h-9 gap-2">
@@ -1014,15 +1121,29 @@ export default function JobView({
               </div>
             </DialogContent>
           </Dialog>
-          <ProformaDropdownActions
-            proformaId={id}
-            currentStatus={proforma.status || 'draft'}
-            projectName={proforma.project_name}
-            proforma={proforma}
-            items={items}
-          />
+
+          {/* End Job */}
+          {jobStatus === 'job' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-2 border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={handleEndJob}
+            >
+              <XCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">End Job</span>
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Signature Modal */}
+      <SignatureModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        onConfirm={handleCollectSignature}
+        isLoading={isSigningJob}
+      />
 
       {/* Main Content Area */}
       <div className="space-y-6">

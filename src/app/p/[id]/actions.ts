@@ -108,7 +108,8 @@ export async function approveProforma(proformaId: string, signatureData?: string
   }
 
   // 2. Perform the update
-  const updatePayload: any = { status: 'approved', approved_at: new Date().toISOString() };
+  const status = proforma.status === 'job' ? 'job' : 'approved';
+  const updatePayload: any = { status, approved_at: new Date().toISOString() };
   if (signatureData) updatePayload.client_signature_data = signatureData;
   if (signatureName) updatePayload.client_signed_name = signatureName;
 
@@ -122,14 +123,16 @@ export async function approveProforma(proformaId: string, signatureData?: string
     return { success: false, error: 'No se pudo aprobar la proforma' };
   }
 
-  await logStatusChange(proformaId, 'approved', proforma.status);
 
-  // Insert notification
-  await insertNotification(proformaId, 'approved', `Client approved the quote: ${proforma.project_name}.`);
+  if (status === 'approved') {
 
+    await logStatusChange(proformaId, 'approved', proforma.status);
+
+    await insertNotification(proformaId, 'approved', `Client approved the quote: ${proforma.project_name}.`);
+  }
 
   // 3. Send notification email if user email is available
-  if (userEmail) {
+  if (userEmail && status === 'approved') {
     try {
       const proformaNumber = String(proforma.number || proformaId.split('-')[0]).toUpperCase();
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

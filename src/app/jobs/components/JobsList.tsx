@@ -56,10 +56,10 @@ export function JobsList({ initialProformas }: JobsListProps) {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Link href="/proforma/new" className="w-full md:w-auto">
-            <Button className="flex-1 sm:flex-initial">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Quote
+          <Link href="/jobs/new" className="w-full md:w-auto">
+            <Button className="flex-1 sm:flex-initial gap-2">
+              <PlusCircle className="h-4 w-4" />
+              New Job
             </Button>
           </Link>
         </div>
