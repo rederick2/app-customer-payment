@@ -296,7 +296,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
                   )}
                 </div>
                 <div className={cn(
-                  "font-mono font-bold text-lg",
+                  "font-bold text-lg",
                   item.is_excluded ? "text-muted-foreground line-through italic" : "text-foreground"
                 )}>
                   ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -325,11 +325,11 @@ export default async function PublicProformaView({ params, searchParams }: Props
               <div className="grid grid-cols-2 gap-4 py-3 border-y border-border/10 mb-4 bg-muted/5 rounded-lg px-3">
                 <div>
                   <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Quantity</p>
-                  <p className="font-mono text-sm font-bold">{item.quantity}</p>
+                  <p className="text-sm font-bold">{item.quantity}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[8px] font-black text-muted-foreground uppercase mb-0.5">Rate</p>
-                  <p className="font-mono text-sm font-bold">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-sm font-bold">${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                 </div>
               </div>
 
@@ -363,7 +363,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
           <div className="w-full sm:w-1/2 p-8 bg-[#F4F2EC] print:bg-transparent print:border print:border-border/50 rounded-2xl border border-primary/5 space-y-4 text-[#0D3B47] shadow-sm">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium tracking-wide uppercase opacity-70">Subtotal</span>
-              <span className="font-mono font-bold">${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <span className="font-bold">${proforma.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
 
             <div className="space-y-3 py-2">
@@ -393,7 +393,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
                             <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold">{adj.value}%</span>
                           )}
                         </span>
-                        <span className={cn("font-mono font-bold", adj.type === 'discount' ? "text-red-600" : "")}>
+                        <span className={cn("font-bold", adj.type === 'discount' ? "text-red-600" : "")}>
                           {adj.type === 'discount' ? '-' : '+'}${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -403,14 +403,14 @@ export default async function PublicProformaView({ params, searchParams }: Props
                   return proforma.applied_taxes.taxes.map((tax: any, idx: number) => (
                     <div key={idx} className="flex justify-between items-center text-sm opacity-80">
                       <span className="font-medium">{tax.name} <span className="text-[10px] ml-1 bg-primary/10 text-primary px-1.5 rounded">{tax.percentage}%</span></span>
-                      <span className="font-mono">${((tax.percentage * proforma.subtotal) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      <span>${((tax.percentage * proforma.subtotal) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                   ));
                 } else {
                   return (
                     <div className="flex justify-between items-center text-sm opacity-80">
                       <span className="font-medium">Tax (0%)</span>
-                      <span className="font-mono">${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      <span>${proforma.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                   );
                 }
@@ -422,7 +422,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
                 {(proforma as any).required_deposit > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Required Deposit</span>
-                    <span className="font-mono font-bold text-primary text-lg">
+                    <span className="font-bold text-primary text-lg">
                       ${(proforma as any).required_deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -430,7 +430,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
                 {(proforma as any).deposit_amount > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#306C3E]">Amount Collected</span>
-                    <span className="font-mono font-bold text-[#306C3E] text-lg">
+                    <span className="font-bold text-[#306C3E] text-lg">
                       ${(proforma as any).deposit_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -444,7 +444,7 @@ export default async function PublicProformaView({ params, searchParams }: Props
             )}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium tracking-wide uppercase opacity-70">Total</span>
-              <span className="font-mono font-bold">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              <span className="font-bold">${proforma.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>

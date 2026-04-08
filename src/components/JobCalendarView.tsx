@@ -22,12 +22,14 @@ import {
   Loader2,
   Check,
   ChevronsUpDown,
-  FileText
+  FileText,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { deleteRequest } from '@/app/requests/components/actions'
-import { deleteJobVisit } from '@/app/calendar/actions'
+import { deleteJobVisit, updateEventDate, updateJobVisit, updateJobTask, updateServiceRequest } from '@/app/calendar/actions'
 import {
   Dialog,
   DialogContent,
@@ -58,7 +60,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
-import { Trash2, AlertTriangle } from 'lucide-react'
+
 import {
   format,
   addDays,
@@ -163,6 +165,7 @@ interface Task {
   end_date?: string
   status: 'pending' | 'completed'
   job_id: string
+  assigned_to?: string
   team_members?: {
     name: string
   },
@@ -194,7 +197,8 @@ interface JobVisit {
   id: string
   proforma_id: string
   visit_date: string
-  assigned_name: string
+  assigned_to?: string
+  assigned_name?: string
   status: string
   notes?: string
   team_members?: {
@@ -222,10 +226,33 @@ interface CalendarViewProps {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
-export default function JobCalendarView({ jobs, teamMembers, tasks, requests, visits }: CalendarViewProps) {
+export default function JobCalendarView({ jobs: initialJobs, teamMembers, tasks: initialTasks, requests: initialRequests, visits: initialVisits }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = React.useState(new Date())
   const [view, setView] = React.useState<'month' | 'week' | 'day'>('week')
   const [isAddingVisit, setIsAddingVisit] = React.useState(false)
+  
+  const [jobs, setJobs] = React.useState(initialJobs)
+  const [tasks, setTasks] = React.useState(initialTasks)
+  const [requests, setRequests] = React.useState(initialRequests)
+  const [visits, setVisits] = React.useState(initialVisits)
+
+  React.useEffect(() => setJobs(initialJobs), [initialJobs])
+  React.useEffect(() => setTasks(initialTasks), [initialTasks])
+  React.useEffect(() => setRequests(initialRequests), [initialRequests])
+  React.useEffect(() => setVisits(initialVisits), [initialVisits])
+
+  const onOptimisticUpdate = React.useCallback((type: string, id: string, start: string, end?: string) => {
+    if (type === 'job') {
+      setJobs(prev => prev.map(j => j.id === id ? { ...j, job_start_at: start, job_end_at: end || j.job_end_at } : j))
+    } else if (type === 'task') {
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, due_date: start, end_date: end || t.end_date } : t))
+    } else if (type === 'request') {
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, schedule_date: start.split('T')[0] } : r))
+    } else if (type === 'visit') {
+      setVisits(prev => prev.map(v => v.id === id ? { ...v, visit_date: start } : v))
+    }
+  }, [])
+
   const router = useRouter()
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -377,11 +404,11 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
 
       <div className="flex flex-1 overflow-hidden">
         {view === 'month' ? (
-          <MonthView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} />
+          <MonthView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} />
         ) : view === 'week' ? (
-          <WeekView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} days={days} getEventStyle={getEventStyle} />
+          <WeekView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} days={days} getEventStyle={getEventStyle} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} />
         ) : (
-          <DayView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} getEventStyle={getEventStyle} />
+          <DayView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} getEventStyle={getEventStyle} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} />
         )}
 
         {/* Right Panel - Agenda / Upcoming Events */}
@@ -444,9 +471,9 @@ export default function JobCalendarView({ jobs, teamMembers, tasks, requests, vi
                     </PopoverTrigger>
                     <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="left" align="start" sideOffset={10}>
                       {event.type === 'job' && <JobDetailContent job={event as any} />}
-                      {event.type === 'task' && <TaskDetailContent task={event as any} />}
+                      {event.type === 'task' && <TaskDetailContent task={event as any} teamMembers={teamMembers} />}
                       {event.type === 'request' && <RequestDetailContent request={event as any} />}
-                      {event.type === 'visit' && <VisitDetailContent visit={event as any} />}
+                      {event.type === 'visit' && <VisitDetailContent visit={event as any} teamMembers={teamMembers} />}
                     </PopoverContent>
                   </Popover>
                 );
@@ -495,8 +522,9 @@ function CurrentTimeIndicator() {
   )
 }
 
-function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventStyle }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, days: Date[], getEventStyle: any }) {
+function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventStyle, onOptimisticUpdate, teamMembers }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, days: Date[], getEventStyle: any, onOptimisticUpdate: any, teamMembers: any[] }) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
+  const [dropTarget, setDropTarget] = React.useState<{dateStr: string, hour: number} | null>(null);
 
   React.useEffect(() => {
     const scrollToCurrentTime = () => {
@@ -566,7 +594,60 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
               const dayVisits = visits.filter(v => isSameDay(parseISO(v.visit_date), day))
 
               return (
-                <div key={day.toString()} className="flex-1 relative border-r border-border/10">
+                <div key={day.toString()} className="flex-1 relative border-r border-border/10"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!e.dataTransfer.types.includes('text/plain')) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const hour = Math.min(23, Math.max(0, Math.floor(y / 64))); // 64px per hour
+                    const dateStr = day.toISOString();
+                    setDropTarget(prev => (prev?.dateStr === dateStr && prev?.hour === hour ? prev : { dateStr, hour }));
+                  }}
+                  onDragLeave={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      setDropTarget(null);
+                    }
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setDropTarget(null);
+                    if (!e.dataTransfer.getData('text/plain')) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    const hour = Math.min(23, Math.max(0, Math.floor(y / 64))); // 64px per hour
+                    
+                    try {
+                      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                      const newStart = new Date(day);
+                      const oldStart = parseISO(data.start);
+                      newStart.setHours(hour, oldStart.getMinutes(), 0, 0);
+                      
+                      let newEnd: Date | undefined;
+                      if (data.end) {
+                        const oldEnd = parseISO(data.end);
+                        const duration = oldEnd.getTime() - oldStart.getTime();
+                        newEnd = new Date(newStart.getTime() + duration);
+                      }
+                      
+                      const newStartStr = newStart.toISOString();
+                      const newEndStr = newEnd?.toISOString();
+                      
+                      onOptimisticUpdate(data.type, data.id, newStartStr, newEndStr);
+                      const res = await updateEventDate(data.type, data.id, newStartStr, newEndStr);
+                      if (res.error) toast.error(res.error);
+                      else toast.success('Date updated');
+                    } catch(err) {
+                      console.error(err);
+                    }
+                  }}
+                >
+                  {dropTarget?.dateStr === day.toISOString() && (
+                    <div 
+                      className="absolute left-1 right-1 z-0 bg-primary/20 border-2 border-primary/40 rounded-lg pointer-events-none transition-all duration-75"
+                      style={{ top: `${dropTarget.hour * 64}px`, height: '64px' }}
+                    />
+                  )}
                   {HOURS.map((hour) => (
                     <div key={hour} className="h-16 border-b border-border/40 last:border-b-0" />
                   ))}
@@ -574,7 +655,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                     <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, day)} />
                   ))}
                   {dayTasks.map(task => (
-                    <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.due_date, day)} />
+                    <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.due_date, day)} teamMembers={teamMembers} />
                   ))}
                   {dayRequests.map((request, idx) => {
                     const { start, end } = getRequestVirtualDates(request.schedule_date, request.time_preference);
@@ -593,7 +674,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                       left: `${15 + (idx * 5)}%`,
                       width: `${80 - (idx * 2)}%`,
                       zIndex: 38
-                    }} />
+                    }} teamMembers={teamMembers} />
                   ))}
                   {isTodayDay && <CurrentTimeIndicator />}
                 </div>
@@ -606,8 +687,9 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
   )
 }
 
-function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, getEventStyle: any }) {
+function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle, onOptimisticUpdate, teamMembers }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, getEventStyle: any, onOptimisticUpdate: any, teamMembers: any[] }) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
+  const [dropTarget, setDropTarget] = React.useState<{dateStr: string, hour: number} | null>(null);
 
   React.useEffect(() => {
     const scrollToCurrentTime = () => {
@@ -663,7 +745,60 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
             ))}
           </div>
 
-          <div className="flex-1 relative">
+          <div className="flex-1 relative"
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (!e.dataTransfer.types.includes('text/plain')) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const y = e.clientY - rect.top;
+              const hour = Math.min(23, Math.max(0, Math.floor(y / 64))); // 64px per hour
+              const dateStr = currentDate.toISOString();
+              setDropTarget(prev => (prev?.dateStr === dateStr && prev?.hour === hour ? prev : { dateStr, hour }));
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setDropTarget(null);
+              }
+            }}
+            onDrop={async (e) => {
+              e.preventDefault();
+              setDropTarget(null);
+              if (!e.dataTransfer.getData('text/plain')) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const y = e.clientY - rect.top;
+              const hour = Math.min(23, Math.max(0, Math.floor(y / 64))); // 64px per hour
+              
+              try {
+                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                const newStart = new Date(currentDate);
+                const oldStart = parseISO(data.start);
+                newStart.setHours(hour, oldStart.getMinutes(), 0, 0);
+                
+                let newEnd: Date | undefined;
+                if (data.end) {
+                  const oldEnd = parseISO(data.end);
+                  const duration = oldEnd.getTime() - oldStart.getTime();
+                  newEnd = new Date(newStart.getTime() + duration);
+                }
+                
+                const newStartStr = newStart.toISOString();
+                const newEndStr = newEnd?.toISOString();
+                
+                onOptimisticUpdate(data.type, data.id, newStartStr, newEndStr);
+                const res = await updateEventDate(data.type, data.id, newStartStr, newEndStr);
+                if (res.error) toast.error(res.error);
+                else toast.success('Date updated');
+              } catch(err) {
+                console.error(err);
+              }
+            }}
+          >
+            {dropTarget?.dateStr === currentDate.toISOString() && (
+              <div 
+                className="absolute left-1 right-1 z-0 bg-primary/20 border-2 border-primary/40 rounded-lg pointer-events-none transition-all duration-75"
+                style={{ top: `${dropTarget.hour * 64}px`, height: '64px' }}
+              />
+            )}
             {isToday(currentDate) && <CurrentTimeIndicator />}
             {HOURS.map((hour) => (
               <div key={hour} className="h-16 border-b border-border/40 last:border-b-0" />
@@ -672,7 +807,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
               <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, currentDate)} />
             ))}
             {dayTasks.map((task) => (
-              <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.end_date || task.due_date, currentDate)} />
+              <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.end_date || task.due_date, currentDate)} teamMembers={teamMembers} />
             ))}
             {dayRequests.map((request, idx) => {
               const { start, end } = getRequestVirtualDates(request.schedule_date, request.time_preference);
@@ -691,7 +826,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
                 left: `${15 + (idx * 5)}%`,
                 width: `${82 - (idx * 2)}%`,
                 zIndex: 38
-              }} />
+              }} teamMembers={teamMembers} />
             ))}
           </div>
         </div>
@@ -700,12 +835,13 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle }: 
   )
 }
 
-function MonthView({ jobs, tasks, requests, visits, currentDate }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date }) {
+function MonthView({ jobs, tasks, requests, visits, currentDate, onOptimisticUpdate, teamMembers }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, onOptimisticUpdate: any, teamMembers: any[] }) {
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 })
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
+  const [dropTarget, setDropTarget] = React.useState<string | null>(null);
 
   return (
     <div className="flex-1 flex flex-col overflow-auto">
@@ -729,9 +865,51 @@ function MonthView({ jobs, tasks, requests, visits, currentDate }: { jobs: Job[]
 
           return (
             <div key={day.toString()} className={cn(
-              "p-2 border-r border-b border-border/10 min-h-[120px] bg-background transition-colors hover:bg-muted/5",
-              !isSameMonth(day, currentDate) && "bg-muted/10 opacity-40"
-            )}>
+              "p-2 border-r border-b border-border/10 min-h-[120px] bg-background transition-colors hover:bg-muted/5 relative",
+              !isSameMonth(day, currentDate) && "bg-muted/10 opacity-40",
+              dropTarget === day.toISOString() && "bg-primary/5 ring-inset ring-2 ring-primary/40 rounded-xl m-0.5 z-10"
+            )}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (e.dataTransfer.types.includes('text/plain')) {
+                  const ds = day.toISOString();
+                  if (dropTarget !== ds) setDropTarget(ds);
+                }
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setDropTarget(null);
+                }
+              }}
+              onDrop={async (e) => {
+                e.preventDefault();
+                setDropTarget(null);
+                if (!e.dataTransfer.getData('text/plain')) return;
+                try {
+                  const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                  const newStart = new Date(day);
+                  const oldStart = parseISO(data.start);
+                  newStart.setHours(oldStart.getHours(), oldStart.getMinutes(), 0, 0);
+                  
+                  let newEnd: Date | undefined;
+                  if (data.end) {
+                    const oldEnd = parseISO(data.end);
+                    const duration = oldEnd.getTime() - oldStart.getTime();
+                    newEnd = new Date(newStart.getTime() + duration);
+                  }
+                  
+                  const newStartStr = newStart.toISOString();
+                  const newEndStr = newEnd?.toISOString();
+                  
+                  onOptimisticUpdate(data.type, data.id, newStartStr, newEndStr);
+                  const res = await updateEventDate(data.type, data.id, newStartStr, newEndStr);
+                  if (res.error) toast.error(res.error);
+                  else toast.success('Date updated');
+                } catch(err) {
+                  console.error(err);
+                }
+              }}
+            >
               <div className={cn(
                 "text-sm font-medium mb-1 h-7 w-7 flex items-center justify-center rounded-full",
                 isToday(day) ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground"
@@ -743,13 +921,13 @@ function MonthView({ jobs, tasks, requests, visits, currentDate }: { jobs: Job[]
                   <JobCardCompact key={`job-${job.id}-${day.toString()}`} job={job} />
                 ))}
                 {dayTasks.map(task => (
-                  <TaskCardCompact key={`task-${task.id}-${day.toString()}`} task={task} />
+                  <TaskCardCompact key={`task-${task.id}-${day.toString()}`} task={task} teamMembers={teamMembers} />
                 ))}
                 {dayRequests.map(request => (
                   <RequestCardCompact key={`request-${request.id}-${day.toString()}`} request={request} />
                 ))}
                 {dayVisits.map(visit => (
-                  <VisitCardCompact key={`visit-${visit.id}-${day.toString()}`} visit={visit} />
+                  <VisitCardCompact key={`visit-${visit.id}-${day.toString()}`} visit={visit} teamMembers={teamMembers} />
                 ))}
               </div>
             </div>
@@ -763,13 +941,15 @@ function MonthView({ jobs, tasks, requests, visits, currentDate }: { jobs: Job[]
 function JobCardCompact({ job }: { job: Job }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
-          <div className="px-2 py-1 rounded bg-[#0D3B47] text-white text-[10px] font-bold truncate cursor-pointer hover:bg-[#144D5D] transition-all shadow-sm">
+      <PopoverTrigger render={
+          <div 
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'job', id: job.id, start: job.job_start_at, end: job.job_end_at })); }}
+            className="px-2 py-1 rounded bg-[#0D3B47] text-white text-[10px] font-bold truncate cursor-pointer hover:bg-[#144D5D] transition-all shadow-sm"
+          >
             {format(parseISO(job.job_start_at), 'HH:mm')} {job.project_name}
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
         <JobDetailContent job={job} />
       </PopoverContent>
@@ -777,21 +957,23 @@ function JobCardCompact({ job }: { job: Job }) {
   )
 }
 
-function TaskCardCompact({ task }: { task: Task }) {
+function TaskCardCompact({ task, teamMembers }: { task: Task, teamMembers: any[] }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
-          <div className={cn(
-            "px-2 py-1 rounded text-white text-[10px] font-bold truncate cursor-pointer transition-all shadow-sm",
-            task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
-          )}>
+      <PopoverTrigger render={
+          <div 
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'task', id: task.id, start: task.due_date, end: task.end_date || task.due_date })); }}
+            className={cn(
+              "px-2 py-1 rounded text-white text-[10px] font-bold truncate cursor-pointer transition-all shadow-sm",
+              task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
+            )}
+          >
             {format(parseISO(task.due_date), 'HH:mm')} {task.title}
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
-        <TaskDetailContent task={task} />
+        <TaskDetailContent task={task} teamMembers={teamMembers} />
       </PopoverContent>
     </Popover>
   )
@@ -800,13 +982,15 @@ function TaskCardCompact({ task }: { task: Task }) {
 function RequestCardCompact({ request }: { request: ServiceRequest }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
-          <div className="px-2 py-1 rounded bg-purple-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-purple-700 transition-all shadow-sm">
+      <PopoverTrigger render={
+          <div 
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'request', id: request.id, start: request.schedule_date, end: request.schedule_date })); }}
+            className="px-2 py-1 rounded bg-purple-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-purple-700 transition-all shadow-sm"
+          >
             {getRequestDisplayTime(request.schedule_date, request.time_preference)} {request.proformas?.project_name || 'Request'}
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
         <RequestDetailContent request={request} />
       </PopoverContent>
@@ -814,18 +998,20 @@ function RequestCardCompact({ request }: { request: ServiceRequest }) {
   )
 }
 
-function VisitCardCompact({ visit }: { visit: JobVisit }) {
+function VisitCardCompact({ visit, teamMembers }: { visit: JobVisit, teamMembers: any[] }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
-          <div className="px-2 py-1 rounded bg-teal-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-teal-700 transition-all shadow-sm">
+      <PopoverTrigger render={
+          <div 
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'visit', id: visit.id, start: visit.visit_date, end: visit.visit_date })); }}
+            className="px-2 py-1 rounded bg-teal-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-teal-700 transition-all shadow-sm"
+          >
             {format(parseISO(visit.visit_date), 'HH:mm')} Visit - {visit.assigned_name}
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
-        <VisitDetailContent visit={visit} />
+        <VisitDetailContent visit={visit} teamMembers={teamMembers} />
       </PopoverContent>
     </Popover>
   )
@@ -834,9 +1020,10 @@ function VisitCardCompact({ visit }: { visit: JobVisit }) {
 function JobCard({ job, style }: { job: Job, style: React.CSSProperties }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
+      <PopoverTrigger render={
           <div
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'job', id: job.id, start: job.job_start_at, end: job.job_end_at })); }}
             className="absolute left-1 right-1 rounded-lg bg-[#0D3B47] text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-[#144D5D] transition-all hover:scale-[1.02] hover:z-30 border border-white/10"
             style={style}
           >
@@ -848,8 +1035,7 @@ function JobCard({ job, style }: { job: Job, style: React.CSSProperties }) {
               {format(parseISO(job.job_start_at), 'HH:mm')}
             </div>
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
         <JobDetailContent job={job} />
       </PopoverContent>
@@ -857,12 +1043,13 @@ function JobCard({ job, style }: { job: Job, style: React.CSSProperties }) {
   )
 }
 
-function TaskCard({ task, style }: { task: Task, style: React.CSSProperties }) {
+function TaskCard({ task, style, teamMembers }: { task: Task, style: React.CSSProperties, teamMembers: any[] }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
+      <PopoverTrigger render={
           <div
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'task', id: task.id, start: task.due_date, end: task.end_date || task.due_date })); }}
             className={cn(
               "absolute left-1 right-1 rounded-lg text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer transition-all hover:scale-[1.02] hover:z-50 border border-white/10",
               task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
@@ -877,10 +1064,9 @@ function TaskCard({ task, style }: { task: Task, style: React.CSSProperties }) {
               {format(parseISO(task.due_date), 'HH:mm')}
             </div>
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
-        <TaskDetailContent task={task} />
+        <TaskDetailContent task={task} teamMembers={teamMembers} />
       </PopoverContent>
     </Popover>
   )
@@ -889,9 +1075,10 @@ function TaskCard({ task, style }: { task: Task, style: React.CSSProperties }) {
 function RequestCard({ request, style }: { request: ServiceRequest, style: React.CSSProperties }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
+      <PopoverTrigger render={
           <div
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'request', id: request.id, start: request.schedule_date, end: request.schedule_date })); }}
             className="absolute rounded-lg bg-purple-600 text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-purple-700 transition-all hover:scale-[1.02] border border-white/10"
             style={style}
           >
@@ -903,8 +1090,7 @@ function RequestCard({ request, style }: { request: ServiceRequest, style: React
               {getRequestDisplayTime(request.schedule_date, request.time_preference)}
             </div>
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
         <RequestDetailContent request={request} />
       </PopoverContent>
@@ -912,12 +1098,13 @@ function RequestCard({ request, style }: { request: ServiceRequest, style: React
   )
 }
 
-function VisitCard({ visit, style }: { visit: JobVisit, style: React.CSSProperties }) {
+function VisitCard({ visit, style, teamMembers }: { visit: JobVisit, style: React.CSSProperties, teamMembers: any[] }) {
   return (
     <Popover>
-      <PopoverTrigger
-        render={
+      <PopoverTrigger render={
           <div
+            draggable
+            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'visit', id: visit.id, start: visit.visit_date, end: visit.visit_date })); }}
             className="absolute left-1 right-1 rounded-lg bg-teal-600 text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-teal-700 transition-all hover:scale-[1.02] hover:z-40 border border-white/10"
             style={style}
           >
@@ -932,10 +1119,9 @@ function VisitCard({ visit, style }: { visit: JobVisit, style: React.CSSProperti
               {format(parseISO(visit.visit_date), 'HH:mm')}
             </div>
           </div>
-        }
-      />
+      } />
       <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
-        <VisitDetailContent visit={visit} />
+        <VisitDetailContent visit={visit} teamMembers={teamMembers} />
       </PopoverContent>
     </Popover>
   )
@@ -1045,8 +1231,107 @@ function JobDetailContent({ job }: { job: Job }) {
   )
 }
 
-function TaskDetailContent({ task }: { task: Task }) {
+function TaskDetailContent({ task, teamMembers }: { task: Task, teamMembers: any[] }) {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [assignedTo, setAssignedTo] = React.useState(task.assigned_to || "");
+  const selectedMemberName = React.useMemo(() => {
+    if (!assignedTo) return "Unassigned";
+    const m = teamMembers.find(t => t.id === assignedTo);
+    return m ? m.name : "Unassigned";
+  }, [assignedTo, teamMembers]);
+  
   const client = getClientData(task);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    const startInput = formData.get('due_date') as string;
+    const endInput = formData.get('end_date') as string;
+    
+    // ISO string from datetime-local
+    const due_date = startInput ? new Date(startInput).toISOString() : task.due_date;
+    const end_date = endInput ? new Date(endInput).toISOString() : (task.end_date || due_date);
+    const assigned_to_val = formData.get('assigned_to') as string;
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    
+    const update = {
+      title,
+      description,
+      due_date,
+      end_date,
+      assigned_to: assigned_to_val || null,
+    };
+    
+    const res = await updateJobTask(task.id, update);
+    setIsSubmitting(false);
+    if (res.error) toast.error(res.error);
+    else {
+      toast.success('Task updated');
+      setIsEditing(false);
+      window.location.reload();
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="bg-card">
+        <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={cn("h-2 w-2 rounded-full", task.status === 'completed' ? "bg-emerald-500" : "bg-orange-500")} />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Edit Task</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Title</Label>
+            <Input name="title" defaultValue={task.title} className="h-9" required />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Description</Label>
+            <Input name="description" defaultValue={task.description || ''} className="h-9" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold text-muted-foreground uppercase">Start</Label>
+              <Input type="datetime-local" name="due_date" defaultValue={format(parseISO(task.due_date), "yyyy-MM-dd'T'HH:mm")} className="h-9" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold text-muted-foreground uppercase">End</Label>
+              <Input type="datetime-local" name="end_date" defaultValue={task.end_date ? format(parseISO(task.end_date), "yyyy-MM-dd'T'HH:mm") : format(parseISO(task.due_date), "yyyy-MM-dd'T'HH:mm")} className="h-9" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Assigned To</Label>
+            <Select name="assigned_to" value={assignedTo} onValueChange={(val) => setAssignedTo(val || "")}>
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="Unassigned">
+                  {selectedMemberName}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="z-[3000]">
+                <SelectItem value="">Unassigned</SelectItem>
+                {teamMembers.map(member => (
+                   <SelectItem key={`member-${member.id}`} value={member.id}>{member.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="pt-3 border-t border-border/10 flex gap-2 mt-4">
+            <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="flex-1 font-bold h-9 text-xs">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="flex-1 bg-[#306C3E] hover:bg-[#265832] font-bold h-9 text-xs text-white">
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card">
@@ -1108,12 +1393,20 @@ function TaskDetailContent({ task }: { task: Task }) {
           </div>
         </div>
 
-        <div className="pt-3 border-t border-border/10 pt-4">
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/10 mt-4">
+          <Button
+            variant="outline"
+            onClick={() => setIsEditing(true)}
+            className="h-10 text-xs font-bold gap-2 hover:bg-muted/50 border-border/60"
+          >
+            <Edit2 className="h-3.5 w-3.5" />
+            Edit
+          </Button>
           <a
             href={`/proforma/${task.proforma_id}`}
-            className={cn(buttonVariants({ variant: 'default' }), "w-full h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
+            className={cn(buttonVariants({ variant: 'default' }), "h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
           >
-            View job associated
+            View Job
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
@@ -1123,6 +1416,9 @@ function TaskDetailContent({ task }: { task: Task }) {
 }
 
 function RequestDetailContent({ request }: { request: ServiceRequest }) {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const [year, month, day] = request.schedule_date.split('-').map(Number);
   const localDate = new Date(year, month - 1, day);
   const displayDate = format(localDate, 'MMM d');
@@ -1130,6 +1426,77 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
   const displayTime = hasTime ? format(parseISO(request.schedule_date), 'p') : '';
 
   const client = getClientData(request);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    const dateInput = formData.get('schedule_date') as string;
+    
+    const schedule_date = dateInput || request.schedule_date;
+    const time_preference = formData.get('time_preference') as string;
+    const details = formData.get('details') as string;
+    
+    const update = {
+      schedule_date,
+      time_preference,
+      details,
+    };
+    
+    const res = await updateServiceRequest(request.id, update);
+    setIsSubmitting(false);
+    if (res.error) toast.error(res.error);
+    else {
+      toast.success('Request updated');
+      setIsEditing(false);
+      window.location.reload();
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="bg-card">
+        <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-purple-500" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Edit Request</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Schedule Date</Label>
+            <Input type="date" name="schedule_date" defaultValue={request.schedule_date.split('T')[0]} className="h-9" required />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Time Preference</Label>
+            <Select name="time_preference" defaultValue={request.time_preference || 'anytime'}>
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="Select Preference" />
+              </SelectTrigger>
+              <SelectContent className="z-[3000]">
+                <SelectItem value="morning">Morning (9AM - 12PM)</SelectItem>
+                <SelectItem value="afternoon">Afternoon (12PM - 5PM)</SelectItem>
+                <SelectItem value="anytime">Anytime</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Details</Label>
+            <Input name="details" defaultValue={request.details || ''} className="h-9" />
+          </div>
+          <div className="pt-3 border-t border-border/10 flex gap-2 mt-4">
+            <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="flex-1 font-bold h-9 text-xs">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="flex-1 bg-purple-600 hover:bg-purple-700 font-bold h-9 text-xs text-white">
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card">
@@ -1209,13 +1576,23 @@ function RequestDetailContent({ request }: { request: ServiceRequest }) {
           </div>
         </div>
         <div className="pt-3 border-t border-border/10 flex flex-col gap-2">
-          <a
-            href={`/proforma/${request.proforma_id}`}
-            className={cn(buttonVariants({ variant: 'default' }), "w-full h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
-          >
-            Review Request
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              className="h-10 text-xs font-bold gap-2 hover:bg-muted/50 border-border/60"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+              Edit
+            </Button>
+            <a
+              href={`/proforma/${request.proforma_id}`}
+              className={cn(buttonVariants({ variant: 'default' }), "h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
+            >
+              Review Request
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
 
           <DeleteConfirmModal
             title="Delete Request?"
@@ -1283,8 +1660,92 @@ function DeleteConfirmModal({ title, description, onConfirm, trigger }: { title:
   );
 }
 
-function VisitDetailContent({ visit }: { visit: JobVisit }) {
+function VisitDetailContent({ visit, teamMembers }: { visit: JobVisit, teamMembers: any[] }) {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [assignedTo, setAssignedTo] = React.useState(visit.assigned_to || "");
+  const selectedMemberName = React.useMemo(() => {
+    if (!assignedTo) return "Unassigned";
+    const m = teamMembers.find(t => t.id === assignedTo);
+    return m ? m.name : "Unassigned";
+  }, [assignedTo, teamMembers]);
+  
   const client = getClientData(visit);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    const dateInput = formData.get('visit_date') as string;
+    
+    // ISO string from datetime-local
+    const visit_date = dateInput ? new Date(dateInput).toISOString() : visit.visit_date;
+    const assigned_to_val = formData.get('assigned_to') as string;
+    const notes = formData.get('notes') as string;
+    
+    const update = {
+      visit_date,
+      assigned_to: assigned_to_val || null,
+      notes: notes || null,
+    };
+    
+    const res = await updateJobVisit(visit.id, update);
+    setIsSubmitting(false);
+    if (res.error) toast.error(res.error);
+    else {
+      toast.success('Visit updated');
+      setIsEditing(false);
+      window.location.reload();
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <div className="bg-card">
+        <div className="p-4 border-b border-border/10 bg-[#f8f9fa] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-teal-500" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Edit Visit</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Schedule</Label>
+            <Input type="datetime-local" name="visit_date" defaultValue={format(parseISO(visit.visit_date), "yyyy-MM-dd'T'HH:mm")} className="h-9" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Assigned To</Label>
+            <Select name="assigned_to" value={assignedTo} onValueChange={(val) => setAssignedTo(val || "")}>
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder="Unassigned">
+                  {selectedMemberName}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="z-[3000]">
+                <SelectItem value="">Unassigned</SelectItem>
+                {teamMembers.map(member => (
+                   <SelectItem key={`member-${member.id}`} value={member.id}>{member.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Notes</Label>
+            <Input name="notes" defaultValue={visit.notes || ''} className="h-9" />
+          </div>
+          <div className="pt-3 border-t border-border/10 flex gap-2 mt-4">
+            <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="flex-1 font-bold h-9 text-xs">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting} className="flex-1 bg-teal-600 hover:bg-teal-700 font-bold h-9 text-xs text-white">
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card">
@@ -1337,13 +1798,23 @@ function VisitDetailContent({ visit }: { visit: JobVisit }) {
         </div>
 
         <div className="pt-3 border-t border-border/10 flex flex-col gap-2">
-          <a
-            href={`/proforma/${visit.proforma_id}`}
-            className={cn(buttonVariants({ variant: 'default' }), "w-full h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
-          >
-            Go to project
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              className="h-10 text-xs font-bold gap-2 hover:bg-muted/50 border-border/60"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+              Edit
+            </Button>
+            <a
+              href={`/proforma/${visit.proforma_id}`}
+              className={cn(buttonVariants({ variant: 'default' }), "h-10 text-xs font-bold gap-2 bg-[#306C3E] hover:bg-[#265832]")}
+            >
+              Go to job
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
 
           <DeleteConfirmModal
             title="Delete Visit?"
