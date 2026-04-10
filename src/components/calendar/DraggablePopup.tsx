@@ -28,20 +28,49 @@ export function DraggablePopup({
   const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 })
   const popupRef = React.useRef<HTMLDivElement>(null)
 
-  // Set initial position once
-  React.useEffect(() => {
+  // Set initial position and adjust for boundaries
+  React.useLayoutEffect(() => {
     if (isOpen) {
+      let nextPos = { x: 0, y: 0 }
+      
       if (initialPosition) {
-        setPosition(initialPosition)
+        nextPos = initialPosition
       } else {
-        // Default to center if no position provided
-        setPosition({
-          x: window.innerWidth / 2 - 160, // approx half width of w-80
-          y: window.innerHeight / 2 - 200
-        })
+        nextPos = {
+          x: window.innerWidth / 2 - 175,
+          y: window.innerHeight / 2 - 250
+        }
       }
+
+      // We use a small timeout to allow the browser to calculate the height of the rendered content
+      const timer = setTimeout(() => {
+        if (!popupRef.current) return
+        
+        const rect = popupRef.current.getBoundingClientRect()
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
+        
+        let x = nextPos.x
+        let y = nextPos.y
+        
+        // Horizontal clamping
+        if (x + rect.width > viewportWidth) {
+          x = viewportWidth - rect.width - 20
+        }
+        if (x < 20) x = 20
+        
+        // Vertical clamping
+        if (y + rect.height > viewportHeight) {
+          y = viewportHeight - rect.height - 20
+        }
+        if (y < 20) y = 20
+        
+        setPosition({ x, y })
+      }, 0)
+
+      return () => clearTimeout(timer)
     }
-  }, [isOpen, initialPosition])
+  }, [isOpen, initialPosition, children])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!popupRef.current) return
