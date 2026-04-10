@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download, AlertTriangle, ExternalLink, FilePen, Building, PenLine } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ZoomIn, Pencil, GripVertical, Check, X, Trash2, Image as ImageIcon, Loader2, Download, AlertTriangle, ExternalLink, FilePen, Building, PenLine, Calendar as CalendarIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import ProformaDropdownActions from './ProformaDropdownActions';
@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { StatusHistory } from './StatusHistory';
+import ScheduleJobModal from './ScheduleJobModal';
 import {
   Dialog,
   DialogContent,
@@ -557,6 +558,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
   const [isSignatureModalOpen, setIsSignatureModalOpen] = React.useState(false);
   const [isSigningJob, setIsSigningJob] = React.useState(false);
   const [jobSignatureData, setJobSignatureData] = React.useState<string | null>(proforma.client_signature_data || null);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = React.useState(false);
 
   const handleCollectSignature = async (signatureData: string | null, signatureName: string | null) => {
     setIsSigningJob(true);
@@ -836,6 +838,8 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                   projectName={proforma.project_name}
                   proforma={proforma}
                   items={items}
+                  onStatusUpdate={(newStatus) => setProformaStatus(newStatus)}
+                  onConvertToJob={() => setIsScheduleModalOpen(true)}
                 />
                 <Button
                   variant="outline"
@@ -884,6 +888,17 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
         onClose={() => setIsSignatureModalOpen(false)}
         onConfirm={handleCollectSignature}
         isLoading={isSigningJob}
+      />
+
+      <ScheduleJobModal
+        proformaId={id}
+        projectName={proformaName}
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        onSuccess={() => {
+          setIsScheduleModalOpen(false);
+          setProformaStatus('job');
+        }}
       />
 
 

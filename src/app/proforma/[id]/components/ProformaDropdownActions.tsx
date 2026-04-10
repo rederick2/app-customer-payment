@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal, FileText, Check, X, Eye, Loader2, Link as LinkIcon, Printer, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { updateProformaStatus, scheduleJob } from './actions';
 import { toast } from 'sonner';
-import ScheduleJobModal from './ScheduleJobModal';
+// import ScheduleJobModal from './ScheduleJobModal'; // Removed as it is now handled by parent
 import QuotePreviewModal from './QuotePreviewModal';
 import EmailQuoteModal from './EmailQuoteModal';
 import React from 'react';
@@ -23,16 +23,20 @@ export default function ProformaDropdownActions({
   currentStatus,
   projectName,
   proforma,
-  items
+  items,
+  onStatusUpdate,
+  onConvertToJob
 }: {
   proformaId: string,
   currentStatus: string,
   projectName: string,
   proforma: any,
-  items: any[]
+  items: any[],
+  onStatusUpdate?: (newStatus: string) => void,
+  onConvertToJob?: () => void
 }) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  // const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
@@ -45,6 +49,9 @@ export default function ProformaDropdownActions({
       toast.error('Error', { description: result.error });
     } else {
       toast.success('Status updated', { description: 'The quote status has been successfully updated.' });
+      if (onStatusUpdate) {
+        onStatusUpdate(newStatus);
+      }
     }
   };
 
@@ -84,7 +91,7 @@ export default function ProformaDropdownActions({
         )}
 
         {currentStatus === 'approved' && (
-          <DropdownMenuItem onClick={() => setIsScheduleModalOpen(true)} className="cursor-pointer text-blue-700 focus:text-blue-800">
+          <DropdownMenuItem onClick={onConvertToJob} className="cursor-pointer text-blue-700 focus:text-blue-800">
             <CalendarIcon className="mr-2 h-4 w-4" />
             Convert to Job
           </DropdownMenuItem>
@@ -117,16 +124,7 @@ export default function ProformaDropdownActions({
 
       </DropdownMenuContent>
 
-      <ScheduleJobModal
-        proformaId={proformaId}
-        projectName={projectName}
-        isOpen={isScheduleModalOpen}
-        onClose={() => setIsScheduleModalOpen(false)}
-        onSuccess={() => {
-          setIsScheduleModalOpen(false);
-          //router.push(`/proforma/${proformaId}`);
-        }}
-      />
+      {/* Modal is now managed by parent QuoteView */}
 
       <QuotePreviewModal
         isOpen={isPreviewModalOpen}
