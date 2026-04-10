@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { createClient } from '@/lib/supabase/client';
 import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Papa from 'papaparse';
+import { parseSafeFloat } from '@/lib/utils';
 
 export function ImportQuotesModal() {
   const [open, setOpen] = useState(false);
@@ -40,7 +41,7 @@ export function ImportQuotesModal() {
       }
 
       const quantity = parseInt(match[2], 10);
-      const unit_price = parseFloat(match[3]);
+      const unit_price = parseSafeFloat(match[3]);
       const total_price = quantity * unit_price;
 
       items.push({
@@ -99,11 +100,11 @@ export function ImportQuotesModal() {
             else if (s.includes('approved') || s.includes('converted')) status = 'approved';
             else if (s.includes('archived')) status = 'rejected';
 
-            const subtotal = parseFloat(row['Subtotal ($)'] || '0');
-            const total = parseFloat(row['Total ($)'] || '0');
-            const discountRaw = parseFloat(row['Discount ($)'] || '0');
-            const collectedDeposit = parseFloat(row['Collected deposit ($)'] || '0');
-            const requiredDeposit = parseFloat(row['Required deposit ($)'] || '0');
+            const subtotal = parseSafeFloat(row['Subtotal ($)'] || '0');
+            const total = parseSafeFloat(row['Total ($)'] || '0');
+            const discountRaw = parseSafeFloat(row['Discount ($)'] || '0');
+            const collectedDeposit = parseSafeFloat(row['Collected deposit ($)'] || '0');
+            const requiredDeposit = parseSafeFloat(row['Required deposit ($)'] || '0');
             
             const tax = total - subtotal + discountRaw; // Total = Subtotal + Tax - Discount => Tax = Total - Subtotal + Discount
             

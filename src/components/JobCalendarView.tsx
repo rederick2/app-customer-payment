@@ -60,6 +60,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
+import { DraggablePopup } from './calendar/DraggablePopup'
 
 import {
   format,
@@ -249,6 +250,11 @@ export default function JobCalendarView({ jobs: initialJobs, teamMembers, tasks:
   const [tasks, setTasks] = React.useState(initialTasks)
   const [requests, setRequests] = React.useState(initialRequests)
   const [visits, setVisits] = React.useState(initialVisits)
+  const [activePopup, setActivePopup] = React.useState<{
+    type: 'job' | 'task' | 'request' | 'visit',
+    data: any,
+    position?: { x: number, y: number }
+  } | null>(null)
 
   React.useEffect(() => setJobs(initialJobs), [initialJobs])
   React.useEffect(() => setTasks(initialTasks), [initialTasks])
@@ -418,11 +424,11 @@ export default function JobCalendarView({ jobs: initialJobs, teamMembers, tasks:
 
       <div className="flex flex-1 overflow-hidden">
         {view === 'month' ? (
-          <MonthView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} />
+          <MonthView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} setActivePopup={setActivePopup} />
         ) : view === 'week' ? (
-          <WeekView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} days={days} getEventStyle={getEventStyle} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} />
+          <WeekView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} days={days} getEventStyle={getEventStyle} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} setActivePopup={setActivePopup} />
         ) : (
-          <DayView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} getEventStyle={getEventStyle} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} />
+          <DayView jobs={jobs} tasks={tasks} requests={requests} visits={visits} currentDate={currentDate} getEventStyle={getEventStyle} onOptimisticUpdate={onOptimisticUpdate} teamMembers={teamMembers} setActivePopup={setActivePopup} />
         )}
 
         {/* Right Panel - Agenda / Upcoming Events */}
@@ -456,40 +462,38 @@ export default function JobCalendarView({ jobs: initialJobs, teamMembers, tasks:
                 const title = event.type === 'job' ? (event as any).project_name : (event.type === 'task' ? (event as any).title : (event.type === 'request' ? ((event as any).proformas?.project_name || 'Request') : ((event as any).team_members?.name || 'Visit')));
 
                 return (
-                  <Popover key={`${event.type}-${(event as any).id}`}>
-                    <PopoverTrigger className="w-full text-left">
-                      <div className={cn(
-                        "p-3 rounded-xl shadow-sm border border-border/50 group transition-all hover:scale-[1.02] cursor-pointer",
-                        "bg-background hover:shadow-md"
-                      )}>
-                        <div className="flex items-start gap-3">
-                          <div className={cn("mt-0.5 h-2 w-2 rounded-full shrink-0",
-                            event.type === 'job' ? 'bg-[#0D3B47]' : (event.type === 'task' ? 'bg-orange-500' : (event.type === 'request' ? 'bg-purple-600' : 'bg-teal-600'))
-                          )} />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{event.type}</span>
-                              <span className="text-[10px] font-black tabular-nums text-foreground/80">{format(parseISO(time || ''), 'HH:mm')}</span>
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePopup({ type: event.type as any, data: event, position: { x: e.clientX, y: e.clientY } });
+                        }}
+                        className="w-full text-left"
+                      >
+                        <div className={cn(
+                          "p-3 rounded-xl shadow-sm border border-border/50 group transition-all hover:scale-[1.02] cursor-pointer",
+                          "bg-background hover:shadow-md"
+                        )}>
+                          <div className="flex items-start gap-3">
+                            <div className={cn("mt-0.5 h-2 w-2 rounded-full shrink-0",
+                              event.type === 'job' ? 'bg-[#0D3B47]' : (event.type === 'task' ? 'bg-orange-500' : (event.type === 'request' ? 'bg-purple-600' : 'bg-teal-600'))
+                            )} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{event.type}</span>
+                                <span className="text-[10px] font-black tabular-nums text-foreground/80">{format(parseISO(time || ''), 'HH:mm')}</span>
+                              </div>
+                              <h4 className="text-xs font-bold leading-snug truncate group-hover:text-primary transition-colors font-archivo">
+                                {title}
+                              </h4>
+                              {event.type === 'visit' && (
+                                <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                                  Assigned: {(event as any).team_members?.name}
+                                </p>
+                              )}
                             </div>
-                            <h4 className="text-xs font-bold leading-snug truncate group-hover:text-primary transition-colors">
-                              {title}
-                            </h4>
-                            {event.type === 'visit' && (
-                              <p className="text-[10px] text-muted-foreground mt-1 truncate">
-                                Assigned: {(event as any).team_members?.name}
-                              </p>
-                            )}
                           </div>
                         </div>
                       </div>
-                    </PopoverTrigger>
-                    <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="left" align="start" sideOffset={10}>
-                      {event.type === 'job' && <JobDetailContent job={event as any} />}
-                      {event.type === 'task' && <TaskDetailContent task={event as any} teamMembers={teamMembers} />}
-                      {event.type === 'request' && <RequestDetailContent request={event as any} />}
-                      {event.type === 'visit' && <VisitDetailContent visit={event as any} teamMembers={teamMembers} />}
-                    </PopoverContent>
-                  </Popover>
                 );
               })
             )}
@@ -508,6 +512,19 @@ export default function JobCalendarView({ jobs: initialJobs, teamMembers, tasks:
           }}
         />
       )}
+
+      {/* DRAGGABLE POPUP HANDLER */}
+      <DraggablePopup 
+        isOpen={!!activePopup} 
+        onClose={() => setActivePopup(null)}
+        title={activePopup ? `${activePopup.type} details` : ''}
+        initialPosition={activePopup?.position}
+      >
+        {activePopup?.type === 'job' && <JobDetailContent job={activePopup.data} />}
+        {activePopup?.type === 'task' && <TaskDetailContent task={activePopup.data} teamMembers={teamMembers} />}
+        {activePopup?.type === 'request' && <RequestDetailContent request={activePopup.data} />}
+        {activePopup?.type === 'visit' && <VisitDetailContent visit={activePopup.data} teamMembers={teamMembers} />}
+      </DraggablePopup>
     </div>
   )
 }
@@ -536,7 +553,7 @@ function CurrentTimeIndicator() {
   )
 }
 
-function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventStyle, onOptimisticUpdate, teamMembers }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, days: Date[], getEventStyle: any, onOptimisticUpdate: any, teamMembers: any[] }) {
+function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventStyle, onOptimisticUpdate, teamMembers, setActivePopup }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, days: Date[], getEventStyle: any, onOptimisticUpdate: any, teamMembers: any[], setActivePopup: any }) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [dropTarget, setDropTarget] = React.useState<{dateStr: string, hour: number} | null>(null);
 
@@ -666,10 +683,10 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                     <div key={hour} className="h-16 border-b border-border/40 last:border-b-0" />
                   ))}
                   {dayJobs.map(job => (
-                    <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, day)} />
+                    <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, day)} setActivePopup={setActivePopup} />
                   ))}
                   {dayTasks.map(task => (
-                    <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.due_date, day)} teamMembers={teamMembers} />
+                    <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.due_date, day)} setActivePopup={setActivePopup} />
                   ))}
                   {dayRequests.map((request, idx) => {
                     const { start, end } = getRequestVirtualDates(request.schedule_date, request.time_preference);
@@ -679,7 +696,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                         left: `${10 + (idx * 5)}%`,
                         width: `${100}%`,
                         zIndex: 35
-                      }} />
+                      }} setActivePopup={setActivePopup} />
                     );
                   })}
                   {dayVisits.map((visit, idx) => (
@@ -688,7 +705,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
                       left: `${15 + (idx * 5)}%`,
                       width: `${80 - (idx * 2)}%`,
                       zIndex: 38
-                    }} teamMembers={teamMembers} />
+                    }} setActivePopup={setActivePopup} />
                   ))}
                   {isTodayDay && <CurrentTimeIndicator />}
                 </div>
@@ -701,7 +718,7 @@ function WeekView({ jobs, tasks, requests, visits, currentDate, days, getEventSt
   )
 }
 
-function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle, onOptimisticUpdate, teamMembers }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, getEventStyle: any, onOptimisticUpdate: any, teamMembers: any[] }) {
+function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle, onOptimisticUpdate, teamMembers, setActivePopup }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, getEventStyle: any, onOptimisticUpdate: any, teamMembers: any[], setActivePopup: any }) {
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const [dropTarget, setDropTarget] = React.useState<{dateStr: string, hour: number} | null>(null);
 
@@ -818,10 +835,10 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle, on
               <div key={hour} className="h-16 border-b border-border/40 last:border-b-0" />
             ))}
             {dayJobs.map((job) => (
-              <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, currentDate)} />
+              <JobCard key={job.id} job={job} style={getEventStyle(job.job_start_at, job.job_end_at, currentDate)} setActivePopup={setActivePopup} />
             ))}
             {dayTasks.map((task) => (
-              <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.end_date || task.due_date, currentDate)} teamMembers={teamMembers} />
+              <TaskCard key={task.id} task={task} style={getEventStyle(task.due_date, task.end_date || task.due_date, currentDate)} setActivePopup={setActivePopup} />
             ))}
             {dayRequests.map((request, idx) => {
               const { start, end } = getRequestVirtualDates(request.schedule_date, request.time_preference);
@@ -831,7 +848,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle, on
                   left: `${10 + (idx * 15)}%`,
                   width: '42%',
                   zIndex: 35
-                }} />
+                }} setActivePopup={setActivePopup} />
               );
             })}
             {dayVisits.map((visit, idx) => (
@@ -840,7 +857,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle, on
                 left: `${15 + (idx * 5)}%`,
                 width: `${82 - (idx * 2)}%`,
                 zIndex: 38
-              }} teamMembers={teamMembers} />
+              }} setActivePopup={setActivePopup} />
             ))}
           </div>
         </div>
@@ -849,7 +866,7 @@ function DayView({ jobs, tasks, requests, visits, currentDate, getEventStyle, on
   )
 }
 
-function MonthView({ jobs, tasks, requests, visits, currentDate, onOptimisticUpdate, teamMembers }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, onOptimisticUpdate: any, teamMembers: any[] }) {
+function MonthView({ jobs, tasks, requests, visits, currentDate, onOptimisticUpdate, teamMembers, setActivePopup }: { jobs: Job[], tasks: Task[], requests: ServiceRequest[], visits: JobVisit[], currentDate: Date, onOptimisticUpdate: any, teamMembers: any[], setActivePopup: any }) {
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 })
@@ -932,16 +949,16 @@ function MonthView({ jobs, tasks, requests, visits, currentDate, onOptimisticUpd
               </div>
               <div className="space-y-1 mt-1 overflow-y-auto max-h-[80px] scrollbar-hide">
                 {dayJobs.map(job => (
-                  <JobCardCompact key={`job-${job.id}-${day.toString()}`} job={job} />
+                  <JobCardCompact key={`job-${job.id}-${day.toString()}`} job={job} setActivePopup={setActivePopup} />
                 ))}
                 {dayTasks.map(task => (
-                  <TaskCardCompact key={`task-${task.id}-${day.toString()}`} task={task} teamMembers={teamMembers} />
+                  <TaskCardCompact key={`task-${task.id}-${day.toString()}`} task={task} teamMembers={teamMembers} setActivePopup={setActivePopup} />
                 ))}
                 {dayRequests.map(request => (
-                  <RequestCardCompact key={`request-${request.id}-${day.toString()}`} request={request} />
+                  <RequestVisitCardCompact key={`request-${request.id}-${day.toString()}`} request={request} setActivePopup={setActivePopup} />
                 ))}
                 {dayVisits.map(visit => (
-                  <VisitCardCompact key={`visit-${visit.id}-${day.toString()}`} visit={visit} teamMembers={teamMembers} />
+                  <VisitCardCompact key={`visit-${visit.id}-${day.toString()}`} visit={visit} setActivePopup={setActivePopup} />
                 ))}
               </div>
             </div>
@@ -952,192 +969,168 @@ function MonthView({ jobs, tasks, requests, visits, currentDate, onOptimisticUpd
   )
 }
 
-function JobCardCompact({ job }: { job: Job }) {
+function JobCardCompact({ job, setActivePopup }: { job: Job, setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div 
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'job', id: job.id, start: job.job_start_at, end: job.job_end_at })); }}
-            className="px-2 py-1 rounded bg-[#0D3B47] text-white text-[10px] font-bold truncate cursor-pointer hover:bg-[#144D5D] transition-all shadow-sm"
-          >
-            {format(parseISO(job.job_start_at), 'HH:mm')} {job.project_name}
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
-        <JobDetailContent job={job} />
-      </PopoverContent>
-    </Popover>
+    <div 
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'job', id: job.id, start: job.job_start_at, end: job.job_end_at })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'job', data: job, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className="px-2 py-1 rounded-xl bg-[#0D3B47] text-white text-[10px] font-bold truncate cursor-pointer hover:bg-[#144D5D] transition-all shadow-none"
+    >
+      {format(parseISO(job.job_start_at), 'HH:mm')} {job.project_name}
+    </div>
   )
 }
 
-function TaskCardCompact({ task, teamMembers }: { task: Task, teamMembers: any[] }) {
+function TaskCardCompact({ task, teamMembers, setActivePopup }: { task: Task, teamMembers: any[], setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div 
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'task', id: task.id, start: task.due_date, end: task.end_date || task.due_date })); }}
-            className={cn(
-              "px-2 py-1 rounded text-white text-[10px] font-bold truncate cursor-pointer transition-all shadow-sm",
-              task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
-            )}
-          >
-            {format(parseISO(task.due_date), 'HH:mm')} {task.title}
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
-        <TaskDetailContent task={task} teamMembers={teamMembers} />
-      </PopoverContent>
-    </Popover>
+    <div 
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'task', id: task.id, start: task.due_date, end: task.end_date || task.due_date })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'task', data: task, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className={cn(
+        "px-2 py-1 rounded-xl text-white text-[10px] font-bold truncate cursor-pointer transition-all shadow-none",
+        task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
+      )}
+    >
+      {format(parseISO(task.due_date), 'HH:mm')} {task.title}
+    </div>
   )
 }
 
-function RequestCardCompact({ request }: { request: ServiceRequest }) {
+function RequestVisitCardCompact({ request, setActivePopup }: { request: ServiceRequest, setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div 
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'request', id: request.id, start: request.schedule_date, end: request.schedule_date })); }}
-            className="px-2 py-1 rounded bg-purple-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-purple-700 transition-all shadow-sm"
-          >
-            {getRequestDisplayTime(request.schedule_date, request.time_preference)} {request.proformas?.project_name || 'Request'}
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
-        <RequestDetailContent request={request} />
-      </PopoverContent>
-    </Popover>
+    <div 
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'request', id: request.id, start: request.schedule_date, end: request.schedule_date })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'request', data: request, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className="px-2 py-1 rounded-xl bg-purple-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-purple-700 transition-all shadow-none"
+    >
+      {getRequestDisplayTime(request.schedule_date, request.time_preference)} {request.proformas?.project_name || 'Request'}
+    </div>
   )
 }
 
-function VisitCardCompact({ visit, teamMembers }: { visit: JobVisit, teamMembers: any[] }) {
+function VisitCardCompact({ visit, setActivePopup }: { visit: JobVisit, setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div 
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'visit', id: visit.id, start: visit.visit_date, end: visit.visit_date })); }}
-            className="px-2 py-1 rounded bg-teal-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-teal-700 transition-all shadow-sm"
-          >
-            {format(parseISO(visit.visit_date), 'HH:mm')} Visit - {visit.assigned_name}
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={10}>
-        <VisitDetailContent visit={visit} teamMembers={teamMembers} />
-      </PopoverContent>
-    </Popover>
+    <div 
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'visit', id: visit.id, start: visit.visit_date, end: visit.visit_date })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'visit', data: visit, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className="px-2 py-1 rounded-xl bg-teal-600 text-white text-[10px] font-bold truncate cursor-pointer hover:bg-teal-700 transition-all shadow-none"
+    >
+      {format(parseISO(visit.visit_date), 'HH:mm')} Visit - {visit.assigned_name}
+    </div>
   )
 }
 
-function JobCard({ job, style }: { job: Job, style: React.CSSProperties }) {
+function JobCard({ job, style, setActivePopup }: { job: Job, style: React.CSSProperties, setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'job', id: job.id, start: job.job_start_at, end: job.job_end_at })); }}
-            className="absolute left-1 right-1 rounded-lg bg-[#0D3B47] text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-[#144D5D] transition-all hover:scale-[1.02] hover:z-30 border border-white/10"
-            style={style}
-          >
-            <div className="font-bold truncate leading-tight">
-              {job.project_name}
-            </div>
-            <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
-              <Clock className="h-3 w-3 mr-1 shrink-0" />
-              {format(parseISO(job.job_start_at), 'HH:mm')}
-            </div>
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
-        <JobDetailContent job={job} />
-      </PopoverContent>
-    </Popover>
+    <div
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'job', id: job.id, start: job.job_start_at, end: job.job_end_at })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'job', data: job, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className="absolute left-1 right-1 rounded-xl bg-[#0D3B47] text-white p-2 text-xs overflow-hidden shadow-none group cursor-pointer hover:bg-[#144D5D] transition-all hover:scale-[1.02] hover:z-30 border border-white/10"
+      style={style}
+    >
+      <div className="font-bold truncate leading-tight">
+        {job.project_name}
+      </div>
+      <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
+        <Clock className="h-3 w-3 mr-1 shrink-0" />
+        {format(parseISO(job.job_start_at), 'HH:mm')}
+      </div>
+    </div>
   )
 }
 
-function TaskCard({ task, style, teamMembers }: { task: Task, style: React.CSSProperties, teamMembers: any[] }) {
+function TaskCard({ task, style, setActivePopup }: { task: Task, style: React.CSSProperties, setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'task', id: task.id, start: task.due_date, end: task.end_date || task.due_date })); }}
-            className={cn(
-              "absolute left-1 right-1 rounded-lg text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer transition-all hover:scale-[1.02] hover:z-50 border border-white/10",
-              task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
-            )}
-            style={style}
-          >
-            <div className="font-bold truncate leading-tight">
-              {task.title}
-            </div>
-            <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
-              <Clock className="h-3 w-3 mr-1 shrink-0" />
-              {format(parseISO(task.due_date), 'HH:mm')}
-            </div>
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
-        <TaskDetailContent task={task} teamMembers={teamMembers} />
-      </PopoverContent>
-    </Popover>
+    <div
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'task', id: task.id, start: task.due_date, end: task.end_date || task.due_date })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'task', data: task, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className={cn(
+        "absolute left-1 right-1 rounded-xl text-white p-2 text-xs overflow-hidden shadow-none group cursor-pointer transition-all hover:scale-[1.02] hover:z-50 border border-white/10",
+        task.status === 'completed' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"
+      )}
+      style={style}
+    >
+      <div className="font-bold truncate leading-tight">
+        {task.title}
+      </div>
+      <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
+        <Clock className="h-3 w-3 mr-1 shrink-0" />
+        {format(parseISO(task.due_date), 'HH:mm')}
+      </div>
+    </div>
   )
 }
 
-function RequestCard({ request, style }: { request: ServiceRequest, style: React.CSSProperties }) {
+function RequestCard({ request, style, setActivePopup }: { request: ServiceRequest, style: React.CSSProperties, setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'request', id: request.id, start: request.schedule_date, end: request.schedule_date })); }}
-            className="absolute rounded-lg bg-purple-600 text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-purple-700 transition-all hover:scale-[1.02] border border-white/10"
-            style={style}
-          >
-            <div className="font-bold truncate leading-tight">
-              {request.proformas?.project_name || 'Request'}
-            </div>
-            <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
-              <Clock className="h-3 w-3 mr-1 shrink-0" />
-              {getRequestDisplayTime(request.schedule_date, request.time_preference)}
-            </div>
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
-        <RequestDetailContent request={request} />
-      </PopoverContent>
-    </Popover>
+    <div
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'request', id: request.id, start: request.schedule_date, end: request.schedule_date })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'request', data: request, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className="absolute rounded-xl bg-purple-600 text-white p-2 text-xs overflow-hidden shadow-none group cursor-pointer hover:bg-purple-700 transition-all hover:scale-[1.02] border border-white/10"
+      style={style}
+    >
+      <div className="font-bold truncate leading-tight">
+        {request.proformas?.project_name || 'Request'}
+      </div>
+      <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
+        <Clock className="h-3 w-3 mr-1 shrink-0" />
+        {getRequestDisplayTime(request.schedule_date, request.time_preference)}
+      </div>
+    </div>
   )
 }
 
-function VisitCard({ visit, style, teamMembers }: { visit: JobVisit, style: React.CSSProperties, teamMembers: any[] }) {
+function VisitCard({ visit, style, setActivePopup }: { visit: JobVisit, style: React.CSSProperties, setActivePopup: any }) {
   return (
-    <Popover>
-      <PopoverTrigger render={
-          <div
-            draggable
-            onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'visit', id: visit.id, start: visit.visit_date, end: visit.visit_date })); }}
-            className="absolute left-1 right-1 rounded-lg bg-teal-600 text-white p-2 text-xs overflow-hidden shadow-md group cursor-pointer hover:bg-teal-700 transition-all hover:scale-[1.02] hover:z-40 border border-white/10"
-            style={style}
-          >
-            <div className="font-bold border-b border-white/20 pb-1 mb-1 truncate leading-tight flex items-center gap-1.5 uppercase tracking-tighter text-[9px]">
-              <User className="h-2.5 w-2.5" /> Visit
-            </div>
-            <div className="font-bold truncate leading-tight">
-              {visit.team_members?.name}
-            </div>
-            <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
-              <Clock className="h-3 w-3 mr-1 shrink-0" />
-              {format(parseISO(visit.visit_date), 'HH:mm')}
-            </div>
-          </div>
-      } />
-      <PopoverContent className="z-50 w-80 p-0 overflow-hidden border-none shadow-2xl rounded-xl" side="bottom" align="center" sideOffset={12}>
-        <VisitDetailContent visit={visit} teamMembers={teamMembers} />
-      </PopoverContent>
-    </Popover>
+    <div
+      draggable
+      onDragStart={(e) => { e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'visit', id: visit.id, start: visit.visit_date, end: visit.visit_date })); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setActivePopup({ type: 'visit', data: visit, position: { x: e.clientX, y: e.clientY } });
+      }}
+      className="absolute left-1 right-1 rounded-xl bg-teal-600 text-white p-2 text-xs overflow-hidden shadow-none group cursor-pointer hover:bg-teal-700 transition-all hover:scale-[1.02] hover:z-40 border border-white/10"
+      style={style}
+    >
+      <div className="font-bold border-b border-white/20 pb-1 mb-1 truncate leading-tight flex items-center gap-1.5 uppercase tracking-tighter text-[9px]">
+        <User className="h-2.5 w-2.5" /> Visit
+      </div>
+      <div className="font-bold truncate leading-tight">
+        {visit.team_members?.name}
+      </div>
+      <div className="text-[10px] opacity-80 font-medium flex items-center mt-1">
+        <Clock className="h-3 w-3 mr-1 shrink-0" />
+        {format(parseISO(visit.visit_date), 'HH:mm')}
+      </div>
+    </div>
   )
 }
 

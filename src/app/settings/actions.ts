@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { parseSafeFloat } from '@/lib/utils'
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
@@ -103,7 +104,7 @@ export async function addTax(formData: FormData) {
   if (!user) throw new Error('Unauthorized')
 
   const name = formData.get('name') as string
-  const percentage = parseFloat(formData.get('percentage') as string)
+  const percentage = parseSafeFloat(formData.get('percentage') as string)
 
   const { error } = await supabase
     .from('taxes')
@@ -144,7 +145,7 @@ export async function updateTax(id: string, formData: FormData) {
   if (!user) throw new Error('Unauthorized')
 
   const name = formData.get('name') as string
-  const percentage = parseFloat(formData.get('percentage') as string)
+  const percentage = parseSafeFloat(formData.get('percentage') as string)
 
   const { error } = await supabase
     .from('taxes')

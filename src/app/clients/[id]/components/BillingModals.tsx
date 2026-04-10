@@ -165,6 +165,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
       let result;
       if (openType === 'payment' || openType === 'deposit') {
         formData.append('type', openType);
+        //console.log('formData', formData);
         result = await recordPayment(clientId, proformaId || null, formData);
       } else if (openType === 'invoice') {
         if (!proformaId) {
@@ -179,12 +180,12 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
         toast.error(result.error);
       } else {
         if (openType === 'invoice' && syncToQBO && result?.data?.id) {
-          toast.success('Factura creada. Sincronizando con QuickBooks...');
+          toast.success('Invoice created. Synchronizing with QuickBooks...');
           const syncRes = await syncInvoiceToQuickBooks(result.data.id);
           if (syncRes.success) {
-            toast.success('Sincronización completada');
+            toast.success('Synchronization completed');
           } else {
-            toast.error('Error en sincronización: ' + syncRes.error);
+            toast.error('Error synchronizing: ' + syncRes.error);
           }
         } else {
           toast.success(

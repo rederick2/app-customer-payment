@@ -37,7 +37,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
     // 1. Client Creation
     activities.push({
       date: new Date(client.created_at),
-      label: 'Cliente Registrado en el Directorio',
+      label: 'Client Registered in the Directory',
       icon: User,
       color: 'bg-blue-500/10 text-blue-600 border-blue-200'
     });
@@ -48,7 +48,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
         if (p.created_at) {
           activities.push({
             date: new Date(p.created_at),
-            label: `Cotización Creada: ${p.number || p.id.split('-')[0].toUpperCase()}`,
+            label: `Quotation Created: ${p.number || p.id.split('-')[0].toUpperCase()}`,
             icon: FileText,
             color: 'bg-slate-500/10 text-slate-600 border-slate-200'
           });
@@ -57,7 +57,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
         if (p.approved_at) {
           activities.push({
             date: new Date(p.approved_at),
-            label: `Cotización Aprobada: ${p.number || p.id.split('-')[0].toUpperCase()}`,
+            label: `Quotation Approved: ${p.number || p.id.split('-')[0].toUpperCase()}`,
             icon: CheckCircle,
             color: 'bg-emerald-500/10 text-emerald-600 border-emerald-200'
           });
@@ -66,7 +66,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
         if (p.job_converted_at) {
           activities.push({
             date: new Date(p.job_converted_at),
-            label: `Convertido a Trabajo (Job): ${p.number || p.id.split('-')[0].toUpperCase()}`,
+            label: `Converted to Job: ${p.number || p.id.split('-')[0].toUpperCase()}`,
             icon: Briefcase,
             color: 'bg-indigo-500/10 text-indigo-600 border-indigo-200'
           });
@@ -76,7 +76,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
           p.job_tasks.forEach((t: any) => {
             activities.push({
               date: new Date(t.created_at),
-              label: `Tarea Creada: ${t.title || 'Nueva Tarea'}`,
+              label: `Task Created: ${t.title || 'New Task'}`,
               icon: CheckSquare,
               color: 'bg-purple-500/10 text-purple-600 border-purple-200'
             });
@@ -87,7 +87,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
           p.job_expenses.forEach((e: any) => {
             activities.push({
               date: new Date(e.created_at),
-              label: `Gasto Ingresado: $${e.amount} (${e.place || 'General'})`,
+              label: `Expense Added: $${e.amount} (${e.place || 'General'})`,
               icon: Receipt,
               color: 'bg-orange-500/10 text-orange-600 border-orange-200'
             });
@@ -101,7 +101,7 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
       client.payments.forEach((pay: any) => {
         activities.push({
           date: new Date(pay.created_at),
-          label: `Pago Registrado: $${pay.amount}`,
+          label: `Payment Registered: $${pay.amount}`,
           icon: DollarSign,
           color: 'bg-green-500/10 text-green-600 border-green-200'
         });
@@ -134,8 +134,8 @@ export function ClientActivityTrigger({ client, latestActivity }: ClientActivity
         <Clock className="h-4 w-4 text-primary/40 group-hover:text-primary transition-colors" />
         <span className="text-muted-foreground font-medium group-hover:text-primary transition-colors">
           {latestActivity
-            ? formatDistanceToNow(latestActivity, { addSuffix: true, locale: es })
-            : 'Nunca'}
+            ? formatDistanceToNow(latestActivity, { addSuffix: true })
+            : 'Never'}
         </span>
       </button>
 

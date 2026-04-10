@@ -2,25 +2,26 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { parseSafeFloat } from '@/lib/utils';
 
 export async function recordPayment(clientId: string, proformaId: string | null, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'No autorizado' };
+    return { error: 'Not authorized' };
   }
 
-  const amount = parseFloat(formData.get('amount') as string);
+  const amount = parseSafeFloat(formData.get('amount') as string);
   const type = formData.get('type') as string; // 'payment' or 'deposit'
   const paymentMethod = formData.get('payment_method') as string;
   const paymentDate = formData.get('payment_date') as string || new Date().toISOString();
   const notes = formData.get('notes') as string;
 
   if (isNaN(amount) || amount <= 0) {
-    return { error: 'El monto debe ser un numero positivo.' };
+    return { error: 'The amount must be a positive number.' };
   }
-
+  console.log('amount', formData.get('amount'));
   const { error } = await supabase
     .from('payments')
     .insert([{
@@ -36,7 +37,7 @@ export async function recordPayment(clientId: string, proformaId: string | null,
 
   if (error) {
     console.error('Error recording payment:', error);
-    return { error: 'Error al registrar el pago.' };
+    return { error: 'Error recording payment.' };
   }
 
   revalidatePath(`/clients/${clientId}`);
@@ -65,20 +66,20 @@ export async function createInvoice(clientId: string, proformaId: string, formDa
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'No autorizado' };
+    return { error: 'Not authorized' };
   }
 
   const invoiceNumber = formData.get('invoice_number') as string;
-  const totalAmount = parseFloat(formData.get('total_amount') as string);
+  const totalAmount = parseSafeFloat(formData.get('total_amount') as string);
   const issueDate = formData.get('issue_date') as string || new Date().toISOString().split('T')[0];
   const dueDate = formData.get('due_date') as string;
   const notes = formData.get('notes') as string;
 
-  const taxAmount = parseFloat(formData.get('tax_amount') as string) || 0;
-  const discountAmount = parseFloat(formData.get('discount_amount') as string) || 0;
+  const taxAmount = parseSafeFloat(formData.get('tax_amount') as string);
+  const discountAmount = parseSafeFloat(formData.get('discount_amount') as string);
 
   if (!invoiceNumber) {
-    return { error: 'Se requiere un numero de factura.' };
+    return { error: 'An invoice number is required.' };
   }
 
   const { data: newData, error } = await supabase
@@ -98,9 +99,9 @@ export async function createInvoice(clientId: string, proformaId: string, formDa
     .select()
     .single();
 
-    if (error) {
+  if (error) {
     console.error('Error creating invoice:', error);
-    return { error: 'Error al crear la factura. Es posible que el numero de factura ya exista.' };
+    return { error: 'Error creating invoice. It is possible that the invoice number already exists.' };
   }
 
   // Link payments
@@ -120,7 +121,7 @@ export async function deleteInvoice(id: string, clientId: string) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'No autorizado' };
+    return { error: 'Not authorized' };
   }
 
   const { error } = await supabase
@@ -130,7 +131,7 @@ export async function deleteInvoice(id: string, clientId: string) {
 
   if (error) {
     console.error('Error deleting invoice:', error);
-    return { error: 'Error al eliminar la factura.' };
+    return { error: 'Error deleting invoice.' };
   }
 
   revalidatePath(`/clients/${clientId}`);
@@ -142,7 +143,7 @@ export async function deletePayment(id: string, clientId: string) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'No autorizado' };
+    return { error: 'Not authorized' };
   }
 
   const { error } = await supabase
@@ -152,7 +153,7 @@ export async function deletePayment(id: string, clientId: string) {
 
   if (error) {
     console.error('Error deleting payment:', error);
-    return { error: 'Error al eliminar el registro.' };
+    return { error: 'Error deleting payment.' };
   }
 
   revalidatePath(`/clients/${clientId}`);
