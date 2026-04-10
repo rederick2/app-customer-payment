@@ -1,11 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
@@ -26,28 +26,28 @@ interface EmailBillingModalProps {
   onClose: () => void;
 }
 
-export function EmailBillingModal({ 
-  type, 
-  id, 
-  clientEmail, 
-  clientName, 
-  referenceNumber, 
-  onClose 
+export function EmailBillingModal({
+  type,
+  id,
+  clientEmail,
+  clientName,
+  referenceNumber,
+  onClose
 }: EmailBillingModalProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     to: clientEmail,
-    subject: type === 'invoice' 
-      ? `Factura #${referenceNumber} - Recordatorio de Pago` 
-      : `Recibo de Pago - Referencia #${referenceNumber}`,
+    subject: type === 'invoice'
+      ? `Invoice #${referenceNumber} - Payment Reminder`
+      : `Payment Receipt - Reference #${referenceNumber}`,
     message: ''
   });
 
   React.useEffect(() => {
     const defaultMessage = type === 'invoice'
-      ? `Hola ${clientName},\n\nEspero que estés bien. Adjunto encontrarás la factura #${referenceNumber} correspondiente a los servicios realizados.\n\nPor favor, avísanos si tienes alguna pregunta.\n\nSaludos,\nEl equipo.`
-      : `Hola ${clientName},\n\nConfirmamos que hemos recibido tu pago con éxito. Adjunto encontrarás el recibo oficial correspondiente a la referencia #${referenceNumber}.\n\nGracias por confiar en nosotros.\n\nSaludos,\nEl equipo.`;
-    
+      ? `Hello ${clientName},\n\nI hope you are well. Attached you will find the invoice #${referenceNumber} corresponding to the services performed.\n\nPlease let us know if you have any questions.\n\nRegards,\nThe Team.`
+      : `Hello ${clientName},\n\nWe confirm that we have received your payment successfully. Attached you will find the official receipt corresponding to the reference #${referenceNumber}.\n\nThank you for trusting us.\n\nRegards,\nThe Team.`;
+
     setFormData(prev => ({ ...prev, message: defaultMessage }));
   }, [type, clientName, referenceNumber]);
 
@@ -61,18 +61,18 @@ export function EmailBillingModal({
     data.append('message', formData.message);
 
     try {
-      const result = type === 'invoice' 
+      const result = type === 'invoice'
         ? await sendInvoiceEmail(id, data)
         : await sendPaymentEmail(id, data);
 
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('Correo enviado exitosamente');
+        toast.success('email sent successfully');
         onClose();
       }
     } catch (error) {
-      toast.error('Error al enviar el correo');
+      toast.error('Error sending email');
     } finally {
       setIsLoading(false);
     }
@@ -84,16 +84,16 @@ export function EmailBillingModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-primary" />
-            Enviar {type === 'invoice' ? 'Factura' : 'Recibo'} por Email
+            Send {type === 'invoice' ? 'Invoice' : 'Receipt'} by Email
           </DialogTitle>
           <DialogDescription>
-            Personaliza el mensaje antes de enviar el documento PDF al cliente.
+            Personalize the message before sending the PDF document to the client.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="to">Para</Label>
+            <Label htmlFor="to">To</Label>
             <Input
               id="to"
               type="email"
@@ -104,7 +104,7 @@ export function EmailBillingModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subject">Asunto</Label>
+            <Label htmlFor="subject">Subject</Label>
             <Input
               id="subject"
               value={formData.subject}
@@ -114,7 +114,7 @@ export function EmailBillingModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">Mensaje</Label>
+            <Label htmlFor="message">Message</Label>
             <Textarea
               id="message"
               value={formData.message}
@@ -130,9 +130,9 @@ export function EmailBillingModal({
               <FileText className="h-5 w-5 text-red-500" />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Documento Adjunto</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Attached Document</p>
               <p className="text-sm font-medium">
-                {type === 'invoice' ? `Factura_${referenceNumber}.pdf` : `Recibo_Pago_${referenceNumber}.pdf`}
+                {type === 'invoice' ? `Invoice_${referenceNumber}.pdf` : `Receipt_Payment_${referenceNumber}.pdf`}
               </p>
             </div>
             <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -146,12 +146,12 @@ export function EmailBillingModal({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
+                  Sending...
                 </>
               ) : (
                 <>
                   <Mail className="mr-2 h-4 w-4" />
-                  Enviar Ahora
+                  Send Now
                 </>
               )}
             </Button>

@@ -73,7 +73,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
       to: [to],
       subject: subject,
       text: message,
-      html: buildEmailHtml(message, proformaId),
+      html: buildEmailHtml(message, proformaId, proforma.users?.display_name || ''),
       attachments: [
         {
           filename: `cotizacion_${String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}.pdf`,
@@ -110,7 +110,7 @@ export async function sendProformaEmail(proformaId: string, formData: FormData) 
 // Helper removed as we now handle it inline or could use a better one if needed elsewhere.
 // But for now, inline is fine to avoid confusion with types.
 
-function buildEmailHtml(message: string, proformaId: string): string {
+function buildEmailHtml(message: string, proformaId: string, display_name: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const portalUrl = `${baseUrl}/p/${proformaId}`;
   const bodyText = message.replace(/\n/g, '<br/>');
@@ -126,8 +126,7 @@ function buildEmailHtml(message: string, proformaId: string): string {
         <!-- Header -->
         <tr>
           <td style="background:#0d3b47;padding:28px 40px;">
-            <p style="margin:0;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:1px;">EstudioPro</p>
-            <p style="margin:4px 0 0;font-size:12px;color:#ffffff99;font-family:Arial,sans-serif;">Interior Design &amp; Remodeling</p>
+            <p style="margin:0;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:1px;">${display_name}</p>
           </td>
         </tr>
 
@@ -159,7 +158,7 @@ function buildEmailHtml(message: string, proformaId: string): string {
         <tr>
           <td style="background:#f4f2ec;padding:20px 40px;border-top:1px solid #e2e0d8;">
             <p style="margin:0;font-size:11px;color:#999999;font-family:Arial,sans-serif;text-align:center;">
-              EstudioPro · This email contains a quote prepared exclusively for you.
+${display_name} · This email contains a quote prepared exclusively for you.
             </p>
           </td>
         </tr>
@@ -538,7 +537,7 @@ export async function sendMaterialsEmail(proformaId: string, formData: FormData)
       to: [to],
       subject: subject,
       text: message,
-      html: buildEmailHtml(message, proformaId),
+      html: buildEmailHtml(message, proformaId, proforma.users?.display_name || ''),
       attachments: [
         {
           filename: `materiales_${String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}.pdf`,
@@ -699,7 +698,7 @@ export async function deleteProformaItem(itemId: string, proformaId: string) {
 
   if (error) {
     console.error('Error deleting item:', error);
-    return { error: 'Error al eliminar el ítem.' };
+    return { error: 'Error deleting item.' };
   }
 
   // Recalculate proforma totals
@@ -721,7 +720,7 @@ export async function sendInvoiceEmail(invoiceId: string, formData: FormData) {
     .eq('id', invoiceId)
     .single();
 
-  if (!invoice) return { error: 'Factura no encontrada' };
+  if (!invoice) return { error: 'Invoice not found' };
 
   try {
     const pdfBuffer = await renderToBuffer(
@@ -738,7 +737,7 @@ export async function sendInvoiceEmail(invoiceId: string, formData: FormData) {
       to: [to],
       subject,
       text: message,
-      html: buildEmailHtml(message, invoice.proforma_id),
+      html: buildEmailHtml(message, invoice.proforma_id, invoice.proformas.users?.display_name || ''),
       attachments: [{
         filename: `factura_${invoice.invoice_number}.pdf`,
         content: pdfBuffer
@@ -759,7 +758,7 @@ export async function sendInvoiceEmail(invoiceId: string, formData: FormData) {
 export async function sendPaymentEmail(paymentId: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'No autorizado' };
+  if (!user) return { error: 'No authorized' };
 
   const to = formData.get('to') as string;
   const subject = formData.get('subject') as string;
@@ -788,9 +787,9 @@ export async function sendPaymentEmail(paymentId: string, formData: FormData) {
       to: [to],
       subject,
       text: message,
-      html: buildEmailHtml(message, payment.proforma_id),
+      html: buildEmailHtml(message, payment.proforma_id, payment.proformas.users?.display_name || ''),
       attachments: [{
-        filename: `recibo_${payment.id.split('-')[0].toUpperCase()}.pdf`,
+        filename: `receipt_${payment.id.split('-')[0].toUpperCase()}.pdf`,
         content: pdfBuffer
       }]
     });
@@ -853,7 +852,7 @@ export async function syncExpenseToQuickBooks({
 
   try {
     const qbo = await QuickBooksClient.fromUserId(userId, supabase);
-    
+
     const purchaseResponse = await qbo.createPurchase({
       vendorRef,
       bankAccountRef,

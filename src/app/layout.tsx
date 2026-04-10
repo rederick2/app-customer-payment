@@ -30,8 +30,8 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: 'EstudioPro | Quote Generator',
-  description: 'Premium quote generator for interior design projects.',
+  title: 'Quickqi | Quote & Invoicing',
+  description: 'Quote & Invoicing for projects.',
 };
 
 export default async function RootLayout({

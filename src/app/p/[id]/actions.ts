@@ -165,7 +165,7 @@ export async function approveProforma(proformaId: string, signatureData?: string
             </a>
             <hr style="margin: 32px 0; border: 0; border-top: 1px solid #e5e7eb;" />
             <p style="font-size: 12px; color: #9ca3af; text-align: center;">
-              This is an automatic notification from EstudioPro.
+              This is an automatic notification from Quickqi.
             </p>
           </div>
         `

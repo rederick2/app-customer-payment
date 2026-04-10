@@ -40,7 +40,7 @@ export default function EmailMaterialsModal({
   const [comboboxOpen, setComboboxOpen] = useState(false);
 
   const defaultSubject = `Materials List - Project ${projectName}`;
-  const defaultMessage = `Hi team,\n\nPlease find attached the Materials List for the project: ${projectName}.\n\nLet me know if you have any questions.\n\nBest,\n\nEstudioPro`;
+  const defaultMessage = `Hi team,\n\nPlease find attached the Materials List for the project: ${projectName}.\n\nLet me know if you have any questions.\n\nBest.`;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

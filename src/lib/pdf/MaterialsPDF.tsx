@@ -13,14 +13,14 @@ Font.register({
 });
 
 const getStyles = (baseSize: number) => StyleSheet.create({
-  page: { 
+  page: {
     paddingTop: 40,
     paddingHorizontal: 40,
     paddingBottom: 80,
-    fontFamily: 'Inter', 
-    fontSize: baseSize, 
-    color: '#0D3B47', 
-    backgroundColor: '#ffffff' 
+    fontFamily: 'Inter',
+    fontSize: baseSize,
+    color: '#0D3B47',
+    backgroundColor: '#ffffff'
   },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#E2E0D8', paddingBottom: 20, marginBottom: 20 },
   companyName: { fontSize: baseSize * 2.4, fontWeight: 700, color: '#306C3E' },
@@ -52,8 +52,8 @@ interface MaterialsPDFProps {
 
 export default function MaterialsPDF({ proforma, materials, client, user }: MaterialsPDFProps) {
   const styles = getStyles(user?.pdf_font_size || 10);
-  const clientNameDisplay = client?.company_name || 
-    [client?.first_name, client?.last_name].filter(Boolean).join(' ') || 
+  const clientNameDisplay = client?.company_name ||
+    [client?.first_name, client?.last_name].filter(Boolean).join(' ') ||
     client?.name || 'Cliente';
 
   const proformaNumber = proforma?.id?.split('-')[0].toUpperCase();
@@ -64,13 +64,12 @@ export default function MaterialsPDF({ proforma, materials, client, user }: Mate
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.companyName}>EstudioPro</Text>
-            <Text style={styles.companySub}>Interior Design & Remodeling</Text>
+            <Text style={styles.companyName}>{user?.display_name}</Text>
           </View>
           <View>
-             <Text style={styles.docTitle}>Materials List</Text>
-             <Text style={styles.docDetails}>Job Nº: {proformaNumber}</Text>
-             <Text style={styles.docDetails}>Date: {dateFormatted}</Text>
+            <Text style={styles.docTitle}>Materials List</Text>
+            <Text style={styles.docDetails}>Job Nº: {proformaNumber}</Text>
+            <Text style={styles.docDetails}>Date: {dateFormatted}</Text>
           </View>
         </View>
 
@@ -92,7 +91,7 @@ export default function MaterialsPDF({ proforma, materials, client, user }: Mate
             <Text style={styles.colDesc}>Material</Text>
             <Text style={styles.colQty}>Qty.</Text>
           </View>
-          
+
           {materials && materials.map((mat, i) => (
             <View wrap={false} key={i} style={styles.tableRow}>
               <View style={styles.colDesc}>

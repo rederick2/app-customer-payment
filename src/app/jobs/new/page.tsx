@@ -1,8 +1,6 @@
 'use client';
 
 import ProformaForm from '@/app/proforma/components/ProformaForm';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 
 export default function NewJobPage() {
   return (

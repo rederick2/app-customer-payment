@@ -164,7 +164,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
         <div>
           <div className="flex items-center gap-3">
             <IdCardIcon className="w-8 h-8" />
-            <h1 className=" text-3xl md:text-4xl font-bold tracking-tight">{clientName}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{clientName}</h1>
             {client.company_name && (
               <Badge variant="secondary" className="mt-1">Company</Badge>
             )}
