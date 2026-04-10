@@ -30,8 +30,8 @@ export default async function EditProforma({ params }: Props) {
   if (proforma.status === 'job' || proforma.status === 'approved') {
     return (
       <div className="container mx-auto px-4 py-12 text-center">
-        <h1 className="text-2xl font-bold text-destructive mb-4">No se puede editar esta proforma</h1>
-        <p className="text-muted-foreground mb-6">Las proformas aprobadas o convertidas en trabajos no pueden modificarse.</p>
+        <h1 className="text-2xl font-bold text-destructive mb-4">Cannot edit this quote</h1>
+        <p className="text-muted-foreground mb-6">Approved quotes or quotes converted to jobs cannot be modified.</p>
         <a href={`/proforma/${id}`} className="text-primary hover:underline font-medium">Return to Quote</a>
       </div>
     );
