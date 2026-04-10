@@ -411,9 +411,14 @@ function SortableRow({
               )}
             </td>
             <td className="px-4 py-5">
-              <div className="font-bold text-base flex items-center gap-2">
-                {item.description}
-                {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
+              <div className="font-bold text-base flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {item.description}
+                  {item.is_optional && <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0">Optional</Badge>}
+                </div>
+                {!isReadOnly && (
+                  <Pencil className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
               </div>
             </td>
             <td className="px-4 py-4 text-center w-24">
@@ -518,8 +523,9 @@ function SortableRow({
               <ZoomIn className="h-4 w-4" />
             </div>
           )}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex items-start justify-between gap-2">
             <h4 className="font-bold text-[#0D3B47] text-base leading-tight tracking-tight break-words">{item.description}</h4>
+            {!isReadOnly && <Pencil className="h-3 w-3 text-primary flex-shrink-0 mt-1" />}
           </div>
         </div>
 
@@ -822,7 +828,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 </Button>
               )
             )*/}
-            {!isReadOnly && (
+            {!isReadOnly && proformaStatus !== 'approved' && (
               <Link href={`/proforma/${id}/edit`}>
                 <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground transition-all">
                   <FilePen className="mr-2 h-4 w-4" />

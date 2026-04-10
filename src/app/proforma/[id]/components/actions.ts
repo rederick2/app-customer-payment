@@ -884,3 +884,28 @@ export async function syncExpenseToQuickBooks({
     return { error: err.message };
   }
 }
+
+export async function deleteJob(jobId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'No autorizado' };
+  }
+
+  const { error } = await supabase
+    .from('proformas')
+    .delete()
+    .eq('id', jobId)
+    .eq('user_id', user.id); // Ensure user owns the proforma
+
+  if (error) {
+    console.error('Error deleting job:', error);
+    return { error: 'Error al eliminar el trabajo.' };
+  }
+
+  revalidatePath('/jobs');
+  revalidatePath('/calendar');
+  revalidatePath('/page');
+  return { success: true };
+}

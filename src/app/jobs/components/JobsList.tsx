@@ -2,8 +2,18 @@
 
 import * as React from 'react';
 import { Card } from '@/components/ui/card';
-import { FileText, Search, ChevronLeft, ChevronRight, CalendarDays, MapPin, User, Clock, ArrowRight, PlusCircle } from 'lucide-react';
+import { FileText, Search, ChevronLeft, ChevronRight, CalendarDays, MapPin, User, Clock, ArrowRight, PlusCircle, Trash2, Loader2, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { deleteJob } from '@/app/proforma/[id]/components/actions';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -19,6 +29,35 @@ export function JobsList({ initialProformas }: JobsListProps) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 8;
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [jobToDelete, setJobToDelete] = React.useState<any>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const handleDeleteClick = (e: React.MouseEvent, proforma: any) => {
+    e.stopPropagation();
+    setJobToDelete(proforma);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!jobToDelete) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteJob(jobToDelete.id);
+      if (result.success) {
+        toast.success('Job deleted successfully');
+        setIsDeleteDialogOpen(false);
+        setJobToDelete(null);
+        router.refresh();
+      } else {
+        toast.error(result.error || 'Failed to delete job');
+      }
+    } catch (err) {
+      toast.error('An error occurred while deleting the job');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Filtering
   const filteredProformas = initialProformas.filter(p =>
@@ -131,7 +170,15 @@ export function JobsList({ initialProformas }: JobsListProps) {
                           router.push(`/proforma/${proforma.id}`);
                         }}
                       >
-                        View Dashboard
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 w-9 p-0 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all ml-1"
+                        onClick={(e) => handleDeleteClick(e, proforma)}
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>
@@ -219,9 +266,21 @@ export function JobsList({ initialProformas }: JobsListProps) {
                   <h3 className="text-lg font-bold text-foreground leading-tight">{proforma.project_name}</h3>
                   <p className="text-[10px] font-black text-muted-foreground tracking-tighter uppercase opacity-60">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-black text-primary leading-none">${proforma.total.toLocaleString('en-US')}</p>
-                  <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total</p>
+                <div className="text-right flex flex-col items-end gap-2">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-lg text-muted-foreground"
+                      onClick={(e) => handleDeleteClick(e, proforma)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-black text-primary leading-none">${proforma.total.toLocaleString('en-US')}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Total</p>
+                  </div>
                 </div>
               </div>
 
@@ -304,6 +363,41 @@ export function JobsList({ initialProformas }: JobsListProps) {
           </div>
         )}
       </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Job</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <span className="font-bold text-foreground">"{jobToDelete?.project_name}"</span>?
+              This action cannot be undone and will remove all associated data.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+              className="font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="font-bold gap-2"
+            >
+              {isDeleting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isDeleting ? 'Deleting...' : 'Delete Job'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
