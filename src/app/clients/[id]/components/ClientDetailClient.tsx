@@ -84,6 +84,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
   const handleViewInvoicePDF = async (invoice: any) => {
     try {
       const proforma = proformas.find(p => p.id === invoice.proforma_id);
+      //console.log('proforma', proforma);
       const user = proformas[0]?.users;
       const blob = await pdf(<InvoicePDF invoice={invoice} proforma={proforma} client={client} user={user} />).toBlob();
       const url = URL.createObjectURL(blob);

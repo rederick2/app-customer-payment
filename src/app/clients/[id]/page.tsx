@@ -26,7 +26,7 @@ export default async function ClientDetailPage({ params }: Props) {
   // Fetch client's proformas
   const { data: proformas } = await supabase
     .from('proformas')
-    .select('*, users(*)')
+    .select('*,proforma_items(*), users(*)')
     .eq('client_id', id)
     .order('created_at', { ascending: false });
 
