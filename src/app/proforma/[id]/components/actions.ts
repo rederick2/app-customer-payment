@@ -716,7 +716,7 @@ export async function sendInvoiceEmail(invoiceId: string, formData: FormData) {
 
   const { data: invoice } = await supabase
     .from('invoices')
-    .select('*, proformas(*, users(*)), clients(*)')
+    .select('*, proformas(*, users(*), proforma_items(*)), clients(*)')
     .eq('id', invoiceId)
     .single();
 
@@ -896,7 +896,7 @@ export async function deleteJob(jobId: string) {
   // 1. Reset proforma status and clear job dates
   const { error: updateError } = await supabase
     .from('proformas')
-    .update({ 
+    .update({
       status: 'approved',
       job_start_at: null,
       job_end_at: null,
@@ -926,7 +926,7 @@ export async function deleteJob(jobId: string) {
       .from(table)
       .delete()
       .eq('proforma_id', jobId);
-    
+
     if (deleteError) {
       console.error(`Error deleting from ${table}:`, deleteError);
     }

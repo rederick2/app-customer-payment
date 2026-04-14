@@ -134,7 +134,7 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={() => onCancel ? onCancel() : router.back()} className="rounded-xl">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver
+          Back
         </Button>
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold font-serif">
