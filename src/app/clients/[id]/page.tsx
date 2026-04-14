@@ -28,6 +28,7 @@ export default async function ClientDetailPage({ params }: Props) {
     .from('proformas')
     .select('*,proforma_items(*), users(*)')
     .eq('client_id', id)
+    .neq('is_template', true)
     .order('created_at', { ascending: false });
 
   // Fetch payments

@@ -150,8 +150,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
   const balance = totalInvoiced - totalPaid;
 
   const tabs = [
-    { id: 'active-work', label: 'Active Work' },
-    { id: 'requests', label: 'Requests' },
+    { id: 'active-work', label: 'Active Job' },
     { id: 'quotes', label: 'Quotes' },
     { id: 'jobs', label: 'Jobs' },
     { id: 'invoices-tab', label: 'Invoices' },
@@ -473,7 +472,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                       <tbody className="divide-y divide-border/40">
                         {(() => {
                           const filteredProformas = (proformas || []).filter(p => {
-                            const matchesTab = activeTab === 'jobs' ? p.status === 'job' : (activeTab === 'quotes' ? p.status !== 'job' : true);
+                            const matchesTab = activeTab === 'active-work' ? p.status === 'job' : (activeTab === 'jobs' ? p.status === 'job' || p.status === 'job_terminated' : true);
                             const matchesSearch = p.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               p.id.toLowerCase().includes(searchQuery.toLowerCase());
                             return matchesTab && matchesSearch;
@@ -487,23 +486,23 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                                 {paginatedProformas.map((item) => (
                                   <tr key={item.id} className="hover:bg-muted/10 transition-colors group">
                                     <td className="px-6 py-4">
-                                      <Link href={`/proforma/${item.id}`}>
+                                      <Link href={`/proforma/${item.id}` + (activeTab === 'quotes' ? '?view=quote' : '')}>
                                         <div className="flex items-center gap-3">
                                           <div className={cn(
                                             "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
-                                            item.status === 'job' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                                            item.status === 'job' || item.status === 'job_terminated' && activeTab !== 'quotes' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
                                           )}>
-                                            {item.status === 'job' ? <Briefcase className="h-5 w-5" /> : <Quote className="h-5 w-5" />}
+                                            {item.status === 'job' || item.status === 'job_terminated' && activeTab !== 'quotes' ? <Briefcase className="h-5 w-5" /> : <Quote className="h-5 w-5" />}
                                           </div>
                                           <div>
                                             <div className="font-bold text-foreground group-hover:text-primary transition-colors">
-                                              {item.status === 'job' ? 'Job #' : 'Quote #'} {String(item.number || item.id.split('-')[0]).toUpperCase()} - {item.project_name}
+                                              {item.status === 'job' || item.status === 'job_terminated' && activeTab !== 'quotes' ? 'Job #' : 'Quote #'} {String(item.number || item.id.split('-')[0]).toUpperCase()} - {item.project_name}
                                             </div>
                                             <Badge variant="outline" className={cn(
                                               "mt-1 text-[10px] font-extrabold py-0 h-5 px-1.5",
-                                              item.status === 'job' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
+                                              item.status === 'job' && activeTab !== 'quotes' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
                                             )}>
-                                              {item.status === 'job' ? 'IN PROGRESS' : 'WAITING RESPONSE'}
+                                              {item.status === 'job' && activeTab !== 'quotes' ? 'IN PROGRESS' : item.status.toUpperCase()}
                                             </Badge>
                                           </div>
                                         </div></Link>
