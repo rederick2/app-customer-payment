@@ -1182,12 +1182,12 @@ export default function JobView({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-6 w-full lg:w-auto pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-border/40 lg:pl-8">
-            <div className="space-y-1">
+          <div className="grid grid-cols-8 sm:grid-cols-8 lg:grid-cols-8 gap-6 w-full lg:w-auto pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-border/40 lg:pl-8">
+            <div className="space-y-1 col-span-4">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Job Type</p>
               <p className="text-sm font-bold">One-off job</p>
             </div>
-            <div className="space-y-1 relative group">
+            <div className="space-y-1 relative group col-span-4">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60 flex items-center gap-2">
                 Started On
                 {!isEditingDates && (
@@ -1212,7 +1212,7 @@ export default function JobView({
                 <p className="text-sm font-bold text-foreground">{proforma.job_start_at ? format(new Date(proforma.job_start_at), 'MMM d, yyyy') : '-'}</p>
               )}
             </div>
-            <div className="space-y-1 relative group">
+            <div className="space-y-1 relative group col-span-4">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Ends On</p>
               {isEditingDates ? (
                 <Input
@@ -1225,7 +1225,7 @@ export default function JobView({
                 <p className="text-sm font-bold text-foreground">{proforma.job_end_at ? format(new Date(proforma.job_end_at), 'MMM d, yyyy') : '-'}</p>
               )}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 col-span-2">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Original Quote</p>
               <p className="text-sm font-bold text-primary">#{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</p>
             </div>
