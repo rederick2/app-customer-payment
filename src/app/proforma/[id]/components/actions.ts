@@ -893,19 +893,52 @@ export async function deleteJob(jobId: string) {
     return { error: 'No autorizado' };
   }
 
-  const { error } = await supabase
+  // 1. Reset proforma status and clear job dates
+  const { error: updateError } = await supabase
     .from('proformas')
-    .delete()
+    .update({ 
+      status: 'approved',
+      job_start_at: null,
+      job_end_at: null,
+      job_converted_at: null,
+      approved_at: new Date().toISOString()
+    })
     .eq('id', jobId)
-    .eq('user_id', user.id); // Ensure user owns the proforma
+    .eq('user_id', user.id);
 
-  if (error) {
-    console.error('Error deleting job:', error);
-    return { error: 'Error al eliminar el trabajo.' };
+  if (updateError) {
+    console.error('Error resetting job status:', updateError);
+    return { error: 'Error al reiniciar el estado del trabajo.' };
   }
+
+  // 2. Delete related data
+  const tables = [
+    'job_visits',
+    'job_time_entries',
+    'job_expenses',
+    'invoices',
+    'job_tasks',
+    'job_materials'
+  ];
+
+  for (const table of tables) {
+    const { error: deleteError } = await supabase
+      .from(table)
+      .delete()
+      .eq('proforma_id', jobId);
+    
+    if (deleteError) {
+      console.error(`Error deleting from ${table}:`, deleteError);
+    }
+  }
+
+  // Log status change
+  await logStatusChange(jobId, 'approved', 'job', user.id);
 
   revalidatePath('/jobs');
   revalidatePath('/calendar');
   revalidatePath('/page');
+  revalidatePath(`/proforma/${jobId}`);
   return { success: true };
 }
+

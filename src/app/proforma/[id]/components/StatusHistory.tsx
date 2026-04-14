@@ -3,13 +3,13 @@
 import * as React from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { 
-  CheckCircle2, 
-  Clock, 
-  Send, 
-  ThumbsUp, 
-  ThumbsDown, 
-  Briefcase, 
+import {
+  CheckCircle2,
+  Clock,
+  Send,
+  ThumbsUp,
+  ThumbsDown,
+  Briefcase,
   AlertCircle,
   Check
 } from 'lucide-react';
@@ -60,12 +60,12 @@ export function StatusHistory({ proformaId }: StatusHistoryProps) {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'draft': return 'Borrador';
-      case 'sent': return 'Enviada';
-      case 'approved': return 'Aprobada';
-      case 'rejected': return 'Rechazada';
-      case 'job': return 'En Trabajo';
-      case 'job_terminated': return 'Trabajo Terminado';
+      case 'draft': return 'Draft';
+      case 'sent': return 'Sent';
+      case 'approved': return 'Approved';
+      case 'rejected': return 'Rejected';
+      case 'job': return 'Job';
+      case 'job_terminated': return 'Job Terminated';
       default: return status;
     }
   };
@@ -81,7 +81,7 @@ export function StatusHistory({ proformaId }: StatusHistoryProps) {
   if (history.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground italic">
-        No hay historial de estados disponible.
+        No history available.
       </div>
     );
   }
@@ -89,12 +89,12 @@ export function StatusHistory({ proformaId }: StatusHistoryProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-black uppercase tracking-widest text-[#0D3B47]">Historial de Estados</h3>
-        <button 
+        <h3 className="text-sm font-black uppercase tracking-widest text-[#0D3B47]">Status History</h3>
+        <button
           onClick={fetchHistory}
           className="text-[10px] font-bold uppercase text-primary hover:underline"
         >
-          Actualizar
+          Update
         </button>
       </div>
 
@@ -108,31 +108,31 @@ export function StatusHistory({ proformaId }: StatusHistoryProps) {
             )}>
               {getStatusIcon(entry.new_status)}
             </div>
-            
+
             <div className="flex-1 ml-14 pt-0.5">
               <div className="flex items-center justify-between mb-1">
                 <span className="font-black text-[13px] text-[#0D3B47] uppercase tracking-wide">
                   {getStatusLabel(entry.new_status)}
                 </span>
                 <time className="text-[10px] font-bold text-muted-foreground uppercase tabular-nums">
-                  {format(new Date(entry.created_at), "d 'de' MMMM, HH:mm", { locale: es })}
+                  {format(new Date(entry.created_at), "MMM dd, HH:mm")}
                 </time>
               </div>
-              
+
               <div className="text-xs text-muted-foreground flex items-center gap-2">
                 {entry.changed_by_user?.display_name ? (
                   <>
-                    <span>Cambiado por</span>
+                    <span>Changed by</span>
                     <span className="font-bold text-foreground">{entry.changed_by_user.display_name}</span>
                   </>
                 ) : (
-                  <span>Acción realizada por el Cliente</span>
+                  <span>Action performed by the Client</span>
                 )}
-                
+
                 {entry.old_status && (
                   <>
                     <span className="text-muted-foreground/30">•</span>
-                    <span className="italic">Desde {getStatusLabel(entry.old_status)}</span>
+                    <span className="italic">From {getStatusLabel(entry.old_status)}</span>
                   </>
                 )}
               </div>

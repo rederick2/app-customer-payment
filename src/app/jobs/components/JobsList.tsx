@@ -45,15 +45,15 @@ export function JobsList({ initialProformas }: JobsListProps) {
     try {
       const result = await deleteJob(jobToDelete.id);
       if (result.success) {
-        toast.success('Job deleted successfully');
+        toast.success('Trabajo restablecido a aprobado correctamente');
         setIsDeleteDialogOpen(false);
         setJobToDelete(null);
         router.refresh();
       } else {
-        toast.error(result.error || 'Failed to delete job');
+        toast.error(result.error || 'Error al restablecer el trabajo');
       }
     } catch (err) {
-      toast.error('An error occurred while deleting the job');
+      toast.error('Ocurrió un error al procesar la solicitud');
     } finally {
       setIsDeleting(false);
     }
@@ -80,9 +80,9 @@ export function JobsList({ initialProformas }: JobsListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 font-manrope">
         <div>
-          <h1 className="font-bold text-3xl md:text-4xl font-bold tracking-tight mb-1">Jobs</h1>
+          <h1 className="font-bold text-3xl md:text-4xl tracking-tight mb-1 font-archivo">Jobs</h1>
           <p className="text-muted-foreground text-sm">List of all in-progress or scheduled jobs.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-stretch sm:items-center">
@@ -90,13 +90,13 @@ export function JobsList({ initialProformas }: JobsListProps) {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by project or client..."
-              className="pl-8 bg-background shadow-sm"
+              className="pl-8 bg-background rounded-xl border-border/40"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <Link href="/jobs/new" className="w-full md:w-auto">
-            <Button className="flex-1 sm:flex-initial gap-2">
+            <Button className="flex-1 sm:flex-initial gap-2 rounded-xl">
               <PlusCircle className="h-4 w-4" />
               New Job
             </Button>
@@ -105,7 +105,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
       </div>
 
       {/* Desktop View: Table */}
-      <Card className="hidden md:block border-border/40 overflow-hidden bg-card/40 backdrop-blur-md rounded-2xl">
+      <Card className="hidden md:block border-border/40 overflow-hidden bg-card/40 backdrop-blur-md rounded-xl font-manrope">
         <div className="overflow-x-auto">
           {filteredProformas.length > 0 ? (
             <table className="w-full text-sm text-left">
@@ -127,7 +127,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
                     onClick={() => router.push(`/proforma/${proforma.id}`)}
                   >
                     <td className="px-6 py-5">
-                      <p className="font-bold text-foreground text-base group-hover:text-primary transition-colors">{proforma.project_name}</p>
+                      <p className="font-bold text-foreground text-base group-hover:text-primary transition-colors font-archivo">{proforma.project_name}</p>
                       <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-tighter">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                     </td>
                     <td className="px-6 py-5">
@@ -150,9 +150,9 @@ export function JobsList({ initialProformas }: JobsListProps) {
                     </td>
                     <td className="px-6 py-5">
                       <span className={cn(
-                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm",
+                        "px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border",
                         proforma.status === 'job_terminated' ? 'bg-slate-100 text-slate-700 border-slate-200' :
-                          'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-emerald-100'
+                          'bg-emerald-50 text-emerald-700 border-emerald-200'
                       )}>
                         {proforma.status === 'job_terminated' ? 'Terminated' : 'Active Job'}
                       </span>
@@ -224,7 +224,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
                     key={page}
                     variant={currentPage === page ? "default" : "ghost"}
                     size="sm"
-                    className={cn("h-8 w-8 rounded-lg p-0 text-xs font-bold", currentPage === page ? 'bg-primary text-primary-foreground shadow-md' : '')}
+                    className={cn("h-8 w-8 rounded-xl p-0 text-xs font-bold", currentPage === page ? 'bg-primary text-primary-foreground' : '')}
                     onClick={() => setCurrentPage(page)}
                   >
                     {page}
@@ -251,19 +251,19 @@ export function JobsList({ initialProformas }: JobsListProps) {
           paginatedProformas.map((proforma) => (
             <div
               key={proforma.id}
-              className="bg-card/60 border border-border/40 p-5 rounded-[0.98rem] shadow-sm active:scale-[0.98] transition-all"
+              className="bg-card/60 border border-border/40 p-5 rounded-xl active:scale-[0.98] transition-all"
               onClick={() => router.push(`/proforma/${proforma.id}`)}
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="space-y-1">
                   <span className={cn(
-                    "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                    "px-2 py-0.5 rounded-xl text-[9px] font-black uppercase tracking-widest border",
                     proforma.status === 'job_terminated' ? 'bg-slate-100 text-slate-700 border-slate-200' :
-                      'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-emerald-100/50 shadow-sm'
+                      'bg-emerald-50 text-emerald-700 border-emerald-200'
                   )}>
                     {proforma.status === 'job_terminated' ? 'Terminated' : 'Active Job'}
                   </span>
-                  <h3 className="text-lg font-bold text-foreground leading-tight">{proforma.project_name}</h3>
+                  <h3 className="text-lg font-bold text-foreground leading-tight font-archivo">{proforma.project_name}</h3>
                   <p className="text-[10px] font-black text-muted-foreground tracking-tighter uppercase opacity-60">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                 </div>
                 <div className="text-right flex flex-col items-end gap-2">
@@ -285,8 +285,8 @@ export function JobsList({ initialProformas }: JobsListProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-muted/30 p-2.5 rounded-[1.5rem] flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-background/50 flex items-center justify-center text-primary shadow-inner">
+                <div className="bg-muted/30 p-2.5 rounded-xl flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-background/50 flex items-center justify-center text-primary">
                     <User className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
@@ -294,8 +294,8 @@ export function JobsList({ initialProformas }: JobsListProps) {
                     <p className="text-xs font-bold text-foreground truncate">{(proforma.clients as any)?.name || 'No Client'}</p>
                   </div>
                 </div>
-                <div className="bg-muted/30 p-2.5 rounded-[1.5rem] flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-background/50 flex items-center justify-center text-primary shadow-inner">
+                <div className="bg-muted/30 p-2.5 rounded-xl flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-background/50 flex items-center justify-center text-primary">
                     <Clock className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
@@ -305,7 +305,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
                 </div>
               </div>
 
-              <div className="bg-primary/5 p-4 rounded-[1.5rem] border border-primary/10">
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-primary" />
@@ -365,12 +365,12 @@ export function JobsList({ initialProformas }: JobsListProps) {
       </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[380px] rounded-xl font-manrope">
           <DialogHeader>
-            <DialogTitle>Delete Job</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="font-archivo text-xl">Delete Job</DialogTitle>
+            <DialogDescription className="text-sm">
               Are you sure you want to delete <span className="font-bold text-foreground">"{jobToDelete?.project_name}"</span>?
-              This action cannot be undone and will remove all associated data.
+              This change will move the job back to the <span className="font-bold">Approved</span> state and will permanently delete all visits, work hours, expenses, and invoices associated with it.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 mt-4">
@@ -378,7 +378,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
               variant="ghost"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={isDeleting}
-              className="font-bold"
+              className="font-bold rounded-xl"
             >
               Cancel
             </Button>
@@ -386,14 +386,14 @@ export function JobsList({ initialProformas }: JobsListProps) {
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="font-bold gap-2"
+              className="font-bold gap-2 rounded-xl"
             >
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              {isDeleting ? 'Deleting...' : 'Delete Job'}
+              {isDeleting ? 'Processing...' : 'Delete Job'}
             </Button>
           </DialogFooter>
         </DialogContent>
