@@ -490,13 +490,13 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                                         <div className="flex items-center gap-3">
                                           <div className={cn(
                                             "h-10 w-10 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
-                                            item.status === 'job' || item.status === 'job_terminated' && activeTab !== 'quotes' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                                            (item.status === 'job' || item.status === 'job_terminated') && activeTab !== 'quotes' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
                                           )}>
-                                            {item.status === 'job' || item.status === 'job_terminated' && activeTab !== 'quotes' ? <Briefcase className="h-5 w-5" /> : <Quote className="h-5 w-5" />}
+                                            {(item.status === 'job' || item.status === 'job_terminated') && activeTab !== 'quotes' ? <Briefcase className="h-5 w-5" /> : <Quote className="h-5 w-5" />}
                                           </div>
                                           <div>
                                             <div className="font-bold text-foreground group-hover:text-primary transition-colors">
-                                              {item.status === 'job' || item.status === 'job_terminated' && activeTab !== 'quotes' ? 'Job #' : 'Quote #'} {String(item.number || item.id.split('-')[0]).toUpperCase()} - {item.project_name}
+                                              {(item.status === 'job' || item.status === 'job_terminated') && activeTab !== 'quotes' ? 'Job #' : 'Quote #'} {String(item.number || item.id.split('-')[0]).toUpperCase()} - {item.project_name}
                                             </div>
                                             <Badge variant="outline" className={cn(
                                               "mt-1 text-[10px] font-extrabold py-0 h-5 px-1.5",
