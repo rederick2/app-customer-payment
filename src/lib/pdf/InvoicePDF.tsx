@@ -202,6 +202,24 @@ const getStyles = (baseSize: number = 10) => StyleSheet.create({
   footerText: {
     fontSize: baseSize * 0.8,
     color: '#999999'
+  },
+  watermarkContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -1,
+  },
+  watermarkText: {
+    fontSize: baseSize * 15,
+    fontWeight: 700,
+    color: '#000000',
+    opacity: 0.1,
+    transform: 'rotate(-45deg)',
+    textTransform: 'uppercase',
   }
 });
 
@@ -225,6 +243,11 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        {invoice.status === 'paid' && (
+          <View style={styles.watermarkContainer} fixed>
+            <Text style={styles.watermarkText}>PAID</Text>
+          </View>
+        )}
         {/* Header: Company Info and Logo */}
         <View style={styles.headerContainer}>
           <View style={styles.companyInfo}>
