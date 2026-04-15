@@ -240,6 +240,9 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
   const dateFormatted = new Date(invoice.issue_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const dueDateFormatted = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A';
 
+  const paymentsApplied = invoice.payments?.reduce((sum: number, p: any) => sum + p.amount, 0) || 0;
+  const balanceDue = Math.max(0, invoice.total_amount - paymentsApplied);
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -303,7 +306,7 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
             <View style={styles.summaryTotalRow}>
               <Text style={styles.summaryTotalLabel}>Amount Due</Text>
               <Text style={styles.summaryTotalValue}>
-                ${Number(invoice.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                ${Number(balanceDue).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </Text>
             </View>
           </View>
@@ -362,6 +365,20 @@ export default function InvoicePDF({ invoice, proforma, client, user }: InvoiceP
               <Text style={{ color: '#666' }}>Total</Text>
               <Text style={{ fontSize: 9 }}>
                 ${invoice.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </Text>
+            </View>
+            {paymentsApplied > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={{ color: '#666' }}>Payments Applied</Text>
+                <Text style={{ fontSize: 9, color: '#10b981' }}>
+                  -${paymentsApplied.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </Text>
+              </View>
+            )}
+            <View style={[styles.summaryRow, { borderTopWidth: 2, borderTopColor: '#e2e8f0' }]}>
+              <Text style={{ color: '#000', fontWeight: 700 }}>Balance Due</Text>
+              <Text style={{ fontSize: 9, fontWeight: 700 }}>
+                ${balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </Text>
             </View>
           </View>

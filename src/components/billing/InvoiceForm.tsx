@@ -346,10 +346,6 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
                           setSelectedPaymentIds(prev =>
                             checked ? [...prev, p.id] : prev.filter(id => id !== p.id)
                           );
-                          setFormData(prev => ({
-                            ...prev,
-                            total_amount: checked ? prev.total_amount - p.amount : prev.total_amount + p.amount
-                          }));
                         }}
                         className="rounded-full"
                       />

@@ -135,7 +135,7 @@ export async function approveProforma(proformaId: string, signatureData?: string
   if (userEmail && status === 'approved') {
     try {
       const proformaNumber = String(proforma.number || proformaId.split('-')[0]).toUpperCase();
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
       const jobLink = `${baseUrl}/proforma/${proformaId}`;
 
       await sendEmail({

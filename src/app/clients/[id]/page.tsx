@@ -41,7 +41,7 @@ export default async function ClientDetailPage({ params }: Props) {
   // Fetch invoices
   const { data: invoices } = await supabase
     .from('invoices')
-    .select('*')
+    .select('*, payments(*)')
     .eq('client_id', id)
     .order('created_at', { ascending: false });
 

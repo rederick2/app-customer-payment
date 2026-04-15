@@ -11,13 +11,13 @@ export default async function GalleryPage() {
 
   const { data: photos } = await supabase
     .from('project_photos')
-    .select('*, proformas(id, project_name, number)')
+    .select('*, proformas(id, project_name, number, client_id, clients(name, company_name, first_name, last_name))')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   const { data: proformas } = await supabase
     .from('proformas')
-    .select('id, project_name, number')
+    .select('id, project_name, number, client_id, clients(name, company_name, first_name, last_name)')
     .eq('user_id', user.id)
     .in('status', ['job', 'approved', 'completed'])
     .order('created_at', { ascending: false });

@@ -716,7 +716,7 @@ export async function sendInvoiceEmail(invoiceId: string, formData: FormData) {
 
   const { data: invoice } = await supabase
     .from('invoices')
-    .select('*, proformas(*, users(*), proforma_items(*)), clients(*)')
+    .select('*, proformas(*, users(*), proforma_items(*)), clients(*), payments(*)')
     .eq('id', invoiceId)
     .single();
 

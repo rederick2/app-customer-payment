@@ -22,7 +22,7 @@ export interface Photo {
   overlay_text: string | null;
   is_public: boolean;
   taken_at: string;
-  proformas?: { project_name: string; number: number } | null;
+  proformas?: { id?: string; project_name: string; number: number; client_id?: string; } | null;
 }
 
 interface PhotoCardProps {
