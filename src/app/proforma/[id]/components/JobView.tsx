@@ -2545,7 +2545,7 @@ export default function JobView({
                         <tbody className="divide-y divide-border/30">
                           {timeEntries.map(entry => (
                             <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(entry.date), 'dd/MM/yyyy')}</td>
+                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{entry.date}</td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-2">
                                   <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
