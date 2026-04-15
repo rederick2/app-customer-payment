@@ -50,7 +50,7 @@ export default async function TeamDashboardPage() {
               <CardHeader className="pb-3 border-b border-border/40">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-base text-[#0D3B47]">
-                    {visit.proformas?.project_name || 'Project Visit'}
+                    {visit.proformas ? `${visit.proformas.project_name} - #${visit.proformas.number}` : 'Project Visit'}
                   </CardTitle>
                   <Badge variant="outline" className="bg-teal-50 text-teal-700 uppercase tracking-widest text-[9px] font-black">
                     {visit.status}

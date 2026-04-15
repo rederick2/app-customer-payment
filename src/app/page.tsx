@@ -112,7 +112,7 @@ export default async function Dashboard() {
   // ── Recent data ───────────────────────────────────────────────
   const { data: recentProformas } = await supabase
     .from('proformas')
-    .select('id, project_name, total, created_at, status, clients ( name )')
+    .select('id, project_name, number, total, created_at, status, clients ( name )')
     .eq('user_id', user.id)
     .eq('is_template', false)
     .order('created_at', { ascending: false })
@@ -315,7 +315,7 @@ export default async function Dashboard() {
                           <tr key={p.id} className="hover:bg-muted/20 transition-colors">
                             <td className="px-5 py-4">
                               <Link href={`/proforma/${p.id}`} className="font-medium text-foreground hover:text-primary transition-colors block truncate max-w-[150px]">
-                                {p.project_name}
+                                {p.project_name} - #{p.number}
                               </Link>
                             </td>
                             <td className="px-5 py-4">{statusBadge(p.status)}</td>

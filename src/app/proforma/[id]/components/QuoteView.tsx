@@ -1062,7 +1062,7 @@ export function QuoteView({ proforma, items: initialItems, id, hideActionBar = f
                 Project
               </h3>
               <p className="text-xl font-bold text-foreground uppercase leading-tight">
-                {proforma.project_name}
+                {proforma.project_name} - #{proforma.number}
               </p>
             </div>
           </div>

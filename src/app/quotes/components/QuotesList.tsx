@@ -117,7 +117,7 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                     onClick={() => router.push(`/proforma/${proforma.id}?view=quote`)}
                   >
                     <td className="px-6 py-4">
-                      <p className="font-bold text-foreground">{proforma.project_name}</p>
+                      <p className="font-bold text-foreground">{proforma.project_name} - #{proforma.number}</p>
                       <p className="text-[10px] font-mono text-muted-foreground/60 uppercase">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                     </td>
                     {activeTab === 'quotes' && (
@@ -209,7 +209,7 @@ export function QuotesList({ initialProformas }: QuotesListProps) {
                 <div className="p-4 space-y-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-bold text-lg leading-tight">{proforma.project_name}</h3>
+                      <h3 className="font-bold text-lg leading-tight">{proforma.project_name} - #{proforma.number}</h3>
                       <p className="text-[10px] font-mono text-muted-foreground/60 uppercase mt-1">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                     </div>
                     <div className="text-right">

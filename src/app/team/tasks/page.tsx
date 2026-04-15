@@ -63,7 +63,7 @@ export default async function TeamTasksPage() {
                 </div>
                 <div className="text-[11px] uppercase tracking-wider font-extrabold text-primary flex items-center gap-1.5 mt-2">
                   <FileText className="h-3 w-3" />
-                  {task.proformas?.project_name} - {task.proformas?.number}
+                  {task.proformas?.project_name} - #{task.proformas?.number}
                 </div>
               </CardHeader>
 

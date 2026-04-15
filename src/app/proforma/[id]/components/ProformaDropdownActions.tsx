@@ -104,23 +104,22 @@ export default function ProformaDropdownActions({
           </DropdownMenuItem>
         )}
 
-        {currentStatus !== 'job' && currentStatus !== 'job_terminated' && (
-          <>
-            <DropdownMenuSeparator />
-            {/* General Actions */}
-            <DropdownMenuItem onClick={copyClientLink} className="cursor-pointer">
-              <LinkIcon className="mr-2 h-4 w-4" />
-              Copy Client Link
-            </DropdownMenuItem>
+        <>
+          <DropdownMenuSeparator />
+          {/* General Actions */}
+          <DropdownMenuItem onClick={copyClientLink} className="cursor-pointer">
+            <LinkIcon className="mr-2 h-4 w-4" />
+            Copy Client Link
+          </DropdownMenuItem>
 
-            <DropdownMenuItem>
-              <a href={`/p/${proformaId}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer w-full flex items-center">
-                <Eye className="mr-2 h-4 w-4" />
-                Preview as Client
-              </a>
-            </DropdownMenuItem>
-          </>
-        )}
+          <DropdownMenuItem>
+            <a href={`/p/${proformaId}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer w-full flex items-center">
+              <Eye className="mr-2 h-4 w-4" />
+              Preview as Client
+            </a>
+          </DropdownMenuItem>
+        </>
+
 
       </DropdownMenuContent>
 

@@ -127,7 +127,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
                     onClick={() => router.push(`/proforma/${proforma.id}`)}
                   >
                     <td className="px-6 py-5">
-                      <p className="font-bold text-foreground text-base group-hover:text-primary transition-colors font-archivo">{proforma.project_name}</p>
+                      <p className="font-bold text-foreground text-base group-hover:text-primary transition-colors font-archivo">{proforma.project_name} - #{proforma.number}</p>
                       <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-tighter">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                     </td>
                     <td className="px-6 py-5">
@@ -263,7 +263,7 @@ export function JobsList({ initialProformas }: JobsListProps) {
                   )}>
                     {proforma.status === 'job_terminated' ? 'Terminated' : 'Active Job'}
                   </span>
-                  <h3 className="text-lg font-bold text-foreground leading-tight font-archivo">{proforma.project_name}</h3>
+                  <h3 className="text-lg font-bold text-foreground leading-tight font-archivo">{proforma.project_name} - #{proforma.number}</h3>
                   <p className="text-[10px] font-black text-muted-foreground tracking-tighter uppercase opacity-60">REF: {proforma.number || proforma.id.split('-')[0]}</p>
                 </div>
                 <div className="text-right flex flex-col items-end gap-2">

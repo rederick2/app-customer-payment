@@ -67,19 +67,19 @@ export default function PhotoUploadModal({ proformaId, proformName, proformas = 
   };
 
   const handleUpload = async () => {
-      let fileToUpload = annotatedBlob || rawFile;
-      if (!fileToUpload) return;
+    let fileToUpload = annotatedBlob || rawFile;
+    if (!fileToUpload) return;
 
-      setUploading(true);
-      try {
-        // Compress if needed (limit to 5MB)
-        if (fileToUpload.size > 5 * 1024 * 1024) {
-          toast.info('Compressing photo...', { duration: 2000 });
-          fileToUpload = await compressImage(fileToUpload, 4.5); // Aim for slightly less than 5MB
-        }
+    setUploading(true);
+    try {
+      // Compress if needed (limit to 5MB)
+      if (fileToUpload.size > 5 * 1024 * 1024) {
+        toast.info('Compressing photo...', { duration: 2000 });
+        fileToUpload = await compressImage(fileToUpload, 4.5); // Aim for slightly less than 5MB
+      }
 
-        const fd = new FormData();
-        fd.append('file', fileToUpload, rawFile?.name || 'photo.jpg');
+      const fd = new FormData();
+      fd.append('file', fileToUpload, rawFile?.name || 'photo.jpg');
       fd.append('caption', caption);
       fd.append('overlay_text', overlayText);
       fd.append('is_public', String(isPublic));
@@ -285,7 +285,7 @@ export default function PhotoUploadModal({ proformaId, proformName, proformas = 
               </div>
               <div className="text-left flex-1">
                 <p className="font-bold text-sm">{isPublic ? 'Visible to Client' : 'Private (Internal Only)'}</p>
-                <p className="text-xs opacity-70">{isPublic ? 'Client can see this in their portal' : 'Only you can see this'}</p>
+                <p className="text-xs opacity-70">{isPublic ? 'Client can see this in their portal' : 'Click or check if you wanted to be visible to client.'}</p>
               </div>
               <div className={cn(
                 'h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all',

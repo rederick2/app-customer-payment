@@ -232,7 +232,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                 className="w-full h-12 bg-background border-border/60 rounded-xl shadow-sm hover:bg-accent/5 transition-all focus:ring-2 focus:ring-primary/10 px-4"
               >
                 <SelectValue placeholder="Select a project...">
-                  {selectedProforma?.project_name}
+                  {selectedProforma ? `${selectedProforma.project_name} - #${selectedProforma.number}` : null}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-border/40 shadow-2xl animate-in zoom-in-95 duration-200">
@@ -242,7 +242,7 @@ export function BillingModals({ clientId, proformas, payments, invoices, openTyp
                     value={p.id}
                     className="py-3 px-4 rounded-lg cursor-pointer transition-colors"
                   >
-                    {p.project_name}
+                    {p.project_name} - #{p.number}
                   </SelectItem>
                 ))}
               </SelectContent>
