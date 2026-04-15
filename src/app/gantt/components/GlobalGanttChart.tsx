@@ -2,8 +2,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { format, addDays, startOfWeek, addWeeks, isSameDay, isBefore, isAfter, differenceInDays } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { User, Calendar, Briefcase, CheckCircle2, CircleDashed, ChevronRight, ChevronDown, Plus, Trash2, Loader2, Sparkles, Tag } from 'lucide-react';
+import { enUS } from 'date-fns/locale';
+import { User, Calendar, Briefcase, CheckCircle2, CircleDashed, ChevronRight, ChevronDown, Plus, Trash2, Loader2, Sparkles, Tag, PanelLeft, PanelLeftClose, Pencil, Palette, Flag, Copy, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -21,6 +21,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+} from "@/components/ui/context-menu";
 
 interface Task {
   id: string;
@@ -29,6 +39,8 @@ interface Task {
   status: string;
   due_date: string | null; // Used as Start Date
   end_date: string | null; // Used as End Date
+  percentage?: number;
+  color?: string;
   team_members?: { name: string; id: string };
   proforma_item_id?: string | null;
   proforma_items?: { id: string; description: string } | null;
@@ -50,12 +62,48 @@ interface ProjectGroup {
   endDate: Date;
 }
 
-export default function GlobalGanttChart({ 
+const PREDEFINED_COLORS = [
+  { name: 'Emerald', value: '#10b981' },
+  { name: 'Blue', value: '#3b82f6' },
+  { name: 'Amber', value: '#f59e0b' },
+  { name: 'Rose', value: '#f43f5e' },
+  { name: 'Purple', value: '#a855f7' },
+  { name: 'Indigo', value: '#6366f1' },
+];
+
+const ProgressCircle = ({ percent, color, colorClass }: { percent: number, color?: string, colorClass?: string }) => {
+  const radius = 6.5;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = Math.max(0, circumference - (percent / 100) * circumference);
+
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" className="transform -rotate-90 shrink-0">
+      <circle
+        cx="9" cy="9" r={radius}
+        stroke="currentColor" strokeWidth="2.5" fill="none"
+        className="text-muted-foreground/20"
+      />
+      {percent > 0 && (
+        <circle
+          cx="9" cy="9" r={radius}
+          stroke="currentColor" strokeWidth="2.5" fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className={cn("transition-all duration-500 ease-out", colorClass)}
+          style={color ? { color } : undefined}
+        />
+      )}
+    </svg>
+  );
+};
+
+export default function GlobalGanttChart({
   tasks,
   teamMembers,
   proformaItems,
   activeJobs
-}: { 
+}: {
   tasks: Task[],
   teamMembers: any[],
   proformaItems: any[],
@@ -66,30 +114,53 @@ export default function GlobalGanttChart({
   const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
   const [addingTaskForProject, setAddingTaskForProject] = useState<string | null>(null);
   const [selectedProjectFilters, setSelectedProjectFilters] = useState<string[]>([]);
-  
+
   // New States for AI and Editing
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!window.confirm("¿Seguro que deseas eliminar esta tarea?")) return;
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
     const { error } = await supabase.from('job_tasks').delete().eq('id', taskId);
     if (error) {
-      toast.error('Error al eliminar tarea');
+      toast.error('Error deleting task');
     } else {
-      toast.success('Tarea eliminada');
+      toast.success('Task deleted');
       router.refresh();
     }
   };
 
   const handleToggleStatus = async (task: Task) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-    const { error } = await supabase.from('job_tasks').update({ status: newStatus }).eq('id', task.id);
+    const newPercentage = newStatus === 'completed' ? 100 : 0;
+    const { error } = await supabase.from('job_tasks').update({ status: newStatus, percentage: newPercentage }).eq('id', task.id);
     if (error) {
-      toast.error('Error al actualizar estado');
+      toast.error('Error updating status');
     } else {
       router.refresh();
-      toast.success(newStatus === 'completed' ? 'Tarea completada' : 'Tarea pendiente');
+      toast.success(newStatus === 'completed' ? 'Task completed' : 'Task pending');
+    }
+  };
+
+  const handleUpdatePercentage = async (task: Task, percentage: number) => {
+    const status = percentage === 100 ? 'completed' : 'pending';
+    const { error } = await supabase.from('job_tasks').update({ percentage, status }).eq('id', task.id);
+    if (error) {
+      toast.error('Error updating progress');
+    } else {
+      router.refresh();
+      toast.success('Progress updated');
+    }
+  };
+
+  const handleUpdateColor = async (task: Task, color: string) => {
+    const { error } = await supabase.from('job_tasks').update({ color }).eq('id', task.id);
+    if (error) {
+      toast.error('Error updating color');
+    } else {
+      router.refresh();
+      toast.success('Color updated');
     }
   };
 
@@ -102,17 +173,17 @@ export default function GlobalGanttChart({
 
     // Parse all active jobs first so empty ones show up
     activeJobs.forEach(job => {
-      uniqueProjectsMap.set(job.id, { id: job.id, name: job.project_name || 'Sin Nombre' });
-      
+      uniqueProjectsMap.set(job.id, { id: job.id, name: job.project_name || 'Unnamed' });
+
       const client = job.clients;
       const clientName = client ? (client.company_name || [client.name, client.last_name].filter(Boolean).join(' ') || 'Unknown Client') : 'No Client';
-      
+
       const start = job.job_start_at ? new Date(job.job_start_at) : new Date();
       const end = job.job_end_at ? new Date(job.job_end_at) : addDays(start, 30);
 
       projMap.set(job.id, {
         projectId: job.id,
-        projectName: job.project_name || 'Sin Nombre',
+        projectName: job.project_name || 'Unnamed',
         clientName: clientName,
         status: job.status,
         tasks: [],
@@ -148,7 +219,7 @@ export default function GlobalGanttChart({
 
         projMap.set(pId, {
           projectId: pId,
-          projectName: task.proformas?.project_name || 'Tareas sin Proyecto',
+          projectName: task.proformas?.project_name || 'Tasks without Project',
           clientName: clientName,
           status: task.proformas?.status || 'draft',
           tasks: [],
@@ -176,13 +247,13 @@ export default function GlobalGanttChart({
   }, [tasks, activeJobs]);
 
   const filteredProjects = useMemo(() => {
-    return projects.filter(proj => 
+    return projects.filter(proj =>
       selectedProjectFilters.length === 0 || selectedProjectFilters.includes(proj.projectId)
     );
   }, [projects, selectedProjectFilters]);
 
   const toggleProjectFilter = (pId: string) => {
-    setSelectedProjectFilters(prev => 
+    setSelectedProjectFilters(prev =>
       prev.includes(pId) ? prev.filter(id => id !== pId) : [...prev, pId]
     );
   };
@@ -219,8 +290,8 @@ export default function GlobalGanttChart({
     return (
       <div className="py-24 flex flex-col items-center justify-center text-muted-foreground bg-muted/5 relative">
         <Calendar className="h-12 w-12 mb-4 opacity-50" />
-        <p className="font-medium">No hay proyectos activos para mostrar.</p>
-        <p className="text-sm opacity-70">Ajusta los filtros o añade nuevas tareas.</p>
+        <p className="font-medium">No active projects to display.</p>
+        <p className="text-sm opacity-70">Adjust filters or add new tasks.</p>
       </div>
     );
   }
@@ -230,30 +301,36 @@ export default function GlobalGanttChart({
       {/* Header Controls */}
       <div className="bg-card px-6 py-4 border-b border-border/40 flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-1.5 border border-border/40 bg-card rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-colors"
+          >
+            {isSidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+          </button>
           <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-            {tasks.length} Tareas Totales
+            {tasks.length} Total Tasks
           </Badge>
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            {filteredProjects.length} Proyectos
+            {filteredProjects.length} Projects
           </Badge>
         </div>
         <div className="flex gap-2">
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-xs">
-                {selectedProjectFilters.length === 0 
-                  ? 'Ver Todos los Proyectos' 
-                  : `${selectedProjectFilters.length} Proyectos Seleccionados`}
-                <ChevronDown className="h-3 w-3" />
+            <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-xs">
+              {selectedProjectFilters.length === 0
+                ? 'View All Projects'
+                : `${selectedProjectFilters.length} Selected Projects`}
+              <ChevronDown className="h-3 w-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[240px]">
-              <div className="px-2 py-1.5 text-sm font-semibold text-foreground">Filtrar por Proyecto</div>
+              <div className="px-2 py-1.5 text-sm font-semibold text-foreground">Filter by Project</div>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem
                 checked={selectedProjectFilters.length === 0}
                 onCheckedChange={() => setSelectedProjectFilters([])}
                 className="font-bold"
               >
-                Todos los Proyectos
+                All Projects
               </DropdownMenuCheckboxItem>
               <DropdownMenuSeparator />
               <div className="max-h-[300px] overflow-y-auto">
@@ -269,111 +346,217 @@ export default function GlobalGanttChart({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Button 
+          {/*<Button
             onClick={() => setAiModalOpen(true)}
             size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium pl-3 rounded-xl"
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            Generar Tareas IA
-          </Button>
+            Generate AI Tasks
+          </Button>*/}
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar (Names and Info) */}
-        <div className="w-[380px] shrink-0 border-r border-border/40 bg-card flex flex-col overflow-y-auto no-scrollbar z-10 shadow-[4px_0_12px_-6px_rgba(0,0,0,0.1)] relative">
-          <div className="h-14 border-b border-border/40 bg-card sticky top-0 px-4 flex items-center shadow-sm z-20">
-            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proyecto / Tarea</span>
-          </div>
+      <div className="flex-1 overflow-auto bg-card relative no-scrollbar">
+        <div className="flex min-w-max min-h-max">
+          {/* Left Sidebar Table */}
+          <div className={cn(
+            "shrink-0 border-r border-border/40 bg-card sticky left-0 z-30 flex flex-col transition-all duration-300",
+            isSidebarOpen ? "w-[480px] md:w-[560px]" : "w-0 opacity-0 overflow-hidden border-r-0"
+          )}>
+            {/* Header */}
+            <div className="h-14 border-b border-border/40 bg-card sticky top-0 flex items-center px-4 shrink-0 z-40 gap-4">
+              <div className="flex-1 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Contributor</div>
+              <div className="w-[100px] text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status</div>
+              <div className="w-[120px] text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Date range</div>
+            </div>
 
-          <div className="pb-8">
-            {filteredProjects.map(proj => (
-              <React.Fragment key={proj.projectId}>
-                {/* Project Header Row */}
-                <div className="px-4 py-3 border-b border-border/40 bg-muted/5 flex items-center gap-2 group">
-                  <button 
-                    onClick={() => toggleProject(proj.projectId)}
-                    className="p-1 -ml-1 text-muted-foreground/50 hover:text-foreground transition-colors shrink-0"
-                  >
-                    {isProjectExpanded(proj.projectId) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  </button>
-                  <Link href={`/proforma/${proj.projectId}`} className="flex-1 overflow-hidden hover:opacity-80 transition-opacity">
-                    <h3 className="font-bold text-foreground text-sm truncate">{proj.projectName}</h3>
-                    {proj.clientName && (
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">{proj.clientName} • {proj.status}</p>
-                    )}
-                  </Link>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setAddingTaskForProject(proj.projectId); }} 
-                    className="p-1.5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 rounded-md transition-all shrink-0"
-                    title="Añadir tarea a este proyecto"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
+            <div className="pb-8">
+              {filteredProjects.map(proj => {
+                const startStr = format(proj.startDate, 'MMM d');
+                const endStr = format(proj.endDate, 'd');
 
-                {/* Task Rows */}
-                {isProjectExpanded(proj.projectId) && proj.tasks.map(task => (
-                  <div key={task.id} className="px-4 py-2 border-b border-border/20 pl-10 hover:bg-muted/5 transition-colors flex flex-col justify-center min-h-[56px] py-1.5 group">
-                    <div className="flex items-center justify-between">
-                      <p 
-                        className="text-sm font-medium text-foreground truncate max-w-[240px] cursor-pointer hover:underline"
-                        onClick={() => setEditingTask(task)}
-                      >
-                        {task.title}
-                      </p>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} 
-                        className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 rounded transition-all shrink-0"
-                        title="Eliminar tarea"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                return (
+                  <React.Fragment key={proj.projectId}>
+                    {/* Project Group Row */}
+                    <div
+                      className="border-b border-border/40 bg-card flex items-stretch group cursor-pointer hover:bg-muted/5 transition-colors h-[52px]"
+                      onClick={() => toggleProject(proj.projectId)}
+                    >
+                      <div className="flex-1 px-4 flex items-center gap-2 overflow-hidden">
+                        <div className="text-muted-foreground transition-colors shrink-0">
+                          {isProjectExpanded(proj.projectId) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </div>
+                        <h3 className="font-bold text-foreground text-sm truncate">{proj.projectName}</h3>
+                      </div>
+                      <div className="w-[100px] flex items-center px-4 border-l border-border/10 shrink-0">
+                        <div className="flex items-center gap-3 w-full">
+                          <span className="text-[11px] font-bold text-foreground text-right flex-1 select-none">
+                            {proj.tasks.length > 0
+                              ? Math.round((proj.tasks.reduce((sum, t) => sum + (typeof t.percentage === 'number' ? t.percentage : (t.status === 'completed' ? 100 : 0)), 0) / proj.tasks.length))
+                              : 0}%
+                          </span>
+                          <ProgressCircle
+                            percent={proj.tasks.length > 0 ? (proj.tasks.reduce((sum, t) => sum + (typeof t.percentage === 'number' ? t.percentage : (t.status === 'completed' ? 100 : 0)), 0) / proj.tasks.length) : 0}
+                            colorClass="text-blue-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="w-[120px] flex items-center px-3 border-l border-border/10">
+                        <span className="text-xs text-muted-foreground truncate">{startStr} - {endStr}</span>
+                      </div>
                     </div>
 
-                    {/* Associated Proforma Item badge/text */}
-                    {task.proforma_items && (
-                      <div className="flex gap-1 items-center mt-1">
-                        <Tag className="h-3 w-3 text-indigo-500" />
-                        <span className="text-[10px] text-indigo-700 font-medium truncate max-w-[220px]">
-                          {task.proforma_items.description}
-                        </span>
+                    {/* Task Rows */}
+                    {isProjectExpanded(proj.projectId) && proj.tasks.map(task => {
+                      const tStart = task.due_date ? new Date(task.due_date) : new Date();
+                      const tEnd = task.end_date ? new Date(task.end_date) : addDays(tStart, 1);
+                      const tStartStr = format(tStart, 'MMM d');
+                      const isDiffMonth = tStart.getMonth() !== tEnd.getMonth();
+                      const tEndStr = format(tEnd, isDiffMonth ? 'MMM d' : 'd');
+                      const isCompleted = task.status === 'completed';
+                      const taskPercent = typeof task.percentage === 'number' ? task.percentage : (isCompleted ? 100 : 0);
+                      const taskColor = task.color || (isCompleted ? '#10b981' : '#f59e0b');
+
+                      return (
+                        <ContextMenu key={task.id}>
+                          <ContextMenuTrigger className="h-[56px] border-b border-border/20 flex items-stretch group hover:bg-muted/5 transition-colors bg-card w-full">
+                            <div className="flex-1 pl-10 pr-4 flex items-center gap-3 overflow-hidden">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleToggleStatus(task); }}
+                                className="focus:outline-none transition-transform active:scale-95 shrink-0"
+                                title={isCompleted ? 'Mark as pending' : 'Mark as completed'}
+                              >
+                                {isCompleted ? (
+                                  <CheckCircle2 className="h-4 w-4 text-emerald-500 hover:text-emerald-600" />
+                                ) : (
+                                  <CircleDashed className="h-4 w-4 text-muted-foreground hover:text-emerald-500" />
+                                )}
+                              </button>
+                              <div className="flex-1 flex flex-col justify-center overflow-hidden">
+                                <p
+                                  className="text-sm font-medium text-foreground truncate cursor-pointer hover:underline"
+                                  onClick={() => setEditingTask(task)}
+                                >
+                                  {task.title}
+                                </p>
+                                {task.team_members && (
+                                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                    {task.team_members.name}
+                                  </p>
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
+                                className="ml-auto opacity-0 group-hover:opacity-100 p-1.5 text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0"
+                                title="Delete task"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <div className="w-[100px] flex items-center px-4 border-l border-border/10 shrink-0">
+                              <div className="flex items-center gap-3 w-full">
+                                <span className="text-[11px] font-bold text-right flex-1 select-none text-foreground">
+                                  {taskPercent}%
+                                </span>
+                                <ProgressCircle
+                                  percent={taskPercent}
+                                  color={taskColor}
+                                />
+                              </div>
+                            </div>
+                            <div className="w-[120px] flex items-center px-3 border-l border-border/10 shrink-0">
+                              <span className="text-xs text-muted-foreground truncate">{tStartStr} - {tEndStr}</span>
+                            </div>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent className="w-56 font-manrope">
+                            <ContextMenuItem onClick={() => handleToggleStatus(task)}>
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              <span>{isCompleted ? 'Mark as pending' : 'Mark as done'}</span>
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => setEditingTask(task)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              <span>Edit</span>
+                            </ContextMenuItem>
+                            <ContextMenuSub>
+                              <ContextMenuSubTrigger>
+                                <Palette className="mr-2 h-4 w-4" />
+                                <span>Color</span>
+                              </ContextMenuSubTrigger>
+                              <ContextMenuSubContent className="w-32">
+                                {PREDEFINED_COLORS.map(c => (
+                                  <ContextMenuItem key={c.value} onClick={() => handleUpdateColor(task, c.value)}>
+                                    <div className="w-3 h-3 rounded-xl mr-2" style={{ backgroundColor: c.value }} />
+                                    <span>{c.name}</span>
+                                  </ContextMenuItem>
+                                ))}
+                              </ContextMenuSubContent>
+                            </ContextMenuSub>
+                            <ContextMenuSub>
+                              <ContextMenuSubTrigger>
+                                <Flag className="mr-2 h-4 w-4" />
+                                <span>Progress</span>
+                              </ContextMenuSubTrigger>
+                              <ContextMenuSubContent className="w-32">
+                                {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(perc => (
+                                  <ContextMenuItem
+                                    key={perc}
+                                    onClick={() => handleUpdatePercentage(task, perc)}
+                                  >
+                                    {perc}%
+                                  </ContextMenuItem>
+                                ))}
+                              </ContextMenuSubContent>
+                            </ContextMenuSub>
+                            <ContextMenuItem onClick={() => toast.info('To duplicate, create a new task')}>
+                              <Copy className="mr-2 h-4 w-4" />
+                              <span>Duplicate</span>
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?task=${task.id}`);
+                              toast.success('Link copied');
+                            }}>
+                              <LinkIcon className="mr-2 h-4 w-4" />
+                              <span>Copy link</span>
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem
+                              className="text-red-500 focus:text-red-500 focus:bg-red-50"
+                              onClick={() => handleDeleteTask(task.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Delete</span>
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      );
+                    })}
+
+                    {/* Add Task Button Row */}
+                    {isProjectExpanded(proj.projectId) && (
+                      <div className="h-[48px] border-b border-border/20 flex items-stretch bg-card">
+                        <div className="flex-1 pl-10 pr-4 flex items-center">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setAddingTaskForProject(proj.projectId); }}
+                            className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Plus className="h-3.5 w-3.5" /> Add task
+                          </button>
+                        </div>
+                        <div className="w-[100px] border-l border-border/10 flex items-center px-3"></div>
+                        <div className="w-[120px] border-l border-border/10 flex items-center px-3"></div>
                       </div>
                     )}
-
-                    <div className="flex items-center gap-2 mt-1">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleToggleStatus(task); }} 
-                        className="focus:outline-none transition-transform active:scale-95"
-                        title={task.status === 'completed' ? 'Marcar como pendiente' : 'Marcar como completada'}
-                      >
-                        {task.status === 'completed' ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 hover:text-emerald-600" />
-                        ) : (
-                          <CircleDashed className="h-3.5 w-3.5 text-muted-foreground hover:text-emerald-500" />
-                        )}
-                      </button>
-                      {task.team_members && (
-                        <div className="flex items-center gap-1.5">
-                          <User className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-[10px] font-medium text-muted-foreground truncate max-w-[150px]">{task.team_members.name}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </React.Fragment>
-            ))}
+                  </React.Fragment>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Right Timelines Area */}
-        <div className="flex-1 overflow-auto bg-muted/5 relative">
-          <div style={{ width: `${timelineWidthPx}px`, minWidth: '100%' }}>
+          {/* Right Timelines Area */}
+          <div className="flex-1 bg-card relative z-10" style={{ width: `${timelineWidthPx}px`, minWidth: `${timelineWidthPx}px` }}>
             {/* Timeline Header */}
-            <div className="h-14 border-b border-border/40 bg-card sticky top-0 flex items-end relative z-10">
+            <div className="h-14 border-b border-border/40 bg-card sticky top-0 flex items-end relative z-20">
               <div className="absolute inset-0 flex">
                 {daysArr.map((day, i) => {
                   const isToday = isSameDay(day, new Date());
@@ -384,30 +567,24 @@ export default function GlobalGanttChart({
                     <div
                       key={day.toISOString()}
                       className={cn(
-                        "flex shrink-0 flex-col justify-end pb-1 relative border-r border-border/20",
+                        "flex shrink-0 flex-col justify-end pb-2 relative",
                         isWeekend && "bg-muted/10",
-                        isToday && "bg-emerald-50/50"
+                        isToday && "bg-emerald-50/20"
                       )}
                       style={{ width: `${DAY_WIDTH}px` }}
                     >
                       {/* Month label */}
                       {(isFirstOfMonth || i === 0) && (
-                        <div className="absolute top-1 left-2 text-[10px] font-black uppercase tracking-widest text-[#0D3B47] whitespace-nowrap z-20">
-                          {format(day, 'MMM yyyy', { locale: es })}
+                        <div className="absolute top-2 left-2 text-[11px] font-bold text-foreground whitespace-nowrap z-20">
+                          {format(day, 'MMMM')}
                         </div>
                       )}
                       <div className="flex flex-col items-center">
                         <span className={cn(
-                          "text-[9px] font-bold",
-                          isToday ? "text-emerald-600" : "text-muted-foreground/60"
+                          "text-[10px] font-bold",
+                          isToday ? "text-emerald-600" : "text-muted-foreground"
                         )}>
-                          {format(day, 'eeeee', { locale: es })}
-                        </span>
-                        <span className={cn(
-                          "text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full mt-0.5",
-                          isToday && "bg-emerald-600 text-white shadow-sm font-bold"
-                        )}>
-                          {format(day, 'd')}
+                          {format(day, 'dd')}
                         </span>
                       </div>
                     </div>
@@ -417,16 +594,16 @@ export default function GlobalGanttChart({
             </div>
 
             {/* Timelines Body */}
-            <div className="relative pb-8">
+            <div className="relative pb-8 h-full">
               {/* Background vertical division grid */}
               <div className="absolute inset-0 flex pointer-events-none">
                 {daysArr.map(day => (
                   <div
                     key={`bg-${day.toISOString()}`}
                     className={cn(
-                      "shrink-0 h-full border-r border-border/20",
-                      (day.getDay() === 0 || day.getDay() === 6) && "bg-muted/10",
-                      isSameDay(day, new Date()) && "border-r-emerald-500/30 bg-emerald-50/20"
+                      "shrink-0 h-full border-r border-border/40",
+                      (day.getDay() === 0 || day.getDay() === 6) && "bg-muted/5",
+                      isSameDay(day, new Date()) && "border-r-emerald-500/20"
                     )}
                     style={{ width: `${DAY_WIDTH}px` }}
                   />
@@ -435,22 +612,24 @@ export default function GlobalGanttChart({
 
               {/* Today line indicator */}
               <div
-                className="absolute top-0 bottom-0 border-l-2 border-dashed border-emerald-500 z-10 pointer-events-none"
+                className="absolute top-0 bottom-0 border-l border-indigo-500 z-10 pointer-events-none"
                 style={{ left: `${getTaskLeftPx(new Date()) + (DAY_WIDTH / 2)}px` }}
-              />
+              >
+                <div className="absolute top-0 -translate-x-1/2 w-1.5 h-1.5 rounded-xl bg-indigo-500" />
+              </div>
 
               {/* Rows */}
               <div className="relative z-20">
                 {filteredProjects.map(proj => (
                   <React.Fragment key={`timeline-${proj.projectId}`}>
                     {/* Project empty track row */}
-                    <div className="h-[52px] border-b border-border/40 relative group">
-                      {/* Project wrapper bar (Optional, shows full duration of project) */}
+                    <div className="h-[52px] border-b border-border/40 relative flex items-center group">
+                      {/* Project wrapper bar */}
                       <div
-                        className="absolute h-1.5 bg-foreground/20 rounded-full top-1/2 -translate-y-1/2 group-hover:bg-foreground/30 transition-colors"
+                        className="absolute h-1 bg-indigo-500/20 rounded-xl pointer-events-none transition-colors group-hover:bg-indigo-500/30"
                         style={{
-                          left: `${getTaskLeftPx(proj.startDate)}px`,
-                          width: `${getTaskWidthPx(proj.startDate, proj.endDate)}px`
+                          left: `${getTaskLeftPx(proj.startDate) + DAY_WIDTH / 2}px`,
+                          width: `${Math.max(0, getTaskWidthPx(proj.startDate, proj.endDate) - DAY_WIDTH)}px`
                         }}
                       />
                     </div>
@@ -460,31 +639,93 @@ export default function GlobalGanttChart({
                       const start = new Date(task.due_date!);
                       const end = task.end_date ? new Date(task.end_date) : addDays(start, 1);
                       const isCompleted = task.status === 'completed';
+                      const taskColor = task.color || undefined;
 
                       return (
-                        <div key={`track-${task.id}`} className="min-h-[56px] py-1.5 border-b border-border/20 relative group hover:bg-muted/5 transition-colors">
-                          {/* Task Bar */}
-                          <div
-                            className={cn(
-                              "absolute border rounded-full h-8 top-1/2 -translate-y-1/2 shadow-sm flex items-center px-3 cursor-pointer transition-all hover:brightness-95 hover:shadow-md",
-                              isCompleted
-                                ? "bg-emerald-100 border-emerald-300 text-emerald-800 shrink-0"
-                                : "bg-[#0D3B47]/10 border-[#0D3B47]/20 text-[#0D3B47] shrink-0"
-                            )}
-                            style={{
-                              left: `${getTaskLeftPx(start)}px`,
-                              width: `${getTaskWidthPx(start, end)}px`
-                            }}
-                            title={`${task.title} (${format(start, 'd MMM')} - ${format(end, 'd MMM')})`}
-                            onClick={() => setEditingTask(task)}
-                          >
-                            <span className="text-xs font-bold truncate">
-                              {task.title}
-                            </span>
-                          </div>
-                        </div>
+                        <ContextMenu key={`track-${task.id}`}>
+                          <ContextMenuTrigger className="h-[56px] border-b border-border/20 relative group hover:bg-muted/5 transition-colors flex items-center w-full">
+                            {/* Task Bar */}
+                            <div
+                              className={cn(
+                                "absolute rounded-xl h-4 cursor-pointer transition-all hover:brightness-95",
+                                !taskColor && (isCompleted ? "bg-emerald-400" : "bg-amber-400")
+                              )}
+                              style={{
+                                backgroundColor: taskColor,
+                                left: `${getTaskLeftPx(start) + DAY_WIDTH / 2}px`,
+                                width: `${Math.max(DAY_WIDTH / 2, getTaskWidthPx(start, end) - DAY_WIDTH / 2)}px`
+                              }}
+                              title={`${task.title} (${format(start, 'd MMM')} - ${format(end, 'd MMM')})`}
+                              onClick={() => setEditingTask(task)}
+                            />
+                          </ContextMenuTrigger>
+                          <ContextMenuContent className="w-56 font-manrope">
+                            <ContextMenuItem onClick={() => handleToggleStatus(task)}>
+                              <CheckCircle2 className="mr-2 h-4 w-4" />
+                              <span>{isCompleted ? 'Mark as pending' : 'Mark as done'}</span>
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => setEditingTask(task)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              <span>Edit</span>
+                            </ContextMenuItem>
+                            <ContextMenuSub>
+                              <ContextMenuSubTrigger>
+                                <Palette className="mr-2 h-4 w-4" />
+                                <span>Color</span>
+                              </ContextMenuSubTrigger>
+                              <ContextMenuSubContent className="w-32">
+                                {PREDEFINED_COLORS.map(c => (
+                                  <ContextMenuItem key={c.value} onClick={() => handleUpdateColor(task, c.value)}>
+                                    <div className="w-3 h-3 rounded-xl mr-2" style={{ backgroundColor: c.value }} />
+                                    <span>{c.name}</span>
+                                  </ContextMenuItem>
+                                ))}
+                              </ContextMenuSubContent>
+                            </ContextMenuSub>
+                            <ContextMenuSub>
+                              <ContextMenuSubTrigger>
+                                <Flag className="mr-2 h-4 w-4" />
+                                <span>Progress</span>
+                              </ContextMenuSubTrigger>
+                              <ContextMenuSubContent className="w-32">
+                                {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(perc => (
+                                  <ContextMenuItem
+                                    key={perc}
+                                    onClick={() => handleUpdatePercentage(task, perc)}
+                                  >
+                                    {perc}%
+                                  </ContextMenuItem>
+                                ))}
+                              </ContextMenuSubContent>
+                            </ContextMenuSub>
+                            <ContextMenuItem onClick={() => toast.info('To duplicate, create a new task')}>
+                              <Copy className="mr-2 h-4 w-4" />
+                              <span>Duplicate</span>
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?task=${task.id}`);
+                              toast.success('Link copied');
+                            }}>
+                              <LinkIcon className="mr-2 h-4 w-4" />
+                              <span>Copy link</span>
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem
+                              className="text-red-500 focus:text-red-500 focus:bg-red-50"
+                              onClick={() => handleDeleteTask(task.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Delete</span>
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
                       )
                     })}
+
+                    {/* Empty row for the Add Task button */}
+                    {isProjectExpanded(proj.projectId) && (
+                      <div className="h-[48px] border-b border-border/20" />
+                    )}
                   </React.Fragment>
                 ))}
               </div>
@@ -569,10 +810,10 @@ function TaskFormModal({
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    
+
     const finalProformaId = selectedProjectId;
     if (!finalProformaId) {
-      toast.error('Debes seleccionar un proyecto');
+      toast.error('You must select a project');
       setIsSubmitting(false);
       return;
     }
@@ -607,9 +848,9 @@ function TaskFormModal({
     }
 
     if (error) {
-      toast.error(isEdit ? 'Error al actualizar tarea' : 'Error al crear tarea');
+      toast.error(isEdit ? 'Error updating task' : 'Error creating task');
     } else {
-      toast.success(isEdit ? 'Tarea actualizada' : 'Tarea creada correctamente');
+      toast.success(isEdit ? 'Task updated' : 'Task created successfully');
       onSuccess();
     }
     setIsSubmitting(false);
@@ -618,14 +859,14 @@ function TaskFormModal({
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
       <Card className="w-full max-w-md shadow-2xl border-none h-fit max-h-[90vh] overflow-y-auto">
-        <CardHeader className="bg-[#0D3B47] text-white rounded-t-xl sticky top-0 z-10">
-          <CardTitle className="text-lg">{isEdit ? 'Editar Tarea' : 'Nueva Tarea Programada'}</CardTitle>
+        <CardHeader className="rounded-t-xl sticky top-0 z-10">
+          <CardTitle className="text-3xl font-bold font-archivo">{isEdit ? 'Edit Task' : 'New Scheduled Task'}</CardTitle>
         </CardHeader>
         <CardContent className="p-6 bg-card rounded-b-xl border border-t-0 border-border/40">
           <form onSubmit={handleSubmit} className="space-y-4">
-            
+
             <div className="space-y-2">
-              <Label htmlFor="proforma_id">Proyecto</Label>
+              <Label htmlFor="proforma_id">Project</Label>
               <select
                 id="proforma_id"
                 name="proforma_id"
@@ -635,7 +876,7 @@ function TaskFormModal({
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                 disabled={isEdit && !!proformaId} // Disable if editing and locked to a project
               >
-                <option value="">Seleccionar Proyecto...</option>
+                <option value="">Select Project...</option>
                 {allProjects.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
@@ -643,7 +884,7 @@ function TaskFormModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="proforma_item_id">Item Asociado (Opcional)</Label>
+              <Label htmlFor="proforma_item_id">Associated Item (Optional)</Label>
               <select
                 id="proforma_item_id"
                 name="proforma_item_id"
@@ -651,7 +892,7 @@ function TaskFormModal({
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                 disabled={!selectedProjectId}
               >
-                <option value="">Sin asociar (Tarea General)</option>
+                <option value="">Unassociated (General Task)</option>
                 {availableItems.map(item => (
                   <option key={item.id} value={item.id}>{item.description}</option>
                 ))}
@@ -659,19 +900,19 @@ function TaskFormModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="title">Título de la Tarea</Label>
-              <Input id="title" name="title" placeholder="Ej: Comprar pintura" defaultValue={taskToEdit?.title || ''} required />
+              <Label htmlFor="title">Task Title</Label>
+              <Input id="title" name="title" placeholder="Ex: Buy paint" defaultValue={taskToEdit?.title || ''} required />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="assigned_to">Asignar a</Label>
+              <Label htmlFor="assigned_to">Assign to</Label>
               <select
                 id="assigned_to"
                 name="assigned_to"
                 defaultValue={taskToEdit?.team_members?.id || ''}
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">Sin asignar</option>
+                <option value="">Unassigned</option>
                 {teamMembers.map(member => (
                   <option key={member.id} value={member.id}>{member.name}</option>
                 ))}
@@ -680,32 +921,32 @@ function TaskFormModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="due_date">Fecha de Inicio</Label>
+                <Label htmlFor="due_date">Start Date</Label>
                 <Input id="due_date" name="due_date" type="datetime-local" defaultValue={formatForInput(taskToEdit?.due_date)} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="end_date">Fecha de Fin</Label>
+                <Label htmlFor="end_date">End Date</Label>
                 <Input id="end_date" name="end_date" type="datetime-local" defaultValue={formatForInput(taskToEdit?.end_date)} required />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción (Opcional)</Label>
+              <Label htmlFor="description">Description (Optional)</Label>
               <textarea
                 id="description"
                 name="description"
                 defaultValue={taskToEdit?.description || ''}
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Detalles adicionales..."
+                placeholder="Additional details..."
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" className="h-10 px-6 rounded-lg font-bold" onClick={onClose} disabled={isSubmitting}>
-                Cancelar
+                Cancel
               </Button>
-              <Button type="submit" className="h-10 px-6 rounded-lg font-bold bg-[#0D3B47] hover:bg-[#072a33]" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEdit ? 'Guardar Cambios' : 'Crear Tarea')}
+              <Button type="submit" className="h-10 px-6 rounded-lg font-bold" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : (isEdit ? 'Save Changes' : 'Create Task')}
               </Button>
             </div>
           </form>
@@ -740,14 +981,14 @@ function AiTaskGeneratorModal({
     const startDate = formData.get('start_date') as string;
 
     if (!projectId) {
-      toast.error('Selecciona un proyecto');
+      toast.error('Select a project');
       setIsGenerating(false);
       return;
     }
 
     try {
       // 1. Call AI endpoint
-      toast.info('Analizando proyecto y generando tareas...', { duration: 4500 });
+      toast.info('Analyzing project and generating tasks...', { duration: 4500 });
       const res = await fetch('/api/tasks/generate', {
         method: 'POST',
         body: JSON.stringify({
@@ -758,12 +999,12 @@ function AiTaskGeneratorModal({
         })
       });
 
-      if (!res.ok) throw new Error('Error en el servicio de IA');
+      if (!res.ok) throw new Error('Error in AI service');
       const data = await res.json();
       const generatedTasks = data.tasks;
 
       if (!generatedTasks || generatedTasks.length === 0) {
-        throw new Error('No se generaron tareas');
+        throw new Error('No tasks generated');
       }
 
       // 2. Insert Tasks into Supabase
@@ -772,7 +1013,7 @@ function AiTaskGeneratorModal({
         title: t.title,
         description: t.description || '',
         status: 'pending',
-        assigned_to: null, 
+        assigned_to: null,
         proforma_item_id: t.proforma_item_id || null, // Optional item association from AI
         due_date: new Date(t.due_date).toISOString(),
         end_date: new Date(t.end_date).toISOString(),
@@ -781,11 +1022,11 @@ function AiTaskGeneratorModal({
       const { error } = await supabase.from('job_tasks').insert(payload);
       if (error) throw error;
 
-      toast.success(`¡${generatedTasks.length} Tareas generadas con éxito!`);
+      toast.success(`${generatedTasks.length} tasks generated successfully!`);
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      toast.error('Hubo un error al generar las tareas con IA.');
+      toast.error('There was an error generating tasks with AI.');
     } finally {
       setIsGenerating(false);
     }
@@ -796,53 +1037,53 @@ function AiTaskGeneratorModal({
       <Card className="w-full max-w-md shadow-2xl border-none overflow-hidden h-fit max-h-[90vh] overflow-y-auto">
         <CardHeader className="bg-indigo-600 text-white sticky top-0 z-10">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="h-5 w-5" /> Auto-Generar Tareas con IA
+            <Sparkles className="h-5 w-5" /> Auto-Generate AI Tasks
           </CardTitle>
           <CardDescription className="text-indigo-100">
-            OpenAI analizará tu proyecto y armará un cronograma.
+            OpenAI will analyze your project and build a schedule.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6 bg-card">
           <form onSubmit={handleGenerate} className="space-y-4">
-            
+
             <div className="space-y-2">
-              <Label htmlFor="project_id">Selecciona el Proyecto</Label>
+              <Label htmlFor="project_id">Select the Project</Label>
               <select
                 id="project_id"
                 name="project_id"
                 required
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">Elegir proyecto...</option>
+                <option value="">Choose project...</option>
                 {projects.map(p => (
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
-              <p className="text-[10px] text-muted-foreground">La IA revisará TODOS los productos o servicios (Line Items) vendidos en este proyecto para crear tareas específicas.</p>
+              <p className="text-[10px] text-muted-foreground">AI will review ALL products or services (Line Items) sold in this project to create specific tasks.</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="start_date">Fecha de Arranque Aproximada</Label>
+              <Label htmlFor="start_date">Approximate Start Date</Label>
               <Input id="start_date" name="start_date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Instrucciones Adicionales para la IA (Opcional)</Label>
+              <Label htmlFor="description">Additional AI Instructions (Optional)</Label>
               <textarea
                 id="description"
                 name="description"
                 className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Ej: Remodelación completa de baño y pintura de cuartos secundarios..."
+                placeholder="Ex: Full bathroom remodel and secondary rooms painting..."
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" className="h-10 px-6 rounded-lg font-bold" onClick={onClose} disabled={isGenerating}>
-                Cancelar
+                Cancel
               </Button>
               <Button type="submit" className="h-10 px-6 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-700 text-white" disabled={isGenerating}>
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                {isGenerating ? 'Generando...' : 'Autocompletar Tareas'}
+                {isGenerating ? 'Generating...' : 'Autocomplete Tasks'}
               </Button>
             </div>
           </form>
