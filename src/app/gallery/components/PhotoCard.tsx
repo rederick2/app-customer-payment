@@ -161,7 +161,7 @@ export default function PhotoCard({ photo, onDelete, onUpdate, onExpand, compact
                     <div className="text-left flex-1">
                       <p className="font-bold text-sm leading-none">{isPublic ? 'Visible to Client' : 'Private'}</p>
                       <p className="text-[10px] opacity-70 mt-1">
-                        {isPublic ? 'Client can see this in their portal' : 'Only you can see this'}
+                        {isPublic ? 'Client can see this in their portal' : 'Click or check if you wanted to be visible to client.'}
                       </p>
                     </div>
                     <div className={cn(
