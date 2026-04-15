@@ -49,7 +49,7 @@ export function InvoiceForm({ clientId, clientName, proforma, proformas = [], in
   const [formData, setFormData] = React.useState({
     invoice_number: initialData?.invoice_number || '',
     issue_date: initialData?.issue_date || new Date().toISOString().split('T')[0],
-    due_date: initialData?.due_date || '',
+    due_date: initialData?.due_date || new Date().toISOString().split('T')[0],
     total_amount: initialData?.total_amount || proforma?.total || 0,
     tax_amount: initialData?.tax_amount ?? (proforma?.tax || 0),
     discount_amount: initialData?.discount_amount ?? calculateDiscount(proforma),

@@ -580,10 +580,10 @@ export default function JobView({
       .eq('id', itemId);
 
     if (error) {
-      toast.error('Error al actualizar el costo');
+      toast.error('Error updating cost');
     } else {
       setItems(prev => prev.map(item => item.id === itemId ? { ...item, cost: newCost } : item));
-      toast.success('Costo actualizado');
+      toast.success('Cost updated');
       handleCancelEditing();
     }
     setIsSavingCost(false);
@@ -596,11 +596,11 @@ export default function JobView({
         toast.error(result.error);
       } else {
         setItems(prev => prev.filter(item => item.id !== itemId));
-        toast.success('Item eliminado');
+        toast.success('Item deleted');
         setItemToDelete(null);
       }
     } catch (err) {
-      toast.error('Error al eliminar item');
+      toast.error('Error deleting item');
     }
   };
 
@@ -619,10 +619,10 @@ export default function JobView({
       .eq('id', paymentId);
 
     if (error) {
-      toast.error('Error al eliminar pago');
+      toast.error('Error deleting payment');
     } else {
       setPayments(prev => prev.filter(p => p.id !== paymentId));
-      toast.success('Pago eliminado');
+      toast.success('Payment deleted');
       setPaymentToDelete(null);
     }
   };
@@ -634,10 +634,10 @@ export default function JobView({
       .eq('id', expenseId);
 
     if (error) {
-      toast.error('Error al eliminar gasto');
+      toast.error('Error deleting expense');
     } else {
       setExpenses(prev => prev.filter(e => e.id !== expenseId));
-      toast.success('Gasto eliminado');
+      toast.success('Expense deleted');
       setExpenseToDelete(null);
     }
   };
@@ -649,10 +649,10 @@ export default function JobView({
       .eq('id', visitId);
 
     if (error) {
-      toast.error('Error al eliminar visita');
+      toast.error('Error deleting visit');
     } else {
       setVisits(prev => prev.filter(v => v.id !== visitId));
-      toast.success('Visita eliminada');
+      toast.success('Visit deleted');
     }
   };
 
@@ -663,10 +663,10 @@ export default function JobView({
       .eq('id', laborId);
 
     if (error) {
-      toast.error('Error al eliminar labor');
+      toast.error('Error deleting labor');
     } else {
       setTimeEntries(prev => prev.filter(t => t.id !== laborId));
-      toast.success('Labor eliminada');
+      toast.success('Labor deleted');
       setLaborToDelete(null);
     }
   };
@@ -692,10 +692,10 @@ export default function JobView({
       .eq('id', taskId);
 
     if (error) {
-      toast.error('Error al eliminar tarea');
+      toast.error('Error deleting task');
     } else {
       setTasks(prev => prev.filter(t => t.id !== taskId));
-      toast.success('Tarea eliminada');
+      toast.success('Task deleted');
       setTaskToDelete(null);
     }
   };
@@ -867,10 +867,10 @@ export default function JobView({
       .eq('id', materialId);
 
     if (error) {
-      toast.error('Error al eliminar material');
+      toast.error('Error deleting material');
     } else {
       setMaterials(prev => prev.filter(m => m.id !== materialId));
-      toast.success('Material eliminado');
+      toast.success('Material deleted');
     }
   };
 
@@ -1012,7 +1012,7 @@ export default function JobView({
       window.open(url, '_blank');
     } catch (error) {
       console.error('Error generating Invoice PDF:', error);
-      toast.error('Error al generar el PDF de la factura');
+      toast.error('Error generating of PDF of Invoice');
     }
   };
 
@@ -1040,12 +1040,12 @@ export default function JobView({
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('Factura eliminada');
+        toast.success('Invoice deleted');
         setInvoiceToDelete(null);
         fetchInvoices();
       }
     } catch (error) {
-      toast.error('Error al eliminar la factura');
+      toast.error('Error deleting invoice');
     }
   };
 
@@ -3245,14 +3245,14 @@ export default function JobView({
       <Dialog open={!!itemToDelete} onOpenChange={(isOpen) => !isOpen && setItemToDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Item</DialogTitle>
+            <DialogTitle>Delete Item</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar "{itemToDelete?.description}"? Esta acción no se puede deshacer.
+              Are you sure you want to delete "{itemToDelete?.description}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setItemToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => itemToDelete && handleDeleteItem(itemToDelete.id)}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setItemToDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => itemToDelete && handleDeleteItem(itemToDelete.id)}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -3260,14 +3260,14 @@ export default function JobView({
       <Dialog open={!!invoiceToDelete} onOpenChange={(isOpen) => !isOpen && setInvoiceToDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Factura</DialogTitle>
+            <DialogTitle>Delete Invoice</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar la factura #{invoiceToDelete?.invoice_number}? Esta acción no se puede deshacer.
+              Are you sure you want to delete invoice #{invoiceToDelete?.invoice_number}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setInvoiceToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => invoiceToDelete && handleDeleteInvoice(invoiceToDelete.id)}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setInvoiceToDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => invoiceToDelete && handleDeleteInvoice(invoiceToDelete.id)}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -3288,14 +3288,14 @@ export default function JobView({
       <Dialog open={!!paymentToDelete} onOpenChange={(isOpen) => !isOpen && setPaymentToDelete(null)}>
         <DialogContent className="border-slate-200">
           <DialogHeader>
-            <DialogTitle>Eliminar Pago</DialogTitle>
+            <DialogTitle>Delete Payment</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar este pago de ${Number(paymentToDelete?.amount || 0).toLocaleString()}? Esta acción no se puede deshacer.
+              Are you sure you want to delete this payment of ${Number(paymentToDelete?.amount || 0).toLocaleString()}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setPaymentToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => paymentToDelete && handleDeletePayment(paymentToDelete.id)}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setPaymentToDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => paymentToDelete && handleDeletePayment(paymentToDelete.id)}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -3303,14 +3303,14 @@ export default function JobView({
       <Dialog open={!!expenseToDelete} onOpenChange={(isOpen) => !isOpen && setExpenseToDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Gasto</DialogTitle>
+            <DialogTitle>Delete Expense</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar el gasto "{expenseToDelete?.description || expenseToDelete?.place}"? Esta acción no se puede deshacer.
+              Are you sure you want to delete the expense "{expenseToDelete?.description || expenseToDelete?.place}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setExpenseToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => expenseToDelete && handleDeleteExpense(expenseToDelete.id)}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setExpenseToDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => expenseToDelete && handleDeleteExpense(expenseToDelete.id)}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -3318,14 +3318,14 @@ export default function JobView({
       <Dialog open={!!laborToDelete} onOpenChange={(isOpen) => !isOpen && setLaborToDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Labor</DialogTitle>
+            <DialogTitle>Delete Labor</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar esta entrada de labor para {laborToDelete?.user_name}? Esta acción no se puede deshacer.
+              Are you sure you want to delete this labor entry for {laborToDelete?.user_name}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setLaborToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => laborToDelete && handeDeleteLabor(laborToDelete.id)}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setLaborToDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => laborToDelete && handeDeleteLabor(laborToDelete.id)}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -3333,14 +3333,14 @@ export default function JobView({
       <Dialog open={!!taskToDelete} onOpenChange={(isOpen) => !isOpen && setTaskToDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Tarea</DialogTitle>
+            <DialogTitle>Delete Task</DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas eliminar la tarea "{taskToDelete?.title}"? Esta acción no se puede deshacer.
+              Are you sure you want to delete the task "{taskToDelete?.title}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setTaskToDelete(null)}>Cancelar</Button>
-            <Button variant="destructive" onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id)}>Eliminar</Button>
+            <Button variant="outline" onClick={() => setTaskToDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => taskToDelete && handleDeleteTask(taskToDelete.id)}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>

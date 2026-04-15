@@ -22,6 +22,7 @@ export default async function ProformaView({ params, searchParams }: Props) {
       *,
       users(*),
       clients (*),
+      proforma_items(*),
       applied_taxes:users (
       taxes (*)
     )
