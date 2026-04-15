@@ -32,6 +32,19 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: 'Quickqi | Quote & Invoicing',
   description: 'Quote & Invoicing for projects.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Quickqi',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport = {
+  themeColor: '#303030',
 };
 
 export default async function RootLayout({
