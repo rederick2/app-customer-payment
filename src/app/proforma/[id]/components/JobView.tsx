@@ -1166,7 +1166,7 @@ export default function JobView({
                 </Badge>
                 <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">REF: {String(proforma.number || proforma.id.split('-')[0]).toUpperCase()}</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">{proforma.project_name}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight">{proforma.project_name} - #{proforma.number}</h1>
               <div className="flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-2 text-sm text-muted-foreground font-medium">
                 <div className="flex items-center gap-2">
                   <UserIcon className="h-3.5 w-3.5 text-primary/60" />

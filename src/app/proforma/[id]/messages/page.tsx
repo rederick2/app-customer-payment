@@ -45,7 +45,7 @@ export default async function AdminProformaMessagesPage({ params }: Props) {
         <div>
           <h1 className="text-xl font-bold  text-foreground">{clientName}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Quote #{String(proforma.number || proforma.id.split('-')[0]).toUpperCase()} · {proforma.project_name}
+            {proforma.project_name} - #{proforma.number}
           </p>
         </div>
       </div>

@@ -22,7 +22,7 @@ export function RecentlyVisitedJobs() {
     try {
       const { data, error } = await supabase
         .from('proformas')
-        .select('id, project_name, status, created_at, clients ( name )')
+        .select('id, project_name, number, status, created_at, clients ( name )')
         .in('id', ids);
 
       if (error) throw error;
@@ -109,7 +109,7 @@ export function RecentlyVisitedJobs() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{job.project_name}</p>
+                    <p className="text-sm font-medium truncate">{job.project_name} - #{job.number}</p>
                     {statusBadge(job.status)}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">

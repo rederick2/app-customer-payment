@@ -116,7 +116,7 @@ export default function TimesheetAdminClient({ initialEntries, hasQuickbooks }: 
               </div>
               
               <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <span className="font-semibold">{entry.proformas?.project_name || 'General Task'}</span>
+                <span className="font-semibold">{entry.proformas ? `${entry.proformas.project_name} - #${entry.proformas.number}` : 'General Task'}</span>
                 <span>•</span>
                 <span>{new Date(entry.start_time).toLocaleDateString()}</span>
               </div>

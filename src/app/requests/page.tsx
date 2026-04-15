@@ -55,6 +55,7 @@ export default async function AdminRequestsView() {
       proformas!inner(
         id,
         project_name,
+        number,
         user_id,
         clients(
           name,
@@ -91,7 +92,7 @@ export default async function AdminRequestsView() {
                       <span className="truncate max-w-[200px] sm:max-w-none">{clientName}</span>
                       <span className="text-muted-foreground/40 font-normal">/</span>
                       <Link href={`/proforma/${request.proforma_id}`} className="hover:underline text-primary truncate max-w-[200px] sm:max-w-none">
-                        {(request.proformas as any).project_name}
+                        {(request.proformas as any).project_name} - #{(request.proformas as any).number}
                       </Link>
                     </CardTitle>
                     <p className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-tight">
