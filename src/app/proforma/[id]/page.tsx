@@ -62,7 +62,7 @@ export default async function ProformaView({ params, searchParams }: Props) {
 
   const { data: invoices } = await supabase
     .from('invoices')
-    .select('*')
+    .select('*, payments(*)')
     .eq('proforma_id', id)
     .order('created_at', { ascending: false });
 

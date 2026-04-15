@@ -42,6 +42,7 @@ export default async function ClientInvoicesView({ params }: Props) {
     .from('invoices')
     .select(`
       *,
+      payments(*),
       proformas (
         project_name
       )

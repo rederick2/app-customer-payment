@@ -8,7 +8,20 @@ import PhotoUploadModal from './components/PhotoUploadModal';
 import { Combobox } from '@/components/ui/combobox';
 import { Button } from '@/components/ui/button';
 
-interface Proforma { id: string; project_name: string; number: number }
+interface ClientInfo {
+  name?: string;
+  company_name?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+interface Proforma { 
+  id: string; 
+  project_name: string; 
+  number: number;
+  client_id?: string;
+  clients?: ClientInfo | ClientInfo[];
+}
 
 interface GalleryClientProps {
   initialPhotos: Photo[];
@@ -19,19 +32,37 @@ export default function GalleryClient({ initialPhotos, proformas }: GalleryClien
   const [photos, setPhotos] = React.useState<Photo[]>(initialPhotos);
   const [search, setSearch] = React.useState('');
   const [filterProject, setFilterProject] = React.useState('');
+  const [filterClient, setFilterClient] = React.useState('');
   const [filterVisibility, setFilterVisibility] = React.useState<'all' | 'public' | 'private'>('all');
   const [lightbox, setLightbox] = React.useState<Photo | null>(null);
   const [lightboxIdx, setLightboxIdx] = React.useState(0);
+
+  const uniqueClients = React.useMemo(() => {
+    const map = new Map<string, { value: string; label: string }>();
+    proformas.forEach(p => {
+      if (p.client_id && p.clients) {
+        if (!map.has(p.client_id)) {
+          const clientData = Array.isArray(p.clients) ? p.clients[0] : p.clients;
+          const label = clientData.company_name || 
+            [clientData.first_name, clientData.last_name].filter(Boolean).join(' ') || 
+            clientData.name || 'Unknown Client';
+          map.set(p.client_id, { value: p.client_id, label });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [proformas]);
 
   const filtered = React.useMemo(() => {
     return photos.filter(p => {
       const matchSearch = !search || [p.caption, p.overlay_text, p.proformas?.project_name]
         .some(s => s?.toLowerCase().includes(search.toLowerCase()));
-      const matchProject = !filterProject || p.proformas?.project_name === filterProject;
+      const matchProject = !filterProject || p.proformas?.id === filterProject;
+      const matchClient = !filterClient || p.proformas?.client_id === filterClient;
       const matchVis = filterVisibility === 'all' || (filterVisibility === 'public' ? p.is_public : !p.is_public);
-      return matchSearch && matchProject && matchVis;
+      return matchSearch && matchProject && matchClient && matchVis;
     });
-  }, [photos, search, filterProject, filterVisibility]);
+  }, [photos, search, filterProject, filterClient, filterVisibility]);
 
   const openLightbox = (photo: Photo) => {
     const idx = filtered.findIndex(p => p.id === photo.id);
@@ -80,7 +111,22 @@ export default function GalleryClient({ initialPhotos, proformas }: GalleryClien
           />
         </div>
 
-        <div className="w-full sm:w-[260px]">
+        <div className="w-full sm:w-[220px]">
+          <Combobox
+            options={[
+              { value: '', label: 'All Clients' },
+              ...uniqueClients
+            ]}
+            value={filterClient}
+            onValueChange={setFilterClient}
+            placeholder="Filter by client..."
+            searchPlaceholder="Search clients..."
+            className="w-full h-11 sm:h-10 rounded-xl"
+            modal={true}
+          />
+        </div>
+
+        <div className="w-full sm:w-[240px]">
           <Combobox
             options={[
               { value: '', label: 'All Projects' },

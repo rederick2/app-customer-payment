@@ -66,7 +66,7 @@ export default function ScheduleJobModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-primary" />
-              Programar Job
+              Schedule Job
             </DialogTitle>
             <DialogDescription>
               Define dates and times for the project: <strong>{projectName}</strong>
