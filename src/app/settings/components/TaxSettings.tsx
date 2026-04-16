@@ -129,7 +129,7 @@ export default function TaxSettings({ initialTaxes }: { initialTaxes: any[] }) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-xl border-border/50">
         <CardHeader>
           <CardTitle>Current Taxes</CardTitle>
         </CardHeader>
@@ -137,41 +137,43 @@ export default function TaxSettings({ initialTaxes }: { initialTaxes: any[] }) {
           {taxes.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">No taxes configured.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Percentage</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {taxes.map((tax) => (
-                  <TableRow key={tax.id}>
-                    <TableCell className="font-medium">{tax.name}</TableCell>
-                    <TableCell>{tax.percentage}%</TableCell>
-                    <TableCell className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleStartEditing(tax)}
-                        className="text-primary hover:text-primary hover:bg-primary/10"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteTax(tax.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto rounded-xl border border-border/50">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[150px]">Name</TableHead>
+                    <TableHead className="min-w-[100px]">Percentage</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {taxes.map((tax) => (
+                    <TableRow key={tax.id}>
+                      <TableCell className="font-medium">{tax.name}</TableCell>
+                      <TableCell>{tax.percentage}%</TableCell>
+                      <TableCell className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleStartEditing(tax)}
+                          className="text-primary hover:text-primary hover:bg-primary/10"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteTax(tax.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
