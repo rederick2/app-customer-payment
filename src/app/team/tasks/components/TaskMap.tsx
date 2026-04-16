@@ -10,9 +10,13 @@ interface MarkerLocation {
   index: number;
 }
 
+import { Maximize, Target } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 interface TaskMapProps {
   locations: MarkerLocation[];
   onSelectMarker?: (index: number) => void;
+  activeIndex?: number | null;
 }
 
 declare global {
@@ -22,11 +26,18 @@ declare global {
   }
 }
 
-export default function TaskMap({ locations, onSelectMarker }: TaskMapProps) {
+export default function TaskMap({ locations, onSelectMarker, activeIndex: externalActiveIndex }: TaskMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  // Sync internal activeIndex with external prop
+  useEffect(() => {
+    if (externalActiveIndex !== undefined) {
+      setActiveIndex(externalActiveIndex);
+    }
+  }, [externalActiveIndex]);
 
   useEffect(() => {
     if (!locations.length) return;
@@ -121,8 +132,10 @@ export default function TaskMap({ locations, onSelectMarker }: TaskMapProps) {
     }
   }, [locations]);
 
-  // Highlight marker when active changes externally
+  // Highlight marker and center when active changes
   useEffect(() => {
+    if (!markersRef.current.length) return;
+
     markersRef.current.forEach(({ marker, infoWindow }, i) => {
       if (i === activeIndex) {
         marker.setIcon({
@@ -133,7 +146,16 @@ export default function TaskMap({ locations, onSelectMarker }: TaskMapProps) {
           strokeColor: '#ffffff',
           strokeWeight: 3,
         });
+        marker.setZIndex(1000);
         infoWindow.open(mapInstance.current, marker);
+        
+        // Center the map on the active marker
+        if (mapInstance.current) {
+          mapInstance.current.panTo(marker.getPosition());
+          if (mapInstance.current.getZoom() < 14) {
+            mapInstance.current.setZoom(14);
+          }
+        }
       } else {
         marker.setIcon({
           path: window.google?.maps?.SymbolPath?.CIRCLE,
@@ -143,17 +165,34 @@ export default function TaskMap({ locations, onSelectMarker }: TaskMapProps) {
           strokeColor: '#ffffff',
           strokeWeight: 2.5,
         });
+        marker.setZIndex(1);
       }
     });
   }, [activeIndex]);
 
-  if (!locations.length) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-muted/20 rounded-xl">
-        <p className="text-muted-foreground text-sm">No locations to display</p>
-      </div>
-    );
-  }
+  const handleResetView = () => {
+    if (!mapInstance.current || !locations.length) return;
+    const bounds = new window.google.maps.LatLngBounds();
+    locations.forEach(loc => bounds.extend({ lat: loc.lat, lng: loc.lng }));
+    mapInstance.current.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
+    setActiveIndex(null);
+    onSelectMarker?.(-1); // Signal parent to clear selection if needed
+  };
 
-  return <div ref={mapRef} className="w-full h-full rounded-xl" />;
+  return (
+    <div className="w-full h-full relative">
+      <div ref={mapRef} className="w-full h-full rounded-xl" />
+      
+      {/* Reset View Button */}
+      {locations.length > 0 && (
+        <button
+          onClick={handleResetView}
+          className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm border border-border/40 p-2.5 rounded-xl shadow-lg hover:bg-white transition-all hover:scale-105 group"
+          title="Reset View"
+        >
+          <Maximize className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+        </button>
+      )}
+    </div>
+  );
 }

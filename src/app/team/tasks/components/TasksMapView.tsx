@@ -191,13 +191,17 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry 
   }));
 
   const handleMapSelect = (index: number) => {
+    if (index === -1) {
+      setActiveGroupIndex(null);
+      return;
+    }
     setActiveGroupIndex(index);
     setExpandedGroups(p => ({ ...p, [index]: true }));
     cardRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   return (
-    <div className="flex flex-col lg:flex-row bg-[#f8fafc]" style={{ height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
+    <div className="flex flex-col lg:flex-row" style={{ height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
 
       {/* Left panel */}
       <div className="w-full lg:w-[400px] lg:min-w-[400px] flex flex-col border-b lg:border-b-0 lg:border-r border-border/30 bg-white" style={{ maxHeight: '95vh', minHeight: 0 }}>
@@ -224,17 +228,18 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry 
               return (
                 <div key={group.address}
                   ref={el => { cardRefs.current[gi] = el; }}
-                  className={cn("rounded-xl border overflow-visible transition-all duration-200",
-                    isActive ? 'ring-2 ring-emerald-400/40 border-emerald-400 shadow-md' : 'border-border/30 hover:border-border/60 hover:shadow-sm'
+                  className={cn("rounded-xl border transition-all duration-200",
+                    isActive ? 'ring-2 ring-primary/30 border-primary/40 shadow-md' : 'border-border/30 hover:border-border/60 hover:shadow-sm'
                   )}>
+                  <div className="rounded-[inherit] overflow-hidden">
 
                   {/* Header */}
                   <div onClick={() => setActiveGroupIndex(gi)}
                     className={cn("px-3 py-2.5 cursor-pointer flex items-start gap-2",
-                      isActive ? 'bg-emerald-50' : 'bg-muted/10 hover:bg-muted/20'
+                      isActive ? 'bg-primary/10' : 'bg-muted/10 hover:bg-muted/20'
                     )}>
                     <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0 mt-0.5",
-                      isActive ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                      isActive ? 'bg-primary' : 'bg-muted-foreground/30'
                     )}>
                       {gi + 1}
                     </div>
@@ -347,7 +352,8 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry 
                         </div>
                       ))}
                     </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })
@@ -358,7 +364,11 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry 
       {/* Map */}
       <div className="flex-1 relative overflow-hidden" style={{ minHeight: '300px' }}>
         {locations.length > 0 ? (
-          <TaskMap locations={locations} onSelectMarker={handleMapSelect} />
+          <TaskMap
+            locations={locations}
+            onSelectMarker={handleMapSelect}
+            activeIndex={activeGroupIndex}
+          />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-muted/10 text-muted-foreground gap-3">
             <MapPin className="h-12 w-12 opacity-20" />

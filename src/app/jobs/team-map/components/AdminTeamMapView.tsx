@@ -264,6 +264,10 @@ export default function AdminTeamMapView({
   };
 
   const handleMapSelect = (index: number) => {
+    if (index === -1) {
+      setActiveGroupIndex(null);
+      return;
+    }
     setActiveGroupIndex(index);
     setExpandedGroups(p => ({ ...p, [index]: true }));
     cardRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -382,96 +386,98 @@ export default function AdminTeamMapView({
                 return (
                   <div key={group.address}
                     ref={el => { cardRefs.current[gi] = el; }}
-                    className={cn("rounded-xl border overflow-hidden transition-all duration-200",
+                    className={cn("rounded-xl border transition-all duration-200",
                       isActive ? 'ring-2 ring-primary/30 border-primary/40 shadow-md' : 'border-border/30 hover:border-border/60 hover:shadow-sm'
                     )}>
+                    <div className="rounded-[inherit] overflow-hidden">
 
-                    {/* Group header */}
-                    <div onClick={() => setActiveGroupIndex(gi)}
-                      className={cn("px-3 py-2.5 cursor-pointer flex items-start gap-2.5",
-                        isActive ? 'bg-primary/5' : 'bg-muted/10 hover:bg-muted/20'
-                      )}>
-                      <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-[12px] font-bold text-white shrink-0 mt-0.5">
-                        {gi + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-foreground truncate">{group.clientName || 'Client'}</p>
-                        <div className="flex items-start gap-1 mt-0.5">
-                          <MapPin className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
-                          <p className="text-xs text-muted-foreground leading-relaxed">{group.address}</p>
+                      {/* Group header */}
+                      <div onClick={() => setActiveGroupIndex(gi)}
+                        className={cn("px-3 py-2.5 cursor-pointer flex items-start gap-2.5",
+                          isActive ? 'bg-primary/5' : 'bg-muted/10 hover:bg-muted/20'
+                        )}>
+                        <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-[12px] font-bold text-white shrink-0 mt-0.5">
+                          {gi + 1}
                         </div>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          {group.phone && (
-                            <a href={`tel:${group.phone}`} onClick={e => e.stopPropagation()}
-                              className="text-[11px] font-semibold text-blue-600 hover:underline">{group.phone}</a>
-                          )}
-                          <a href={buildGMapsUrl(group.address)} target="_blank" rel="noopener noreferrer"
-                            onClick={e => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:underline">
-                            <ExternalLink className="h-2.5 w-2.5" />Google Maps
-                          </a>
-                        </div>
-                        {assigneeIds.length > 0 && (
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {assigneeIds.map(mid => (
-                              <div key={mid} className="flex items-center gap-1">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: memberColorMap[mid] || '#94a3b8' }} />
-                                <span className="text-[10px] text-muted-foreground">{getMemberName(mid)}</span>
-                              </div>
-                            ))}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm text-foreground truncate">{group.clientName || 'Client'}</p>
+                          <div className="flex items-start gap-1 mt-0.5">
+                            <MapPin className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                            <p className="text-xs text-muted-foreground leading-relaxed">{group.address}</p>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className="text-[11px] font-bold bg-muted rounded-full px-2 py-0.5">
-                          {group.items.length} item{group.items.length !== 1 ? 's' : ''}
-                        </span>
-                        <button onClick={e => { e.stopPropagation(); setExpandedGroups(p => ({ ...p, [gi]: !p[gi] })); }}
-                          className="text-muted-foreground hover:text-foreground p-0.5 transition-colors">
-                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Expanded items */}
-                    {isExpanded && (
-                      <div className="border-t border-border/20 divide-y divide-border/10">
-                        {group.items.map((item: any) => {
-                          const color = item.assigned_to ? memberColorMap[item.assigned_to] : '#94a3b8';
-                          const isVisit = !!item.visit_date;
-                          const date = getItemDate(item);
-                          return (
-                            <div key={item.id} className="px-4 py-2.5 bg-white space-y-1.5">
-                              <div className="flex items-center gap-2">
-                                {isVisit
-                                  ? <Eye className="h-3.5 w-3.5 text-teal-500 shrink-0" />
-                                  : <Check className="h-3.5 w-3.5 text-orange-500 shrink-0" />}
-                                <span className="text-sm font-bold text-foreground truncate flex-1">{getItemTitle(item)}</span>
-                                <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-bold shrink-0">
-                                  {item.status?.replace('_', ' ')}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-xs">
-                                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                                <span className="font-semibold" style={{ color }}>{getMemberName(item.assigned_to)}</span>
-                              </div>
-                              {item.proformas?.project_name && (
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <FileText className="h-3 w-3 shrink-0" />
-                                  <span className="truncate">{item.proformas.project_name}{item.proformas.number ? ` · #${item.proformas.number}` : ''}</span>
+                          <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            {group.phone && (
+                              <a href={`tel:${group.phone}`} onClick={e => e.stopPropagation()}
+                                className="text-[11px] font-semibold text-blue-600 hover:underline">{group.phone}</a>
+                            )}
+                            <a href={buildGMapsUrl(group.address)} target="_blank" rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:underline">
+                              <ExternalLink className="h-2.5 w-2.5" />Google Maps
+                            </a>
+                          </div>
+                          {assigneeIds.length > 0 && (
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {assigneeIds.map(mid => (
+                                <div key={mid} className="flex items-center gap-1">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: memberColorMap[mid] || '#94a3b8' }} />
+                                  <span className="text-[10px] text-muted-foreground">{getMemberName(mid)}</span>
                                 </div>
-                              )}
-                              {date && (
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <Calendar className="h-3 w-3 shrink-0" />
-                                  <span>{new Date(date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                                </div>
-                              )}
+                              ))}
                             </div>
-                          );
-                        })}
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className="text-[11px] font-bold bg-muted rounded-full px-2 py-0.5">
+                            {group.items.length} item{group.items.length !== 1 ? 's' : ''}
+                          </span>
+                          <button onClick={e => { e.stopPropagation(); setExpandedGroups(p => ({ ...p, [gi]: !p[gi] })); }}
+                            className="text-muted-foreground hover:text-foreground p-0.5 transition-colors">
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
-                    )}
+
+                      {/* Expanded items */}
+                      {isExpanded && (
+                        <div className="border-t border-border/20 divide-y divide-border/10">
+                          {group.items.map((item: any) => {
+                            const color = item.assigned_to ? memberColorMap[item.assigned_to] : '#94a3b8';
+                            const isVisit = !!item.visit_date;
+                            const date = getItemDate(item);
+                            return (
+                              <div key={item.id} className="px-4 py-2.5 bg-white space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  {isVisit
+                                    ? <Eye className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                                    : <Check className="h-3.5 w-3.5 text-orange-500 shrink-0" />}
+                                  <span className="text-sm font-bold text-foreground truncate flex-1">{getItemTitle(item)}</span>
+                                  <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-bold shrink-0">
+                                    {item.status?.replace('_', ' ')}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-xs">
+                                  <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                  <span className="font-semibold" style={{ color }}>{getMemberName(item.assigned_to)}</span>
+                                </div>
+                                {item.proformas?.project_name && (
+                                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <FileText className="h-3 w-3 shrink-0" />
+                                    <span className="truncate">{item.proformas.project_name}{item.proformas.number ? ` · #${item.proformas.number}` : ''}</span>
+                                  </div>
+                                )}
+                                {date && (
+                                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <Calendar className="h-3 w-3 shrink-0" />
+                                    <span>{new Date(date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })
@@ -487,7 +493,11 @@ export default function AdminTeamMapView({
               <p className="font-semibold text-sm">Assign items to see them on the map</p>
             </div>
           ) : locations.length > 0 ? (
-            <TaskMap locations={locations} onSelectMarker={handleMapSelect} />
+            <TaskMap
+              locations={locations}
+              onSelectMarker={handleMapSelect}
+              activeIndex={activeGroupIndex}
+            />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center bg-muted/10 text-muted-foreground gap-3">
               <MapPin className="h-12 w-12 opacity-20" />
@@ -497,7 +507,7 @@ export default function AdminTeamMapView({
           )}
 
           {/* Legend */}
-          {selectedMemberId !== 'unassigned' && teamMembers.length > 0 && locations.length > 0 && (
+          {/*selectedMemberId !== 'unassigned' && teamMembers.length > 0 && locations.length > 0 && (
             <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm border border-border/40 rounded-xl px-3 py-2.5 shadow-lg text-xs flex flex-col gap-1.5 max-w-[200px]">
               <p className="font-bold text-foreground/60 uppercase tracking-wider text-[10px]">Team</p>
               {teamMembers.map((m, i) => {
@@ -511,7 +521,7 @@ export default function AdminTeamMapView({
                 );
               })}
             </div>
-          )}
+          )*/}
         </div>
       </div>
     </div>
