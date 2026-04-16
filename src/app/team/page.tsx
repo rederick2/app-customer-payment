@@ -10,7 +10,7 @@ export default async function TeamDashboardPage() {
   const { data: teamMember } = await supabase
     .from('team_members')
     .select('*, auth_user_id')
-    .eq('auth_user_id', user?.id)
+    //.eq('auth_user_id', user?.id)
     .single();
 
   if (!teamMember) return <div>Auth error</div>;

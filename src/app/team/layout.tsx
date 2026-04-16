@@ -1,26 +1,23 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
-import { Clock, CheckSquare, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
+// user_type: 0 = admin, 1 = regular user, 2 = team member
+const USER_TYPE_TEAM = 2;
 
 export default async function TeamLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect('/login');
-  }
+  if (!user) redirect('/login');
 
-  // Check if they are a team member
-  const { data: teamMember } = await supabase
-    .from('team_members')
-    .select('*')
-    .eq('auth_user_id', user.id)
+  const { data: profile } = await supabase
+    .from('users')
+    .select('user_type')
+    .eq('id', user.id)
     .single();
 
-  if (!teamMember) {
-    // If not a team member, redirect to main app maybe they are admin
+  // If not a team member, send them to the main admin app
+  if (profile?.user_type !== USER_TYPE_TEAM) {
     redirect('/');
   }
 

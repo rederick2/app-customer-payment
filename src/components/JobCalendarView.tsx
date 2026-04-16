@@ -341,83 +341,96 @@ export default function JobCalendarView({ jobs: initialJobs, teamMembers, tasks:
 
   return (
     <div className="flex flex-col h-full bg-background border border-border/50 rounded-xl overflow-hidden animate-in fade-in duration-500">
-      <header className="flex flex-col p-4 bg-card border-b border-border/40 gap-4">
-        {/* Top Row: Date and Main Controls */}
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          <div className="flex items-center gap-2 shrink-0">
-            <h2 className="text-lg md:text-xl font-bold whitespace-nowrap">
-              {format(currentDate, 'MMMM yyyy', { locale: enUS }).replace(/^\w/, (c) => c.toUpperCase())}
-            </h2>
-            <div className="flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/50 shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md" onClick={prev}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-md" onClick={next}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button variant="outline" size="sm" className="h-8 md:h-9 font-medium px-3" onClick={goToToday}>
-              Today
+      <header className="flex items-center justify-between gap-2 px-4 py-3 bg-card border-b border-border/40 flex-wrap">
+
+        {/* Left: Date + Navigation */}
+        <div className="flex items-center gap-2 shrink-0">
+          <h2 className="text-base md:text-lg font-bold whitespace-nowrap min-w-[110px]">
+            {format(currentDate, 'MMMM yyyy', { locale: enUS }).replace(/^\w/, (c) => c.toUpperCase())}
+          </h2>
+          <div className="flex items-center bg-muted/30 rounded-xl p-0.5 border border-border/50">
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-xl" onClick={prev}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-xl" onClick={next}>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-
-          <div className="flex items-center gap-2">
-            {/* Desktop Create Button */}
-            <Button
-              className="bg-[#306C3E] hover:bg-[#265832] text-white h-9 font-semibold gap-2 hidden sm:flex"
-              onClick={() => setIsAddingVisit(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Create Visit
-            </Button>
-
-            {/* Mobile Actions Dropdown */}
-            <div className="sm:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className={cn(
-                    buttonVariants({ variant: 'outline', size: 'icon' }),
-                    "h-9 w-9 text-white border-none shadow-md hover:bg-[#265832] transition-colors"
-                  )}
-                >
-                  <Plus className="h-5 w-5" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 p-2 z-[100]">
-                  <DropdownMenuItem onClick={() => setIsAddingVisit(true)} className="font-bold py-2.5 cursor-pointer">
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Visit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={goToToday} className="font-bold py-2.5 cursor-pointer">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    Go to Today
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+          <Button variant="outline" size="sm" className="h-8 text-xs font-bold px-3 rounded-xl" onClick={goToToday}>
+            Today
+          </Button>
         </div>
 
-        {/* View Toggles Section */}
-        <div className="flex items-center justify-center sm:justify-start">
-          <div className="flex items-center bg-muted/30 rounded-xl p-1 border border-border/50 w-full sm:w-auto">
-            {[
-              { label: 'Month', value: 'month' },
-              { label: 'Week', value: 'week' },
-              { label: 'Day', value: 'day' }
-            ].map((v) => (
-              <Button
-                key={v.value}
-                variant={view === v.value ? 'secondary' : 'ghost'}
-                size="sm"
+        {/* Center: View toggles */}
+        <div className="flex items-center bg-muted/30 rounded-xl p-0.5 border border-border/50">
+          {(['month', 'week', 'day'] as const).map((v) => (
+            <Button
+              key={v}
+              variant={view === v ? 'secondary' : 'ghost'}
+              size="sm"
+              className={cn(
+                "h-8 px-4 text-xs font-bold rounded-xl capitalize transition-all",
+                view === v && "bg-background shadow-sm border border-border/20 text-foreground"
+              )}
+              onClick={() => setView(v)}
+            >
+              {v.charAt(0).toUpperCase() + v.slice(1)}
+            </Button>
+          ))}
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
+          {/* Team Map button */}
+          <a
+            href="/jobs/team-map"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              "h-8 text-xs font-bold gap-1.5 rounded-xl border-border/50 hidden sm:flex"
+            )}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            Team Map
+          </a>
+
+          {/* Create Visit - desktop */}
+          <Button
+            size="sm"
+            className="bg-[#306C3E] hover:bg-[#265832] text-white h-8 font-bold gap-1.5 rounded-xl hidden sm:flex"
+            onClick={() => setIsAddingVisit(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Create Visit
+          </Button>
+
+          {/* Mobile dropdown */}
+          <div className="sm:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger
                 className={cn(
-                  "flex-1 sm:flex-none h-9 px-6 text-xs font-bold rounded-lg transition-all",
-                  view === v.value && "bg-background shadow-sm border border-border/20 text-foreground"
+                  buttonVariants({ variant: 'outline', size: 'icon' }),
+                  "h-8 w-8 rounded-xl"
                 )}
-                onClick={() => setView(v.value as any)}
               >
-                {v.label}
-              </Button>
-            ))}
+                <Plus className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 p-2 z-[100]">
+                <DropdownMenuItem onClick={() => setIsAddingVisit(true)} className="font-bold py-2.5 cursor-pointer rounded-xl">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Visit
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="font-bold py-2.5 cursor-pointer rounded-xl">
+                  <a href="/jobs/team-map">
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Team Map
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={goToToday} className="font-bold py-2.5 cursor-pointer rounded-xl">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  Go to Today
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

@@ -57,25 +57,20 @@ export default async function RootLayout({
   let userProfile: { displayName: string | null, email: string | null, phone: string | null } | null = null;
   let isTeamMember = false;
   if (user) {
-    const { data: profile } = await supabase.from('users').select('display_name, email, phone').eq('id', user.id).single();
+    const { data: profile } = await supabase
+      .from('users')
+      .select('display_name, email, phone, user_type')
+      .eq('id', user.id)
+      .single();
+
     userProfile = {
       displayName: profile?.display_name || user.email?.split('@')[0] || null,
       email: profile?.email || user.email || null,
       phone: profile?.phone || null
     };
 
-    const { data: teamMemberData } = await supabase
-      .from('team_members')
-      .select('id, name')
-      .eq('auth_user_id', user.id)
-      .single();
-
-    if (teamMemberData) {
-      isTeamMember = true;
-      if (userProfile) {
-        userProfile.displayName = teamMemberData.name;
-      }
-    }
+    // user_type: 0 = admin, 1 = regular user, 2 = team member
+    isTeamMember = profile?.user_type === 2;
   }
 
   // Count unread messages from clients across all proformas
