@@ -28,28 +28,30 @@ export default function SettingsClient({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="profile" className="flex items-center space-x-2">
-            <User className="h-4 w-4" />
-            <span>Profile</span>
-          </TabsTrigger>
-          <TabsTrigger value="payment" className="flex items-center space-x-2">
-            <CreditCard className="h-4 w-4" />
-            <span>Payment</span>
-          </TabsTrigger>
-          <TabsTrigger value="taxes" className="flex items-center space-x-2">
-            <Percent className="h-4 w-4" />
-            <span>Taxes</span>
-          </TabsTrigger>
-          <TabsTrigger value="team" className="flex items-center space-x-2">
-            <Users className="h-4 w-4" />
-            <span>Team Members</span>
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="flex items-center space-x-2">
-            <Share2 className="h-4 w-4" />
-            <span>Integrations</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+          <TabsList className="bg-muted/50 p-1 inline-flex w-max min-w-full md:w-full md:flex justify-start md:justify-center rounded-xl">
+            <TabsTrigger value="profile" className="flex items-center space-x-2 rounded-xl">
+              <User className="h-4 w-4" />
+              <span>Profile</span>
+            </TabsTrigger>
+            <TabsTrigger value="payment" className="flex items-center space-x-2 rounded-xl">
+              <CreditCard className="h-4 w-4" />
+              <span>Payment</span>
+            </TabsTrigger>
+            <TabsTrigger value="taxes" className="flex items-center space-x-2 rounded-xl">
+              <Percent className="h-4 w-4" />
+              <span>Taxes</span>
+            </TabsTrigger>
+            <TabsTrigger value="team" className="flex items-center space-x-2 rounded-xl">
+              <Users className="h-4 w-4" />
+              <span>Team Members</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center space-x-2 rounded-xl">
+              <Share2 className="h-4 w-4" />
+              <span>Integrations</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="profile">
           <ProfileForm initialData={initialProfile} />

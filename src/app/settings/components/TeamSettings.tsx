@@ -116,16 +116,16 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
   };
 
   return (
-    <Card className="border-border/50 shadow-md">
+    <Card className="border-border/50 rounded-xl">
       <CardHeader className="bg-muted/10 border-b border-border/50 pb-6">
-        <CardTitle className="text-xl  text-[#0D3B47]">Team Members</CardTitle>
+        <CardTitle className="text-xl text-[#0D3B47]">Team Members</CardTitle>
         <CardDescription className="text-muted-foreground/80 pt-1">
           Manage your employees and contractors. Defining their standard hourly costs here automatically speeds up job time entries.
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-8">
+      <CardContent className="p-4 md:p-8">
         {/* ADD NEW MEMBER */}
-        <form onSubmit={handleAddMember} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8 bg-muted/20 p-6 rounded-3xl border border-border/40 shadow-sm animate-in fade-in zoom-in-95 duration-300">
+        <form onSubmit={handleAddMember} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8 bg-muted/20 p-6 rounded-xl border border-border/40 animate-in fade-in zoom-in-95 duration-300">
           <div className="space-y-1 md:col-span-1">
             <Label htmlFor="name" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Name</Label>
             <Input id="name" name="name" placeholder="John Doe" className="bg-background font-medium h-10 transition-colors focus:border-primary/50" required />
@@ -143,21 +143,114 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
             <Input id="hourly_cost" name="hourly_cost" type="number" step="0.01" min="0" placeholder="25.00" className="bg-background h-10 font-mono" required />
           </div>
           <div className="flex items-end justify-center md:justify-end md:col-span-1 pt-4 md:pt-0">
-            <Button type="submit" className="w-full shadow-lg" disabled={isSubmitting}>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="mr-2 h-4 w-4" /> Add Team Member</>}
             </Button>
           </div>
         </form>
 
-        <div className="rounded-xl border border-border/50 overflow-hidden bg-background">
+        {/* MOBILE CARD VIEW */}
+        <div className="md:hidden space-y-4">
+          {members.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground bg-muted/5 italic border border-dashed border-border/50 rounded-xl">
+              No team members found. Add one above to get started.
+            </div>
+          ) : members.map((member) => (
+            <div key={member.id} className="bg-muted/10 border border-border/50 rounded-xl overflow-hidden transition-all">
+              {editingId === member.id ? (
+                <form onSubmit={(e) => handleUpdateMember(e, member.id)} className="p-4 space-y-4 bg-primary/5 animate-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Name</Label>
+                    <Input name="name" defaultValue={member.name} className="h-10" required />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">Role</Label>
+                      <Input name="role" defaultValue={member.role} className="h-10" placeholder="Role" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">Hourly Cost ($)</Label>
+                      <Input name="hourly_cost" type="number" step="0.01" min="0" defaultValue={member.hourly_cost} className="h-10 font-mono" required />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-bold uppercase text-muted-foreground">Email</Label>
+                    <Input name="email" type="email" defaultValue={member.email} className="h-10" placeholder="Email" />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditingId(null)} className="h-10 px-4">
+                      Cancel
+                    </Button>
+                    <Button type="submit" size="sm" className="h-10 px-6 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Changes'}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="p-4 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-archivo font-bold text-lg text-[#0D3B47] uppercase tracking-tight">{member.name}</h4>
+                      <p className="text-sm text-muted-foreground font-medium">{member.role || 'No role defined'}</p>
+                    </div>
+                    <div className="flex gap-1.5 pt-1">
+                      {member.auth_user_id ? (
+                        <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-black uppercase bg-emerald-500/10 px-2 py-1 rounded-md">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Active
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] font-black uppercase bg-muted/50 px-2 py-1 rounded-md">
+                          Pending
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 py-2 border-y border-border/40">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-wider">Email</p>
+                      <p className="text-xs font-medium truncate">{member.email || '-'}</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-wider">Hourly Cost</p>
+                      <p className="text-sm font-mono font-bold text-[#0D3B47]">${Number(member.hourly_cost || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center gap-2 pt-1">
+                    <div className="flex gap-2">
+                      {!member.auth_user_id && (
+                        <Button variant="outline" size="sm" onClick={() => handleGenerateInvite(member.id, member.email)} className="h-9 px-3 text-blue-600 hover:bg-blue-50">
+                          <LinkIcon className="h-3.5 w-3.5 mr-2" /> Invite
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setEditingId(member.id)} className="h-9 w-9 p-0 text-muted-foreground hover:text-primary">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDeleteMember(member.id)} className="h-9 w-9 p-0 text-destructive/70 hover:text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* DESKTOP TABLE VIEW */}
+        <div className="hidden md:block rounded-xl border border-border/50 overflow-x-auto bg-background">
           <table className="w-full text-sm text-left align-middle border-collapse">
             <thead className="text-xs uppercase bg-muted/30 text-muted-foreground font-semibold border-b border-border/50">
               <tr>
-                <th className="px-5 py-4">Name</th>
-                <th className="px-5 py-4">Role</th>
-                <th className="px-5 py-4">Email</th>
-                <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4 text-right">Actions</th>
+                <th className="px-5 py-4 min-w-[150px]">Name</th>
+                <th className="px-5 py-4 min-w-[120px]">Role</th>
+                <th className="px-5 py-4 min-w-[180px]">Email</th>
+                <th className="px-5 py-4 min-w-[100px]">Status</th>
+                <th className="px-5 py-4 text-right min-w-[120px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
@@ -196,7 +289,7 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
                     </td>
                   ) : (
                     <>
-                      <td className="px-5 py-4 font-bold text-[#0D3B47]">{member.name}</td>
+                      <td className="px-5 py-4 font-bold text-[#0D3B47] uppercase tracking-tighter">{member.name}</td>
                       <td className="px-5 py-4 text-muted-foreground">{member.role || '-'}</td>
                       <td className="px-5 py-4 text-muted-foreground/80 text-xs truncate max-w-[200px]">{member.email || '-'}</td>
                       <td className="px-5 py-4 text-center">
@@ -256,7 +349,7 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
                 className="font-mono text-[10px] h-12 bg-muted/20 border-border/40 rounded-xl"
               />
             </div>
-            <Button type="button" className="px-6 h-12 shadow-xl" onClick={() => {
+            <Button type="button" className="px-6 h-12" onClick={() => {
               navigator.clipboard.writeText(currentInviteLink);
               toast.success('Link copied to clipboard');
             }}>

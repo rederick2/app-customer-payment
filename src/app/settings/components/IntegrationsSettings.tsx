@@ -38,7 +38,7 @@ export default function IntegrationsSettings() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-border/50 shadow-sm overflow-hidden">
+      <Card className="border-border/50 rounded-xl overflow-hidden">
         <CardHeader className="border-b border-border/40 bg-muted/20">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -92,7 +92,7 @@ export default function IntegrationsSettings() {
                     <p className="text-[10px] text-center text-muted-foreground italic">Connected to realm: {qbo.realm_id}</p>
                   </div>
                 ) : (
-                  <Button onClick={handleConnectQBO} className="rounded-xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 px-8 h-11">
+                  <Button onClick={handleConnectQBO} className="rounded-xl font-bold bg-primary hover:bg-primary/90 px-8 h-11">
                     Connect to QuickBooks
                   </Button>
                 )}
@@ -102,7 +102,7 @@ export default function IntegrationsSettings() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/50 shadow-sm opacity-50 grayscale cursor-not-allowed">
+      <Card className="border-border/50 rounded-xl opacity-50 grayscale cursor-not-allowed">
         <CardHeader>
           <CardTitle className="text-lg">Stripe (Coming Soon)</CardTitle>
           <CardDescription>Accept online payments and sync transactions.</CardDescription>

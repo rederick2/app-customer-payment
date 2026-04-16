@@ -71,7 +71,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
   };
 
   return (
-    <Card className="border-border/50 shadow-sm">
+    <Card className="border-border/50 rounded-xl">
       <CardHeader>
         <CardTitle className="">Profile Information</CardTitle>
         <CardDescription>
@@ -84,7 +84,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
           <div className="space-y-4 pb-4 border-b border-border/50">
             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Company Logo</Label>
             <div className="flex items-center gap-6">
-              <div className="relative h-28 w-28 rounded-[2rem] border-2 border-dashed border-border/40 bg-muted/20 flex items-center justify-center overflow-hidden group transition-all hover:border-primary/30">
+              <div className="relative h-28 w-28 rounded-xl border-2 border-dashed border-border/40 bg-muted/20 flex items-center justify-center overflow-hidden group transition-all hover:border-primary/30">
                 {logoPreview ? (
                   <>
                     <img src={logoPreview} alt="Logo" className="h-full w-full object-contain p-3" />
@@ -250,7 +250,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-dashed border-border/60 bg-muted/5 p-4 md:p-8 transition-all relative overflow-hidden group">
+              <div className="rounded-xl border border-dashed border-border/60 bg-muted/5 p-4 md:p-8 transition-all relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="text-[10px] bg-primary/10 text-primary-foreground px-2 py-1 rounded-full font-bold uppercase tracking-widest">PDF Preview</div>
                 </div>
@@ -284,7 +284,7 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-10 h-12 bg-primary hover:bg-primary/90 rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 active:scale-[0.98] transition-all"
+            className="w-full sm:w-auto px-10 h-12 bg-primary hover:bg-primary/90 rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all"
           >
             {loading && <Loader2 className="mr-3 h-4 w-4 animate-spin" />}
             {loading ? 'Saving Changes...' : 'Save Profile Settings'}
