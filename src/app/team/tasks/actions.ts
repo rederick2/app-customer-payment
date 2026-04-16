@@ -7,7 +7,10 @@ export async function updateTaskProgress(taskId: string, percentage: number) {
   const supabase = await createClient();
   const { error } = await supabase
     .from('job_tasks')
-    .update({ percentage })
+    .update({ 
+      percentage,
+      status: percentage === 100 ? 'completed' : 'pending'
+    })
     .eq('id', taskId);
   if (error) return { error: 'Failed to update progress' };
   revalidatePath('/team/tasks');
