@@ -47,6 +47,7 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
     { href: '/requests', icon: ListTodo, label: 'Requests' },
     // Schedule submenu items rendered separately
     { href: '/gallery', icon: Image, label: 'Gallery' },
+    { href: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   const teamLinks = [
