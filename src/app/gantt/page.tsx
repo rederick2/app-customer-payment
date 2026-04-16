@@ -27,22 +27,24 @@ export default async function GanttPage() {
     .select('id, name')
     .order('name');
 
-  // Fetch proforma items to allow manual associations in modales
-  const { data: proformaItems } = await supabase
-    .from('proforma_items')
-    .select('id, description, proforma_id');
 
   // Fetch all active jobs (projects) even if they have no tasks
   const { data: jobs } = await supabase
     .from('proformas')
-    .select('id, project_name, status, job_start_at, job_end_at, clients (company_name, name, last_name)')
+    .select('id, project_name, status, job_start_at, job_end_at, clients (company_name, name, last_name), proforma_items (id, description, proforma_id)')
     .in('status', ['job', 'in_progress']); // Assuming active jobs are not draft
   //.not('status', 'eq', 'rejected');
 
+  console.log('jobs', jobs);
+
   const activeTasks = (tasks || []) as any[];
   const activeTeamMembers = (teamMembers || []) as any[];
-  const activeProformaItems = (proformaItems || []) as any[];
+  // Flatten the proforma_items arrays from each job into a single list
+  const activeProformaItems = (jobs || []).flatMap((job: any) => job.proforma_items || []) as any[];
+
   const activeJobs = (jobs || []) as any[];
+
+
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-[1600px] animate-in fade-in slide-in-from-bottom-4 duration-700">

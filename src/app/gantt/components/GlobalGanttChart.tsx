@@ -794,9 +794,13 @@ function TaskFormModal({
 
   const isEdit = !!taskToEdit;
 
+
+
   // Filter proforma items based on currently selected project
   // Useful if editing or creating unassociated task and we decide to switch projects
   const availableItems = proformaItems.filter(p => p.proforma_id === selectedProjectId);
+
+  console.log('availableItems', availableItems);
 
   // Format dates for the native date-time picker (YYYY-MM-DDThh:mm)
   const formatForInput = (isoString?: string | null) => {

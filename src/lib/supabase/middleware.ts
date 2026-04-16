@@ -33,7 +33,10 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Proteger rutas privadas
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
+                     request.nextUrl.pathname.startsWith('/register') ||
+                     request.nextUrl.pathname.startsWith('/forgot-password') ||
+                     request.nextUrl.pathname.startsWith('/update-password')
   const isPublicSharedPage = request.nextUrl.pathname.startsWith('/p/')
   const isWebhook = request.nextUrl.pathname.startsWith('/api/quickbooks/webhook')
   const isPublicFile = request.nextUrl.pathname === '/robots.txt' || request.nextUrl.pathname === '/sitemap.xml'

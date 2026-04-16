@@ -1,15 +1,17 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 export async function signupTeamMember(token: string, teamMemberId: string, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
-  const supabase = await createClient();
 
-  // Re-verify token
-  const { data: invitation, error: invError } = await supabase
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+
+  // Re-verify token using admin client to bypass RLS
+  const { data: invitation, error: invError } = await adminClient
     .from('team_invitations')
     .select('*, team_members(name)')
     .eq('token', token)
@@ -21,47 +23,59 @@ export async function signupTeamMember(token: string, teamMemberId: string, form
     redirect('/register?error=Invalid+Invitation');
   }
 
-  const teamMemberName = invitation.team_members?.name || 'Team Member';
+  const teamMemberName = (invitation.team_members as any)?.name || 'Team Member';
 
-  // Register user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  // Use admin API to create the user — this bypasses email confirmation
+  // and guarantees we get user.id back immediately even if email confirmation
+  // is enabled in the Supabase project settings.
+  const { data: adminAuthData, error: adminAuthError } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: {
-        name: teamMemberName,
-        display_name: teamMemberName,
-        role: 'team',
-      }
-    }
+    email_confirm: true, // auto-confirm so they can log in right away
+    user_metadata: {
+      name: teamMemberName,
+      display_name: teamMemberName,
+      role: 'team',
+    },
   });
 
-  if (authError || !authData.user) {
-    console.error('Signup error:', authError);
-    redirect('/register/team/' + token + '?error=' + encodeURIComponent(authError?.message || 'Failed to sign up'));
+  if (adminAuthError || !adminAuthData.user) {
+    console.error('Admin signup error:', adminAuthError);
+    redirect(
+      '/register/team/' + token + '?error=' + encodeURIComponent(adminAuthError?.message || 'Failed to sign up')
+    );
   }
 
-  // Update team member row with the new auth.user id
-  await supabase
+  const newUserId = adminAuthData.user.id;
+
+  // Link the new auth user to the team_members row (use admin to bypass RLS)
+  const { error: updateError } = await adminClient
     .from('team_members')
-    .update({ auth_user_id: authData.user.id })
+    .update({ auth_user_id: newUserId })
     .eq('id', teamMemberId);
 
-  // Attempt to update public.users if the trigger already created it
-  await supabase
+  if (updateError) {
+    console.error('Failed to link auth_user_id to team member:', updateError);
+  }
+
+  // Update public.users display_name if the DB trigger already created the row
+  await adminClient
     .from('users')
     .update({ display_name: teamMemberName })
-    .eq('id', authData.user.id);
+    .eq('id', newUserId);
 
   // Mark invitation as used
-  await supabase
+  await adminClient
     .from('team_invitations')
     .update({ used: true })
     .eq('id', invitation.id);
 
-  // Sign out in case signup automatically signs in but we want to let them login fresh,
-  // Actually Next.js supabase auth helpers often don't log in on server signUp if confirmations enabled,
-  // but if they do, we're good.
-  
+  // Sign them in immediately so they land on /team already authenticated
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInError) {
+    // Fallback: send to login if sign-in fails
+    redirect('/login?message=Account+created!+Please+log+in.');
+  }
+
   redirect('/team');
 }
