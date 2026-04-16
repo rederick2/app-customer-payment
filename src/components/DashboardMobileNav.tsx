@@ -98,11 +98,11 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
                 >
                   <Icon className="mr-4 h-5 w-5" />
                   {link.label}
-                  {link.badge !== undefined && link.badge > 0 && (
+                  {/*link.badge !== undefined && link.badge > 0 && (
                     <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white leading-none">
                       {link.badge > 9 ? '9+' : link.badge}
                     </span>
-                  )}
+                  )*/}
                 </Link>
               );
             })}

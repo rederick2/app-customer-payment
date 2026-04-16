@@ -419,7 +419,7 @@ export default function JobCalendarView({ jobs: initialJobs, teamMembers, tasks:
                   <Plus className="mr-2 h-4 w-4" />
                   New Visit
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="font-bold py-2.5 cursor-pointer rounded-xl">
+                <DropdownMenuItem className="font-bold py-2.5 cursor-pointer rounded-xl">
                   <a href="/jobs/team-map">
                     <MapPin className="mr-2 h-4 w-4" />
                     Team Map
