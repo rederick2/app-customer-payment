@@ -18,7 +18,11 @@ import {
   FileText,
   Briefcase,
   Receipt,
-  Image
+  Image,
+  MapPin,
+  Clock,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -41,21 +45,13 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
     { href: '/jobs', icon: Briefcase, label: 'Jobs' },
     { href: '/invoices', icon: Receipt, label: 'Invoices' },
     { href: '/requests', icon: ListTodo, label: 'Requests' },
-    { href: '/calendar', icon: Calendar, label: 'Calendar' },
-    { href: '/gantt', icon: GanttChart, label: 'Gantt' },
+    // Schedule submenu items rendered separately
     { href: '/gallery', icon: Image, label: 'Gallery' },
-    {
-      href: '/messages',
-      icon: MessageSquare,
-      label: 'Messages',
-      badge: unreadCount
-    },
-    { href: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   const teamLinks = [
-    { href: '/team', icon: Calendar, label: 'My Visits', badge: 0 },
-    { href: '/team/tasks', icon: ListTodo, label: 'My Tasks', badge: 0 },
+    { href: '/team/tasks', icon: MapPin, label: 'My Schedule', badge: 0 },
+    { href: '/team/timesheets', icon: Clock, label: 'Timesheets', badge: 0 },
   ];
 
   const links = isTeamMember ? teamLinks : adminLinks;
@@ -102,14 +98,34 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
                 >
                   <Icon className="mr-4 h-5 w-5" />
                   {link.label}
-                  {link.badge !== undefined && link.badge > 0 && (
+                  {/*link.badge !== undefined && link.badge > 0 && (
                     <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white leading-none">
                       {link.badge > 9 ? '9+' : link.badge}
                     </span>
-                  )}
+                  )*/}
                 </Link>
               );
             })}
+            {/* Schedule submenu for admin */}
+            {!isTeamMember && (
+              <div className="space-y-1">
+                <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Schedule</p>
+                {[
+                  { href: '/calendar', icon: Calendar, label: 'Calendar' },
+                  { href: '/gantt', icon: GanttChart, label: 'Gantt' },
+                  { href: '/jobs/team-map', icon: MapPin, label: 'Map' },
+                ].map(link => (
+                  <Link key={link.href} href={link.href}
+                    className={cn(
+                      "flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors",
+                      pathname.startsWith(link.href) ? "bg-primary/10 text-primary" : "text-foreground/80 hover:bg-muted/50"
+                    )}>
+                    <link.icon className="mr-4 h-5 w-5" />
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </nav>
 
           <div className="p-4 border-t border-border/40 mb-4 space-y-2">

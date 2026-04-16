@@ -1,98 +1,74 @@
 import { createClient } from '@/lib/supabase/server';
 import JobCalendarView from '@/components/JobCalendarView';
-import { Calendar as CalendarIcon } from 'lucide-react';
 
 export const revalidate = 0;
 
 export default async function CalendarPage() {
   const supabase = await createClient();
 
-  // Fetch all proformas with status 'job', including client info
-  const { data: jobs, error } = await supabase
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id;
+
+  // Get proforma IDs for this user to scope tasks, visits, and requests
+  const { data: userProformas } = await supabase
+    .from('proformas')
+    .select('id')
+    .eq('user_id', userId);
+
+  const proformaIds = (userProformas || []).map((p: any) => p.id);
+
+  // Fetch this user's jobs for the calendar
+  const { data: jobs } = await supabase
     .from('proformas')
     .select(`
-      id,
-      number,
-      project_name,
-      job_start_at,
-      job_end_at,
-      clients (
-        name,
-        company_name,
-        street_1,
-        city,
-        province
-      )
+      id, number, project_name, job_start_at, job_end_at,
+      clients ( name, company_name, street_1, city, province )
     `)
+    .eq('user_id', userId)
     .notIn('status', ['job_terminated', 'rejected', 'draft'])
     .order('job_start_at', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching jobs for calendar:', error);
-  }
+  // Tasks scoped by proforma ownership
+  const { data: tasks } = proformaIds.length > 0
+    ? await supabase
+        .from('job_tasks')
+        .select(`*, team_members (name), proformas (clients (street_1, city, province))`)
+        .in('proforma_id', proformaIds)
+        .order('due_date', { ascending: true })
+    : { data: [] };
 
-  // Fetch job tasks
-  const { data: tasks, error: tasksError } = await supabase
-    .from('job_tasks')
-    .select(`
-      *,
-      team_members (name),
-      proformas (clients (street_1, city, province))
-    `)
-    .order('due_date', { ascending: true });
+  // Service requests scoped by proforma ownership
+  const { data: requests } = proformaIds.length > 0
+    ? await supabase
+        .from('service_requests')
+        .select(`
+          *,
+          proformas ( id, number, project_name, clients ( name, company_name, street_1, city, province ) )
+        `)
+        .in('proforma_id', proformaIds)
+        .not('status', 'eq', 'cancelled')
+        .order('schedule_date', { ascending: true })
+    : { data: [] };
 
-  // Fetch service requests
-  const { data: requests, error: requestsError } = await supabase
-    .from('service_requests')
-    .select(`
-      *,
-      proformas (
-        id,
-        number,
-        project_name,
-        clients (
-          name,
-          company_name,
-          street_1,
-          city,
-          province
-        )
-      )
-    `)
-    .not('status', 'eq', 'cancelled')
-    .order('schedule_date', { ascending: true });
+  // Job visits scoped by proforma ownership
+  const { data: visits } = proformaIds.length > 0
+    ? await supabase
+        .from('job_visits')
+        .select(`
+          *,
+          team_members (name),
+          proformas ( id, number, project_name, clients ( name, company_name, street_1, city, province ) )
+        `)
+        .in('proforma_id', proformaIds)
+        .order('visit_date', { ascending: true })
+    : { data: [] };
 
-  // Fetch job visits
-  const { data: visits, error: visitsError } = await supabase
-    .from('job_visits')
-    .select(`
-      *,
-      team_members (name),
-      proformas (
-        id,
-        number,
-        project_name,
-        clients (
-          name,
-          company_name,
-          street_1,
-          city,
-          province
-        )
-      )
-    `)
-    .order('visit_date', { ascending: true });
-
-  // Fetch team members
-  const { data: teamMembers, error: teamMembersError } = await supabase
+  // Team members scoped to this admin
+  const { data: teamMembers } = await supabase
     .from('team_members')
     .select('*')
+    .eq('user_id', userId)
     .order('name', { ascending: true });
-
-  if (error || tasksError || requestsError || visitsError || teamMembersError) {
-    console.error('Error fetching calendar data:', error || tasksError || requestsError || visitsError || teamMembersError);
-    return <div>Error loading calendar data.</div>;
-  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-full mx-auto px-4 py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">

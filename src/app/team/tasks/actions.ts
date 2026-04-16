@@ -3,13 +3,22 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+export async function updateTaskProgress(taskId: string, percentage: number) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('job_tasks')
+    .update({ percentage })
+    .eq('id', taskId);
+  if (error) return { error: 'Failed to update progress' };
+  revalidatePath('/team/tasks');
+  return { success: true };
+}
+
 export async function startTimeEntry(teamMemberId: string, proformaId: string | null) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
 
-  // Need admin ID to save. This is a bit tricky: team members log in with their own auth_user_id.
-  // Their associated `user_id` on `team_members` is the admin.
   const { data: teamMember } = await supabase
     .from('team_members')
     .select('user_id')
@@ -19,7 +28,7 @@ export async function startTimeEntry(teamMemberId: string, proformaId: string | 
   if (!teamMember) return { error: 'Team member not found' };
 
   const { data, error } = await supabase.from('time_entries').insert([{
-    user_id: teamMember.user_id, // Admin's user ID
+    user_id: teamMember.user_id,
     team_member_id: teamMemberId,
     proforma_id: proformaId || null,
     start_time: new Date().toISOString(),
@@ -37,8 +46,7 @@ export async function startTimeEntry(teamMemberId: string, proformaId: string | 
 
 export async function stopTimeEntry(entryId: string) {
   const supabase = await createClient();
-  
-  // Get existing entry
+
   const { data: entry } = await supabase.from('time_entries').select('*').eq('id', entryId).single();
   if (!entry) return { error: 'Not found' };
 
