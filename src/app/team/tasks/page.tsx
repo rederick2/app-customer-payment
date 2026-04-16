@@ -1,25 +1,27 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import TasksMapView from './components/TasksMapView';
 
-// Geocode an address using Google Maps Geocoding API server-side
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey || !address) return null;
   try {
     const res = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`,
-      { next: { revalidate: 3600 } } // cache for 1 hour
+      { next: { revalidate: 3600 } }
     );
     const data = await res.json();
     if (data.status === 'OK' && data.results[0]) {
       const { lat, lng } = data.results[0].geometry.location;
       return { lat, lng };
     }
-  } catch (e) {
-    console.error('Geocoding error:', e);
-  }
+  } catch (e) { console.error('Geocoding error:', e); }
   return null;
 }
+
+const CLIENT_SELECT = `
+  name, last_name, company_name, phone, email,
+  street_1, city, province, country, postal_code
+`;
 
 export default async function TeamTasksPage() {
   const supabase = await createClient();
@@ -39,60 +41,81 @@ export default async function TeamTasksPage() {
     );
   }
 
-  const supabaseAdmin = createAdminClient();
+  const admin = createAdminClient();
 
-  // Get tasks assigned to them with full client + address data
-  const { data: rawTasks } = await supabaseAdmin
-    .from('job_tasks')
-    .select(`
-      *,
-      proformas (
-        project_name,
-        number,
-        clients (
-          name,
-          last_name,
-          company_name,
-          phone,
-          email,
-          street_1,
-          city,
-          province,
-          country,
-          postal_code
+  // Fetch proformas that have tasks or visits assigned to this team member
+  // We query the tasks + visits assigned to this member and group by proforma
+  const [{ data: rawTasks }, { data: rawVisits }, { data: activeEntry }] = await Promise.all([
+    admin
+      .from('job_tasks')
+      .select(`
+        id, title, description, status, due_date, end_date, percentage, proforma_id,
+        proformas (
+          id, project_name, number,
+          clients ( ${CLIENT_SELECT} )
         )
-      )
-    `)
-    .eq('assigned_to', teamMember.id)
-    .neq('status', 'completed')
-    .order('due_date', { ascending: true });
+      `)
+      .eq('assigned_to', teamMember.id)
+      .neq('status', 'completed')
+      .order('due_date', { ascending: true }),
 
-  // Get active time entry (if any)
-  const { data: activeEntry } = await supabaseAdmin
-    .from('time_entries')
-    .select('*')
-    .eq('team_member_id', teamMember.id)
-    .eq('status', 'active')
-    .maybeSingle();
+    admin
+      .from('job_visits')
+      .select(`
+        id, visit_date, status, notes, proforma_id,
+        proformas (
+          id, project_name, number,
+          clients ( ${CLIENT_SELECT} )
+        )
+      `)
+      .eq('assigned_to', teamMember.id)
+      .not('status', 'eq', 'completed')
+      .order('visit_date', { ascending: true }),
 
-  // Geocode all task addresses server-side
-  const tasks = await Promise.all(
-    (rawTasks || []).map(async (task: any) => {
-      const p = task.proformas;
-      if (!p) return { ...task, lat: null, lng: null };
+    admin
+      .from('time_entries')
+      .select('*')
+      .eq('team_member_id', teamMember.id)
+      .eq('status', 'active')
+      .maybeSingle(),
+  ]);
 
-      const addressParts = [p.clients?.street_1, p.clients?.city, p.clients?.province, p.clients?.country, p.clients?.postal_code].filter(Boolean);
-      if (addressParts.length === 0) return { ...task, lat: null, lng: null };
+  // Geocode once per unique address
+  const addressCache = new Map<string, { lat: number | null; lng: number | null }>();
 
-      const address = addressParts.join(', ');
-      const coords = await geocodeAddress(address);
-      return { ...task, lat: coords?.lat ?? null, lng: coords?.lng ?? null };
-    })
-  );
+  const geocodeClients = async (items: any[]) => {
+    await Promise.all(
+      items.map(async (item: any) => {
+        const c = item.proformas?.clients;
+        if (!c) return;
+        const parts = [c.street_1, c.city, c.province, c.country, c.postal_code].filter(Boolean);
+        if (!parts.length) return;
+        const key = parts.join(',');
+        if (addressCache.has(key)) return;
+        const coords = await geocodeAddress(parts.join(', '));
+        addressCache.set(key, { lat: coords?.lat ?? null, lng: coords?.lng ?? null });
+      })
+    );
+  };
+
+  await Promise.all([geocodeClients(rawTasks || []), geocodeClients(rawVisits || [])]);
+
+  const attachCoords = (item: any) => {
+    const c = item.proformas?.clients;
+    if (!c) return { ...item, lat: null, lng: null };
+    const parts = [c.street_1, c.city, c.province, c.country, c.postal_code].filter(Boolean);
+    const key = parts.join(',');
+    const coords = addressCache.get(key) ?? { lat: null, lng: null };
+    return { ...item, ...coords };
+  };
+
+  const tasks = (rawTasks || []).map(attachCoords);
+  const visits = (rawVisits || []).map(attachCoords);
 
   return (
     <TasksMapView
       tasks={tasks}
+      visits={visits}
       teamMemberId={teamMember.id}
       activeEntry={activeEntry}
     />

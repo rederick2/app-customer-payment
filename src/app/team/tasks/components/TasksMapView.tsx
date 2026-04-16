@@ -1,227 +1,353 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import {
-  MapPin, Calendar, Clock, User, FileText, ExternalLink,
-  ChevronRight, Navigation
+  MapPin, Calendar, User, FileText, ExternalLink, Navigation,
+  Eye, CheckSquare, ChevronDown, ChevronUp, Loader2,
+  Play, Square, Clock
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { updateTaskProgress, startTimeEntry, stopTimeEntry } from '../actions';
+import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 const TaskMap = dynamic(() => import('./TaskMap'), { ssr: false });
 
-interface Task {
+// ── Types ─────────────────────────────────────────────────────
+interface BaseItem {
   id: string;
-  title: string;
-  description?: string;
   status: string;
-  due_date?: string | null;
-  end_date?: string | null;
   proforma_id?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   proformas?: {
+    id?: string;
     project_name?: string;
     number?: string | number;
     clients?: {
-      name?: string;
-      last_name?: string;
-      company_name?: string;
-      phone?: string;
-      email?: string;
-      street_1?: string;
-      city?: string;
-      province?: string;
-      country?: string;
-      postal_code?: string;
+      name?: string; last_name?: string; company_name?: string;
+      phone?: string; email?: string;
+      street_1?: string; city?: string; province?: string;
+      country?: string; postal_code?: string;
     };
   } | null;
-  lat?: number | null;
-  lng?: number | null;
 }
-
-interface MapLocation {
-  lat: number;
-  lng: number;
-  title: string;
-  address: string;
-  index: number;
-}
+interface Task extends BaseItem { title: string; description?: string; due_date?: string | null; end_date?: string | null; percentage?: number | null; }
+interface Visit extends BaseItem { visit_date?: string | null; notes?: string | null; }
 
 interface TasksMapViewProps {
   tasks: Task[];
+  visits: Visit[];
   teamMemberId: string;
   activeEntry: any;
 }
 
-function buildAddress(proformas: Task['proformas']) {
-  if (!proformas) return null;
-  const parts = [proformas.clients?.street_1, proformas.clients?.city, proformas.clients?.province, proformas.clients?.country, proformas.clients?.postal_code].filter(Boolean);
-  return parts.length > 0 ? parts.join(', ') : null;
+interface LocationGroup {
+  address: string; lat: number; lng: number;
+  clientName: string | null; phone: string | null;
+  tasks: Task[]; visits: Visit[];
 }
 
-function buildGoogleMapsUrl(address: string) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+// ── Helpers ───────────────────────────────────────────────────
+function buildAddress(item: BaseItem) {
+  const c = item.proformas?.clients;
+  if (!c) return null;
+  return [c.street_1, c.city, c.province, c.country, c.postal_code].filter(Boolean).join(', ') || null;
+}
+function buildGMapsUrl(a: string) { return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a)}`; }
+function getClientName(item: BaseItem) {
+  const c = item.proformas?.clients;
+  if (!c) return null;
+  return c.company_name || [c.name, c.last_name].filter(Boolean).join(' ') || null;
+}
+function groupByAddress(tasks: Task[], visits: Visit[]): LocationGroup[] {
+  const map = new Map<string, LocationGroup>();
+  const add = (item: any, isVisit: boolean) => {
+    const address = buildAddress(item);
+    if (!address || !item.lat || !item.lng) return;
+    const key = address.toLowerCase().trim();
+    if (!map.has(key)) {
+      map.set(key, { address, lat: item.lat, lng: item.lng, clientName: getClientName(item), phone: item.proformas?.clients?.phone || null, tasks: [], visits: [] });
+    }
+    if (isVisit) map.get(key)!.visits.push(item);
+    else map.get(key)!.tasks.push(item);
+  };
+  tasks.forEach(t => add(t, false));
+  visits.forEach(v => add(v, true));
+  return Array.from(map.values());
 }
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case 'in_progress': return 'bg-amber-100 text-amber-700 border-amber-200';
-    case 'completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-    default: return 'bg-blue-100 text-blue-700 border-blue-200';
-  }
+// ── Progress Slider ───────────────────────────────────────────
+function ProgressButton({ taskId, initial }: { taskId: string; initial: number | null | undefined }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(initial ?? 0);
+  const [isPending, startTransition] = useTransition();
+
+  const save = (v: number) => {
+    setValue(v);
+    startTransition(async () => {
+      const r = await updateTaskProgress(taskId, v);
+      if (r.error) toast.error(r.error);
+    });
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
+      >
+        {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <span>{value}%</span>}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute z-50 left-0 top-8 bg-white border border-border/40 rounded-xl shadow-xl p-3 min-w-[180px]">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Progress</p>
+            <input
+              type="range" min={0} max={100} step={5}
+              value={value}
+              onChange={e => setValue(Number(e.target.value))}
+              onMouseUp={e => save(Number((e.target as HTMLInputElement).value))}
+              onTouchEnd={e => save(Number((e.target as HTMLInputElement).value))}
+              className="w-full accent-blue-600"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+              <span>0%</span>
+              <span className="font-bold text-blue-600">{value}%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
-export default function TasksMapView({ tasks, teamMemberId, activeEntry }: TasksMapViewProps) {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+// ── Timer Button (compact inline) ────────────────────────────
+function TimerButton({ teamMemberId, proformaId, activeEntry }: { teamMemberId: string; proformaId: string; activeEntry: any }) {
+  const [isPending, startTransition] = useTransition();
+  const [elapsed, setElapsed] = useState('00:00');
+  const isActive = activeEntry?.proforma_id === proformaId;
+  const isBusy = activeEntry && !isActive;
+
+  useEffect(() => {
+    if (!isActive) { setElapsed('00:00'); return; }
+    const tick = () => {
+      const diff = Math.floor((Date.now() - new Date(activeEntry.start_time).getTime()) / 1000);
+      const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+      const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+      setElapsed(`${h}:${m}`);
+    };
+    tick();
+    const id = setInterval(tick, 60000);
+    return () => clearInterval(id);
+  }, [isActive, activeEntry]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isBusy) { toast.error('Stop the other timer first'); return; }
+    startTransition(async () => {
+      if (isActive) {
+        const r = await stopTimeEntry(activeEntry.id);
+        if (r.error) toast.error(r.error); else toast.success('Timer stopped');
+      } else {
+        const r = await startTimeEntry(teamMemberId, proformaId);
+        if (r.error) toast.error(r.error); else toast.success('Timer started');
+      }
+    });
+  };
+
+  return (
+    <button onClick={handleClick} disabled={isPending || isBusy}
+      className={cn(
+        "flex items-center gap-1.5 px-2 py-1 rounded-xl text-[11px] font-bold border transition-colors",
+        isActive ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' :
+          isBusy ? 'bg-muted text-muted-foreground border-border/30 opacity-50 cursor-not-allowed' :
+            'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
+      )}>
+      {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> :
+        isActive ? <><Square className="h-3 w-3" />{elapsed}</> :
+          <><Play className="h-3 w-3" />Timer</>
+      }
+    </button>
+  );
+}
+
+// ── Main View ─────────────────────────────────────────────────
+export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry }: TasksMapViewProps) {
+  const [activeGroupIndex, setActiveGroupIndex] = useState<number | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({});
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Build map locations — geocode on the fly if no lat/lng stored
-  // We will use the address string for display; real geocoding happens in TaskMap via labels
-  const locations: MapLocation[] = tasks
-    .map((task, i) => {
-      const address = buildAddress(task.proformas);
-      if (!address) return null;
-      // Use stored coordinates if available, otherwise we'll use a fallback center
-      // The parent page should pass geocoded coords; for now we display pins with labels
-      return {
-        lat: task.lat ?? 0,
-        lng: task.lng ?? 0,
-        title: task.title,
-        address,
-        index: i,
-      } as MapLocation;
-    })
-    .filter((l): l is MapLocation => l !== null && (l.lat !== 0 || l.lng !== 0));
+  const groups = groupByAddress(tasks, visits);
+
+  const locations = groups.map((g, i) => ({
+    lat: g.lat, lng: g.lng,
+    title: g.clientName || g.address,
+    address: g.address, index: i,
+  }));
 
   const handleMapSelect = (index: number) => {
-    setActiveIndex(index);
+    setActiveGroupIndex(index);
+    setExpandedGroups(p => ({ ...p, [index]: true }));
     cardRefs.current[index]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-0 h-full min-h-screen bg-[#f8fafc]">
+    <div className="flex flex-col lg:flex-row bg-[#f8fafc]" style={{ height: 'calc(100vh - 56px)', overflow: 'hidden' }}>
 
-      {/* ── Left Panel: Task Cards ── */}
-      <div className="w-full lg:w-[400px] lg:min-w-[400px] flex flex-col h-screen overflow-hidden border-r border-border/30 bg-white">
-        {/* Header */}
-        <div className="px-6 py-5 border-b border-border/20 bg-white">
-          <h1 className="font-archivo text-2xl font-bold text-foreground">Your Tasks</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {tasks.length} task{tasks.length !== 1 ? 's' : ''} assigned · Select to view on map
+      {/* Left panel */}
+      <div className="w-full lg:w-[400px] lg:min-w-[400px] flex flex-col border-b lg:border-b-0 lg:border-r border-border/30 bg-white" style={{ maxHeight: '95vh', minHeight: 0 }}>
+
+        <div className="px-5 py-3 border-b border-border/20 bg-white shrink-0">
+          <h1 className="font-archivo text-lg font-bold text-foreground">My Schedule</h1>
+          <p className="text-[11px] text-muted-foreground">
+            {tasks.length} task{tasks.length !== 1 ? 's' : ''} · {visits.length} visit{visits.length !== 1 ? 's' : ''} · {groups.length} location{groups.length !== 1 ? 's' : ''}
           </p>
         </div>
 
-        {/* Scrollable list */}
-        <div className="flex-1 overflow-y-auto py-3 px-3 space-y-2">
-          {tasks.length === 0 ? (
+        <div className="flex-1 overflow-y-auto py-2 px-2 space-y-2 min-h-0">
+          {groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-muted-foreground text-sm gap-2">
               <Navigation className="h-8 w-8 opacity-30" />
-              <p>No tasks assigned right now.</p>
+              <p>No tasks or visits assigned.</p>
             </div>
           ) : (
-            tasks.map((task, i) => {
-              const address = buildAddress(task.proformas);
-              const mapsUrl = address ? buildGoogleMapsUrl(address) : null;
-              const clientName = task.proformas?.clients?.company_name ||
-                [task.proformas?.clients?.name, task.proformas?.clients?.last_name].filter(Boolean).join(' ') || null;
-              const isActive = activeIndex === i;
+            groups.map((group, gi) => {
+              const isActive = activeGroupIndex === gi;
+              const isExpanded = expandedGroups[gi] ?? false;
+              const totalItems = group.tasks.length + group.visits.length;
 
               return (
-                <div
-                  key={task.id}
-                  ref={el => { cardRefs.current[i] = el; }}
-                  onClick={() => setActiveIndex(i)}
-                  className={`rounded-xl border cursor-pointer transition-all duration-200 overflow-hidden
-                    ${isActive
-                      ? 'border-emerald-400 ring-2 ring-emerald-400/30 shadow-md'
-                      : 'border-border/30 hover:border-border/60 hover:shadow-sm bg-white'
-                    }`}
-                >
-                  {/* Number badge + status */}
-                  <div className={`px-4 py-3 flex items-center justify-between gap-2 ${isActive ? 'bg-emerald-50' : 'bg-muted/20'}`}>
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
-                        ${isActive ? 'bg-emerald-500 text-white' : 'bg-muted-foreground/20 text-foreground'}`}>
-                        {i + 1}
-                      </div>
-                      <span className="font-bold text-sm text-foreground truncate max-w-[200px]">{task.title}</span>
+                <div key={group.address}
+                  ref={el => { cardRefs.current[gi] = el; }}
+                  className={cn("rounded-xl border overflow-visible transition-all duration-200",
+                    isActive ? 'ring-2 ring-emerald-400/40 border-emerald-400 shadow-md' : 'border-border/30 hover:border-border/60 hover:shadow-sm'
+                  )}>
+
+                  {/* Header */}
+                  <div onClick={() => setActiveGroupIndex(gi)}
+                    className={cn("px-3 py-2.5 cursor-pointer flex items-start gap-2",
+                      isActive ? 'bg-emerald-50' : 'bg-muted/10 hover:bg-muted/20'
+                    )}>
+                    <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0 mt-0.5",
+                      isActive ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                    )}>
+                      {gi + 1}
                     </div>
-                    <Badge variant="outline" className={`text-[10px] uppercase tracking-wider font-bold shrink-0 ${getStatusColor(task.status)}`}>
-                      {task.status?.replace('_', ' ') || 'Pending'}
-                    </Badge>
-                  </div>
-
-                  <div className="px-4 py-3 space-y-2.5 bg-white">
-                    {/* Project */}
-                    {task.proformas?.project_name && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <FileText className="h-3.5 w-3.5 shrink-0 text-primary/60" />
-                        <span className="font-semibold text-foreground/70 truncate">
-                          {task.proformas.project_name}
-                          {task.proformas.number ? ` · #${task.proformas.number}` : ''}
-                        </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-foreground truncate">{group.clientName || 'Client'}</p>
+                      <div className="flex items-start gap-1 mt-0.5">
+                        <MapPin className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                        <p className="text-xs text-muted-foreground leading-relaxed">{group.address}</p>
                       </div>
-                    )}
-
-                    {/* Client */}
-                    {clientName && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <User className="h-3.5 w-3.5 shrink-0 text-primary/60" />
-                        <span className="truncate">{clientName}</span>
-                        {task.proformas?.clients?.phone && (
-                          <a href={`tel:${task.proformas.clients.phone}`}
-                            onClick={e => e.stopPropagation()}
-                            className="ml-auto text-blue-600 hover:underline font-medium shrink-0">
-                            {task.proformas.clients.phone}
-                          </a>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        {group.phone && (
+                          <a href={`tel:${group.phone}`} onClick={e => e.stopPropagation()}
+                            className="text-[11px] font-semibold text-blue-600 hover:underline">{group.phone}</a>
                         )}
+                        <a href={buildGMapsUrl(group.address)} target="_blank" rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:underline">
+                          <ExternalLink className="h-2.5 w-2.5" />Google Maps
+                        </a>
                       </div>
-                    )}
-
-                    {/* Dates */}
-                    {(task.due_date || task.end_date) && (
-                      <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary/60" />
-                        <div className="flex flex-col gap-0.5">
-                          {task.due_date && (
-                            <span><span className="font-semibold text-foreground/60">Start:</span> {new Date(task.due_date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                          )}
-                          {task.end_date && (
-                            <span><span className="font-semibold text-foreground/60">End:</span> {new Date(task.end_date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Address */}
-                    {address && (
-                      <div className="flex items-start gap-2 text-xs">
-                        <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-500" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-foreground/80 leading-relaxed">{address}</p>
-                          {mapsUrl && (
-                            <a
-                              href={mapsUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={e => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 mt-1 text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              Open in Google Maps
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Description */}
-                    {task.description && (
-                      <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/20 pt-2 line-clamp-2">
-                        {task.description}
-                      </p>
-                    )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {group.tasks.length > 0 && (
+                        <span className="text-[10px] font-bold bg-orange-100 text-orange-600 rounded-full px-2 py-0.5">{group.tasks.length} task{group.tasks.length !== 1 ? 's' : ''}</span>
+                      )}
+                      {group.visits.length > 0 && (
+                        <span className="text-[10px] font-bold bg-teal-100 text-teal-600 rounded-full px-2 py-0.5">{group.visits.length} visit{group.visits.length !== 1 ? 's' : ''}</span>
+                      )}
+                      <button onClick={e => { e.stopPropagation(); setExpandedGroups(p => ({ ...p, [gi]: !p[gi] })); }}
+                        className="text-muted-foreground hover:text-foreground p-0.5 transition-colors mt-0.5">
+                        {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Expanded items */}
+                  {isExpanded && (
+                    <div className="border-t border-border/20 divide-y divide-border/10 overflow-visible">
+
+                      {/* Tasks */}
+                      {group.tasks.map(task => (
+                        <div key={task.id} className="px-3 py-3 bg-white space-y-2 overflow-visible">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <CheckSquare className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+                            <span className="text-sm font-bold text-foreground truncate flex-1">{task.title}</span>
+                            <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-bold shrink-0">
+                              {task.status?.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          {task.proformas?.project_name && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <FileText className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{task.proformas.project_name}{task.proformas.number ? ` · #${task.proformas.number}` : ''}</span>
+                            </div>
+                          )}
+                          {(task.due_date || task.end_date) && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3 shrink-0" />
+                              <span>
+                                {task.due_date && new Date(task.due_date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                                {task.end_date && ` → ${new Date(task.end_date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}`}
+                              </span>
+                            </div>
+                          )}
+                          {/* Progress + Timer */}
+                          <div className="flex items-center gap-2 pt-1 overflow-visible">
+                            <ProgressButton taskId={task.id} initial={task.percentage} />
+                            {task.proformas?.id && (
+                              <TimerButton
+                                teamMemberId={teamMemberId}
+                                proformaId={task.proformas.id}
+                                activeEntry={activeEntry}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Visits */}
+                      {group.visits.map(visit => (
+                        <div key={visit.id} className="px-3 py-3 bg-teal-50/30 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Eye className="h-3.5 w-3.5 text-teal-500 shrink-0" />
+                            <span className="text-sm font-bold text-foreground truncate flex-1">
+                              {visit.proformas?.project_name ? `Visit – ${visit.proformas.project_name}` : 'Visit'}
+                            </span>
+                            <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-bold shrink-0 border-teal-200 text-teal-700 bg-teal-50">
+                              {visit.status?.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          {visit.visit_date && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <Calendar className="h-3 w-3 shrink-0" />
+                              <span>{new Date(visit.visit_date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                            </div>
+                          )}
+                          {visit.notes && (
+                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{visit.notes}</p>
+                          )}
+                          {/* Timer for visit */}
+                          {visit.proformas?.id && (
+                            <div className="pt-1">
+                              <TimerButton
+                                teamMemberId={teamMemberId}
+                                proformaId={visit.proformas.id}
+                                activeEntry={activeEntry}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -229,29 +355,26 @@ export default function TasksMapView({ tasks, teamMemberId, activeEntry }: Tasks
         </div>
       </div>
 
-      {/* ── Right Panel: Map ── */}
-      <div className="flex-1 relative min-h-[50vh] lg:min-h-screen">
+      {/* Map */}
+      <div className="flex-1 relative overflow-hidden" style={{ minHeight: '300px' }}>
         {locations.length > 0 ? (
           <TaskMap locations={locations} onSelectMarker={handleMapSelect} />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-muted/10 text-muted-foreground gap-3">
             <MapPin className="h-12 w-12 opacity-20" />
-            <div className="text-center">
-              <p className="font-semibold">No map locations available</p>
-              <p className="text-sm opacity-70 mt-1">Tasks need coordinates stored to appear on the map</p>
-            </div>
+            <p className="font-semibold">No locations on the map</p>
+            <p className="text-sm opacity-70">Tasks need valid client addresses</p>
           </div>
         )}
-        {/* Floating legend */}
         {locations.length > 0 && (
-          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm border border-border/40 rounded-xl px-4 py-2.5 shadow-lg text-xs flex items-center gap-3">
+          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm border border-border/40 rounded-xl px-3 py-2 shadow-lg text-xs flex items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <div className="w-3.5 h-3.5 rounded-full bg-emerald-500" />
-              <span className="text-muted-foreground font-medium">Task location</span>
+              <div className="w-3 h-3 rounded-full bg-orange-400" />
+              <span className="text-muted-foreground font-medium">Tasks</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3.5 h-3.5 rounded-full bg-amber-400" />
-              <span className="text-muted-foreground font-medium">Selected</span>
+              <div className="w-3 h-3 rounded-full bg-teal-400" />
+              <span className="text-muted-foreground font-medium">Visits</span>
             </div>
           </div>
         )}
