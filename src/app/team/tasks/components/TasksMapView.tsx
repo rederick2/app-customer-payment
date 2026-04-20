@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { updateTaskProgress, startTimeEntry, stopTimeEntry } from '../actions';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const TaskMap = dynamic(() => import('./TaskMap'), { ssr: false });
 
@@ -84,53 +85,63 @@ function groupByAddress(tasks: Task[], visits: Visit[]): LocationGroup[] {
 }
 
 // ── Task Progress Control ──────────────────────────────────────
-function TaskProgress({ taskId, initial, value, isPending, setOpen, open, setValue, save }: { 
+function TaskProgress({ 
+  taskId, 
+  value, 
+  isPending, 
+  setValue, 
+  save 
+}: { 
   taskId: string; 
-  initial: number | null | undefined;
   value: number;
   isPending: boolean;
-  setOpen: (o: boolean | ((o: boolean) => boolean)) => void;
-  open: boolean;
   setValue: (v: number) => void;
   save: (v: number) => void;
 }) {
   const isCompleted = value === 100;
 
   return (
-    <div className="relative">
-      <button
-        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+    <Popover>
+      <PopoverTrigger
         className={cn(
-          "flex items-center gap-1.5 px-2 py-1 rounded-xl text-[11px] font-bold border transition-colors",
+          "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black border transition-all active:scale-95",
           isCompleted 
-            ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100" 
-            : "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/20" 
+            : "bg-blue-500/10 border-blue-500/30 text-blue-700 hover:bg-blue-500/20"
         )}
       >
         {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <span>{value}%</span>}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute z-50 left-0 top-8 bg-white border border-border/40 rounded-xl shadow-xl p-3 min-w-[180px]">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Progress</p>
+        <ChevronDown className="h-3 w-3 opacity-50" />
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-4 shadow-2xl border-border/40" align="start" side="bottom" sideOffset={8}>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Update Progress</span>
+            <span className={cn(
+              "text-xs font-mono font-black px-1.5 py-0.5 rounded",
+              isCompleted ? "bg-emerald-500 text-white" : "bg-blue-500 text-white"
+            )}>
+              {value}%
+            </span>
+          </div>
+          <div className="relative pt-1">
             <input
               type="range" min={0} max={100} step={5}
               value={value}
               onChange={e => setValue(Number(e.target.value))}
               onMouseUp={e => save(Number((e.target as HTMLInputElement).value))}
               onTouchEnd={e => save(Number((e.target as HTMLInputElement).value))}
-              className="w-full accent-blue-600 cursor-pointer"
+              className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer accent-blue-600 focus:outline-none"
             />
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-              <span>0%</span>
-              <span className="font-bold text-blue-600">{value}%</span>
-              <span>100%</span>
-            </div>
           </div>
-        </>
-      )}
-    </div>
+          <div className="flex justify-between text-[9px] font-black text-muted-foreground/40 uppercase tracking-tighter">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -177,7 +188,6 @@ function TaskActions({ taskId, initialPercentage, teamMemberId, proformaId, acti
   proformaId: string;
   activeEntry: any;
 }) {
-  const [open, setOpen] = useState(false);
   const [value, setValue] = useState(initialPercentage ?? 0);
   const [isPending, startTransition] = useTransition();
 
@@ -196,11 +206,8 @@ function TaskActions({ taskId, initialPercentage, teamMemberId, proformaId, acti
       <div className="flex items-center gap-2 overflow-visible">
         <TaskProgress 
           taskId={taskId} 
-          initial={initialPercentage} 
           value={value}
           isPending={isPending}
-          open={open}
-          setOpen={setOpen}
           setValue={setValue}
           save={save}
         />
