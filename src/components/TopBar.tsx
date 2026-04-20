@@ -311,19 +311,20 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
 
               {/* Menu Options */}
               <div className="p-2 space-y-1">
-                <Link
-                  href="/messages"
-                  className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-xl transition-all group"
-                >
-                  <MessageSquare className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  Messages
-                  {unreadCount > 0 && (
-                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </Link>
-
+                {!isTeamMember && (
+                  <Link
+                    href="/messages"
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-xl transition-all group"
+                  >
+                    <MessageSquare className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    Messages
+                    {unreadCount > 0 && (
+                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                )}
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-primary hover:bg-muted/50 rounded-xl transition-all group"
