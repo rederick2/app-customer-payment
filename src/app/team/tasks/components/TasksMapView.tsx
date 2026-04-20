@@ -42,6 +42,10 @@ interface TasksMapViewProps {
   visits: Visit[];
   teamMemberId: string;
   activeEntry: any;
+  settings?: {
+    showClientName: boolean;
+    showClientPhone: boolean;
+  };
 }
 
 interface LocationGroup {
@@ -79,25 +83,29 @@ function groupByAddress(tasks: Task[], visits: Visit[]): LocationGroup[] {
   return Array.from(map.values());
 }
 
-// ── Progress Slider ───────────────────────────────────────────
-function ProgressButton({ taskId, initial }: { taskId: string; initial: number | null | undefined }) {
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(initial ?? 0);
-  const [isPending, startTransition] = useTransition();
-
-  const save = (v: number) => {
-    setValue(v);
-    startTransition(async () => {
-      const r = await updateTaskProgress(taskId, v);
-      if (r.error) toast.error(r.error);
-    });
-  };
+// ── Task Progress Control ──────────────────────────────────────
+function TaskProgress({ taskId, initial, value, isPending, setOpen, open, setValue, save }: { 
+  taskId: string; 
+  initial: number | null | undefined;
+  value: number;
+  isPending: boolean;
+  setOpen: (o: boolean | ((o: boolean) => boolean)) => void;
+  open: boolean;
+  setValue: (v: number) => void;
+  save: (v: number) => void;
+}) {
+  const isCompleted = value === 100;
 
   return (
     <div className="relative">
       <button
         onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
-        className="flex items-center gap-1.5 px-2 py-1 rounded-xl text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
+        className={cn(
+          "flex items-center gap-1.5 px-2 py-1 rounded-xl text-[11px] font-bold border transition-colors",
+          isCompleted 
+            ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100" 
+            : "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+        )}
       >
         {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <span>{value}%</span>}
       </button>
@@ -112,7 +120,7 @@ function ProgressButton({ taskId, initial }: { taskId: string; initial: number |
               onChange={e => setValue(Number(e.target.value))}
               onMouseUp={e => save(Number((e.target as HTMLInputElement).value))}
               onTouchEnd={e => save(Number((e.target as HTMLInputElement).value))}
-              className="w-full accent-blue-600"
+              className="w-full accent-blue-600 cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
               <span>0%</span>
@@ -122,6 +130,97 @@ function ProgressButton({ taskId, initial }: { taskId: string; initial: number |
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function TaskProgressWrapper({ taskId, initial }: { taskId: string; initial: number | null | undefined }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(initial ?? 0);
+  const [isPending, startTransition] = useTransition();
+
+  const save = (v: number) => {
+    setValue(v);
+    startTransition(async () => {
+      const r = await updateTaskProgress(taskId, v);
+      if (r.error) toast.error(r.error);
+    });
+  };
+
+  const isCompleted = value === 100;
+
+  return (
+    <div className="flex flex-col gap-2 w-full pr-1 overflow-visible">
+      {/* Visual Progress Bar */}
+      <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
+        <div 
+          className={cn(
+            "h-full transition-all duration-500 ease-out",
+            isCompleted ? "bg-emerald-500" : "bg-blue-500"
+          )}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+      
+      {/* We expose the setOpen etc if we wanted, but let's keep it simple: 
+          The button is handled inside the parent to keep the layout clean 
+      */}
+    </div>
+  );
+}
+
+// ── Combined Progress + Timer Hook-like component ─────────────
+function TaskActions({ taskId, initialPercentage, teamMemberId, proformaId, activeEntry }: {
+  taskId: string;
+  initialPercentage: number | null | undefined;
+  teamMemberId: string;
+  proformaId: string;
+  activeEntry: any;
+}) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(initialPercentage ?? 0);
+  const [isPending, startTransition] = useTransition();
+
+  const save = (v: number) => {
+    setValue(v);
+    startTransition(async () => {
+      const r = await updateTaskProgress(taskId, v);
+      if (r.error) toast.error(r.error);
+    });
+  };
+
+  const isCompleted = value === 100;
+
+  return (
+    <div className="flex flex-col gap-2 pt-1 w-full overflow-visible">
+      <div className="flex items-center gap-2 overflow-visible">
+        <TaskProgress 
+          taskId={taskId} 
+          initial={initialPercentage} 
+          value={value}
+          isPending={isPending}
+          open={open}
+          setOpen={setOpen}
+          setValue={setValue}
+          save={save}
+        />
+        <TimerButton
+          teamMemberId={teamMemberId}
+          proformaId={proformaId}
+          activeEntry={activeEntry}
+        />
+      </div>
+      
+      {/* Visual Progress Bar */}
+      <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden mt-0.5">
+        <div 
+          className={cn(
+            "h-full transition-all duration-500 ease-out",
+            isCompleted ? "bg-emerald-500" : "bg-blue-500"
+          )}
+          style={{ width: `${value}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -177,10 +276,13 @@ function TimerButton({ teamMemberId, proformaId, activeEntry }: { teamMemberId: 
 }
 
 // ── Main View ─────────────────────────────────────────────────
-export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry }: TasksMapViewProps) {
+export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry, settings }: TasksMapViewProps) {
   const [activeGroupIndex, setActiveGroupIndex] = useState<number | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({});
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const showClientName = settings?.showClientName !== false;
+  const showClientPhone = settings?.showClientPhone !== false;
 
   const groups = groupByAddress(tasks, visits);
 
@@ -231,7 +333,7 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry 
                   className={cn("rounded-xl border transition-all duration-200",
                     isActive ? 'ring-2 ring-primary/30 border-primary/40 shadow-md' : 'border-border/30 hover:border-border/60 hover:shadow-sm'
                   )}>
-                  <div className="rounded-[inherit] overflow-hidden">
+                  <div className="rounded-[inherit] overflow-visible">
 
                   {/* Header */}
                   <div onClick={() => setActiveGroupIndex(gi)}
@@ -244,13 +346,15 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry 
                       {gi + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-foreground truncate">{group.clientName || 'Client'}</p>
+                      <p className="font-bold text-sm text-foreground truncate">
+                        {showClientName ? (group.clientName || 'Client') : 'Client'}
+                      </p>
                       <div className="flex items-start gap-1 mt-0.5">
                         <MapPin className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
                         <p className="text-xs text-muted-foreground leading-relaxed">{group.address}</p>
                       </div>
                       <div className="flex items-center gap-3 mt-1 flex-wrap">
-                        {group.phone && (
+                        {group.phone && showClientPhone && (
                           <a href={`tel:${group.phone}`} onClick={e => e.stopPropagation()}
                             className="text-[11px] font-semibold text-blue-600 hover:underline">{group.phone}</a>
                         )}
@@ -305,16 +409,15 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry 
                             </div>
                           )}
                           {/* Progress + Timer */}
-                          <div className="flex items-center gap-2 pt-1 overflow-visible">
-                            <ProgressButton taskId={task.id} initial={task.percentage} />
-                            {task.proformas?.id && (
-                              <TimerButton
-                                teamMemberId={teamMemberId}
-                                proformaId={task.proformas.id}
-                                activeEntry={activeEntry}
-                              />
-                            )}
-                          </div>
+                          {task.proformas?.id && (
+                            <TaskActions 
+                              taskId={task.id}
+                              initialPercentage={task.percentage}
+                              teamMemberId={teamMemberId}
+                              proformaId={task.proformas.id}
+                              activeEntry={activeEntry}
+                            />
+                          )}
                         </div>
                       ))}
 

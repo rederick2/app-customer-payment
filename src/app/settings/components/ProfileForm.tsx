@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { updateProfile } from '../actions';
 import { toast } from 'sonner';
-import { Loader2, Camera, Trash2 } from 'lucide-react';
+import { Loader2, Camera, Trash2, Users, ShieldCheck } from 'lucide-react';
 import Autocomplete from 'react-google-autocomplete';
 import { compressImage } from '@/lib/image-compression';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function ProfileForm({ initialData }: { initialData: any }) {
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,9 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [address, setAddress] = useState(initialData?.address || '');
   const [pdfFontSize, setPdfFontSize] = useState(initialData?.pdf_font_size || 10);
+  
+  const [showClientNameToWorkers, setShowClientNameToWorkers] = useState(initialData?.show_client_name_to_workers !== false);
+  const [showClientPhoneToWorkers, setShowClientPhoneToWorkers] = useState(initialData?.show_client_phone_to_workers !== false);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -38,6 +42,8 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
 
     const formData = new FormData(e.currentTarget);
     formData.set('address', address); // Ensure we use the autocomplete value
+    formData.set('showClientNameToWorkers', String(showClientNameToWorkers));
+    formData.set('showClientPhoneToWorkers', String(showClientPhoneToWorkers));
 
     if (logoFile) {
       let fileToUpload = logoFile;
@@ -221,6 +227,41 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
               placeholder="e.g. This quote is valid for 30 days..."
               className="min-h-[120px] bg-background border-border/60 border-dashed focus:border-primary/30 text-sm leading-relaxed p-4 rounded-xl resize-none"
             />
+          </div>
+
+          {/* Team Privacy Settings */}
+          <div className="space-y-4 pt-6 border-t border-border/50">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Team Privacy Settings</Label>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Control what your team members can see in the team portal schedule.</p>
+            
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center space-x-3 p-3 rounded-xl border border-border/40 bg-muted/5">
+                <Checkbox 
+                  id="showClientNameToWorkers" 
+                  checked={showClientNameToWorkers}
+                  onCheckedChange={(checked) => setShowClientNameToWorkers(checked === true)}
+                />
+                <div className="space-y-0.5">
+                  <Label htmlFor="showClientNameToWorkers" className="text-sm font-bold cursor-pointer">Show client name to workers</Label>
+                  <p className="text-[10px] text-muted-foreground">When disabled, workers will only see "Client" instead of the person/company name.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 p-3 rounded-xl border border-border/40 bg-muted/5">
+                <Checkbox 
+                  id="showClientPhoneToWorkers" 
+                  checked={showClientPhoneToWorkers}
+                  onCheckedChange={(checked) => setShowClientPhoneToWorkers(checked === true)}
+                />
+                <div className="space-y-0.5">
+                  <Label htmlFor="showClientPhoneToWorkers" className="text-sm font-bold cursor-pointer">Show client phone number to workers</Label>
+                  <p className="text-[10px] text-muted-foreground">When disabled, the client's phone number and call button will be hidden from workers.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-4 pt-4 border-t border-border/50">
