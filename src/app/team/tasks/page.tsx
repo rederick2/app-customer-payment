@@ -43,8 +43,12 @@ export default async function TeamTasksPage() {
 
   const admin = createAdminClient();
 
-  // Fetch proformas that have tasks or visits assigned to this team member
-  // We query the tasks + visits assigned to this member and group by proforma
+  // Fetch tasks and visits assigned to this team member
+  // We show: 1. All non-completed items, 2. Items completed TODAY (so they don't disappear immediately)
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const todayIso = todayStart.toISOString();
+
   const [{ data: rawTasks }, { data: rawVisits }, { data: activeEntry }] = await Promise.all([
     admin
       .from('job_tasks')
@@ -56,7 +60,7 @@ export default async function TeamTasksPage() {
         )
       `)
       .eq('assigned_to', teamMember.id)
-      .neq('status', 'completed')
+      .or(`status.neq.completed,updated_at.gte.${todayIso}`)
       .order('due_date', { ascending: true }),
 
     admin
@@ -69,7 +73,7 @@ export default async function TeamTasksPage() {
         )
       `)
       .eq('assigned_to', teamMember.id)
-      .not('status', 'eq', 'completed')
+      .or(`status.neq.completed,updated_at.gte.${todayIso}`)
       .order('visit_date', { ascending: true }),
 
     admin
@@ -100,6 +104,14 @@ export default async function TeamTasksPage() {
 
   await Promise.all([geocodeClients(rawTasks || []), geocodeClients(rawVisits || [])]);
 
+  const [{ data: adminSettings }] = await Promise.all([
+    admin
+      .from('users')
+      .select('show_client_name_to_workers, show_client_phone_to_workers')
+      .eq('id', teamMember.user_id)
+      .single()
+  ]);
+
   const attachCoords = (item: any) => {
     const c = item.proformas?.clients;
     if (!c) return { ...item, lat: null, lng: null };
@@ -118,6 +130,10 @@ export default async function TeamTasksPage() {
       visits={visits}
       teamMemberId={teamMember.id}
       activeEntry={activeEntry}
+      settings={{
+        showClientName: adminSettings?.show_client_name_to_workers !== false,
+        showClientPhone: adminSettings?.show_client_phone_to_workers !== false
+      }}
     />
   );
 }

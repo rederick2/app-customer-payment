@@ -68,7 +68,7 @@ export function EmailBillingModal({
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('email sent successfully');
+        toast.success('Email sent successfully');
         onClose();
       }
     } catch (error) {

@@ -48,6 +48,9 @@ export async function updateProfile(formData: FormData) {
     logoUrl = publicUrl
   }
 
+  const showClientNameToWorkers = formData.get('showClientNameToWorkers') === 'true'
+  const showClientPhoneToWorkers = formData.get('showClientPhoneToWorkers') === 'true'
+
   const updateData: any = {
     display_name: displayName,
     email: email,
@@ -56,7 +59,9 @@ export async function updateProfile(formData: FormData) {
     business_license: businessLicense,
     proforma_sequence_start: proformaSequenceStart,
     terms_conditions: termsConditions,
-    pdf_font_size: pdfFontSize
+    pdf_font_size: pdfFontSize,
+    show_client_name_to_workers: showClientNameToWorkers,
+    show_client_phone_to_workers: showClientPhoneToWorkers
   }
 
   if (logoUrl !== undefined) {
