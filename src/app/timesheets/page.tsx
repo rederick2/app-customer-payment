@@ -13,7 +13,8 @@ export default async function TimesheetsAdminPage() {
     .select(`
       *,
       team_members(*),
-      proformas(project_name, number)
+      proformas(project_name, number),
+      job_tasks:task_id(title)
     `)
     .eq('proformas.user_id', user.id)
     .order('created_at', { ascending: false });

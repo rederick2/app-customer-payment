@@ -214,6 +214,7 @@ function TaskActions({ taskId, initialPercentage, teamMemberId, proformaId, acti
         <TimerButton
           teamMemberId={teamMemberId}
           proformaId={proformaId}
+          taskId={taskId}
           activeEntry={activeEntry}
         />
       </div>
@@ -233,10 +234,17 @@ function TaskActions({ taskId, initialPercentage, teamMemberId, proformaId, acti
 }
 
 // ── Timer Button (compact inline) ────────────────────────────
-function TimerButton({ teamMemberId, proformaId, activeEntry }: { teamMemberId: string; proformaId: string; activeEntry: any }) {
+function TimerButton({ teamMemberId, proformaId, taskId, activeEntry }: { 
+  teamMemberId: string; 
+  proformaId: string; 
+  taskId?: string | null;
+  activeEntry: any 
+}) {
   const [isPending, startTransition] = useTransition();
   const [elapsed, setElapsed] = useState('00:00');
-  const isActive = activeEntry?.proforma_id === proformaId;
+  
+  // Prefer task_id check for accuracy, fallback to proforma_id for legacy entries
+  const isActive = activeEntry?.task_id === taskId || (!activeEntry?.task_id && activeEntry?.proforma_id === proformaId);
   const isBusy = activeEntry && !isActive;
 
   useEffect(() => {
@@ -260,7 +268,7 @@ function TimerButton({ teamMemberId, proformaId, activeEntry }: { teamMemberId: 
         const r = await stopTimeEntry(activeEntry.id);
         if (r.error) toast.error(r.error); else toast.success('Timer stopped');
       } else {
-        const r = await startTimeEntry(teamMemberId, proformaId);
+        const r = await startTimeEntry(teamMemberId, proformaId, taskId ?? null);
         if (r.error) toast.error(r.error); else toast.success('Timer started');
       }
     });
@@ -455,6 +463,7 @@ export default function TasksMapView({ tasks, visits, teamMemberId, activeEntry,
                               <TimerButton
                                 teamMemberId={teamMemberId}
                                 proformaId={visit.proformas.id}
+                                taskId={null}
                                 activeEntry={activeEntry}
                               />
                             </div>

@@ -110,3 +110,20 @@ export async function syncTimeEntryToQB(entryId: string) {
     return { error: err.message || 'Failed to sync to QuickBooks' };
   }
 }
+
+export async function updateTimeEntryStatus(entryId: string, status: 'approved' | 'rejected' | 'completed') {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from('time_entries')
+    .update({ status })
+    .eq('id', entryId);
+
+  if (error) {
+    console.error('Error updating status:', error);
+    return { error: 'Failed' };
+  }
+
+  revalidatePath('/timesheets');
+  return { success: true };
+}
