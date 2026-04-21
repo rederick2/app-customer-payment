@@ -17,7 +17,7 @@ export async function updateTaskProgress(taskId: string, percentage: number) {
   return { success: true };
 }
 
-export async function startTimeEntry(teamMemberId: string, proformaId: string | null) {
+export async function startTimeEntry(teamMemberId: string, proformaId: string | null, taskId: string | null) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
@@ -34,13 +34,14 @@ export async function startTimeEntry(teamMemberId: string, proformaId: string | 
     user_id: teamMember.user_id,
     team_member_id: teamMemberId,
     proforma_id: proformaId || null,
+    task_id: taskId || null,
     start_time: new Date().toISOString(),
     status: 'active'
   }]).select().single();
 
   if (error) {
     console.error('Error starting time:', error);
-    return { error: 'Failed to start time entry' };
+    return { error: 'Failed' };
   }
 
   revalidatePath('/team/tasks');

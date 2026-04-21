@@ -6,12 +6,25 @@ import { Play, Square, Loader2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { startTimeEntry, stopTimeEntry } from '../actions';
 
-export default function TaskTimerClient({ teamMemberId, proformaId, globalActiveEntry }: { teamMemberId: string, proformaId: string, globalActiveEntry: any }) {
+export default function TaskTimerClient({ 
+  teamMemberId, 
+  proformaId, 
+  taskId,
+  globalActiveEntry 
+}: { 
+  teamMemberId: string;
+  proformaId: string;
+  taskId?: string | null;
+  globalActiveEntry: any 
+}) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [elapsedTime, setElapsedTime] = useState('00:00:00');
 
-  const isActiveForThisProject = globalActiveEntry && globalActiveEntry.proforma_id === proformaId;
-  const isAnotherProjectActive = globalActiveEntry && globalActiveEntry.proforma_id !== proformaId;
+  const isActiveForThisProject = globalActiveEntry && (
+    (taskId && globalActiveEntry.task_id === taskId) || 
+    (!taskId && globalActiveEntry.proforma_id === proformaId)
+  );
+  const isAnotherProjectActive = globalActiveEntry && !isActiveForThisProject;
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -39,7 +52,7 @@ export default function TaskTimerClient({ teamMemberId, proformaId, globalActive
       return;
     }
     setIsUpdating(true);
-    const res = await startTimeEntry(teamMemberId, proformaId);
+    const res = await startTimeEntry(teamMemberId, proformaId, taskId || null);
     setIsUpdating(false);
 
     if (res.error) {
