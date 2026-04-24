@@ -35,9 +35,10 @@ export async function updateSession(request: NextRequest) {
   const isPublicSharedPage = pathname.startsWith('/p/')
   const isWebhook = pathname.startsWith('/api/quickbooks/webhook')
   const isPublicFile = pathname === '/robots.txt' || pathname === '/sitemap.xml'
+  const isMarketing = pathname === '/' || pathname.startsWith('/landing')
 
   // Not logged in → send to login
-  if (!user && !isAuthPage && !isPublicSharedPage && !isWebhook && !isPublicFile) {
+  if (!user && !isAuthPage && !isPublicSharedPage && !isWebhook && !isPublicFile && !isMarketing) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import {
   PlusCircle, FileText, Users, Briefcase, DollarSign,
   TrendingUp, Clock, CheckCircle2, AlertCircle, ArrowUpRight, ArrowRight
@@ -31,12 +32,9 @@ export default async function Dashboard() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground italic">Cargando sesión...</p>
-      </div>
-    );
+    redirect('/landing');
   }
+
 
   // ── Counts ──────────────────────────────────────────────────
   const { count: proformasCount } = await supabase
