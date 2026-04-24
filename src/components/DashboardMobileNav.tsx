@@ -5,13 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Menu,
-  X,
   LayoutDashboard,
   Users,
-  PlusCircle,
   ListTodo,
   Calendar,
-  MessageSquare,
   LogOut,
   Settings,
   GanttChart,
@@ -21,13 +18,19 @@ import {
   Image,
   MapPin,
   Clock,
-  ChevronDown,
-  ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/app/login/actions';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 
 interface DashboardMobileNavProps {
   unreadCount: number;
@@ -45,7 +48,6 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
     { href: '/jobs', icon: Briefcase, label: 'Jobs' },
     { href: '/invoices', icon: Receipt, label: 'Invoices' },
     { href: '/requests', icon: ListTodo, label: 'Requests' },
-    // Schedule submenu items rendered separately
     { href: '/gallery', icon: Image, label: 'Gallery' },
     { href: '/settings', icon: Settings, label: 'Settings' },
   ];
@@ -56,6 +58,12 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
   ];
 
   const links = isTeamMember ? teamLinks : adminLinks;
+
+  const scheduleLinks = [
+    { href: '/calendar', icon: Calendar, label: 'Calendar' },
+    { href: '/gantt', icon: GanttChart, label: 'Gantt' },
+    { href: '/jobs/team-map', icon: MapPin, label: 'Map' },
+  ];
 
   // Close menu when route changes
   React.useEffect(() => {
@@ -69,80 +77,87 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
         <Link href="/" className="flex items-center space-x-2">
           <img src="/logo.png" alt="Logo" className="h-8" />
         </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsOpen(!isOpen)}
-          className="text-foreground"
-        >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </Button>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-background pt-16 flex flex-col animate-in fade-in slide-in-from-top-4 duration-300">
-          <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
-            {links.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors",
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/80 hover:bg-muted/50"
-                  )}
-                >
-                  <Icon className="mr-4 h-5 w-5" />
-                  {link.label}
-                  {/*link.badge !== undefined && link.badge > 0 && (
-                    <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white leading-none">
-                      {link.badge > 9 ? '9+' : link.badge}
-                    </span>
-                  )*/}
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground"
+            />
+          }>
+            <Menu className="h-6 w-6" />
+          </SheetTrigger>
+          <SheetContent side="left" className="w-72 p-0 flex flex-col">
+            <SheetHeader className="px-4 py-5 border-b border-border/40">
+              <SheetTitle>
+                <Link href="/" onClick={() => setIsOpen(false)}>
+                  <img src="/logo.png" alt="Logo" className="h-8" />
                 </Link>
-              );
-            })}
-            {/* Schedule submenu for admin */}
-            {!isTeamMember && (
-              <div className="space-y-1">
-                <p className="px-4 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Schedule</p>
-                {[
-                  { href: '/calendar', icon: Calendar, label: 'Calendar' },
-                  { href: '/gantt', icon: GanttChart, label: 'Gantt' },
-                  { href: '/jobs/team-map', icon: MapPin, label: 'Map' },
-                ].map(link => (
-                  <Link key={link.href} href={link.href}
+              </SheetTitle>
+            </SheetHeader>
+
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+              {links.map((link) => {
+                const Icon = link.icon;
+                const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
                     className={cn(
-                      "flex items-center px-4 py-3 text-base font-medium rounded-xl transition-colors",
-                      pathname.startsWith(link.href) ? "bg-primary/10 text-primary" : "text-foreground/80 hover:bg-muted/50"
-                    )}>
-                    <link.icon className="mr-4 h-5 w-5" />
+                      "flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground/80 hover:bg-muted/50 hover:text-primary"
+                    )}
+                  >
+                    <Icon className="mr-3 h-4 w-4" />
                     {link.label}
                   </Link>
-                ))}
-              </div>
-            )}
-          </nav>
+                );
+              })}
 
-          <div className="p-4 border-t border-border/40 mb-4 space-y-2">
-            <ThemeToggle />
-            <form action={logout}>
-              <button
-                type="submit"
-                className="w-full flex items-center px-4 py-3 text-base font-medium text-foreground/80 hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
-              >
-                <LogOut className="mr-4 h-5 w-5" />
-                Log Out
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+              {/* Schedule submenu for admin */}
+              {!isTeamMember && (
+                <div className="space-y-1 pt-2">
+                  <p className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Schedule</p>
+                  {scheduleLinks.map(link => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "flex items-center px-3 py-2.5 text-sm font-bold rounded-xl transition-colors",
+                        pathname.startsWith(link.href)
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground/80 hover:bg-muted/50 hover:text-primary"
+                      )}
+                    >
+                      <link.icon className="mr-3 h-4 w-4" />
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </nav>
+
+            <div className="p-3 border-t border-border/40 space-y-1">
+              <ThemeToggle />
+              <Separator className="my-2" />
+              <form action={logout}>
+                <button
+                  type="submit"
+                  className="w-full flex items-center px-3 py-2.5 text-sm font-bold text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+                >
+                  <LogOut className="mr-3 h-4 w-4" />
+                  Log Out
+                </button>
+              </form>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </header>
     </>
   );
 }

@@ -15,6 +15,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { createTeamInvitation } from './teamActions';
 
 export default function TeamSettings({ initialTeamMembers }: { initialTeamMembers: any[] }) {
@@ -24,6 +34,7 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [currentInviteLink, setCurrentInviteLink] = useState('');
   const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -77,11 +88,10 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
   };
 
   const handleDeleteMember = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this team member?')) return;
-
     const { error } = await supabase.from('team_members').delete().eq('id', id);
     if (!error) {
       toast.success('Team member removed');
+      setDeleteConfirmId(null);
       fetchMembers();
     } else {
       toast.error('Failed to remove team member');
@@ -317,7 +327,7 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
                           <Button variant="outline" size="sm" onClick={() => setEditingId(member.id)} className="h-8 w-8 p-0 text-muted-foreground hover:text-primary">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleDeleteMember(member.id)} className="h-8 w-8 p-0 text-destructive/70 hover:text-destructive hover:bg-destructive/10">
+                          <Button variant="outline" size="sm" onClick={() => setDeleteConfirmId(member.id)} className="h-8 w-8 p-0 text-destructive/70 hover:text-destructive hover:bg-destructive/10">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -358,6 +368,25 @@ export default function TeamSettings({ initialTeamMembers }: { initialTeamMember
           </div>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Team Member?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The team member will lose access to the portal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirmId && handleDeleteMember(deleteConfirmId)}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

@@ -29,10 +29,10 @@ export default async function TimesheetsAdminPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex justify-between items-center p-6">
+      <div className="flex justify-between items-center mb-2">
         <div>
-          <h1 className="text-3xl  text-[#0D3B47] mb-1">Timesheets</h1>
-          <p className="text-muted-foreground text-sm">Review your team's hours and sync them securely to QuickBooks.</p>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-1">Timesheets</h1>
+          <p className="text-muted-foreground text-sm">Review your team&apos;s hours and sync them securely to QuickBooks.</p>
         </div>
       </div>
 

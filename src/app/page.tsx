@@ -14,6 +14,15 @@ import { DashboardNotifications } from '@/components/dashboard/DashboardNotifica
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardAIChat } from "@/components/dashboard/DashboardAIChat";
 import { Sparkles, Activity } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const revalidate = 0;
 
@@ -127,18 +136,14 @@ export default async function Dashboard() {
 
   // ── Helpers ───────────────────────────────────────────────────
   const statusBadge = (status: string) => {
-    const map: Record<string, { label: string; className: string }> = {
-      quote: { label: 'Quote', className: 'bg-amber-100 text-amber-700' },
-      job: { label: 'Active Job', className: 'bg-violet-100 text-violet-700' },
-      completed: { label: 'Completed', className: 'bg-emerald-100 text-emerald-700' },
-      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
+    const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' | 'success' }> = {
+      quote: { label: 'Quote', variant: 'warning' },
+      job: { label: 'Active Job', variant: 'default' },
+      completed: { label: 'Completed', variant: 'success' },
+      cancelled: { label: 'Cancelled', variant: 'destructive' },
     };
-    const s = map[status] ?? { label: status, className: 'bg-muted text-muted-foreground' };
-    return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.className}`}>
-        {s.label}
-      </span>
-    );
+    const s = map[status] ?? { label: status, variant: 'secondary' as const };
+    return <Badge variant={s.variant}>{s.label}</Badge>;
   };
 
   const stats = [
@@ -300,32 +305,31 @@ export default async function Dashboard() {
                 </Link>
               </div>
               <Card className="shadow-sm border-border/40 overflow-hidden">
-                <div className="overflow-x-auto">
                   {recentProformas && recentProformas.length > 0 ? (
-                    <table className="w-full text-sm text-left">
-                      <thead className="text-xs uppercase bg-muted/40 text-muted-foreground">
-                        <tr>
-                          <th className="px-5 py-4 font-medium">Project</th>
-                          <th className="px-5 py-4 font-medium">Status</th>
-                          <th className="px-5 py-4 text-right font-medium">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/40">
+                    <Table>
+                      <TableHeader className="bg-muted/40">
+                        <TableRow>
+                          <TableHead className="font-medium">Project</TableHead>
+                          <TableHead className="font-medium">Status</TableHead>
+                          <TableHead className="text-right font-medium">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {recentProformas.map((p) => (
-                          <tr key={p.id} className="hover:bg-muted/20 transition-colors">
-                            <td className="px-5 py-4">
+                          <TableRow key={p.id} className="hover:bg-muted/20 transition-colors">
+                            <TableCell>
                               <Link href={`/proforma/${p.id}`} className="font-medium text-foreground hover:text-primary transition-colors block truncate max-w-[150px]">
                                 {p.project_name} - #{p.number}
                               </Link>
-                            </td>
-                            <td className="px-5 py-4">{statusBadge(p.status)}</td>
-                            <td className="px-5 py-4 text-right font-semibold tabular-nums">
+                            </TableCell>
+                            <TableCell>{statusBadge(p.status)}</TableCell>
+                            <TableCell className="text-right font-semibold tabular-nums">
                               ${(p.total ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0 })}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   ) : (
                     <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-3">
                       <AlertCircle className="h-12 w-12 text-muted/20" />
@@ -333,7 +337,6 @@ export default async function Dashboard() {
                       <Link href="/proforma/new" className="text-primary hover:underline">Create your first quote</Link>
                     </div>
                   )}
-                </div>
               </Card>
             </div>
 

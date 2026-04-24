@@ -10,6 +10,14 @@ import { ImportClientsModal } from './components/ImportClientsModal';
 import { ClientSearchInput } from './components/ClientSearchInput';
 import { ClientPagination } from './components/ClientPagination';
 import { ClientActivityTrigger } from './components/ClientActivityTrigger';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export const revalidate = 0;
 
@@ -142,58 +150,55 @@ export default async function ClientsPage(
       <Card className="border-border/50 overflow-hidden bg-transparent hidden md:block">
         <div className="hidden md:block">
           {clients && clients.length > 0 ? (
-            <table className="w-full text-sm text-left border-collapse">
-              <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-medium">Name</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Email / Phone</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Address</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Last Activity</th>
-                  <th scope="col" className="px-6 py-4 text-right font-medium">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="font-medium">Name</TableHead>
+                  <TableHead className="font-medium">Email / Phone</TableHead>
+                  <TableHead className="font-medium">Address</TableHead>
+                  <TableHead className="font-medium">Last Activity</TableHead>
+                  <TableHead className="text-right font-medium">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {clients.map((client) => (
-                  <tr
+                  <TableRow
                     key={client.id}
-                    className="group bg-card hover:bg-muted/50 transition-colors cursor-pointer relative"
+                    className="group hover:bg-muted/50 transition-colors cursor-pointer"
                   >
-                    {/* Celdas principales con Link envolviendo el contenido */}
-                    <td className="p-0">
-                      <Link href={`/clients/${client.id}`} className="block px-6 py-4 font-medium text-foreground">
+                    <TableCell className="p-0">
+                      <Link href={`/clients/${client.id}`} className="block px-4 py-4 font-medium text-foreground">
                         {getDisplayName(client)}
                       </Link>
-                    </td>
-                    <td className="p-0">
-                      <Link href={`/clients/${client.id}`} className="block px-6 py-4 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-0">
+                      <Link href={`/clients/${client.id}`} className="block px-4 py-4 text-muted-foreground">
                         <div>{client.email || '-'}</div>
                         <div className="text-xs">{client.phone || '-'}</div>
                       </Link>
-                    </td>
-                    <td className="p-0">
-                      <Link href={`/clients/${client.id}`} className="block px-6 py-4 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="p-0">
+                      <Link href={`/clients/${client.id}`} className="block px-4 py-4 text-muted-foreground">
                         {client.street_1 ? `${client.street_1}, ${client.city}, ${client.province}` : (client.street_1 || '-')}
                       </Link>
-                    </td>
-                    <td className="p-0">
+                    </TableCell>
+                    <TableCell className="p-0">
                       <ClientActivityTrigger
                         client={client}
                         latestActivity={client._latestActivity ? new Date(client._latestActivity) : null}
                       />
-                    </td>
-
-                    {/* Celda de acciones (Edit) */}
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-4 py-4 text-right">
                       <Link href={`/clients/${client.id}/edit`} className="inline-block relative z-10">
                         <Button variant="ghost" size="sm" className="hover:text-primary hover:bg-background">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           ) : null}
         </div>
       </Card>

@@ -16,6 +16,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { useTheme } from "next-themes";
 import { logout } from '@/app/login/actions';
 
@@ -159,12 +166,14 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
                         onClick={() => setOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors group"
                       >
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          {client.company_name
-                            ? <Building2 className="h-4 w-4 text-primary" />
-                            : <User className="h-4 w-4 text-primary" />
-                          }
-                        </div>
+                        <Avatar className="h-8 w-8 shrink-0">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {client.company_name
+                              ? <Building2 className="h-4 w-4" />
+                              : <User className="h-4 w-4" />
+                            }
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-foreground truncate">{clientName(client)}</p>
                           {client.company_name && client.first_name && (
@@ -246,54 +255,55 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
       {/* Right icons */}
       <div className="flex items-center gap-1 ml-auto shrink-0">
         <DashboardNotifications />
-        {/* Notifications 
-        <Link
-          href="/messages"
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-          title="Notifications"
-        >
-          <Bell className="h-4.5 w-4.5" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white leading-none">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </Link>*/}
 
         {/* Help */}
-        <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-          title="Help"
-        >
-          <HelpCircle className="h-4.5 w-4.5" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger render={
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            />
+          }>
+            <HelpCircle className="h-4.5 w-4.5" />
+          </TooltipTrigger>
+          <TooltipContent>Help</TooltipContent>
+        </Tooltip>
 
         {/* Settings */}
         {!isTeamMember && (
-          <Link
-            href="/settings"
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            title="Settings"
-          >
-            <Settings className="h-4.5 w-4.5" />
-          </Link>
+          <Tooltip>
+            <TooltipTrigger render={
+              <Link
+                href="/settings"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              />
+            }>
+              <Settings className="h-4.5 w-4.5" />
+            </TooltipTrigger>
+            <TooltipContent>Settings</TooltipContent>
+          </Tooltip>
         )}
 
         {/* Avatar & Profile Dropdown */}
         {userProfile && (
           <Popover>
             <PopoverTrigger render={
-              <button className="ml-2 h-8.5 w-8.5 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold select-none shrink-0 transition-transform hover:scale-105 active:scale-95">
-                {userProfile.displayName?.charAt(0).toUpperCase()}
+              <button className="ml-2 shrink-0 transition-transform hover:scale-105 active:scale-95">
+                <Avatar className="h-8 w-8 bg-primary">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-bold">
+                    {userProfile.displayName?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               </button>
             }>
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0 overflow-hidden rounded-2xl shadow-2xl border-border/40" align="end">
               {/* Header Profile Section */}
               <div className="bg-muted/30 p-6 flex flex-col items-center text-center gap-2 border-b border-border/40">
-                <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold mb-1 shadow-inner">
-                  {userProfile.displayName?.charAt(0).toUpperCase()}
-                </div>
+                <Avatar className="h-16 w-16 mb-1">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                    {userProfile.displayName?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="space-y-0.5">
                   <p className="font-bold text-foreground leading-none">{userProfile.displayName}</p>
                   <div className="flex items-center justify-center gap-2 mt-2">
@@ -343,8 +353,10 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
                 </button>
               </div>
 
+              <Separator />
+
               {/* Logout Footer */}
-              <div className="p-2 pt-0">
+              <div className="p-2">
                 <form action={logout}>
                   <button
                     type="submit"

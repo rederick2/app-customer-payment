@@ -13,6 +13,7 @@ import SidebarNav from '@/components/SidebarNav';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { TopBar } from '@/components/TopBar';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const archivoBlack = Archivo_Black({
   weight: '400',
@@ -96,6 +97,7 @@ export default async function RootLayout({
         className={`${archivoBlack.variable} ${dmSans.variable} ${manrope.variable} font-manrope antialiased min-h-screen bg-background text-foreground flex`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <TooltipProvider delay={300}>
           {user ? (
             <>
               <aside className="hidden md:flex flex-col w-48 border-r border-border/40 bg-muted/50 h-screen sticky top-0 px-4 py-8 print:hidden">
@@ -134,6 +136,7 @@ export default async function RootLayout({
             </main>
           )}
           <Toaster />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
