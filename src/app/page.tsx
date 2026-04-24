@@ -10,7 +10,6 @@ import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { StatusDonutChart } from '@/components/dashboard/StatusDonutChart';
 import { MonthlyBarChart } from '@/components/dashboard/MonthlyBarChart';
 import { RecentlyVisitedJobs } from '@/components/dashboard/RecentlyVisitedJobs';
-import { DashboardNotifications } from '@/components/dashboard/DashboardNotifications';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardAIChat } from "@/components/dashboard/DashboardAIChat";
 import { Sparkles, Activity } from "lucide-react";
@@ -23,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DashboardStatCards } from "@/components/dashboard/DashboardStatCards";
 
 export const revalidate = 0;
 
@@ -71,7 +71,7 @@ export default async function Dashboard() {
     .in('status', ['job', 'completed']).eq('is_template', false);
   const totalRevenue = (revenueData || []).reduce((s, p) => s + (p.total || 0), 0);
 
-  // ── Chart data: all proformas with date + total + status ─────
+  // ── Chart data ─────────────────────────────────────────────
   const { data: allProformas } = await supabase
     .from('proformas')
     .select('created_at, total, status')
@@ -79,7 +79,6 @@ export default async function Dashboard() {
     .eq('is_template', false)
     .order('created_at', { ascending: true });
 
-  // Build last 12 months map
   const now = new Date();
   const months: { key: string; label: string }[] = [];
   for (let i = 11; i >= 0; i--) {
@@ -106,7 +105,6 @@ export default async function Dashboard() {
   const revenueChartData = months.map(m => ({ month: m.label, revenue: revenueByMonth[m.key] }));
   const countChartData = months.map(m => ({ month: m.label, count: countByMonth[m.key] }));
 
-  // Status breakdown for donut
   const statusCounts = { quote: 0, job: 0, completed: 0, cancelled: 0 };
   (allProformas || []).forEach(p => {
     if (p.status in statusCounts) statusCounts[p.status as keyof typeof statusCounts]++;
@@ -134,7 +132,6 @@ export default async function Dashboard() {
     .order('created_at', { ascending: false })
     .limit(5);
 
-  // ── Helpers ───────────────────────────────────────────────────
   const statusBadge = (status: string) => {
     const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'warning' | 'success' }> = {
       quote: { label: 'Quote', variant: 'warning' },
@@ -156,16 +153,22 @@ export default async function Dashboard() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="relative container mx-auto px-4 py-8 max-w-7xl">
+
+      {/* Glassmorphism background blobs */}
+      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
+        <div className="absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/[0.035] blur-[140px]" />
+        <div className="absolute bottom-0 right-0 h-[360px] w-[360px] rounded-full bg-foreground/[0.025] blur-[120px]" />
+        <div className="absolute top-1/2 left-1/4 h-[400px] w-[400px] rounded-full bg-primary/[0.02] blur-[150px]" />
+      </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-        <div>
-          <h1 className=" text-3xl md:text-4xl font-bold tracking-tight mb-1">Dashboard</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground text-sm">Overview of your business performance.</p>
         </div>
         <div className="flex items-center gap-3">
-
           <Link href="/proforma/new">
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all hover:-translate-y-0.5">
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -175,8 +178,8 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full space-y-8">
-        <TabsList className="bg-muted p-1 border border-border/40 rounded-xl h-auto flex flex-wrap gap-1 justify-start">
+      <Tabs defaultValue="overview" className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <TabsList className="bg-background/60 backdrop-blur border border-border/40 p-1 rounded-xl h-auto flex flex-wrap gap-1 justify-start">
           <TabsTrigger value="overview" className="rounded-lg px-6 py-2.5 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md text-sm font-medium transition-all">
             <Activity className="h-4 w-4 mr-2" />
             Summary
@@ -202,48 +205,29 @@ export default async function Dashboard() {
               <RecentlyVisitedJobs />
 
               <div>
-                <h2 className=" text-xl font-semibold tracking-tight mb-3">Quick Actions</h2>
-                <Card className="shadow-sm border-border/40">
-                  <CardContent className="p-3 space-y-1">
-                    {[
-                      { href: '/clients/new', label: 'New Client', icon: Users, color: 'text-blue-500' },
-                      { href: '/proforma/new', label: 'New Quote', icon: FileText, color: 'text-blue-500' },
-                      { href: '/clients', label: 'Manage Clients', icon: Users, color: 'text-orange-500' },
-                      { href: '/jobs', label: 'View Jobs', icon: Briefcase, color: 'text-violet-500' },
-                      { href: '/quotes', label: 'All Quotes', icon: TrendingUp, color: 'text-emerald-500' },
-                    ].map(({ href, label, icon: Icon, color }) => (
-                      <Link key={href} href={href}>
-                        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors cursor-pointer group">
-                          <Icon className={`h-4 w-4 ${color}`} />
-                          <span className="text-sm font-medium flex-1">{label}</span>
-                          <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
-                        </div>
-                      </Link>
-                    ))}
-                  </CardContent>
-                </Card>
+                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground mb-3">Quick Actions</h2>
+                <div className="rounded-2xl border border-border/40 bg-background/60 backdrop-blur overflow-hidden">
+                  {[
+                    { href: '/clients/new', label: 'New Client', icon: Users, color: 'text-blue-500' },
+                    { href: '/proforma/new', label: 'New Quote', icon: FileText, color: 'text-blue-500' },
+                    { href: '/clients', label: 'Manage Clients', icon: Users, color: 'text-orange-500' },
+                    { href: '/jobs', label: 'View Jobs', icon: Briefcase, color: 'text-violet-500' },
+                    { href: '/quotes', label: 'All Quotes', icon: TrendingUp, color: 'text-emerald-500' },
+                  ].map(({ href, label, icon: Icon, color }) => (
+                    <Link key={href} href={href}>
+                      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group border-b border-border/20 last:border-0">
+                        <Icon className={`h-4 w-4 ${color} shrink-0`} />
+                        <span className="text-sm font-medium flex-1">{label}</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="lg:col-span-8">
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                {stats.map(({ label, value, sub, icon: Icon, color, bg }) => (
-                  <Card key={label} className="shadow-sm border-border/40 hover:shadow-md transition-all hover:-translate-y-1">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label}</p>
-                          <p className="text-3xl font-bold  truncate">{value}</p>
-                          <p className="text-xs text-muted-foreground mt-2">{sub}</p>
-                        </div>
-                        <div className={`${bg} ${color} p-3 rounded-2xl shrink-0 ml-4 shadow-sm`}>
-                          <Icon className="h-6 w-6" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <DashboardStatCards stats={stats} />
             </div>
           </div>
         </TabsContent>
@@ -252,45 +236,48 @@ export default async function Dashboard() {
         <TabsContent value="analytics" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-border/40">
-                <CardHeader className="pb-2 pt-5 px-5 flex flex-row items-center justify-between">
+              <div className="group relative overflow-hidden rounded-2xl border border-border/40 bg-background/60 backdrop-blur transition-all hover:border-border/60 hover:shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.04] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 -z-10" />
+                <div className="pb-2 pt-5 px-5 flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Revenue Trend</CardTitle>
+                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Revenue Trend</p>
                     <p className="text-xs text-muted-foreground mt-1">Earnings over the last 12 months</p>
                   </div>
                   <TrendingUp className="h-4 w-4 text-emerald-500" />
-                </CardHeader>
-                <CardContent className="px-5 pb-5">
+                </div>
+                <div className="px-5 pb-5">
                   <RevenueChart data={revenueChartData} />
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card className="shadow-sm border-border/40">
-                <CardHeader className="pb-2 pt-5 px-5 flex flex-row items-center justify-between">
+              <div className="group relative overflow-hidden rounded-2xl border border-border/40 bg-background/60 backdrop-blur transition-all hover:border-border/60 hover:shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.04] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 -z-10" />
+                <div className="pb-2 pt-5 px-5 flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quote Status Distribution</CardTitle>
+                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Quote Status</p>
                     <p className="text-xs text-muted-foreground mt-1">Breakdown by current project status</p>
                   </div>
                   <Activity className="h-4 w-4 text-violet-500" />
-                </CardHeader>
-                <CardContent className="px-5 pb-5">
+                </div>
+                <div className="px-5 pb-5">
                   <StatusDonutChart data={donutData} />
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
 
-            <Card className="shadow-sm border-border/40">
-              <CardHeader className="pb-2 pt-5 px-5 flex flex-row items-center justify-between">
+            <div className="group relative overflow-hidden rounded-2xl border border-border/40 bg-background/60 backdrop-blur transition-all hover:border-border/60 hover:shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.04] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 -z-10" />
+              <div className="pb-2 pt-5 px-5 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Monthly Productivity</CardTitle>
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Monthly Productivity</p>
                   <p className="text-xs text-muted-foreground mt-1">Number of quotes created per month</p>
                 </div>
                 <FileText className="h-4 w-4 text-blue-500" />
-              </CardHeader>
-              <CardContent className="px-5 pb-5">
+              </div>
+              <div className="px-5 pb-5">
                 <MonthlyBarChart data={countChartData} />
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
@@ -299,78 +286,78 @@ export default async function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className=" text-xl font-semibold tracking-tight">Recent Quotes</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Recent Quotes</h2>
                 <Link href="/quotes" className="text-xs text-primary hover:underline flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-full">
                   All Quotes <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
-              <Card className="shadow-sm border-border/40 overflow-hidden">
-                  {recentProformas && recentProformas.length > 0 ? (
-                    <Table>
-                      <TableHeader className="bg-muted/40">
-                        <TableRow>
-                          <TableHead className="font-medium">Project</TableHead>
-                          <TableHead className="font-medium">Status</TableHead>
-                          <TableHead className="text-right font-medium">Total</TableHead>
+              <div className="group relative overflow-hidden rounded-2xl border border-border/40 bg-background/60 backdrop-blur transition-all hover:border-border/60 hover:shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.04] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 -z-10" />
+                {recentProformas && recentProformas.length > 0 ? (
+                  <Table>
+                    <TableHeader className="bg-muted/20">
+                      <TableRow>
+                        <TableHead className="font-medium">Project</TableHead>
+                        <TableHead className="font-medium">Status</TableHead>
+                        <TableHead className="text-right font-medium">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentProformas.map((p) => (
+                        <TableRow key={p.id} className="hover:bg-muted/20 transition-colors">
+                          <TableCell>
+                            <Link href={`/proforma/${p.id}`} className="font-medium text-foreground hover:text-primary transition-colors block truncate max-w-[150px]">
+                              {p.project_name} - #{p.number}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{statusBadge(p.status)}</TableCell>
+                          <TableCell className="text-right font-semibold tabular-nums">
+                            ${(p.total ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0 })}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentProformas.map((p) => (
-                          <TableRow key={p.id} className="hover:bg-muted/20 transition-colors">
-                            <TableCell>
-                              <Link href={`/proforma/${p.id}`} className="font-medium text-foreground hover:text-primary transition-colors block truncate max-w-[150px]">
-                                {p.project_name} - #{p.number}
-                              </Link>
-                            </TableCell>
-                            <TableCell>{statusBadge(p.status)}</TableCell>
-                            <TableCell className="text-right font-semibold tabular-nums">
-                              ${(p.total ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0 })}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-3">
-                      <AlertCircle className="h-12 w-12 text-muted/20" />
-                      <p className="text-base font-medium">No quotes yet.</p>
-                      <Link href="/proforma/new" className="text-primary hover:underline">Create your first quote</Link>
-                    </div>
-                  )}
-              </Card>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-3">
+                    <AlertCircle className="h-12 w-12 text-muted/20" />
+                    <p className="text-base font-medium">No quotes yet.</p>
+                    <Link href="/proforma/new" className="text-primary hover:underline">Create your first quote</Link>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className=" text-xl font-semibold tracking-tight">Recent Clients</h2>
+                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Recent Clients</h2>
                 <Link href="/clients" className="text-xs text-primary hover:underline flex items-center gap-1 bg-primary/5 px-2 py-1 rounded-full">
                   All Clients <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
-              <Card className="shadow-sm border-border/40">
-                <CardContent className="p-3 space-y-1">
-                  {recentClients && recentClients.length > 0 ? recentClients.map((client) => (
-                    <Link key={client.id} href={`/clients/${client.id}`}>
-                      <div className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 border border-primary/5">
-                          <span className="text-sm font-bold text-primary">
-                            {client.name?.charAt(0).toUpperCase() || '?'}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate leading-none mb-1">{client.name}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{client.email || 'No email provided'}</p>
-                        </div>
-                        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+              <div className="group relative overflow-hidden rounded-2xl border border-border/40 bg-background/60 backdrop-blur transition-all hover:border-border/60 hover:shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.04] via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 -z-10" />
+                {recentClients && recentClients.length > 0 ? recentClients.map((client) => (
+                  <Link key={client.id} href={`/clients/${client.id}`}>
+                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group/item border-b border-border/20 last:border-0">
+                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 border border-primary/5">
+                        <span className="text-sm font-bold text-primary">
+                          {client.name?.charAt(0).toUpperCase() || '?'}
+                        </span>
                       </div>
-                    </Link>
-                  )) : (
-                    <div className="py-10 text-center text-muted-foreground">
-                      <p className="text-sm italic">No recent clients found.</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate leading-none mb-1">{client.name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{client.email || 'No email provided'}</p>
+                      </div>
+                      <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover/item:text-primary transition-colors shrink-0" />
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </Link>
+                )) : (
+                  <div className="py-10 text-center text-muted-foreground">
+                    <p className="text-sm italic">No recent clients found.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </TabsContent>
