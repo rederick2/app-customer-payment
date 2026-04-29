@@ -57,18 +57,14 @@ export function RecentlyVisitedJobs() {
   }, [fetchJobs]);
 
   const statusBadge = (status: string) => {
-    const map: Record<string, { label: string; className: string }> = {
-      quote: { label: 'Quote', className: 'bg-amber-100 text-amber-700' },
-      job: { label: 'Active Job', className: 'bg-violet-100 text-violet-700' },
-      completed: { label: 'Completed', className: 'bg-emerald-100 text-emerald-700' },
-      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
+    const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'warning' | 'success' }> = {
+      quote: { label: 'Quote', variant: 'warning' },
+      job: { label: 'Active Job', variant: 'default' },
+      completed: { label: 'Completed', variant: 'success' },
+      cancelled: { label: 'Cancelled', variant: 'destructive' },
     };
-    const s = map[status] ?? { label: status, className: 'bg-muted text-muted-foreground' };
-    return (
-      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.className}`}>
-        {s.label}
-      </span>
-    );
+    const s = map[status] ?? { label: status, variant: 'secondary' as const };
+    return <Badge variant={s.variant}>{s.label}</Badge>;
   };
 
   if (isLoading) {

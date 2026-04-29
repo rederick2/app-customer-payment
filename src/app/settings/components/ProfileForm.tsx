@@ -12,6 +12,7 @@ import { Loader2, Camera, Trash2, Users, ShieldCheck } from 'lucide-react';
 import Autocomplete from 'react-google-autocomplete';
 import { compressImage } from '@/lib/image-compression';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 
 export default function ProfileForm({ initialData }: { initialData: any }) {
   const [loading, setLoading] = useState(false);
@@ -273,16 +274,18 @@ export default function ProfileForm({ initialData }: { initialData: any }) {
             </div>
             <div className="flex flex-col gap-6">
               <div className="px-2">
-                <input
-                  type="range"
+                <Slider
                   id="pdfFontSize"
                   name="pdfFontSize"
-                  min="8"
-                  max="16"
-                  step="1"
-                  value={pdfFontSize}
-                  onChange={(e) => setPdfFontSize(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary transition-all hover:accent-primary/80"
+                  min={8}
+                  max={16}
+                  step={1}
+                  value={[pdfFontSize]}
+                  onValueChange={(values: number | readonly number[]) => {
+                    const val = Array.isArray(values) ? values[0] : values;
+                    setPdfFontSize(val as number);
+                  }}
+                  className="w-full"
                 />
                 <div className="flex justify-between mt-2 px-0.5">
                   <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-tighter">Small (8px)</span>

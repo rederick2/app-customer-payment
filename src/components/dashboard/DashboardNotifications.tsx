@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Notification = {
   id: string;
@@ -171,7 +172,7 @@ export function DashboardNotifications() {
           </div>
         </div>
 
-        <div className="max-h-[350px] overflow-y-auto">
+        <ScrollArea className="h-[350px]">
           {isLoading ? (
             <div className="flex justify-center items-center py-8">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -215,7 +216,7 @@ export function DashboardNotifications() {
               ))}
             </div>
           )}
-        </div>
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );

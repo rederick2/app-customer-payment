@@ -3,16 +3,15 @@ import { Archivo_Black, DM_Sans, Manrope } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { logout } from '@/app/login/actions';
-import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
-import { LayoutDashboard, Users, PlusCircle, ListTodo, LogOut, MessageSquare, Calendar, Settings, GanttChart, FileText, Briefcase, Receipt, Camera, Clock } from 'lucide-react';
 import RealtimeNotifier from '@/components/RealtimeNotifier';
 import DashboardMobileNav from '@/components/DashboardMobileNav';
 import SidebarNav from '@/components/SidebarNav';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { TopBar } from '@/components/TopBar';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { AppShell } from '@/components/AppShell';
+import { HousePlus } from 'lucide-react';
 
 const archivoBlack = Archivo_Black({
   weight: '400',
@@ -70,11 +69,9 @@ export default async function RootLayout({
       phone: profile?.phone || null
     };
 
-    // user_type: 0 = admin, 1 = regular user, 2 = team member
     isTeamMember = profile?.user_type === 2;
   }
 
-  // Count unread messages from clients across all proformas
   let unreadCount = 0;
   let proformaIds: string[] = [];
   if (user) {
@@ -90,50 +87,49 @@ export default async function RootLayout({
       unreadCount = count || 0;
     }
   }
+
+  const sidebar = user ? (
+    <aside className="hidden md:flex flex-col w-48 border-r border-border/40 bg-muted/50 h-screen sticky top-0 px-4 py-8 print:hidden">
+      <Link href="/" className="mb-4 flex items-center justify-center gap-3">
+        <HousePlus className="h-9 w-9 shrink-0" />
+        <span className="font-archivo text-3xl font-bold tracking-tight mt-1">Quickqi</span>
+      </Link>
+      <nav className="flex-1 space-y-1">
+        <SidebarNav isTeamMember={isTeamMember} />
+      </nav>
+    </aside>
+  ) : null;
+
+  const topbar = user ? (
+    <TopBar userProfile={userProfile} unreadCount={unreadCount} isTeamMember={isTeamMember} />
+  ) : null;
+
+  const mobileNav = user ? (
+    <DashboardMobileNav unreadCount={unreadCount} isTeamMember={isTeamMember} />
+  ) : null;
+
+  const realtimeNotifier = user ? (
+    <RealtimeNotifier proformaIds={proformaIds} watchSenderType="client" />
+  ) : null;
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${archivoBlack.variable} ${dmSans.variable} ${manrope.variable} font-manrope antialiased min-h-screen bg-background text-foreground flex`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {user ? (
-            <>
-              <aside className="hidden md:flex flex-col w-48 border-r border-border/40 bg-muted/50 h-screen sticky top-0 px-4 py-8 print:hidden">
-                <Link href="/" className="mb-8 px-2 flex items-center space-x-2">
-                  <img src="/logo.png" alt="Logo" />
-                </Link>
-
-                <nav className="flex-1 space-y-1">
-                  <SidebarNav isTeamMember={isTeamMember} />
-                </nav>
-
-                {/*<div className="pt-4 border-t border-border/40 space-y-2">
-                  <ThemeToggle />
-                  <form action={logout}>
-                    <button type="submit" className="w-full flex items-center px-3 py-2.5 text-sm font-medium text-foreground/80 hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors">
-                      <LogOut className="mr-3 h-4 w-4" />
-                      Log Out
-                    </button>
-                  </form>
-                </div>*/}
-              </aside>
-              <DashboardMobileNav unreadCount={unreadCount} isTeamMember={isTeamMember} />
-              {/* Fixed top bar — sits above main, outside scroll container */}
-              <div className="hidden md:block fixed top-0 left-48 right-0 z-40 print:hidden">
-                <TopBar userProfile={userProfile} unreadCount={unreadCount} isTeamMember={isTeamMember} />
-              </div>
-              <main className="flex-1 flex flex-col min-w-0 overflow-x-hidden pt-16 md:pt-14">
-                {children}
-              </main>
-              {/* Invisible realtime listener — keeps the badge count live */}
-              <RealtimeNotifier proformaIds={proformaIds} watchSenderType="client" />
-            </>
-          ) : (
-            <main className="flex-1 flex flex-col">
+          <TooltipProvider delay={300}>
+            <AppShell
+              isLoggedIn={!!user}
+              sidebar={sidebar}
+              topbar={topbar}
+              mobileNav={mobileNav}
+              realtimeNotifier={realtimeNotifier}
+            >
               {children}
-            </main>
-          )}
-          <Toaster />
+            </AppShell>
+            <Toaster />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
