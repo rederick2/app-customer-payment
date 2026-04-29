@@ -11,6 +11,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { TopBar } from '@/components/TopBar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppShell } from '@/components/AppShell';
+import { HousePlus } from 'lucide-react';
 
 const archivoBlack = Archivo_Black({
   weight: '400',
@@ -89,9 +90,9 @@ export default async function RootLayout({
 
   const sidebar = user ? (
     <aside className="hidden md:flex flex-col w-48 border-r border-border/40 bg-muted/50 h-screen sticky top-0 px-4 py-8 print:hidden">
-      <Link href="/" className="mb-8 px-2 flex items-center space-x-2">
-        {/*<img src="/logo.png" alt="Logo" />*/}
-        <span className="font-archivo text-xl font-bold tracking-tight text-white">Quickqi</span>
+      <Link href="/" className="mb-4 flex items-center justify-center gap-3">
+        <HousePlus className="h-9 w-9 shrink-0" />
+        <span className="font-archivo text-3xl font-bold tracking-tight mt-1">Quickqi</span>
       </Link>
       <nav className="flex-1 space-y-1">
         <SidebarNav isTeamMember={isTeamMember} />
@@ -112,7 +113,7 @@ export default async function RootLayout({
   ) : null;
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${archivoBlack.variable} ${dmSans.variable} ${manrope.variable} font-manrope antialiased min-h-screen bg-background text-foreground flex`}
       >

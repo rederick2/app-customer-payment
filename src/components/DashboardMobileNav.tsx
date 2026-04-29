@@ -18,6 +18,7 @@ import {
   Image,
   MapPin,
   Clock,
+  HousePlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -74,8 +75,9 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
     <>
       {/* Mobile Top Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border/40 h-16 flex items-center justify-between px-4">
-        <Link href="/" className="flex items-center space-x-2">
-          <img src="/logo.png" alt="Logo" className="h-8" />
+        <Link href="/" className="flex items-center gap-3">
+          <HousePlus className="h-8 w-8 shrink-0 text-foreground" />
+          <span className="font-archivo text-2xl font-bold tracking-tight mt-1">Quickqi</span>
         </Link>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger render={
@@ -90,8 +92,9 @@ export default function DashboardMobileNav({ unreadCount, isTeamMember }: Dashbo
           <SheetContent side="left" className="w-72 p-0 flex flex-col">
             <SheetHeader className="px-4 py-5 border-b border-border/40">
               <SheetTitle>
-                <Link href="/" onClick={() => setIsOpen(false)}>
-                  <img src="/logo.png" alt="Logo" className="h-8" />
+                <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-3">
+                  <HousePlus className="h-8 w-8 shrink-0 text-foreground" />
+                  <span className="font-archivo text-2xl font-bold tracking-tight mt-1">Quickqi</span>
                 </Link>
               </SheetTitle>
             </SheetHeader>
