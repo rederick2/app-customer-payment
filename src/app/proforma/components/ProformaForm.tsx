@@ -12,7 +12,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal, Clock, Calendar as CalendarIcon, HelpCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { TutorialDialog } from './TutorialDialog';
+import { ProformaTour } from './ProformaTour';
 import { cn } from '@/lib/utils';
 import { generateAndSaveVisits } from './job-actions';
 import Autocomplete from 'react-google-autocomplete';
@@ -234,7 +234,7 @@ function SortableItem({
           <div
             {...attributes}
             {...listeners}
-            className="p-1.5 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground group-hover:text-muted-foreground/40 transition-colors"
+            className="tour-item-drag p-1.5 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground group-hover:text-muted-foreground/40 transition-colors"
           >
             <GripVertical className="h-6 w-6" />
           </div>
@@ -258,7 +258,7 @@ function SortableItem({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
             <div className={cn("md:col-span-6 space-y-2", comboboxOpen && "relative z-[100]")}>
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item Name *</Label>
-              <div className="w-full relative">
+              <div className="tour-item-name w-full relative">
                 <div className="relative group/trigger">
                   <Input
                     placeholder="Product or service name..."
@@ -338,7 +338,7 @@ function SortableItem({
                 </div>
               </div>
 
-              <div className="space-y-2 text-right">
+              <div className="tour-item-price space-y-2 text-right">
                 <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Price *</Label>
                 <div className="relative group/price">
                   <CurrencyInput
@@ -504,7 +504,7 @@ function SortableItem({
           <div className="pt-4 flex justify-end">
 
             {/* El botón/etiqueta con su estilo */}
-            <div className="flex items-center gap-3 bg-muted/10 px-4 py-2 rounded-xl border border-border/40 hover:bg-muted/20 transition-all cursor-pointer group/opt">
+            <div className="tour-item-optional flex items-center gap-3 bg-muted/10 px-4 py-2 rounded-xl border border-border/40 hover:bg-muted/20 transition-all cursor-pointer group/opt">
 
               {/* El texto primero */}
               <Label
@@ -1181,7 +1181,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
             <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div>
-            <h1 className="text-2xl uppercase md:text-3xl font-bold tracking-tight">
+            <h1 id="tour-header" className="text-2xl uppercase md:text-3xl font-bold tracking-tight">
               {isJobMode ? 'New Job' : (mode === 'edit' ? 'Edit Quote' : 'New Quote')}
             </h1>
             <p className="text-muted-foreground text-xs md:text-sm">
@@ -1232,7 +1232,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </div>
         )}
 
-        <div className="space-y-2">
+        <div id="tour-project-name" className="space-y-2">
           <Label htmlFor="projectName" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">
             {isTemplate ? 'Template Name *' : isJobMode ? 'Job Name *' : 'Project Name *'}
           </Label>
@@ -1255,7 +1255,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
                   text="Select an existing client or create a new one to assign to this quote. The client's contact information will be included in the final document."
                 />
               </h2>
-              <Card className="shadow-sm border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
+              <Card id="tour-client-details" className="shadow-sm border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
                 <CardContent className="p-6 space-y-4">
                   {mode === 'create' && (
                     <div className="space-y-2">
@@ -1401,7 +1401,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
                 text={isJobMode ? 'Configure the schedule for this job, including recurrences and team assignments.' : 'Set the basic properties of the quote, such as its expiration date.'}
               />
             </h2>
-            <Card className="border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
+            <Card id="tour-project-details" className="border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
               <CardContent className="p-8 space-y-8">
                 {!isTemplate && !isJobMode && (
                   <div className="space-y-2">
@@ -1762,7 +1762,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
               text="Add products or services. You can set quantities and unit prices. Click inside the unit price to calculate cost and markup. Check 'Mark as optional' to let clients decide on an item."
             />
           </h2>
-          <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
+          <Card id="tour-line-items" className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
             <CardContent className="px-4 md:px-10 py-10">
               <datalist id="catalog-descriptions">
                 {catalog.map(c => <option key={c.description} value={c.description} />)}
@@ -1800,6 +1800,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
               {/* List Footer Actions (Matching reference image) */}
               <div className="mt-8 flex gap-4">
                 <Button
+                  id="tour-item-add"
                   type="button"
                   onClick={addItem}
                   className="bg-primary text-white font-bold px-10 h-14 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]"
@@ -1812,7 +1813,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </Card>
         </div>
 
-        <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
+        <div id="tour-adjustments" className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
           {/* Subtotal */}
           <div className="flex justify-between w-full md:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4 relative">
             <div className="absolute -left-6 top-2">
@@ -2291,9 +2292,9 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <TutorialDialog 
-        isOpen={isTutorialOpen} 
-        onClose={() => setIsTutorialOpen(false)} 
+      <ProformaTour 
+        run={isTutorialOpen} 
+        onFinish={() => setIsTutorialOpen(false)} 
       />
     </div>
   );

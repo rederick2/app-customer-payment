@@ -11,7 +11,6 @@ import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { TutorialDialog } from '../components/TutorialDialog';
 
 function TemplateSelectorModal({
   isOpen,
@@ -158,7 +157,6 @@ function NewProformaContent() {
   const [initialData, setInitialData] = useState<any>(clientId ? { client: { id: clientId } } : undefined);
 
   const [modalMode, setModalMode] = useState<'template' | 'quote' | null>(null);
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
   // If clientId is provided in URL, we assume they want a blank quote for that client
   useEffect(() => {
@@ -201,10 +199,6 @@ function NewProformaContent() {
             </Link>
             <h1 className=" text-3xl font-bold tracking-tight">Create Quote</h1>
           </div>
-          <Button variant="outline" className="gap-2 rounded-xl" onClick={() => setIsTutorialOpen(true)}>
-            <HelpCircle className="h-4 w-4" />
-            How it works
-          </Button>
         </div>
 
         <div className="bg-card border border-border/40 rounded-xl p-8 mb-8 shadow-sm">
@@ -258,11 +252,6 @@ function NewProformaContent() {
           onSelect={handleSelectTemplateOrQuote}
           mode={modalMode || 'template'}
           onCreateBlankTemplate={handleStartBlankTemplate}
-        />
-
-        <TutorialDialog 
-          isOpen={isTutorialOpen} 
-          onClose={() => setIsTutorialOpen(false)} 
         />
       </div>
     );
