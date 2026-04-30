@@ -42,7 +42,8 @@ import {
   PenLine,
   Download,
   Check,
-  XCircle
+  XCircle,
+  HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -105,7 +106,8 @@ import PaymentPDF from '@/lib/pdf/PaymentPDF';
 import { deleteInvoice, deleteProformaItem, updateJobDates, getQuickBooksVendors, getQuickBooksAccounts, syncExpenseToQuickBooks } from './actions';
 import { approveProforma } from '@/app/p/[id]/actions';
 import SignatureModal from '@/app/p/[id]/components/SignatureModal';
-
+import { FormHelp } from '@/components/FormHelp';
+import { JobTour } from './JobTour';
 interface JobViewProps {
   proforma: any;
   items: any[];
@@ -135,6 +137,8 @@ export default function JobView({
 }: JobViewProps) {
   const router = useRouter();
   const [items, setItems] = React.useState(itemsProp);
+  const [activeTab, setActiveTab] = React.useState('items');
+  const [isTutorialOpen, setIsTutorialOpen] = React.useState(false);
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
   const [tempCost, setTempCost] = React.useState<string>('');
   const [isSavingCost, setIsSavingCost] = React.useState(false);
@@ -1053,7 +1057,7 @@ export default function JobView({
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
 
       {/* Action Bar */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div id="tour-job-actions" className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
         </div>
         <div className="flex gap-2 items-center flex-wrap">
@@ -1077,6 +1081,16 @@ export default function JobView({
               </Button>
             )
           )}
+          {/* How it works */}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setIsTutorialOpen(true)}
+            className="h-9 gap-2"
+          >
+            <HelpCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">How it works</span>
+          </Button>
 
           {/* Download PDF */}
           <Button
@@ -1099,7 +1113,10 @@ export default function JobView({
           >
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
+            <span className="sm:hidden">Invoice</span>
           </Button>
+
+
 
           {/* History */}
           <Dialog>
@@ -1149,7 +1166,7 @@ export default function JobView({
       <div className="space-y-6">
 
         {/* Header Summary */}
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-8 bg-card p-6 md:p-8 border border-border/40 rounded-2xl shadow-sm">
+        <div id="tour-job-overview" className="flex flex-col lg:flex-row justify-between items-start gap-8 bg-card p-6 md:p-8 border border-border/40 rounded-2xl shadow-sm">
           <div className="flex flex-col sm:flex-row items-start gap-5 w-full">
             <div className="p-4 bg-primary/10 text-primary rounded-2xl shrink-0">
               <Briefcase className="h-8 w-8" />
@@ -1344,27 +1361,33 @@ export default function JobView({
         </div>
 
         {/* Tabs Navigation */}
-        <Tabs defaultValue="items" className="space-y-6">
-          <TabsList className="bg-muted/20 p-1 h-auto grid grid-cols-2 sm:flex items-center gap-1 border border-border/40 rounded-2xl overflow-hidden shadow-inner">
-            <TabsTrigger value="items" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList id="tour-job-tabs" className="bg-muted/30 p-1 w-full flex flex-wrap gap-1 rounded-2xl mb-6 h-auto justify-start border border-border/40 overflow-x-auto hide-scrollbar">
+            <TabsTrigger id="tour-tab-items" value="items" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               Job Items
             </TabsTrigger>
-            <TabsTrigger value="work" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+            <TabsTrigger id="tour-tab-work" value="work" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               Progress
             </TabsTrigger>
-            <TabsTrigger value="finance" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+            <TabsTrigger id="tour-tab-finance" value="finance" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               Financials
             </TabsTrigger>
-            <TabsTrigger value="materials" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
+            <TabsTrigger id="tour-tab-materials" value="materials" className="data-[state=active]:bg-background data-[state=active]:shadow-md py-2.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               Materials
             </TabsTrigger>
           </TabsList>
-          {/* Tab: Items */}
+          {/* Tab: Job Items */}
           <TabsContent value="items" className="space-y-6 mt-0">
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5">
-                <CardTitle className="text-lg font-bold">Line Items</CardTitle>
-                <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLineItem(true)}>
+            <Card id="tour-job-items" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                <CardTitle className="text-lg font-bold flex items-center">
+                  Line Items
+                  <FormHelp
+                    title="Line Items"
+                    text="Review the original quote items. You can mark items as complete or track actual vs estimated costs here."
+                  />
+                </CardTitle>
+                <Button id="tour-btn-new-item" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLineItem(true)}>
                   <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New Line Item</span>
                 </Button>
               </CardHeader>
@@ -1680,298 +1703,300 @@ export default function JobView({
 
           {/* Tab: Materials */}
           <TabsContent value="materials" className="space-y-6 mt-0">
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col">
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between py-4 bg-muted/5 gap-4 border-b border-border/40">
-                <div className="flex items-center gap-2">
-                  <ListTodo className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg font-bold">Materials</CardTitle>
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto overflow-x-auto">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger render={<Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" />}>
-                      <Plus className="h-4 w-4" /> Add Materials
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsEmailingMaterials(true)}>
-                        <Mail className="h-4 w-4 text-blue-600" /> Send Email List
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsSearchingSodimac(true)}>
-                        <Search className="h-4 w-4 text-primary" /> Search Products
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterial(true)}>
-                        <TrendingUp className="h-4 w-4 text-primary" /> AI Auto-Gen
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterialManually(true)}>
-                        <Pencil className="h-4 w-4 text-primary" /> Manual Add
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 flex-1 flex flex-col">
-                {/* Materials Search Bar */}
-                <div className="p-4 border-b border-border/40 bg-card">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search materials..."
-                      className="pl-9 h-9 text-xs"
-                      value={materialSearchTerm}
-                      onChange={handleMaterialSearchChange}
-                    />
+            <div id="tour-job-materials" className="space-y-6">
+              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between py-4 bg-muted/5 gap-4 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <ListTodo className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg font-bold">Materials</CardTitle>
                   </div>
-                </div>
+                  <div className="flex gap-2 w-full sm:w-auto overflow-x-auto">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger render={<Button id="tour-btn-add-materials" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" />}>
+                        <Plus className="h-4 w-4" /> Add Materials
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsEmailingMaterials(true)}>
+                          <Mail className="h-4 w-4 text-blue-600" /> Send Email List
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsSearchingSodimac(true)}>
+                          <Search className="h-4 w-4 text-primary" /> Search Products
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterial(true)}>
+                          <TrendingUp className="h-4 w-4 text-primary" /> AI Auto-Gen
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-xs gap-2 py-2" onClick={() => setIsAddingMaterialManually(true)}>
+                          <Pencil className="h-4 w-4 text-primary" /> Manual Add
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0 flex-1 flex flex-col">
+                  {/* Materials Search Bar */}
+                  <div className="p-4 border-b border-border/40 bg-card">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search materials..."
+                        className="pl-9 h-9 text-xs"
+                        value={materialSearchTerm}
+                        onChange={handleMaterialSearchChange}
+                      />
+                    </div>
+                  </div>
 
-                {paginatedMaterials && paginatedMaterials.length > 0 ? (
-                  <>
-                    {/* VISTA DESKTOP: Tabla de Materiales */}
-                    <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-black uppercase tracking-widest">
-                          <tr>
-                            <th className="px-4 py-3 text-left w-10">Done</th>
-                            <th className="px-4 py-3 text-center w-16">Img</th>
-                            <th className="px-6 py-3 text-left">Material</th>
-                            <th className="px-6 py-3 text-center w-32 border-x border-emerald-500/30">Qty</th>
-                            <th className="px-6 py-3 text-right">Unit Price</th>
-                            <th className="px-6 py-3 text-right">Total</th>
-                            <th className="px-4 py-3 text-center w-10">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                          {paginatedMaterials.map((mat: any) => (
-                            <tr
-                              key={mat.id}
-                              className={cn("hover:bg-muted/5 transition-colors align-top cursor-pointer", mat.is_purchased && "opacity-60 bg-muted/5", editingMaterialId === mat.id && "bg-primary/5")}
+                  {paginatedMaterials && paginatedMaterials.length > 0 ? (
+                    <>
+                      {/* VISTA DESKTOP: Tabla de Materiales */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40 text-[10px] font-black uppercase tracking-widest">
+                            <tr>
+                              <th className="px-4 py-3 text-left w-10">Done</th>
+                              <th className="px-4 py-3 text-center w-16">Img</th>
+                              <th className="px-6 py-3 text-left">Material</th>
+                              <th className="px-6 py-3 text-center w-32 border-x border-emerald-500/30">Qty</th>
+                              <th className="px-6 py-3 text-right">Unit Price</th>
+                              <th className="px-6 py-3 text-right">Total</th>
+                              <th className="px-4 py-3 text-center w-10">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border/30">
+                            {paginatedMaterials.map((mat: any) => (
+                              <tr
+                                key={mat.id}
+                                className={cn("hover:bg-muted/5 transition-colors align-top cursor-pointer", mat.is_purchased && "opacity-60 bg-muted/5", editingMaterialId === mat.id && "bg-primary/5")}
 
-                            >
-                              <td className="px-4 py-5 text-center" onClick={(e) => e.stopPropagation()}>
-                                <Checkbox
-                                  checked={mat.is_purchased}
-                                  onCheckedChange={() => handleToggleMaterialStatus(mat.id, mat.is_purchased)}
-                                />
+                              >
+                                <td className="px-4 py-5 text-center" onClick={(e) => e.stopPropagation()}>
+                                  <Checkbox
+                                    checked={mat.is_purchased}
+                                    onCheckedChange={() => handleToggleMaterialStatus(mat.id, mat.is_purchased)}
+                                  />
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  {mat.photo_url ? (
+                                    <img src={mat.photo_url} alt={mat.name} className="h-10 w-10 object-cover rounded-md mx-auto border border-border/50" />
+                                  ) : (
+                                    <div className="h-10 w-10 mx-auto bg-muted/10 rounded-md border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/30">
+                                      <ListTodo className="h-4 w-4" />
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4">
+                                  {mat.product_url ? (
+                                    <a href={mat.product_url} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-600 hover:underline" onClick={(e) => e.stopPropagation()}>
+                                      {mat.name}
+                                    </a>
+                                  ) : (
+                                    <p className="font-bold text-foreground">{mat.name}</p>
+                                  )}
+                                  {mat.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mat.description}</p>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-center bg-emerald-50/20 border-x border-emerald-500/10 hover:bg-emerald-50/50 transition-colors cursor-text" onClick={() => editingMaterialId !== mat.id && handleStartEditingMaterial(mat)}>
+                                  {editingMaterialId === mat.id ? (
+                                    <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                      <Input
+                                        autoFocus
+                                        className="w-16 h-8 text-center text-sm font-bold"
+                                        value={tempMaterialQty}
+                                        onChange={(e) => setTempMaterialQty(e.target.value)}
+                                        onKeyDown={(e) => handleMaterialKeyDown(e, mat.id)}
+                                        type="number"
+                                        step="0.01"
+                                      />
+                                      <div className="flex flex-col gap-0.5 ml-1">
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-4 w-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-full"
+                                          onClick={() => handleSaveMaterialQty(mat.id)}
+                                          disabled={isSavingMaterialQty}
+                                        >
+                                          {isSavingMaterialQty ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                                        </Button>
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-4 w-4 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                                          onClick={handleCancelEditingMaterial}
+                                          disabled={isSavingMaterialQty}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="font-bold text-emerald-700 border-b border-dashed border-emerald-600/30 pb-0.5">
+                                      {mat.quantity}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-right tabular-nums text-muted-foreground">${(mat.unit_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                <td className={cn("px-6 py-4 text-right tabular-nums font-bold", mat.is_purchased && "line-through italic text-muted-foreground")}>
+                                  ${(mat.total_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  {!mat.is_purchased && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteMaterial(mat.id);
+                                      }}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                            {/* Total Materials Footer inside table */}
+                            <tr className="bg-muted/5 font-bold border-t border-border/40">
+                              <td colSpan={5} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">
+                                Total Materials
                               </td>
-                              <td className="px-4 py-4 text-center">
+                              <td className="px-6 py-4 text-right tabular-nums text-emerald-600 text-lg">
+                                ${totalMaterialsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              </td>
+                              <td />
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* VISTA MOBILE: Cards de Materiales */}
+                      <div className="md:hidden divide-y divide-border/20">
+                        {paginatedMaterials.map((mat: any) => (
+                          <div
+                            key={mat.id}
+                            className={cn(
+                              "p-5 space-y-4 active:bg-muted/5 transition-colors",
+                              mat.is_purchased && "opacity-60 bg-muted/5"
+                            )}
+                            onClick={() => editingMaterialId !== mat.id && handleStartEditingMaterial(mat)}
+                          >
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="flex gap-4">
+                                <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                                  <Checkbox
+                                    checked={mat.is_purchased}
+                                    onCheckedChange={() => handleToggleMaterialStatus(mat.id, mat.is_purchased)}
+                                    className="h-5 w-5 rounded-md"
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  {mat.product_url ? (
+                                    <a href={mat.product_url} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-600 hover:underline leading-tight block truncate max-w-[180px]">
+                                      {mat.name}
+                                    </a>
+                                  ) : (
+                                    <p className="font-bold text-foreground leading-tight truncate max-w-[180px]">{mat.name}</p>
+                                  )}
+                                  {mat.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{mat.description}</p>}
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2 opacity-60">
+                                    Unit: ${(mat.unit_price || 0).toLocaleString('en-US')}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={cn("text-base font-black text-emerald-600 leading-none", mat.is_purchased && "line-through italic text-muted-foreground")}>
+                                  ${(mat.total_price || 0).toLocaleString('en-US')}
+                                </p>
+                                <div className="bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 mt-2">
+                                  <p className="text-[10px] font-black text-emerald-700 leading-none">Qty: {mat.quantity}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
                                 {mat.photo_url ? (
-                                  <img src={mat.photo_url} alt={mat.name} className="h-10 w-10 object-cover rounded-md mx-auto border border-border/50" />
+                                  <img src={mat.photo_url} className="h-10 w-10 rounded-xl object-cover border" />
                                 ) : (
-                                  <div className="h-10 w-10 mx-auto bg-muted/10 rounded-md border border-dashed border-border/50 flex items-center justify-center text-muted-foreground/30">
+                                  <div className="h-10 w-10 rounded-xl bg-muted/20 border border-dashed flex items-center justify-center text-muted-foreground/30">
                                     <ListTodo className="h-4 w-4" />
                                   </div>
                                 )}
-                              </td>
-                              <td className="px-6 py-4">
-                                {mat.product_url ? (
-                                  <a href={mat.product_url} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-600 hover:underline" onClick={(e) => e.stopPropagation()}>
-                                    {mat.name}
-                                  </a>
-                                ) : (
-                                  <p className="font-bold text-foreground">{mat.name}</p>
-                                )}
-                                {mat.description && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{mat.description}</p>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 text-center bg-emerald-50/20 border-x border-emerald-500/10 hover:bg-emerald-50/50 transition-colors cursor-text" onClick={() => editingMaterialId !== mat.id && handleStartEditingMaterial(mat)}>
-                                {editingMaterialId === mat.id ? (
-                                  <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                    <Input
-                                      autoFocus
-                                      className="w-16 h-8 text-center text-sm font-bold"
-                                      value={tempMaterialQty}
-                                      onChange={(e) => setTempMaterialQty(e.target.value)}
-                                      onKeyDown={(e) => handleMaterialKeyDown(e, mat.id)}
-                                      type="number"
-                                      step="0.01"
-                                    />
-                                    <div className="flex flex-col gap-0.5 ml-1">
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-4 w-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-full"
-                                        onClick={() => handleSaveMaterialQty(mat.id)}
-                                        disabled={isSavingMaterialQty}
-                                      >
-                                        {isSavingMaterialQty ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
-                                      </Button>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-4 w-4 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
-                                        onClick={handleCancelEditingMaterial}
-                                        disabled={isSavingMaterialQty}
-                                      >
-                                        <X className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <span className="font-bold text-emerald-700 border-b border-dashed border-emerald-600/30 pb-0.5">
-                                    {mat.quantity}
-                                  </span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 text-right tabular-nums text-muted-foreground">${(mat.unit_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td className={cn("px-6 py-4 text-right tabular-nums font-bold", mat.is_purchased && "line-through italic text-muted-foreground")}>
-                                ${(mat.total_price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                              </td>
-                              <td className="px-4 py-4 text-center">
-                                {!mat.is_purchased && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteMaterial(mat.id);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                          {/* Total Materials Footer inside table */}
-                          <tr className="bg-muted/5 font-bold border-t border-border/40">
-                            <td colSpan={5} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">
-                              Total Materials
-                            </td>
-                            <td className="px-6 py-4 text-right tabular-nums text-emerald-600 text-lg">
-                              ${totalMaterialsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </td>
-                            <td />
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* VISTA MOBILE: Cards de Materiales */}
-                    <div className="md:hidden divide-y divide-border/20">
-                      {paginatedMaterials.map((mat: any) => (
-                        <div
-                          key={mat.id}
-                          className={cn(
-                            "p-5 space-y-4 active:bg-muted/5 transition-colors",
-                            mat.is_purchased && "opacity-60 bg-muted/5"
-                          )}
-                          onClick={() => editingMaterialId !== mat.id && handleStartEditingMaterial(mat)}
-                        >
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex gap-4">
-                              <div className="mt-1" onClick={(e) => e.stopPropagation()}>
-                                <Checkbox
-                                  checked={mat.is_purchased}
-                                  onCheckedChange={() => handleToggleMaterialStatus(mat.id, mat.is_purchased)}
-                                  className="h-5 w-5 rounded-md"
-                                />
+                                <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest ml-1">
+                                  {mat.is_purchased ? 'Purchased' : 'Pending'}
+                                </span>
                               </div>
-                              <div className="min-w-0">
-                                {mat.product_url ? (
-                                  <a href={mat.product_url} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-600 hover:underline leading-tight block truncate max-w-[180px]">
-                                    {mat.name}
-                                  </a>
-                                ) : (
-                                  <p className="font-bold text-foreground leading-tight truncate max-w-[180px]">{mat.name}</p>
-                                )}
-                                {mat.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{mat.description}</p>}
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-2 opacity-60">
-                                  Unit: ${(mat.unit_price || 0).toLocaleString('en-US')}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <p className={cn("text-base font-black text-emerald-600 leading-none", mat.is_purchased && "line-through italic text-muted-foreground")}>
-                                ${(mat.total_price || 0).toLocaleString('en-US')}
-                              </p>
-                              <div className="bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 mt-2">
-                                <p className="text-[10px] font-black text-emerald-700 leading-none">Qty: {mat.quantity}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {mat.photo_url ? (
-                                <img src={mat.photo_url} className="h-10 w-10 rounded-xl object-cover border" />
-                              ) : (
-                                <div className="h-10 w-10 rounded-xl bg-muted/20 border border-dashed flex items-center justify-center text-muted-foreground/30">
-                                  <ListTodo className="h-4 w-4" />
-                                </div>
+                              {!mat.is_purchased && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-10 w-10 rounded-2xl text-red-600 hover:bg-red-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteMaterial(mat.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </Button>
                               )}
-                              <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest ml-1">
-                                {mat.is_purchased ? 'Purchased' : 'Pending'}
-                              </span>
                             </div>
-                            {!mat.is_purchased && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 rounded-2xl text-red-600 hover:bg-red-50"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteMaterial(mat.id);
-                                }}
-                              >
-                                <Trash2 className="h-5 w-5" />
-                              </Button>
-                            )}
+                          </div>
+                        ))}
+
+                        {/* Summary for mobile */}
+                        <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Materials Value</span>
+                          <span className="text-xl font-black text-emerald-600">${totalMaterialsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+
+                      {/* Materials Pagination Controls */}
+                      {totalMaterialPages > 1 && (
+                        <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
+                          <p className="text-[10px] text-muted-foreground">
+                            Showing {(materialCurrentPage - 1) * materialsPerPage + 1} - {Math.min(materialCurrentPage * materialsPerPage, filteredMaterials.length)} of {filteredMaterials.length}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              disabled={materialCurrentPage === 1}
+                              onClick={() => setMaterialCurrentPage(prev => prev - 1)}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <div className="flex items-center gap-1.5 px-2">
+                              <span className="text-xs font-bold text-foreground">{materialCurrentPage}</span>
+                              <span className="text-[10px] text-muted-foreground">/</span>
+                              <span className="text-xs text-muted-foreground">{totalMaterialPages}</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              disabled={materialCurrentPage === totalMaterialPages}
+                              onClick={() => setMaterialCurrentPage(prev => prev + 1)}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
-                      ))}
-
-                      {/* Summary for mobile */}
-                      <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Materials Value</span>
-                        <span className="text-xl font-black text-emerald-600">${totalMaterialsCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                      </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-8 text-center flex flex-col items-center justify-center opacity-60">
+                      <ListTodo className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="text-sm font-medium">
+                        {materialSearchTerm ? 'No materials found matching your search' : 'No materials registered.'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Auto-generate a list using AI based on Home Depot prices.</p>
                     </div>
-
-                    {/* Materials Pagination Controls */}
-                    {totalMaterialPages > 1 && (
-                      <div className="p-4 border-t border-border/40 flex items-center justify-between bg-card mt-auto">
-                        <p className="text-[10px] text-muted-foreground">
-                          Showing {(materialCurrentPage - 1) * materialsPerPage + 1} - {Math.min(materialCurrentPage * materialsPerPage, filteredMaterials.length)} of {filteredMaterials.length}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            disabled={materialCurrentPage === 1}
-                            onClick={() => setMaterialCurrentPage(prev => prev - 1)}
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <div className="flex items-center gap-1.5 px-2">
-                            <span className="text-xs font-bold text-foreground">{materialCurrentPage}</span>
-                            <span className="text-[10px] text-muted-foreground">/</span>
-                            <span className="text-xs text-muted-foreground">{totalMaterialPages}</span>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            disabled={materialCurrentPage === totalMaterialPages}
-                            onClick={() => setMaterialCurrentPage(prev => prev + 1)}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="p-8 text-center flex flex-col items-center justify-center opacity-60">
-                    <ListTodo className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-sm font-medium">
-                      {materialSearchTerm ? 'No materials found matching your search' : 'No materials registered.'}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">Auto-generate a list using AI based on Home Depot prices.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Tab: Work Progress */}
@@ -1980,549 +2005,560 @@ export default function JobView({
             <WorkProgressSection proformaId={proforma.id} proformaName={proforma.project_name} />
 
             {/* Tasks Section */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <div className="flex items-center gap-2">
-                  <ListTodo className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg font-bold">Tasks</CardTitle>
-                </div>
-                <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingTask(true)}>
-                  <Plus className="h-4 w-4" /> New Task
-                </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                {tasks.length > 0 ? (
-                  <>
-                    {/* VISTA DESKTOP: Tabla de Tareas */}
-                    <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                          <tr>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left w-10">Done</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Task Description</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Associate</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Due Date</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Assigned To</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                          {tasks.map(task => (
-                            <tr key={task.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-6 py-4">
+            <div className="space-y-6">
+              <Card id="tour-job-progress" className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <ListTodo className="h-5 w-5 text-primary" />
+                    <CardTitle className="text-lg font-bold">Tasks</CardTitle>
+                  </div>
+                  <Button id="tour-btn-new-task" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingTask(true)}>
+                    <Plus className="h-4 w-4" /> New Task
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {tasks.length > 0 ? (
+                    <>
+                      {/* VISTA DESKTOP: Tabla de Tareas */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                            <tr>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left w-10">Done</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Task Description</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Associate</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Due Date</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Assigned To</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border/30">
+                            {tasks.map(task => (
+                              <tr key={task.id} className="hover:bg-muted/5 transition-colors group">
+                                <td className="px-6 py-4">
+                                  <button
+                                    onClick={() => handleToggleTaskStatus(task.id, task.status)}
+                                    className={cn(
+                                      "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                                      task.status === 'completed'
+                                        ? "bg-emerald-500 border-emerald-500 text-white"
+                                        : "border-muted-foreground/30 hover:border-emerald-500"
+                                    )}
+                                  >
+                                    {task.status === 'completed' && <CheckCircle className="h-4 w-4" />}
+                                  </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className={cn(
+                                      "font-bold",
+                                      task.status === 'completed' && "line-through text-muted-foreground"
+                                    )}>{task.title}</h3>
+                                    {task.status === 'completed' && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 rounded-full text-emerald-600 hover:bg-emerald-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenMediaUpload(task);
+                                        }}
+                                      >
+                                        <Camera className="h-3.5 w-3.5" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  {task.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4">
+                                  {task.proforma_item_id ? (
+                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-200">
+                                      Item Associated
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-muted-foreground/40">-</span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4">
+                                  {task.due_date ? (
+                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                      <CalendarDays className="h-3.5 w-3.5" />
+                                      <span>{format(new Date(task.due_date), 'MMM d, h:mm a')}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted-foreground/40">-</span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4">
+                                  {task.team_members ? (
+                                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                                      <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                      <span>{task.team_members.name}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted-foreground/40">-</span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                      <MoreVertical className="h-4 w-4" />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-44">
+                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
+                                        <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingTask(task)}>
+                                        <Pencil className="h-3.5 w-3.5" /> Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
+                                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* VISTA MOBILE: Cards de Tareas */}
+                      <div className="md:hidden divide-y divide-border/20">
+                        {tasks.map(task => (
+                          <div key={task.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="flex gap-4">
                                 <button
                                   onClick={() => handleToggleTaskStatus(task.id, task.status)}
                                   className={cn(
-                                    "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                                    "h-8 w-8 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all",
                                     task.status === 'completed'
-                                      ? "bg-emerald-500 border-emerald-500 text-white"
-                                      : "border-muted-foreground/30 hover:border-emerald-500"
+                                      ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                                      : "border-muted-foreground/20 hover:border-emerald-500"
                                   )}
                                 >
-                                  {task.status === 'completed' && <CheckCircle className="h-4 w-4" />}
+                                  {task.status === 'completed' && <CheckCircle className="h-5 w-5" />}
                                 </button>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
+                                <div className="min-w-0">
                                   <h3 className={cn(
-                                    "font-bold",
-                                    task.status === 'completed' && "line-through text-muted-foreground"
+                                    "font-bold text-base leading-tight",
+                                    task.status === 'completed' && "line-through text-muted-foreground/60"
                                   )}>{task.title}</h3>
-                                  {task.status === 'completed' && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-6 w-6 rounded-full text-emerald-600 hover:bg-emerald-50"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenMediaUpload(task);
-                                      }}
-                                    >
-                                      <Camera className="h-3.5 w-3.5" />
-                                    </Button>
+                                  {task.description && (
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
                                   )}
                                 </div>
-                                {task.description && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-                                )}
-                              </td>
-                              <td className="px-6 py-4">
-                                {task.proforma_item_id ? (
-                                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-200">
-                                    Item Associated
-                                  </Badge>
-                                ) : (
-                                  <span className="text-muted-foreground/40">-</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4">
-                                {task.due_date ? (
-                                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                    <CalendarDays className="h-3.5 w-3.5" />
-                                    <span>{format(new Date(task.due_date), 'MMM d, h:mm a')}</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-muted-foreground/40">-</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4">
-                                {task.team_members ? (
-                                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
-                                    <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span>{task.team_members.name}</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-muted-foreground/40">-</span>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                    <MoreVertical className="h-4 w-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-44">
-                                    <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
-                                      <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingTask(task)}>
-                                      <Pencil className="h-3.5 w-3.5" /> Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
-                                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* VISTA MOBILE: Cards de Tareas */}
-                    <div className="md:hidden divide-y divide-border/20">
-                      {tasks.map(task => (
-                        <div key={task.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex gap-4">
-                              <button
-                                onClick={() => handleToggleTaskStatus(task.id, task.status)}
-                                className={cn(
-                                  "h-8 w-8 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all",
-                                  task.status === 'completed'
-                                    ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                                    : "border-muted-foreground/20 hover:border-emerald-500"
-                                )}
-                              >
-                                {task.status === 'completed' && <CheckCircle className="h-5 w-5" />}
-                              </button>
-                              <div className="min-w-0">
-                                <h3 className={cn(
-                                  "font-bold text-base leading-tight",
-                                  task.status === 'completed' && "line-through text-muted-foreground/60"
-                                )}>{task.title}</h3>
-                                {task.description && (
-                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
-                                )}
                               </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
+                                  <MoreVertical className="h-5 w-5" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleOpenMediaUpload(task)}>
+                                    <Camera className="h-4 w-4 text-emerald-600" /> Upload Media
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingTask(task)}>
+                                    <Pencil className="h-4 w-4" /> Edit Task
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
+                                    <Trash2 className="h-4 w-4" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
-                                <MoreVertical className="h-5 w-5" />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleOpenMediaUpload(task)}>
-                                  <Camera className="h-4 w-4 text-emerald-600" /> Upload Media
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingTask(task)}>
-                                  <Pencil className="h-4 w-4" /> Edit Task
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
-                                  <Trash2 className="h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
 
-                          <div className="flex flex-wrap items-center gap-3">
-                            {task.due_date && (
-                              <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-xl border border-border/40">
-                                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{format(new Date(task.due_date), 'MMM d')}</span>
-                              </div>
-                            )}
-                            {task.team_members && (
-                              <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
-                                <UserIcon className="h-3.5 w-3.5 text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-primary">{task.team_members.name}</span>
-                              </div>
-                            )}
-                            {task.proforma_item_id && (
-                              <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">
-                                <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-none p-0 text-blue-700">Linked Item</Badge>
-                              </div>
-                            )}
+                            <div className="flex flex-wrap items-center gap-3">
+                              {task.due_date && (
+                                <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-xl border border-border/40">
+                                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{format(new Date(task.due_date), 'MMM d')}</span>
+                                </div>
+                              )}
+                              {task.team_members && (
+                                <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
+                                  <UserIcon className="h-3.5 w-3.5 text-primary" />
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">{task.team_members.name}</span>
+                                </div>
+                              )}
+                              {task.proforma_item_id && (
+                                <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">
+                                  <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-none p-0 text-blue-700">Linked Item</Badge>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                      <ListTodo className="h-10 w-10 text-muted-foreground" />
+                      <p className="text-xs font-medium px-8 text-center">No tasks for this job yet. Add tasks to keep your team organized.</p>
+                      <Button size="sm" variant="ghost" className="text-primary font-bold mt-2" onClick={() => setIsAddingTask(true)}>Create First Task</Button>
                     </div>
-                  </>
-                ) : (
-                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                    <ListTodo className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-xs font-medium px-8 text-center">No tasks for this job yet. Add tasks to keep your team organized.</p>
-                    <Button size="sm" variant="ghost" className="text-primary font-bold mt-2" onClick={() => setIsAddingTask(true)}>Create First Task</Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Tab: Financials (Block 1) */}
           <TabsContent value="finance" className="space-y-6 mt-0">
-            {/* Payments */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold">Payments</CardTitle>
-                <Button
-                  size="sm"
-                  className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
-                  onClick={() => setIsRecordingPayment(true)}
-                >
-                  <Plus className="h-4 w-4" /> Record Payment
-                </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                {payments.length > 0 ? (
-                  <>
-                    {/* VISTA DESKTOP: Tabla de Pagos */}
-                    <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                          <tr>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
-                            <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                          {payments.map(payment => (
-                            <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
-                              <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
-                              <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td className="px-6 py-4 text-center">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                    <MoreVertical className="h-4 w-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-40">
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
-                                      <Eye className="h-3.5 w-3.5" /> View Receipt
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
-                                      <Mail className="h-3.5 w-3.5" /> Send by Email
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
-                                      <Pencil className="h-3.5 w-3.5" /> Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
-                                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* VISTA MOBILE: Cards de Pagos */}
-                    <div className="md:hidden divide-y divide-border/20">
-                      {payments.map(payment => (
-                        <div key={payment.id} className="p-5 flex justify-between items-center hover:bg-muted/5 transition-colors">
-                          <div className="space-y-1">
-                            <p className="font-bold text-base text-foreground leading-none">{payment.payment_method}</p>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                              {format(new Date(payment.payment_date), 'MMM d, yyyy')}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <p className="text-lg font-black text-emerald-600 leading-none">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
-                                <MoreVertical className="h-5 w-5" />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleViewPaymentPDF(payment)}>
-                                  <Eye className="h-4 w-4" /> View Receipt
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
-                                  <Mail className="h-4 w-4" /> Send Email
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingPayment(payment)}>
-                                  <Pencil className="h-4 w-4" /> Edit Record
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
-                                  <Trash2 className="h-4 w-4" /> Delete Payment
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                    <DollarSign className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-xs font-medium px-8 text-center">No payment records found for this job</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Expenses */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold">Expenses</CardTitle>
-                <div className="flex gap-2">
+            <div className="space-y-6">
+              {/* Payments */}
+              <Card id="tour-job-finance" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                  <CardTitle className="text-lg font-bold">Payments</CardTitle>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5"
-                    onClick={() => setIsScanningExpense(true)}
-                  >
-                    <Camera className="h-4 w-4" /> Scanner AI
-                  </Button>
-                  <Button
+                    id="tour-btn-new-payment"
                     size="sm"
                     className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
-                    onClick={() => setIsAddingExpense(true)}
+                    onClick={() => setIsRecordingPayment(true)}
                   >
-                    <Plus className="h-4 w-4" /> New Expense
+                    <Plus className="h-4 w-4" /> Record Payment
                   </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 flex-1 flex flex-col">
-                {/* Search Bar */}
-                <div className="p-4 border-b border-border/40 bg-card">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by place, description or category..."
-                      className="pl-9 h-9 text-xs"
-                      value={expenseSearchTerm}
-                      onChange={handleSearchChange}
-                    />
-                  </div>
-                </div>
-
-                {paginatedExpenses.length > 0 ? (
-                  <>
-                    {/* VISTA DESKTOP: Tabla de Gastos */}
-                    <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                          <tr>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Place</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Sync</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
-                            <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                          {paginatedExpenses.map(exp => (
-                            <tr key={exp.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(exp.date), 'dd/MM/yyyy')}</td>
-                              <td className="px-6 py-4 font-bold text-foreground text-xs">{exp.place || 'Supplier'}</td>
-                              <td className="px-6 py-4 text-xs text-muted-foreground line-clamp-1 max-w-[150px]">{exp.description}</td>
-                              <td className="px-6 py-4">
-                                <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
-                                  {exp.category}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                {exp.sync_status === 'synced' ? (
-                                  <div className="flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-full h-6 w-6 mx-auto" title="Synced to QuickBooks">
-                                    <CheckCircle2 className="h-3.5 w-3.5" />
-                                  </div>
-                                ) : (
-                                  qboIntegration && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                                      onClick={() => handleSyncExpenseToQBO(exp)}
-                                      disabled={syncingExpenseId === exp.id}
-                                      title="Sync to QuickBooks"
-                                    >
-                                      {syncingExpenseId === exp.id ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                      ) : (
-                                        <RefreshCw className="h-3.5 w-3.5" />
-                                      )}
-                                    </Button>
-                                  )
-                                )}
-                              </td>
-                              <td className="px-6 py-4 text-right tabular-nums font-bold text-red-600 text-xs">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td className="px-6 py-4 text-center">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7" />}>
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-40">
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedExpenseForEdit(exp)}>
-                                      <Pencil className="h-3.5 w-3.5" /> Edit
-                                    </DropdownMenuItem>
-                                    {exp.image_url && (
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedFileUrl(exp.image_url)}>
-                                        <Eye className="h-3.5 w-3.5" /> View File
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
-                                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {payments.length > 0 ? (
+                    <>
+                      {/* VISTA DESKTOP: Tabla de Pagos */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                            <tr>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                              <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody className="divide-y divide-border/30">
+                            {payments.map(payment => (
+                              <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
+                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
+                                <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
+                                <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                <td className="px-6 py-4 text-center">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                      <MoreVertical className="h-4 w-4" />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-40">
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
+                                        <Eye className="h-3.5 w-3.5" /> View Receipt
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
+                                        <Mail className="h-3.5 w-3.5" /> Send by Email
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
+                                        <Pencil className="h-3.5 w-3.5" /> Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
+                                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
 
-                    {/* VISTA MOBILE: Cards de Gastos */}
-                    <div className="md:hidden divide-y divide-border/20">
-                      {paginatedExpenses.map(exp => (
-                        <div key={exp.id} className="p-5 space-y-3 hover:bg-muted/5 transition-colors">
-                          <div className="flex justify-between items-start">
+                      {/* VISTA MOBILE: Cards de Pagos */}
+                      <div className="md:hidden divide-y divide-border/20">
+                        {payments.map(payment => (
+                          <div key={payment.id} className="p-5 flex justify-between items-center hover:bg-muted/5 transition-colors">
                             <div className="space-y-1">
-                              <p className="font-bold text-sm text-foreground">{exp.place || 'Supplier'}</p>
-                              <div className="flex items-center gap-2">
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                                  {format(new Date(exp.date), 'MMM d, yyyy')}
-                                </p>
-                                <span className="w-1 h-1 rounded-full bg-border" />
-                                <span className="text-[9px] font-black tracking-widest uppercase text-primary/70">{exp.category}</span>
-                              </div>
+                              <p className="font-bold text-base text-foreground leading-none">{payment.payment_method}</p>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                                {format(new Date(payment.payment_date), 'MMM d, yyyy')}
+                              </p>
                             </div>
-                            <div className="text-right flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <div className="text-right">
-                                <p className="text-lg font-black text-red-600 leading-none">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                <p className="text-lg font-black text-emerald-600 leading-none">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                               </div>
                               <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" />}>
-                                  <MoreVertical className="h-4 w-4" />
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
+                                  <MoreVertical className="h-5 w-5" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedExpenseForEdit(exp)}>
-                                    <Pencil className="h-4 w-4" /> Edit Expense
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleViewPaymentPDF(payment)}>
+                                    <Eye className="h-4 w-4" /> View Receipt
                                   </DropdownMenuItem>
-                                  {exp.image_url && (
-                                    <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedFileUrl(exp.image_url)}>
-                                      <Eye className="h-4 w-4" /> View File
-                                    </DropdownMenuItem>
-                                  )}
-                                  {qboIntegration && exp.sync_status !== 'synced' && (
-                                    <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleSyncExpenseToQBO(exp)}>
-                                      <RefreshCw className="h-4 w-4 text-orange-500" /> Sync to QBO
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
-                                    <Trash2 className="h-4 w-4" /> Delete Expense
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
+                                    <Mail className="h-4 w-4" /> Send Email
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingPayment(payment)}>
+                                    <Pencil className="h-4 w-4" /> Edit Record
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
+                                    <Trash2 className="h-4 w-4" /> Delete Payment
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
                           </div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                      <DollarSign className="h-10 w-10 text-muted-foreground" />
+                      <p className="text-xs font-medium px-8 text-center">No payment records found for this job</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-                          {exp.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 italic">"{exp.description}"</p>
-                          )}
+              {/* Expenses */}
+              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
+                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                  <CardTitle className="text-lg font-bold">Expenses</CardTitle>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5"
+                      onClick={() => setIsScanningExpense(true)}
+                    >
+                      <Camera className="h-4 w-4" /> Scanner AI
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
+                      onClick={() => setIsAddingExpense(true)}
+                    >
+                      <Plus className="h-4 w-4" /> New Expense
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0 flex-1 flex flex-col">
+                  {/* Search Bar */}
+                  <div className="p-4 border-b border-border/40 bg-card">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by place, description or category..."
+                        className="pl-9 h-9 text-xs"
+                        value={expenseSearchTerm}
+                        onChange={handleSearchChange}
+                      />
+                    </div>
+                  </div>
 
-                          <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center gap-2">
-                              {exp.sync_status === 'synced' ? (
-                                <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">QBO Synced</span>
+                  {paginatedExpenses.length > 0 ? (
+                    <>
+                      {/* VISTA DESKTOP: Tabla de Gastos */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                            <tr>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Place</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Sync</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                              <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border/30">
+                            {paginatedExpenses.map(exp => (
+                              <tr key={exp.id} className="hover:bg-muted/5 transition-colors group">
+                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(exp.date), 'dd/MM/yyyy')}</td>
+                                <td className="px-6 py-4 font-bold text-foreground text-xs">{exp.place || 'Supplier'}</td>
+                                <td className="px-6 py-4 text-xs text-muted-foreground line-clamp-1 max-w-[150px]">{exp.description}</td>
+                                <td className="px-6 py-4">
+                                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
+                                    {exp.category}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                  {exp.sync_status === 'synced' ? (
+                                    <div className="flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-full h-6 w-6 mx-auto" title="Synced to QuickBooks">
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                    </div>
+                                  ) : (
+                                    qboIntegration && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                                        onClick={() => handleSyncExpenseToQBO(exp)}
+                                        disabled={syncingExpenseId === exp.id}
+                                        title="Sync to QuickBooks"
+                                      >
+                                        {syncingExpenseId === exp.id ? (
+                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                          <RefreshCw className="h-3.5 w-3.5" />
+                                        )}
+                                      </Button>
+                                    )
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-right tabular-nums font-bold text-red-600 text-xs">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                <td className="px-6 py-4 text-center">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7" />}>
+                                      <MoreVertical className="h-3.5 w-3.5" />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-40">
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedExpenseForEdit(exp)}>
+                                        <Pencil className="h-3.5 w-3.5" /> Edit
+                                      </DropdownMenuItem>
+                                      {exp.image_url && (
+                                        <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedFileUrl(exp.image_url)}>
+                                          <Eye className="h-3.5 w-3.5" /> View File
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
+                                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* VISTA MOBILE: Cards de Gastos */}
+                      <div className="md:hidden divide-y divide-border/20">
+                        {paginatedExpenses.map(exp => (
+                          <div key={exp.id} className="p-5 space-y-3 hover:bg-muted/5 transition-colors">
+                            <div className="flex justify-between items-start">
+                              <div className="space-y-1">
+                                <p className="font-bold text-sm text-foreground">{exp.place || 'Supplier'}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                                    {format(new Date(exp.date), 'MMM d, yyyy')}
+                                  </p>
+                                  <span className="w-1 h-1 rounded-full bg-border" />
+                                  <span className="text-[9px] font-black tracking-widest uppercase text-primary/70">{exp.category}</span>
                                 </div>
-                              ) : (
-                                <div className="flex items-center gap-1.5 bg-muted/30 text-muted-foreground px-2.5 py-1 rounded-lg border border-border/40">
-                                  <RefreshCw className="h-3 w-3" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">Not Synced</span>
+                              </div>
+                              <div className="text-right flex items-center gap-3">
+                                <div className="text-right">
+                                  <p className="text-lg font-black text-red-600 leading-none">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
-                              )}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" />}>
+                                    <MoreVertical className="h-4 w-4" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedExpenseForEdit(exp)}>
+                                      <Pencil className="h-4 w-4" /> Edit Expense
+                                    </DropdownMenuItem>
+                                    {exp.image_url && (
+                                      <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedFileUrl(exp.image_url)}>
+                                        <Eye className="h-4 w-4" /> View File
+                                      </DropdownMenuItem>
+                                    )}
+                                    {qboIntegration && exp.sync_status !== 'synced' && (
+                                      <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleSyncExpenseToQBO(exp)}>
+                                        <RefreshCw className="h-4 w-4 text-orange-500" /> Sync to QBO
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
+                                      <Trash2 className="h-4 w-4" /> Delete Expense
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+
+                            {exp.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2 italic">"{exp.description}"</p>
+                            )}
+
+                            <div className="flex items-center justify-between pt-1">
+                              <div className="flex items-center gap-2">
+                                {exp.sync_status === 'synced' ? (
+                                  <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    <span className="text-[9px] font-black uppercase tracking-widest">QBO Synced</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 bg-muted/30 text-muted-foreground px-2.5 py-1 rounded-lg border border-border/40">
+                                    <RefreshCw className="h-3 w-3" />
+                                    <span className="text-[9px] font-black uppercase tracking-widest">Not Synced</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Pagination Controls - Responsive */}
-                    {totalExpensePages > 1 && (
-                      <div className="p-4 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between bg-card mt-auto gap-4">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                          Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} OF {filteredExpenses.length}
-                        </p>
-                        <div className="flex gap-2 w-full sm:w-auto justify-center">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 px-4 rounded-xl border-border/40"
-                            disabled={expenseCurrentPage === 1}
-                            onClick={() => setExpenseCurrentPage(prev => prev - 1)}
-                          >
-                            <ChevronLeft className="h-4 w-4 sm:mr-1" />
-                            <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Prev</span>
-                          </Button>
-                          <div className="flex items-center bg-muted/30 px-4 rounded-xl border border-border/40 min-w-[80px] justify-center">
-                            <span className="text-xs font-black text-foreground">{expenseCurrentPage}</span>
-                            <span className="mx-2 text-[10px] text-muted-foreground">/</span>
-                            <span className="text-xs text-muted-foreground">{totalExpensePages}</span>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 px-4 rounded-xl border-border/40"
-                            disabled={expenseCurrentPage === totalExpensePages}
-                            onClick={() => setExpenseCurrentPage(prev => prev + 1)}
-                          >
-                            <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Next</span>
-                            <ChevronRight className="h-4 w-4 sm:ml-1" />
-                          </Button>
-                        </div>
+                        ))}
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                    <Receipt className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-xs font-medium px-8 text-center">
-                      {expenseSearchTerm ? 'No expenses found matching your search' : 'Log your expenses to track detailed job costs'}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+
+                      {/* Pagination Controls - Responsive */}
+                      {totalExpensePages > 1 && (
+                        <div className="p-4 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between bg-card mt-auto gap-4">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                            Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} OF {filteredExpenses.length}
+                          </p>
+                          <div className="flex gap-2 w-full sm:w-auto justify-center">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-10 px-4 rounded-xl border-border/40"
+                              disabled={expenseCurrentPage === 1}
+                              onClick={() => setExpenseCurrentPage(prev => prev - 1)}
+                            >
+                              <ChevronLeft className="h-4 w-4 sm:mr-1" />
+                              <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Prev</span>
+                            </Button>
+                            <div className="flex items-center bg-muted/30 px-4 rounded-xl border border-border/40 min-w-[80px] justify-center">
+                              <span className="text-xs font-black text-foreground">{expenseCurrentPage}</span>
+                              <span className="mx-2 text-[10px] text-muted-foreground">/</span>
+                              <span className="text-xs text-muted-foreground">{totalExpensePages}</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-10 px-4 rounded-xl border-border/40"
+                              disabled={expenseCurrentPage === totalExpensePages}
+                              onClick={() => setExpenseCurrentPage(prev => prev + 1)}
+                            >
+                              <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Next</span>
+                              <ChevronRight className="h-4 w-4 sm:ml-1" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                      <Receipt className="h-10 w-10 text-muted-foreground" />
+                      <p className="text-xs font-medium px-8 text-center">
+                        {expenseSearchTerm ? 'No expenses found matching your search' : 'Log your expenses to track detailed job costs'}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Tab: Work Progress (Block 2) */}
           <TabsContent value="work" className="space-y-6 mt-0">
             {/* Labor */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+            <Card id="tour-job-labor" className="border-border/40 overflow-hidden rounded-xl shadow-none">
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold">Labor</CardTitle>
-                <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
+                <CardTitle className="text-lg font-bold flex items-center">
+                  Labor
+                  <FormHelp
+                    title="Labor"
+                    text="Track employee hours dedicated to this job to properly calculate labor costs against your margin."
+                  />
+                </CardTitle>
+                <Button id="tour-btn-new-labor" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
                   <Plus className="h-4 w-4" /> New Time Entry
                 </Button>
               </CardHeader>
@@ -2646,7 +2682,13 @@ export default function JobView({
             {/* Visits */}
             <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold">Visits</CardTitle>
+                <CardTitle className="text-lg font-bold flex items-center">
+                  Visits
+                  <FormHelp
+                    title="Visits"
+                    text="Schedule and track site visits or recurring service appointments."
+                  />
+                </CardTitle>
                 <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
                   <Plus className="h-4 w-4" /> New Visit
                 </Button>
@@ -2706,12 +2748,17 @@ export default function JobView({
             </Card>
           </TabsContent>
 
-          {/* Tab: Financials (Block 2) */}
+          {/* Tab: Financials (Block 3) */}
           <TabsContent value="finance" className="space-y-6 mt-0">
-            {/* Invoices */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+            <Card id="tour-job-invoices" className="border-border/40 overflow-hidden rounded-xl shadow-none">
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold">Invoices</CardTitle>
+                <CardTitle className="text-lg font-bold flex items-center">
+                  Invoices
+                  <FormHelp
+                    title="Invoices"
+                    text="Manage invoices generated for this job."
+                  />
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="border-b border-border/40">
@@ -2869,9 +2916,11 @@ export default function JobView({
                   </div>
 
                   <Link
+                    id="tour-btn-new-invoice"
                     href={`/clients/${proforma.client_id}/invoices/new?proformaId=${id}`}
                     className={cn(buttonVariants({ variant: 'ghost' }), "text-primary font-bold px-0 h-auto hover:bg-transparent")}
                   >
+                    <Plus className="h-4 w-4 mr-1" />
                     Create Invoice
                   </Link>
                 </div>
@@ -3189,7 +3238,7 @@ export default function JobView({
       <Dialog open={!!selectedFileUrl} onOpenChange={(open) => !open && setSelectedFileUrl(null)}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden bg-black border-none">
           <DialogHeader className="p-4 bg-card/10 backdrop-blur-md absolute top-0 left-0 right-0 z-10 flex flex-row items-center justify-between">
-            <DialogTitle className="text-white text-sm font-bold flex items-center gap-2">
+            <DialogTitle className="white text-sm font-bold flex items-center gap-2">
               <Eye className="h-4 w-4" /> Receipt View
             </DialogTitle>
             <Button
@@ -3251,7 +3300,7 @@ export default function JobView({
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setItemToDelete(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => itemToDelete && setItemToDelete(null)}>Cancel</Button>
             <Button variant="destructive" onClick={() => itemToDelete && handleDeleteItem(itemToDelete.id)}>Delete</Button>
           </div>
         </DialogContent>
@@ -3272,8 +3321,6 @@ export default function JobView({
         </DialogContent>
       </Dialog>
 
-      {/* InvoiceFormModal has been removed in favor of dedicated pages */}
-
       {billingEmailModal && (
         <EmailBillingModal
           type={billingEmailModal.type}
@@ -3284,6 +3331,13 @@ export default function JobView({
           onClose={() => setBillingEmailModal(null)}
         />
       )}
+      <JobTour
+        run={isTutorialOpen}
+        onFinish={() => setIsTutorialOpen(false)}
+        onStepChange={(tab) => {
+          setActiveTab(tab);
+        }}
+      />
 
       <Dialog open={!!paymentToDelete} onOpenChange={(isOpen) => !isOpen && setPaymentToDelete(null)}>
         <DialogContent className="border-slate-200">

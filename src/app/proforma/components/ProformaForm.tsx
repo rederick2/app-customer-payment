@@ -133,17 +133,7 @@ const formatUSD = (val: string | number) => {
   }).format(num);
 };
 
-const FormHelp = ({ title, text }: { title: string, text: string }) => (
-  <Popover>
-    <PopoverTrigger className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors ml-1 align-text-bottom focus:outline-none">
-      <HelpCircle className="h-4 w-4" />
-    </PopoverTrigger>
-    <PopoverContent className="w-64 p-4 text-sm z-[9999]" side="top">
-      <div className="font-bold mb-1.5 font-archivo">{title}</div>
-      <div className="text-muted-foreground leading-relaxed text-xs">{text}</div>
-    </PopoverContent>
-  </Popover>
-);
+import { FormHelp } from '@/components/FormHelp';
 
 const parseUSD = (val: string) => {
   return val.replace(/[^0-9.]/g, '');
