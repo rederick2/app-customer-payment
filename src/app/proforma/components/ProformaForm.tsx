@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal, Clock, Calendar as CalendarIcon, HelpCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { TutorialDialog } from './TutorialDialog';
 import { cn } from '@/lib/utils';
 import { generateAndSaveVisits } from './job-actions';
 import Autocomplete from 'react-google-autocomplete';
@@ -131,6 +132,18 @@ const formatUSD = (val: string | number) => {
     maximumFractionDigits: 2,
   }).format(num);
 };
+
+const FormHelp = ({ title, text }: { title: string, text: string }) => (
+  <Popover>
+    <PopoverTrigger className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors ml-1 align-text-bottom focus:outline-none">
+      <HelpCircle className="h-4 w-4" />
+    </PopoverTrigger>
+    <PopoverContent className="w-64 p-4 text-sm z-[9999]" side="top">
+      <div className="font-bold mb-1.5 font-archivo">{title}</div>
+      <div className="text-muted-foreground leading-relaxed text-xs">{text}</div>
+    </PopoverContent>
+  </Popover>
+);
 
 const parseUSD = (val: string) => {
   return val.replace(/[^0-9.]/g, '');
@@ -611,6 +624,9 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [aiProjectDescription, setAIProjectDescription] = useState("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  // Tutorial State
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1174,16 +1190,28 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </div>
         </div>
 
-        {mode === 'create' && (
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
           <Button
             type="button"
-            onClick={() => setIsAIModalOpen(true)}
-            className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 h-11 px-6 rounded-2xl"
+            variant="outline"
+            onClick={() => setIsTutorialOpen(true)}
+            className="w-full md:w-auto gap-2 rounded-2xl h-11 px-6 shadow-sm font-bold"
           >
-            <Sparkles className="h-4 w-4 fill-white/20" />
-            <span className="font-bold tracking-tight text-xs uppercase">Generate with AI</span>
+            <HelpCircle className="h-4 w-4" />
+            <span className="text-xs uppercase tracking-tight">How it works</span>
           </Button>
-        )}
+
+          {mode === 'create' && (
+            <Button
+              type="button"
+              onClick={() => setIsAIModalOpen(true)}
+              className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 h-11 px-6 rounded-2xl"
+            >
+              <Sparkles className="h-4 w-4 fill-white/20" />
+              <span className="font-bold tracking-tight text-xs uppercase">Generate with AI</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -1220,7 +1248,13 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         <div className="space-y-10">
           {!isTemplate && (
             <div className="space-y-4">
-              <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">Client Details</h2>
+              <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
+                Client Details
+                <FormHelp 
+                  title="Assign a Client" 
+                  text="Select an existing client or create a new one to assign to this quote. The client's contact information will be included in the final document."
+                />
+              </h2>
               <Card className="shadow-sm border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
                 <CardContent className="p-6 space-y-4">
                   {mode === 'create' && (
@@ -1360,8 +1394,12 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           )}
 
           <div className="space-y-4">
-            <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">
+            <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
               {isJobMode ? 'Schedule' : 'Project Details'}
+              <FormHelp 
+                title={isJobMode ? 'Schedule' : 'Project Details'}
+                text={isJobMode ? 'Configure the schedule for this job, including recurrences and team assignments.' : 'Set the basic properties of the quote, such as its expiration date.'}
+              />
             </h2>
             <Card className="border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
               <CardContent className="p-8 space-y-8">
@@ -1717,8 +1755,12 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">
+          <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
             {isJobMode ? 'Job Items' : 'Quote Items'}
+            <FormHelp 
+              title="Line Items"
+              text="Add products or services. You can set quantities and unit prices. Click inside the unit price to calculate cost and markup. Check 'Mark as optional' to let clients decide on an item."
+            />
           </h2>
           <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
             <CardContent className="px-4 md:px-10 py-10">
@@ -1772,7 +1814,13 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
 
         <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
           {/* Subtotal */}
-          <div className="flex justify-between w-full md:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4">
+          <div className="flex justify-between w-full md:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4 relative">
+            <div className="absolute -left-6 top-2">
+              <FormHelp 
+                title="Adjustments & Taxes"
+                text="Apply discounts as percentages or fixed amounts. Select or create tax rates. Request a deposit before starting work."
+              />
+            </div>
             <span className="text-muted-foreground uppercase text-[10px] tracking-widest self-center">Subtotal:</span>
             <span className="font-bold text-lg tabular-nums">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
@@ -2243,6 +2291,10 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <TutorialDialog 
+        isOpen={isTutorialOpen} 
+        onClose={() => setIsTutorialOpen(false)} 
+      />
     </div>
   );
 }
