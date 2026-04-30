@@ -353,11 +353,11 @@ function SortableItem({
                       const newCost = Number((newPrice / (1 + currentMarkup / 100)).toFixed(2));
                       updateItemFields(item.id, { unit_price: newPrice, cost: newCost });
                     }}
-                    className="rounded-xl h-11 border-border/60 focus:ring-2 focus:ring-primary/10 pl-7 text-right font-bold transition-all peer"
+                    className="tour-item-price-input rounded-xl h-11 border-border/60 focus:ring-2 focus:ring-primary/10 pl-7 text-right font-bold transition-all peer"
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">$</span>
 
-                  <div className="absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
+                  <div className="tour-item-calculator absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
                     <div className="space-y-2 text-left">
                       <Label className="text-xs font-bold text-muted-foreground">Unit Cost</Label>
                       <div className="relative">
@@ -1250,8 +1250,8 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
             <div className="space-y-4">
               <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
                 Client Details
-                <FormHelp 
-                  title="Assign a Client" 
+                <FormHelp
+                  title="Assign a Client"
                   text="Select an existing client or create a new one to assign to this quote. The client's contact information will be included in the final document."
                 />
               </h2>
@@ -1396,7 +1396,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           <div className="space-y-4">
             <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
               {isJobMode ? 'Schedule' : 'Project Details'}
-              <FormHelp 
+              <FormHelp
                 title={isJobMode ? 'Schedule' : 'Project Details'}
                 text={isJobMode ? 'Configure the schedule for this job, including recurrences and team assignments.' : 'Set the basic properties of the quote, such as its expiration date.'}
               />
@@ -1757,7 +1757,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         <div className="space-y-4">
           <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
             {isJobMode ? 'Job Items' : 'Quote Items'}
-            <FormHelp 
+            <FormHelp
               title="Line Items"
               text="Add products or services. You can set quantities and unit prices. Click inside the unit price to calculate cost and markup. Check 'Mark as optional' to let clients decide on an item."
             />
@@ -1817,7 +1817,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           {/* Subtotal */}
           <div className="flex justify-between w-full md:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4 relative">
             <div className="absolute -left-6 top-2">
-              <FormHelp 
+              <FormHelp
                 title="Adjustments & Taxes"
                 text="Apply discounts as percentages or fixed amounts. Select or create tax rates. Request a deposit before starting work."
               />
@@ -2292,9 +2292,9 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <ProformaTour 
-        run={isTutorialOpen} 
-        onFinish={() => setIsTutorialOpen(false)} 
+      <ProformaTour
+        run={isTutorialOpen}
+        onFinish={() => setIsTutorialOpen(false)}
       />
     </div>
   );
