@@ -6,7 +6,7 @@ import ProformaForm from '../components/ProformaForm';
 import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Copy, LayoutTemplate, ArrowRight, Loader2, ArrowLeft, Search } from 'lucide-react';
+import { FileText, Copy, LayoutTemplate, ArrowRight, Loader2, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -192,11 +192,13 @@ function NewProformaContent() {
   if (view === 'select') {
     return (
       <div className="container mx-auto px-4 py-12 max-w-4xl animate-in fade-in duration-500">
-        <div className="flex items-center gap-2 mb-8">
-          <Link href="/quotes" className="text-muted-foreground hover:text-primary transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h1 className=" text-3xl font-bold tracking-tight">Create Quote</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2">
+            <Link href="/quotes" className="text-muted-foreground hover:text-primary transition-colors">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className=" text-3xl font-bold tracking-tight">Create Quote</h1>
+          </div>
         </div>
 
         <div className="bg-card border border-border/40 rounded-xl p-8 mb-8 shadow-sm">

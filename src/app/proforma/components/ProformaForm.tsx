@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Save, Upload, X, Check, ChevronsUpDown, Pencil, ChevronDown, ChevronUp, Sparkles, Wand2, Loader2, MoreHorizontal, Clock, Calendar as CalendarIcon, HelpCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { ProformaTour } from './ProformaTour';
 import { cn } from '@/lib/utils';
 import { generateAndSaveVisits } from './job-actions';
 import Autocomplete from 'react-google-autocomplete';
@@ -132,6 +133,8 @@ const formatUSD = (val: string | number) => {
   }).format(num);
 };
 
+import { FormHelp } from '@/components/FormHelp';
+
 const parseUSD = (val: string) => {
   return val.replace(/[^0-9.]/g, '');
 };
@@ -221,7 +224,7 @@ function SortableItem({
           <div
             {...attributes}
             {...listeners}
-            className="p-1.5 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground group-hover:text-muted-foreground/40 transition-colors"
+            className="tour-item-drag p-1.5 rounded-lg hover:bg-muted cursor-grab active:cursor-grabbing text-muted-foreground group-hover:text-muted-foreground/40 transition-colors"
           >
             <GripVertical className="h-6 w-6" />
           </div>
@@ -245,7 +248,7 @@ function SortableItem({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
             <div className={cn("md:col-span-6 space-y-2", comboboxOpen && "relative z-[100]")}>
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Item Name *</Label>
-              <div className="w-full relative">
+              <div className="tour-item-name w-full relative">
                 <div className="relative group/trigger">
                   <Input
                     placeholder="Product or service name..."
@@ -325,7 +328,7 @@ function SortableItem({
                 </div>
               </div>
 
-              <div className="space-y-2 text-right">
+              <div className="tour-item-price space-y-2 text-right">
                 <Label className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unit Price *</Label>
                 <div className="relative group/price">
                   <CurrencyInput
@@ -340,11 +343,11 @@ function SortableItem({
                       const newCost = Number((newPrice / (1 + currentMarkup / 100)).toFixed(2));
                       updateItemFields(item.id, { unit_price: newPrice, cost: newCost });
                     }}
-                    className="rounded-xl h-11 border-border/60 focus:ring-2 focus:ring-primary/10 pl-7 text-right font-bold transition-all peer"
+                    className="tour-item-price-input rounded-xl h-11 border-border/60 focus:ring-2 focus:ring-primary/10 pl-7 text-right font-bold transition-all peer"
                   />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground/40 pointer-events-none">$</span>
 
-                  <div className="absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
+                  <div className="tour-item-calculator absolute right-0 top-[calc(100%+8px)] w-64 p-4 space-y-4 shadow-xl border border-border/40 rounded-xl bg-popover text-popover-foreground z-[100] transition-all duration-200 opacity-0 invisible peer-focus:opacity-100 peer-focus:visible focus-within:opacity-100 focus-within:visible hover:opacity-100 hover:visible">
                     <div className="space-y-2 text-left">
                       <Label className="text-xs font-bold text-muted-foreground">Unit Cost</Label>
                       <div className="relative">
@@ -491,7 +494,7 @@ function SortableItem({
           <div className="pt-4 flex justify-end">
 
             {/* El botón/etiqueta con su estilo */}
-            <div className="flex items-center gap-3 bg-muted/10 px-4 py-2 rounded-xl border border-border/40 hover:bg-muted/20 transition-all cursor-pointer group/opt">
+            <div className="tour-item-optional flex items-center gap-3 bg-muted/10 px-4 py-2 rounded-xl border border-border/40 hover:bg-muted/20 transition-all cursor-pointer group/opt">
 
               {/* El texto primero */}
               <Label
@@ -611,6 +614,9 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [aiProjectDescription, setAIProjectDescription] = useState("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  // Tutorial State
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1165,7 +1171,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
             <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
           <div>
-            <h1 className="text-2xl uppercase md:text-3xl font-bold tracking-tight">
+            <h1 id="tour-header" className="text-2xl uppercase md:text-3xl font-bold tracking-tight">
               {isJobMode ? 'New Job' : (mode === 'edit' ? 'Edit Quote' : 'New Quote')}
             </h1>
             <p className="text-muted-foreground text-xs md:text-sm">
@@ -1174,16 +1180,28 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </div>
         </div>
 
-        {mode === 'create' && (
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
           <Button
             type="button"
-            onClick={() => setIsAIModalOpen(true)}
-            className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 h-11 px-6 rounded-2xl"
+            variant="outline"
+            onClick={() => setIsTutorialOpen(true)}
+            className="w-full md:w-auto gap-2 rounded-2xl h-11 px-6 shadow-sm font-bold"
           >
-            <Sparkles className="h-4 w-4 fill-white/20" />
-            <span className="font-bold tracking-tight text-xs uppercase">Generate with AI</span>
+            <HelpCircle className="h-4 w-4" />
+            <span className="text-xs uppercase tracking-tight">How it works</span>
           </Button>
-        )}
+
+          {mode === 'create' && (
+            <Button
+              type="button"
+              onClick={() => setIsAIModalOpen(true)}
+              className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-purple-200 border-none transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 h-11 px-6 rounded-2xl"
+            >
+              <Sparkles className="h-4 w-4 fill-white/20" />
+              <span className="font-bold tracking-tight text-xs uppercase">Generate with AI</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -1204,7 +1222,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </div>
         )}
 
-        <div className="space-y-2">
+        <div id="tour-project-name" className="space-y-2">
           <Label htmlFor="projectName" className="font-bold text-xs uppercase tracking-widest text-muted-foreground ml-1">
             {isTemplate ? 'Template Name *' : isJobMode ? 'Job Name *' : 'Project Name *'}
           </Label>
@@ -1220,8 +1238,14 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         <div className="space-y-10">
           {!isTemplate && (
             <div className="space-y-4">
-              <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">Client Details</h2>
-              <Card className="shadow-sm border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
+              <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
+                Client Details
+                <FormHelp
+                  title="Assign a Client"
+                  text="Select an existing client or create a new one to assign to this quote. The client's contact information will be included in the final document."
+                />
+              </h2>
+              <Card id="tour-client-details" className="shadow-sm border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
                 <CardContent className="p-6 space-y-4">
                   {mode === 'create' && (
                     <div className="space-y-2">
@@ -1360,10 +1384,14 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           )}
 
           <div className="space-y-4">
-            <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">
+            <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
               {isJobMode ? 'Schedule' : 'Project Details'}
+              <FormHelp
+                title={isJobMode ? 'Schedule' : 'Project Details'}
+                text={isJobMode ? 'Configure the schedule for this job, including recurrences and team assignments.' : 'Set the basic properties of the quote, such as its expiration date.'}
+              />
             </h2>
-            <Card className="border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
+            <Card id="tour-project-details" className="border rounded-xl overflow-hidden" style={{ boxShadow: 'none' }}>
               <CardContent className="p-8 space-y-8">
                 {!isTemplate && !isJobMode && (
                   <div className="space-y-2">
@@ -1717,10 +1745,14 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1">
+          <h2 className="text-lg uppercase font-black tracking-tight font-archivo ml-1 flex items-center">
             {isJobMode ? 'Job Items' : 'Quote Items'}
+            <FormHelp
+              title="Line Items"
+              text="Add products or services. You can set quantities and unit prices. Click inside the unit price to calculate cost and markup. Check 'Mark as optional' to let clients decide on an item."
+            />
           </h2>
-          <Card className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
+          <Card id="tour-line-items" className="shadow-sm border-none bg-muted/20 overflow-visible rounded-3xl" >
             <CardContent className="px-4 md:px-10 py-10">
               <datalist id="catalog-descriptions">
                 {catalog.map(c => <option key={c.description} value={c.description} />)}
@@ -1758,6 +1790,7 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
               {/* List Footer Actions (Matching reference image) */}
               <div className="mt-8 flex gap-4">
                 <Button
+                  id="tour-item-add"
                   type="button"
                   onClick={addItem}
                   className="bg-primary text-white font-bold px-10 h-14 rounded-2xl shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-[0.2em]"
@@ -1770,9 +1803,15 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </Card>
         </div>
 
-        <div className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
+        <div id="tour-adjustments" className="mt-8 border-t border-border/50 pt-6 flex flex-col items-end space-y-4 px-2">
           {/* Subtotal */}
-          <div className="flex justify-between w-full md:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4">
+          <div className="flex justify-between w-full md:w-96 text-sm font-bold pt-2 border-b border-border/10 pb-4 relative">
+            <div className="absolute -left-6 top-2">
+              <FormHelp
+                title="Adjustments & Taxes"
+                text="Apply discounts as percentages or fixed amounts. Select or create tax rates. Request a deposit before starting work."
+              />
+            </div>
             <span className="text-muted-foreground uppercase text-[10px] tracking-widest self-center">Subtotal:</span>
             <span className="font-bold text-lg tabular-nums">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
           </div>
@@ -2243,6 +2282,10 @@ export default function ProformaForm({ initialData, mode, onBack }: ProformaForm
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ProformaTour
+        run={isTutorialOpen}
+        onFinish={() => setIsTutorialOpen(false)}
+      />
     </div>
   );
 }
