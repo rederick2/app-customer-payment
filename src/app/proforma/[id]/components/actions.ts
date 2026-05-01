@@ -766,11 +766,13 @@ export async function sendPaymentEmail(paymentId: string, formData: FormData) {
 
   const { data: payment } = await supabase
     .from('payments')
-    .select('*, proformas(*, users(*)), clients(*)')
+    .select('*, proformas(*), clients(*, users(*))')
     .eq('id', paymentId)
     .single();
 
-  if (!payment) return { error: 'Pago no encontrado' };
+  console.log('Payment', payment);
+
+  if (!payment) return { error: 'Payment not found' };
 
   try {
     const pdfBuffer = await renderToBuffer(
@@ -778,16 +780,16 @@ export async function sendPaymentEmail(paymentId: string, formData: FormData) {
         payment,
         proforma: payment.proformas,
         client: payment.clients,
-        user: payment.proformas.users
+        user: payment.clients.users
       }) as React.ReactElement<DocumentProps>
     );
 
     await sendEmail({
-      displayName: payment.proformas.users.display_name,
+      displayName: payment.clients.users.display_name,
       to: [to],
       subject,
       text: message,
-      html: buildEmailHtml(message, payment.proforma_id, payment.proformas.users?.display_name || ''),
+      html: buildEmailHtml(message, payment.proforma_id, payment.clients.users?.display_name || ''),
       attachments: [{
         filename: `receipt_${payment.id.split('-')[0].toUpperCase()}.pdf`,
         content: pdfBuffer
