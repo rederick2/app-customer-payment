@@ -156,11 +156,11 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
           {/* Create Dropdown */}
           <div className="absolute left-full ml-2 top-0">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              <DropdownMenuTrigger render={
                 <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border-border/40 hover:bg-muted/50 hover:border-primary/20 transition-all shadow-sm">
                   <Plus className="h-4 w-4 text-primary" />
                 </Button>
-              </DropdownMenuTrigger>
+              } />
               <DropdownMenuContent align="start" className="w-56 p-2 rounded-2xl border-border/40 shadow-xl z-[100]">
                 <DropdownMenuItem onClick={() => router.push('/proforma/new?action=blank')} className="gap-3 py-3 rounded-xl cursor-pointer">
                   <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
