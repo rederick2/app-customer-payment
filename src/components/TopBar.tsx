@@ -7,10 +7,17 @@ import {
   Search, Bell, Settings, HelpCircle, X,
   User, MapPin, FileText, CreditCard, Building2, ChevronRight,
   LogOut, Phone, Mail, Moon, Sun,
-  MessageSquare
+  MessageSquare, Plus, Copy, LayoutTemplate
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DashboardNotifications } from './dashboard/DashboardNotifications';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -144,6 +151,46 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
                 <X className="h-4 w-4" />
               </button>
             )}
+          </div>
+
+          {/* Create Dropdown */}
+          <div className="absolute left-full ml-2 top-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl border-border/40 hover:bg-muted/50 hover:border-primary/20 transition-all shadow-sm">
+                  <Plus className="h-4 w-4 text-primary" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 p-2 rounded-2xl border-border/40 shadow-xl z-[100]">
+                <DropdownMenuItem onClick={() => router.push('/proforma/new?action=blank')} className="gap-3 py-3 rounded-xl cursor-pointer">
+                  <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm">Blank Quote</span>
+                    <span className="text-[10px] text-muted-foreground">Start from scratch</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/proforma/new?action=template')} className="gap-3 py-3 rounded-xl cursor-pointer">
+                  <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <LayoutTemplate className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm">Use Template</span>
+                    <span className="text-[10px] text-muted-foreground">From saved template</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/proforma/new?action=quote')} className="gap-3 py-3 rounded-xl cursor-pointer">
+                  <div className="h-8 w-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
+                    <Copy className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm">Clone Existing</span>
+                    <span className="text-[10px] text-muted-foreground">Duplicate old quote</span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Dropdown */}

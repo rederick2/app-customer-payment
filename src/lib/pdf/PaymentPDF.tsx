@@ -252,7 +252,7 @@ export default function PaymentPDF({ payment, proforma, client, user }: PaymentP
           </View>
           <View style={styles.detailsRow}>
             <Text style={styles.detailLabel}>Reference</Text>
-            <Text style={styles.detailValue}>Job #{proforma?.number}</Text>
+            <Text style={styles.detailValue}>Job #{proforma?.number || '-'}</Text>
           </View>
         </View>
 

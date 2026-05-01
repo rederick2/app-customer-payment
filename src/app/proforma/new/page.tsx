@@ -158,12 +158,22 @@ function NewProformaContent() {
 
   const [modalMode, setModalMode] = useState<'template' | 'quote' | null>(null);
 
+  const action = searchParams.get('action');
+
   // If clientId is provided in URL, we assume they want a blank quote for that client
   useEffect(() => {
     if (clientId) {
       setView('form');
     }
-  }, [clientId]);
+
+    if (action === 'blank') {
+      handleStartBlank();
+    } else if (action === 'template') {
+      setModalMode('template');
+    } else if (action === 'quote') {
+      setModalMode('quote');
+    }
+  }, [clientId, action]);
 
   const handleStartBlank = () => {
     setInitialData({ proforma: { is_template: false } });
