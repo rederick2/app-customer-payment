@@ -138,6 +138,8 @@ export default function JobView({
   const router = useRouter();
   const [items, setItems] = React.useState(itemsProp);
   const [activeTab, setActiveTab] = React.useState('items');
+  const [activeProgressTab, setActiveProgressTab] = React.useState('photos');
+  const [activeFinanceTab, setActiveFinanceTab] = React.useState('payments');
   const [isTutorialOpen, setIsTutorialOpen] = React.useState(false);
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
   const [tempCost, setTempCost] = React.useState<string>('');
@@ -2000,13 +2002,27 @@ export default function JobView({
           </TabsContent>
 
           {/* Tab: Work Progress */}
-          <TabsContent value="work" className="space-y-6 mt-0">
-            {/* Work Progress Photos Section */}
-            <WorkProgressSection proformaId={proforma.id} proformaName={proforma.project_name} />
+          <TabsContent value="work" className="mt-0">
+            {/* Inner sub-tabs for Progress */}
+            <div className="bg-card border border-border/40 rounded-2xl p-4">
+            <Tabs value={activeProgressTab} onValueChange={setActiveProgressTab} className="w-full">
+              <TabsList className="bg-muted/20 p-1 w-full flex gap-1 rounded-xl mb-4 h-auto justify-start border border-border/30 overflow-x-auto hide-scrollbar">
+                <TabsTrigger value="photos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Photos</TabsTrigger>
+                <TabsTrigger value="tasks" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Tasks</TabsTrigger>
+                <TabsTrigger value="labor" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Labor</TabsTrigger>
+                <TabsTrigger value="visits" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Visits</TabsTrigger>
+                <TabsTrigger value="notes" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Notes</TabsTrigger>
+              </TabsList>
 
-            {/* Tasks Section */}
+              {/* Sub-tab: Photos */}
+              <TabsContent value="photos" className="mt-0">
+                <WorkProgressSection proformaId={proforma.id} proformaName={proforma.project_name} />
+              </TabsContent>
+
+              {/* Sub-tab: Tasks */}
+              <TabsContent value="tasks" className="mt-0">
             <div className="space-y-6">
-              <Card id="tour-job-progress" className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
+              <Card id="tour-job-progress" className="border-border/40 overflow-hidden rounded-xl shadow-none">
                 <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
                   <div className="flex items-center gap-2">
                     <ListTodo className="h-5 w-5 text-primary" />
@@ -2203,28 +2219,205 @@ export default function JobView({
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+              </TabsContent>
 
-          {/* Tab: Financials (Block 1) */}
-          <TabsContent value="finance" className="space-y-6 mt-0">
-            <div className="space-y-6">
-              {/* Payments */}
+              {/* Sub-tab: Labor */}
+              <TabsContent value="labor" className="mt-0">
+              <Card id="tour-job-labor" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                  <CardTitle className="text-lg font-bold flex items-center">
+                    Labor
+                    <FormHelp title="Labor" text="Track employee hours dedicated to this job to properly calculate labor costs against your margin." />
+                  </CardTitle>
+                  <Button id="tour-btn-new-labor" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
+                    <Plus className="h-4 w-4" /> New Time Entry
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {timeEntries.length > 0 ? (
+                    <>
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                            <tr>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
+                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
+                              <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border/30">
+                            {timeEntries.map(entry => (
+                              <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
+                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{entry.date}</td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><UserIcon className="h-3 w-3" /></div>
+                                    <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
+                                <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
+                                <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                <td className="px-6 py-4 text-center">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
+                                      <MoreVertical className="h-3.5 w-3.5" />
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-32">
+                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </td>
+                              </tr>
+                            ))}
+                            <tr className="bg-muted/5 font-bold">
+                              <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
+                              <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                              <td />
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="md:hidden divide-y divide-border/20">
+                        {timeEntries.map(entry => (
+                          <div key={entry.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100"><UserIcon className="h-5 w-5" /></div>
+                                <div>
+                                  <p className="font-bold text-sm text-foreground">{entry.user_name || 'Staff Member'}</p>
+                                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-60">{format(new Date(entry.date), 'MMM d, yyyy')}</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-black text-foreground leading-none">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Total Cost</p>
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => setEditingLabor(entry)}><Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit</Button>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-600 hover:bg-red-50" onClick={() => setLaborToDelete(entry)}><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Labor Cost</span>
+                          <span className="text-xl font-black text-emerald-600">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
+                      <Clock className="h-10 w-10 text-muted-foreground" />
+                      <p className="text-xs font-medium px-8 text-center">Time tracked to this job by you or your team will show here</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              </TabsContent>
+
+              {/* Sub-tab: Visits */}
+              <TabsContent value="visits" className="mt-0">
+              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                  <CardTitle className="text-lg font-bold flex items-center">
+                    Visits
+                    <FormHelp title="Visits" text="Schedule and track site visits or recurring service appointments." />
+                  </CardTitle>
+                  <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
+                    <Plus className="h-4 w-4" /> New Visit
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {visits.length > 0 ? (
+                    <div className="divide-y divide-border/30">
+                      {visits.map(visit => (
+                        <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600")}>
+                              <Calendar className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
+                                {visit.status === 'overdue' && <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Overdue</Badge>}
+                                {visit.status === 'completed' && <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Completed</Badge>}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">Assigned to: {visit.assigned_name || 'Unassigned'}</p>
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" />}>
+                              <MoreVertical className="h-4 w-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}><CheckCircle2 className="h-4 w-4" /> Complete Visit</DropdownMenuItem>
+                              <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'scheduled')}><Calendar className="h-4 w-4" /> Reschedule</DropdownMenuItem>
+                              <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteVisit(visit.id)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
+                      <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                      <p className="text-xs font-medium">No visits scheduled for this job yet</p>
+                      <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              </TabsContent>
+
+              {/* Sub-tab: Notes */}
+              <TabsContent value="notes" className="mt-0">
+                <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                  <CardHeader className="py-4 bg-muted/5 border-b border-border/40">
+                    <CardTitle className="text-lg font-bold">Internal Notes</CardTitle>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Note details</p>
+                      <textarea
+                        className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none"
+                        placeholder="Click here to add a note..."
+                        rows={4}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+            </div>
+          </TabsContent>
+          <TabsContent value="finance" className="mt-0">
+            {/* Inner sub-tabs for Financials */}
+            <div className="bg-card border border-border/40 rounded-2xl p-4">
+            <Tabs value={activeFinanceTab} onValueChange={setActiveFinanceTab} className="w-full">
+              <TabsList className="bg-muted/20 p-1 w-full flex gap-1 rounded-xl mb-4 h-auto justify-start border border-border/30 overflow-x-auto hide-scrollbar">
+                <TabsTrigger value="payments" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Payments</TabsTrigger>
+                <TabsTrigger value="expenses" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Expenses</TabsTrigger>
+                <TabsTrigger value="invoices" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Invoices</TabsTrigger>
+              </TabsList>
+
+              {/* Sub-tab: Payments */}
+              <TabsContent value="payments" className="mt-0">
               <Card id="tour-job-finance" className="border-border/40 overflow-hidden rounded-xl shadow-none">
                 <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
                   <CardTitle className="text-lg font-bold">Payments</CardTitle>
-                  <Button
-                    id="tour-btn-new-payment"
-                    size="sm"
-                    className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
-                    onClick={() => setIsRecordingPayment(true)}
-                  >
+                  <Button id="tour-btn-new-payment" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsRecordingPayment(true)}>
                     <Plus className="h-4 w-4" /> Record Payment
                   </Button>
                 </CardHeader>
                 <CardContent className="p-0">
                   {payments.length > 0 ? (
                     <>
-                      {/* VISTA DESKTOP: Tabla de Pagos */}
                       <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
@@ -2247,18 +2440,10 @@ export default function JobView({
                                       <MoreVertical className="h-4 w-4" />
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-40">
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}>
-                                        <Eye className="h-3.5 w-3.5" /> View Receipt
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
-                                        <Mail className="h-3.5 w-3.5" /> Send by Email
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}>
-                                        <Pencil className="h-3.5 w-3.5" /> Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
-                                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}><Eye className="h-3.5 w-3.5" /> View Receipt</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}><Mail className="h-3.5 w-3.5" /> Send by Email</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
                                 </td>
@@ -2267,38 +2452,23 @@ export default function JobView({
                           </tbody>
                         </table>
                       </div>
-
-                      {/* VISTA MOBILE: Cards de Pagos */}
                       <div className="md:hidden divide-y divide-border/20">
                         {payments.map(payment => (
                           <div key={payment.id} className="p-5 flex justify-between items-center hover:bg-muted/5 transition-colors">
                             <div className="space-y-1">
                               <p className="font-bold text-base text-foreground leading-none">{payment.payment_method}</p>
-                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                                {format(new Date(payment.payment_date), 'MMM d, yyyy')}
-                              </p>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{format(new Date(payment.payment_date), 'MMM d, yyyy')}</p>
                             </div>
                             <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <p className="text-lg font-black text-emerald-600 leading-none">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                              </div>
+                              <p className="text-lg font-black text-emerald-600 leading-none">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                               <DropdownMenu>
                                 <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
                                   <MoreVertical className="h-5 w-5" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleViewPaymentPDF(payment)}>
-                                    <Eye className="h-4 w-4" /> View Receipt
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}>
-                                    <Mail className="h-4 w-4" /> Send Email
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingPayment(payment)}>
-                                    <Pencil className="h-4 w-4" /> Edit Record
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}>
-                                    <Trash2 className="h-4 w-4" /> Delete Payment
-                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleViewPaymentPDF(payment)}><Eye className="h-4 w-4" /> View Receipt</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingPayment(payment)}><Pencil className="h-4 w-4" /> Edit</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -2314,112 +2484,51 @@ export default function JobView({
                   )}
                 </CardContent>
               </Card>
+              </TabsContent>
 
-              {/* Expenses */}
-              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col mt-6">
+              {/* Sub-tab: Expenses */}
+              <TabsContent value="expenses" className="mt-0">
+              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col">
                 <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
                   <CardTitle className="text-lg font-bold">Expenses</CardTitle>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5"
-                      onClick={() => setIsScanningExpense(true)}
-                    >
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5" onClick={() => setIsScanningExpense(true)}>
                       <Camera className="h-4 w-4" /> Scanner AI
                     </Button>
-                    <Button
-                      size="sm"
-                      className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5"
-                      onClick={() => setIsAddingExpense(true)}
-                    >
+                    <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingExpense(true)}>
                       <Plus className="h-4 w-4" /> New Expense
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="p-0 flex-1 flex flex-col">
-                  {/* Search Bar */}
-                  <div className="p-4 border-b border-border/40 bg-card">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by place, description or category..."
-                        className="pl-9 h-9 text-xs"
-                        value={expenseSearchTerm}
-                        onChange={handleSearchChange}
-                      />
-                    </div>
-                  </div>
-
-                  {paginatedExpenses.length > 0 ? (
+                <CardContent className="p-0">
+                  {expenses.length > 0 ? (
                     <>
-                      {/* VISTA DESKTOP: Tabla de Gastos */}
                       <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
                             <tr>
                               <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Place</th>
                               <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
                               <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Sync</th>
                               <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
                               <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border/30">
-                            {paginatedExpenses.map(exp => (
-                              <tr key={exp.id} className="hover:bg-muted/5 transition-colors group">
-                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(exp.date), 'dd/MM/yyyy')}</td>
-                                <td className="px-6 py-4 font-bold text-foreground text-xs">{exp.place || 'Supplier'}</td>
-                                <td className="px-6 py-4 text-xs text-muted-foreground line-clamp-1 max-w-[150px]">{exp.description}</td>
-                                <td className="px-6 py-4">
-                                  <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-widest">
-                                    {exp.category}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                  {exp.sync_status === 'synced' ? (
-                                    <div className="flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-full h-6 w-6 mx-auto" title="Synced to QuickBooks">
-                                      <CheckCircle2 className="h-3.5 w-3.5" />
-                                    </div>
-                                  ) : (
-                                    qboIntegration && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                                        onClick={() => handleSyncExpenseToQBO(exp)}
-                                        disabled={syncingExpenseId === exp.id}
-                                        title="Sync to QuickBooks"
-                                      >
-                                        {syncingExpenseId === exp.id ? (
-                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        ) : (
-                                          <RefreshCw className="h-3.5 w-3.5" />
-                                        )}
-                                      </Button>
-                                    )
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 text-right tabular-nums font-bold text-red-600 text-xs">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                            {expenses.map(expense => (
+                              <tr key={expense.id} className="hover:bg-muted/5 transition-colors group">
+                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(expense.expense_date), 'dd/MM/yyyy')}</td>
+                                <td className="px-6 py-4 font-medium text-sm">{expense.description}</td>
+                                <td className="px-6 py-4"><Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest">{expense.category || 'General'}</Badge></td>
+                                <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground">${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                                 <td className="px-6 py-4 text-center">
                                   <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7" />}>
-                                      <MoreVertical className="h-3.5 w-3.5" />
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                      <MoreVertical className="h-4 w-4" />
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-40">
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedExpenseForEdit(exp)}>
-                                        <Pencil className="h-3.5 w-3.5" /> Edit
-                                      </DropdownMenuItem>
-                                      {exp.image_url && (
-                                        <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setSelectedFileUrl(exp.image_url)}>
-                                          <Eye className="h-3.5 w-3.5" /> View File
-                                        </DropdownMenuItem>
-                                      )}
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
-                                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => setSelectedExpenseForEdit(expense)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(expense.id)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
                                 </td>
@@ -2428,329 +2537,42 @@ export default function JobView({
                           </tbody>
                         </table>
                       </div>
-
-                      {/* VISTA MOBILE: Cards de Gastos */}
                       <div className="md:hidden divide-y divide-border/20">
-                        {paginatedExpenses.map(exp => (
-                          <div key={exp.id} className="p-5 space-y-3 hover:bg-muted/5 transition-colors">
-                            <div className="flex justify-between items-start">
-                              <div className="space-y-1">
-                                <p className="font-bold text-sm text-foreground">{exp.place || 'Supplier'}</p>
-                                <div className="flex items-center gap-2">
-                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                                    {format(new Date(exp.date), 'MMM d, yyyy')}
-                                  </p>
-                                  <span className="w-1 h-1 rounded-full bg-border" />
-                                  <span className="text-[9px] font-black tracking-widest uppercase text-primary/70">{exp.category}</span>
-                                </div>
-                              </div>
-                              <div className="text-right flex items-center gap-3">
-                                <div className="text-right">
-                                  <p className="text-lg font-black text-red-600 leading-none">${Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                                </div>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" />}>
-                                    <MoreVertical className="h-4 w-4" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedExpenseForEdit(exp)}>
-                                      <Pencil className="h-4 w-4" /> Edit Expense
-                                    </DropdownMenuItem>
-                                    {exp.image_url && (
-                                      <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedFileUrl(exp.image_url)}>
-                                        <Eye className="h-4 w-4" /> View File
-                                      </DropdownMenuItem>
-                                    )}
-                                    {qboIntegration && exp.sync_status !== 'synced' && (
-                                      <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleSyncExpenseToQBO(exp)}>
-                                        <RefreshCw className="h-4 w-4 text-orange-500" /> Sync to QBO
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setExpenseToDelete(exp)}>
-                                      <Trash2 className="h-4 w-4" /> Delete Expense
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                        {expenses.map(expense => (
+                          <div key={expense.id} className="p-5 flex justify-between items-start hover:bg-muted/5 transition-colors">
+                            <div className="space-y-1">
+                              <p className="font-bold text-sm text-foreground">{expense.description}</p>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{format(new Date(expense.expense_date), 'MMM d, yyyy')}</p>
                             </div>
-
-                            {exp.description && (
-                              <p className="text-xs text-muted-foreground line-clamp-2 italic">"{exp.description}"</p>
-                            )}
-
-                            <div className="flex items-center justify-between pt-1">
-                              <div className="flex items-center gap-2">
-                                {exp.sync_status === 'synced' ? (
-                                  <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-100">
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest">QBO Synced</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1.5 bg-muted/30 text-muted-foreground px-2.5 py-1 rounded-lg border border-border/40">
-                                    <RefreshCw className="h-3 w-3" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest">Not Synced</span>
-                                  </div>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-3">
+                              <p className="text-lg font-black text-foreground">${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" />}>
+                                  <MoreVertical className="h-4 w-4" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedExpenseForEdit(expense)}><Pencil className="h-4 w-4" /> Edit</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(expense.id)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         ))}
                       </div>
-
-                      {/* Pagination Controls - Responsive */}
-                      {totalExpensePages > 1 && (
-                        <div className="p-4 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between bg-card mt-auto gap-4">
-                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                            Showing {(expenseCurrentPage - 1) * itemsPerPage + 1} - {Math.min(expenseCurrentPage * itemsPerPage, filteredExpenses.length)} OF {filteredExpenses.length}
-                          </p>
-                          <div className="flex gap-2 w-full sm:w-auto justify-center">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-10 px-4 rounded-xl border-border/40"
-                              disabled={expenseCurrentPage === 1}
-                              onClick={() => setExpenseCurrentPage(prev => prev - 1)}
-                            >
-                              <ChevronLeft className="h-4 w-4 sm:mr-1" />
-                              <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Prev</span>
-                            </Button>
-                            <div className="flex items-center bg-muted/30 px-4 rounded-xl border border-border/40 min-w-[80px] justify-center">
-                              <span className="text-xs font-black text-foreground">{expenseCurrentPage}</span>
-                              <span className="mx-2 text-[10px] text-muted-foreground">/</span>
-                              <span className="text-xs text-muted-foreground">{totalExpensePages}</span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-10 px-4 rounded-xl border-border/40"
-                              disabled={expenseCurrentPage === totalExpensePages}
-                              onClick={() => setExpenseCurrentPage(prev => prev + 1)}
-                            >
-                              <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest">Next</span>
-                              <ChevronRight className="h-4 w-4 sm:ml-1" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
                     </>
                   ) : (
                     <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
                       <Receipt className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">
-                        {expenseSearchTerm ? 'No expenses found matching your search' : 'Log your expenses to track detailed job costs'}
-                      </p>
+                      <p className="text-xs font-medium px-8 text-center">Log your expenses to track detailed job costs</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
+              </TabsContent>
 
-          {/* Tab: Work Progress (Block 2) */}
-          <TabsContent value="work" className="space-y-6 mt-0">
-            {/* Labor */}
-            <Card id="tour-job-labor" className="border-border/40 overflow-hidden rounded-xl shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold flex items-center">
-                  Labor
-                  <FormHelp
-                    title="Labor"
-                    text="Track employee hours dedicated to this job to properly calculate labor costs against your margin."
-                  />
-                </CardTitle>
-                <Button id="tour-btn-new-labor" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
-                  <Plus className="h-4 w-4" /> New Time Entry
-                </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                {timeEntries.length > 0 ? (
-                  <>
-                    {/* VISTA DESKTOP: Tabla de Labor */}
-                    <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                          <tr>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
-                            <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
-                            <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                          {timeEntries.map(entry => (
-                            <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
-                              <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{entry.date}</td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                    <UserIcon className="h-3 w-3" />
-                                  </div>
-                                  <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
-                              <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
-                              <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td className="px-6 py-4 text-center">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
-                                    <MoreVertical className="h-3.5 w-3.5" />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-32">
-                                    <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}>
-                                      <Pencil className="h-3.5 w-3.5" /> Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}>
-                                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </td>
-                            </tr>
-                          ))}
-                          <tr className="bg-muted/5 font-bold">
-                            <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
-                            <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td />
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* VISTA MOBILE: Cards de Labor */}
-                    <div className="md:hidden divide-y divide-border/20">
-                      {timeEntries.map(entry => (
-                        <div key={entry.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
-                          <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
-                                <UserIcon className="h-5 w-5" />
-                              </div>
-                              <div>
-                                <p className="font-bold text-sm text-foreground">{entry.user_name || 'Staff Member'}</p>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-60">
-                                  {format(new Date(entry.date), 'MMM d, yyyy')}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-black text-foreground leading-none">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Total Cost</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between bg-muted/30 p-3 rounded-2xl border border-border/40">
-                            <div className="space-y-0.5">
-                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Duration</p>
-                              <p className="text-xs font-bold text-foreground">{entry.duration}</p>
-                            </div>
-                            <div className="h-8 w-px bg-border/40" />
-                            <div className="space-y-0.5 text-right">
-                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Hourly Rate</p>
-                              <p className="text-xs font-bold text-foreground">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</p>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => setEditingLabor(entry)}>
-                              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-600 hover:bg-red-50" onClick={() => setLaborToDelete(entry)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      {/* Labor Summary Mobile */}
-                      <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Labor Cost</span>
-                        <span className="text-xl font-black text-emerald-600">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
-                    <Clock className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-xs font-medium px-8 text-center">Time tracked to this job by you or your team will show here</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Visits */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none mt-6">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold flex items-center">
-                  Visits
-                  <FormHelp
-                    title="Visits"
-                    text="Schedule and track site visits or recurring service appointments."
-                  />
-                </CardTitle>
-                <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
-                  <Plus className="h-4 w-4" /> New Visit
-                </Button>
-              </CardHeader>
-              <CardContent className="p-0">
-                {visits.length > 0 ? (
-                  <div className="divide-y divide-border/30">
-                    {visits.map(visit => (
-                      <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className={cn(
-                            "h-10 w-10 rounded-lg flex items-center justify-center",
-                            visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
-                          )}>
-                            <Calendar className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
-                              {visit.status === 'overdue' && (
-                                <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Overdue</Badge>
-                              )}
-                              {visit.status === 'completed' && (
-                                <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Completed</Badge>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">Assigned to: {visit.assigned_name || 'Unassigned'}</p>
-                          </div>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" />}>
-                            <MoreVertical className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}>
-                              <CheckCircle2 className="h-4 w-4" /> Complete Visit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'scheduled')}>
-                              <Calendar className="h-4 w-4" /> Reschedule
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteVisit(visit.id)}>
-                              <Trash2 className="h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
-                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                    <p className="text-xs font-medium">No visits scheduled for this job yet</p>
-                    <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab: Financials (Block 3) */}
-          <TabsContent value="finance" className="space-y-6 mt-0">
-            <Card id="tour-job-invoices" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+              {/* Sub-tab: Invoices */}
+              <TabsContent value="invoices" className="mt-0">
+              <Card id="tour-job-invoices" className="border-border/40 overflow-hidden rounded-xl shadow-none">
               <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
                 <CardTitle className="text-lg font-bold flex items-center">
                   Invoices
@@ -2925,28 +2747,10 @@ export default function JobView({
                   </Link>
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab: Work Progress (Block 3) */}
-          <TabsContent value="work" className="space-y-6 mt-0">
-            {/* Internal Notes */}
-            <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
-              <CardHeader className="py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold">Internal notes</CardTitle>
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 ">Note details</p>
-                  <textarea
-                    className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none"
-                    placeholder="Click here to add a note..."
-                    rows={4}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              </Card>
+              </TabsContent>
+             </Tabs>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
