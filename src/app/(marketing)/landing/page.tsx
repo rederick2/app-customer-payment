@@ -6,6 +6,7 @@ import {
   Clock, RefreshCw, Sparkles, Star, ChevronRight, BarChart3,
   Shield, Smartphone
 } from 'lucide-react';
+import FloatingContactForm from '@/components/FloatingContactForm';
 
 const features = [
   {
@@ -400,6 +401,7 @@ export default async function LandingPage() {
       </footer>
       </div> {/* <-- Closes relative z-10 wrapper */}
 
+      <FloatingContactForm />
     </div>
   );
 }
