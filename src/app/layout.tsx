@@ -12,6 +12,8 @@ import { TopBar } from '@/components/TopBar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppShell } from '@/components/AppShell';
 import { HousePlus } from 'lucide-react';
+import { isTrialExpired } from '@/lib/trial';
+import { headers } from 'next/headers';
 
 const archivoBlack = Archivo_Black({
   weight: '400',
@@ -56,10 +58,12 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser();
   let userProfile: { displayName: string | null, email: string | null, phone: string | null } | null = null;
   let isTeamMember = false;
+  let trialStartedAt: string | null = null;
+
   if (user) {
     const { data: profile } = await supabase
       .from('users')
-      .select('display_name, email, phone, user_type')
+      .select('display_name, email, phone, user_type, trial_started_at, created_at')
       .eq('id', user.id)
       .single();
 
@@ -70,6 +74,36 @@ export default async function RootLayout({
     };
 
     isTeamMember = profile?.user_type === 2;
+    trialStartedAt = profile?.trial_started_at ?? null;
+
+    // ── Trial Logic ─────────────────────────────────────────────
+    // Old users (created before May 4th, 2026) are exempt from trial
+    const TRIAL_LAUNCH_DATE = new Date('2026-05-04T00:00:00Z');
+    const userCreatedAt = profile?.created_at ? new Date(profile.created_at) : new Date();
+
+    if (!trialStartedAt && userCreatedAt >= TRIAL_LAUNCH_DATE) {
+      // New user: Initialize trial on first authenticated access
+      const now = new Date().toISOString();
+      await supabase
+        .from('users')
+        .update({ trial_started_at: now })
+        .eq('id', user.id);
+      trialStartedAt = now;
+    }
+
+    // ── Redirect expired trial users to subscription page ──────
+    // Only applies if they have a trial started
+    if (trialStartedAt) {
+      const headersList = await headers();
+      const pathname = headersList.get('x-pathname') ?? headersList.get('next-url') ?? '';
+      const isExempt = ['/subscription', '/login', '/register', '/landing', '/p/', '/api'].some(
+        (p) => pathname.startsWith(p)
+      );
+      if (!isExempt && isTrialExpired(trialStartedAt)) {
+        const { redirect } = await import('next/navigation');
+        redirect('/subscription');
+      }
+    }
   }
 
   let unreadCount = 0;
@@ -125,6 +159,7 @@ export default async function RootLayout({
               topbar={topbar}
               mobileNav={mobileNav}
               realtimeNotifier={realtimeNotifier}
+              trialStartedAt={trialStartedAt}
             >
               {children}
             </AppShell>

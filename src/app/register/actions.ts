@@ -14,6 +14,11 @@ export async function signup(formData: FormData) {
       data: {
         phone: formData.get('phone') as string,
         address: formData.get('address') as string,
+        company_name: formData.get('company_name') as string,
+        website: formData.get('website') as string,
+        workers: formData.get('workers') as string,
+        sector: formData.get('sector') as string,
+        job_types: formData.get('job_types') as string,
       }
     }
   }

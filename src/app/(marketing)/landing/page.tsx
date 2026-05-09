@@ -160,7 +160,7 @@ export default async function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 border border-white/10 bg-white/5 backdrop-blur px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300 mb-8">
             <span className="h-2 w-2 rounded-full bg-[#fdd393] shadow-[0_0_10px_rgba(253,211,147,0.8)] animate-pulse" />
-            Built for contractors & service businesses
+            30-day free trial · Built for contractors & service businesses
           </div>
 
           <h1 className="font-archivo text-6xl md:text-8xl font-black tracking-tight max-w-5xl mb-8 leading-[1.1]">
@@ -176,10 +176,10 @@ export default async function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center gap-4 mb-20 w-full justify-center">
             <Link
-              href="/login"
+              href="/register"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#7e3af2] text-white px-8 py-4 rounded-2xl text-lg font-bold hover:bg-[#6c2bd9] transition-all hover:-translate-y-1 shadow-[0_0_40px_rgba(126,58,242,0.4)]"
             >
-              Start for free <ArrowRight className="h-5 w-5" />
+              Start 30-day free trial <ArrowRight className="h-5 w-5" />
             </Link>
             <a
               href="#how-it-works"
@@ -303,7 +303,7 @@ export default async function LandingPage() {
           <div className="text-center mb-20">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-400 mb-4 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">Pricing</p>
             <h2 className="font-archivo text-4xl md:text-6xl font-bold tracking-tight text-white">Simple, transparent pricing</h2>
-            <p className="text-xl text-zinc-400 mt-6 max-w-2xl mx-auto">14-day free trial on all plans. No credit card required.</p>
+            <p className="text-xl text-zinc-400 mt-6 max-w-2xl mx-auto">30-day free trial on all plans. No credit card required.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
@@ -344,7 +344,7 @@ export default async function LandingPage() {
                 </ul>
 
                 <Link
-                  href="/login"
+                  href="/register"
                   className={`w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-base font-bold transition-all hover:-translate-y-1 ${
                     highlighted
                       ? 'bg-indigo-500 text-white hover:bg-indigo-600 shadow-lg shadow-indigo-500/25'
@@ -377,10 +377,10 @@ export default async function LandingPage() {
             Join hundreds of contractors already using Quickqi to quote faster, manage better, and get paid without the headache.
           </p>
           <Link
-            href="/login"
+            href="/register"
             className="inline-flex items-center gap-2 bg-white text-zinc-950 px-10 py-5 rounded-2xl text-lg font-bold hover:bg-zinc-200 transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(255,255,255,0.15)]"
           >
-            Start your free trial <ArrowRight className="h-5 w-5" />
+            Start your 30-day free trial <ArrowRight className="h-5 w-5" />
           </Link>
           <p className="text-sm font-medium text-zinc-500 mt-6 uppercase tracking-wider">No credit card required · Cancel anytime</p>
         </div>
