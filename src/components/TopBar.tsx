@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { LoadingLink as Link } from '@/components/ui/loading-link';
 import { useRouter } from 'next/navigation';
+import { useLoading } from '@/components/ui/loading-provider';
 import {
   Search, Bell, Settings, HelpCircle, X,
   User, MapPin, FileText, CreditCard, Building2, ChevronRight,
@@ -78,6 +79,7 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
   const inputRef = React.useRef<HTMLInputElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { startLoading } = useLoading();
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Close on outside click
@@ -162,7 +164,7 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
                 </Button>
               } />
               <DropdownMenuContent align="start" className="w-56 p-2 rounded-2xl border-border/40 shadow-xl z-[100]">
-                <DropdownMenuItem onClick={() => router.push('/proforma/new?action=blank')} className="gap-3 py-3 rounded-xl cursor-pointer">
+                <DropdownMenuItem onClick={() => { startLoading(); router.push('/proforma/new?action=blank'); }} className="gap-3 py-3 rounded-xl cursor-pointer">
                   <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                     <FileText className="h-4 w-4" />
                   </div>
@@ -171,7 +173,7 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
                     <span className="text-[10px] text-muted-foreground">Start from scratch</span>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/proforma/new?action=template')} className="gap-3 py-3 rounded-xl cursor-pointer">
+                <DropdownMenuItem onClick={() => { startLoading(); router.push('/proforma/new?action=template'); }} className="gap-3 py-3 rounded-xl cursor-pointer">
                   <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <LayoutTemplate className="h-4 w-4" />
                   </div>
@@ -180,7 +182,7 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
                     <span className="text-[10px] text-muted-foreground">From saved template</span>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/proforma/new?action=quote')} className="gap-3 py-3 rounded-xl cursor-pointer">
+                <DropdownMenuItem onClick={() => { startLoading(); router.push('/proforma/new?action=quote'); }} className="gap-3 py-3 rounded-xl cursor-pointer">
                   <div className="h-8 w-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center">
                     <Copy className="h-4 w-4" />
                   </div>
@@ -286,7 +288,7 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
                   {/* Footer */}
                   <div className="border-t border-border/40 px-4 py-2 bg-muted/10">
                     <button
-                      onClick={() => { router.push(`/clients?q=${encodeURIComponent(query)}`); setOpen(false); }}
+                      onClick={() => { startLoading(); router.push(`/clients?q=${encodeURIComponent(query)}`); setOpen(false); }}
                       className="text-xs text-primary font-semibold hover:underline"
                     >
                       See all results for &ldquo;{query}&rdquo; →
@@ -321,8 +323,7 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
             <TooltipTrigger render={
               <Link
                 href="/settings"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-              />
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" children={undefined} />
             }>
               <Settings className="h-4.5 w-4.5" />
             </TooltipTrigger>

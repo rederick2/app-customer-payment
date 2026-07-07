@@ -11,6 +11,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { TopBar } from '@/components/TopBar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppShell } from '@/components/AppShell';
+import { LoadingProvider } from '@/components/ui/loading-provider';
 import { HousePlus } from 'lucide-react';
 import { isTrialExpired } from '@/lib/trial';
 import { headers } from 'next/headers';
@@ -152,19 +153,21 @@ export default async function RootLayout({
         className={`${archivoBlack.variable} ${dmSans.variable} ${manrope.variable} font-manrope antialiased min-h-screen bg-background text-foreground flex`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <TooltipProvider delay={300}>
-            <AppShell
-              isLoggedIn={!!user}
-              sidebar={sidebar}
-              topbar={topbar}
-              mobileNav={mobileNav}
-              realtimeNotifier={realtimeNotifier}
-              trialStartedAt={trialStartedAt}
-            >
-              {children}
-            </AppShell>
-            <Toaster />
-          </TooltipProvider>
+          <LoadingProvider>
+            <TooltipProvider delay={300}>
+              <AppShell
+                isLoggedIn={!!user}
+                sidebar={sidebar}
+                topbar={topbar}
+                mobileNav={mobileNav}
+                realtimeNotifier={realtimeNotifier}
+                trialStartedAt={trialStartedAt}
+              >
+                {children}
+              </AppShell>
+              <Toaster />
+            </TooltipProvider>
+          </LoadingProvider>
         </ThemeProvider>
       </body>
     </html>

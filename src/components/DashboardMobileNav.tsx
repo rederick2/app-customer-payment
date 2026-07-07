@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { LoadingLink as Link } from '@/components/ui/loading-link';
 import { usePathname } from 'next/navigation';
 import {
   Menu,
