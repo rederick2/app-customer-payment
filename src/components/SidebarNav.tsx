@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { LoadingLink as Link } from '@/components/ui/loading-link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, FileText, Briefcase, Receipt,

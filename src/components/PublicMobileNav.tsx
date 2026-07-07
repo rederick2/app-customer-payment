@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { LoadingLink as Link } from '@/components/ui/loading-link';
 import { usePathname } from 'next/navigation';
 import { ListTodo, FileText, MessageSquare, Plus, Phone, DollarSign, Camera } from 'lucide-react';
 import ContactUsModal from '@/components/ContactUsModal';
