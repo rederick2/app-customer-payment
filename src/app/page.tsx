@@ -11,6 +11,7 @@ import { RevenueChart } from '@/components/dashboard/RevenueChart';
 import { StatusDonutChart } from '@/components/dashboard/StatusDonutChart';
 import { MonthlyBarChart } from '@/components/dashboard/MonthlyBarChart';
 import { RecentlyVisitedJobs } from '@/components/dashboard/RecentlyVisitedJobs';
+import { QuickActions } from '@/components/dashboard/QuickActions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardAIChat } from "@/components/dashboard/DashboardAIChat";
 import { Sparkles, Activity } from "lucide-react";
@@ -202,26 +203,7 @@ export default async function Dashboard() {
             <div className="lg:col-span-4 space-y-8">
               <RecentlyVisitedJobs />
 
-              <div>
-                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground mb-3">Quick Actions</h2>
-                <div className="rounded-2xl border border-border/40 bg-background/60 backdrop-blur overflow-hidden">
-                  {[
-                    { href: '/clients/new', label: 'New Client', icon: Users, color: 'text-blue-500' },
-                    { href: '/proforma/new', label: 'New Quote', icon: FileText, color: 'text-blue-500' },
-                    { href: '/clients', label: 'Manage Clients', icon: Users, color: 'text-orange-500' },
-                    { href: '/jobs', label: 'View Jobs', icon: Briefcase, color: 'text-violet-500' },
-                    { href: '/quotes', label: 'All Quotes', icon: TrendingUp, color: 'text-emerald-500' },
-                  ].map(({ href, label, icon: Icon, color }) => (
-                    <Link key={href} href={href}>
-                      <div className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer group border-b border-border/20 last:border-0">
-                        <Icon className={`h-4 w-4 ${color} shrink-0`} />
-                        <span className="text-sm font-medium flex-1">{label}</span>
-                        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              <QuickActions />
             </div>
 
             <div className="lg:col-span-8">
