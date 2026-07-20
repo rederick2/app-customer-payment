@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Loader2,
   Camera,
   Upload,
   X,
   Check,
-  Sparkles,
   AlertCircle
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -19,9 +19,9 @@ import { toast } from 'sonner';
 import { compressImage } from '@/lib/image-compression';
 
 type ReceiptScannerProps = {
-  proformaId: string;
+  proformaId?: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (proformaId?: string) => void;
 };
 
 export default function ReceiptScanner({ proformaId, onClose, onSuccess }: ReceiptScannerProps) {
@@ -32,9 +32,41 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
   const [extractedData, setExtractedData] = useState<any>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
+  // For project/proforma selection when not provided
+  const [selectedProformaId, setSelectedProformaId] = useState<string | null>(proformaId || null);
+  const [proformas, setProformas] = useState<any[]>([]);
+  const [isLoadingProformas, setIsLoadingProformas] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
+
+  useEffect(() => {
+    if (!proformaId) {
+      const fetchProformas = async () => {
+        setIsLoadingProformas(true);
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+
+          const { data, error } = await supabase
+            .from('proformas')
+            .select('id, project_name, number, status, clients ( name )')
+            .eq('user_id', user.id)
+            .eq('is_template', false)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+          setProformas(data || []);
+        } catch (err: any) {
+          toast.error('Error loading jobs/quotes: ' + err.message);
+        } finally {
+          setIsLoadingProformas(false);
+        }
+      };
+      fetchProformas();
+    }
+  }, [proformaId, supabase]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -97,7 +129,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
       setExtractedData(data);
     } catch (error: any) {
-      toast.error('Error al procesar recibo', { description: error.message });
+      toast.error('Error processing receipt', { description: error.message });
       setIsUploading(false);
       setIsProcessing(false);
     } finally {
@@ -107,12 +139,16 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
   const confirmSave = async () => {
     if (!extractedData) return;
+    if (!selectedProformaId) {
+      toast.error('Please select a project or quote first');
+      return;
+    }
 
     setIsUploading(true);
     const { error } = await supabase
       .from('job_expenses')
       .insert([{
-        proforma_id: proformaId,
+        proforma_id: selectedProformaId,
         place: extractedData.place,
         description: extractedData.description,
         category: extractedData.category,
@@ -123,26 +159,61 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
       }]);
 
     if (error) {
-      toast.error('Error al guardar gasto');
+      toast.error('Error saving expense');
     } else {
-      toast.success('Gasto guardado con éxito');
-      onSuccess();
+      toast.success('Expense saved successfully');
+      onSuccess(selectedProformaId);
     }
     setIsUploading(false);
   };
 
+  const selectedProforma = proformas.find(p => p.id === selectedProformaId);
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 font-manrope">
       <Card className="w-full max-w-lg shadow-2xl border-none max-h-[90vh] overflow-y-auto">
         <CardHeader className="bg-[#0D3B47] text-white rounded-t-xl flex flex-row items-center justify-between sticky top-0 z-10">
-          <CardTitle className="text-lg flex items-center gap-2">
-            Scanner of receipts
+          <CardTitle className="text-lg flex items-center gap-2 font-archivo uppercase">
+            Receipt Scanner
           </CardTitle>
           <Button variant="ghost" size="icon" className="text-white hover:bg-card/10" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
+          {/* Associate to Job/Quote Select Dropdown */}
+          {!proformaId && (
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Associate to Job/Quote *</Label>
+              {isLoadingProformas ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  Loading projects...
+                </div>
+              ) : (
+                <Select
+                  value={selectedProformaId || ''}
+                  onValueChange={(val) => setSelectedProformaId(val || null)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose a job or quote...">
+                      {selectedProforma ? (
+                        `${selectedProforma.number ? `#${selectedProforma.number} - ` : ''}${selectedProforma.project_name || 'Unnamed Project'} ${selectedProforma.clients?.name ? `(${selectedProforma.clients.name})` : ''}`
+                      ) : null}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {proformas.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.number ? `#${p.number} - ` : ''}{p.project_name || 'Unnamed Project'} {p.clients?.name ? `(${p.clients.name})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
+
           {!preview ? (
             <div className="grid grid-cols-1 gap-4">
               <div
@@ -152,8 +223,8 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                 <div className="h-12 w-12 bg-[#306C3E]/5 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                   <Camera className="h-6 w-6 text-[#306C3E]" />
                 </div>
-                <p className="font-semibold text-foreground">Tomar Foto</p>
-                <p className="text-xs text-muted-foreground mt-1">Usa la cámara de tu celular</p>
+                <p className="font-semibold text-foreground">Take Photo</p>
+                <p className="text-xs text-muted-foreground mt-1">Use your mobile camera</p>
                 <input
                   type="file"
                   ref={cameraInputRef}
@@ -171,8 +242,8 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                 <div className="h-12 w-12 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                   <Upload className="h-6 w-6 text-primary" />
                 </div>
-                <p className="font-semibold text-foreground">Subir de Galería</p>
-                <p className="text-xs text-muted-foreground mt-1">JPG, PNG o archivos guardados</p>
+                <p className="font-semibold text-foreground">Upload from Gallery</p>
+                <p className="text-xs text-muted-foreground mt-1">JPG, PNG or saved files</p>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -191,7 +262,7 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white gap-3 backdrop-blur-[2px]">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     <p className="font-bold tracking-widest uppercase text-xs">
-                      {isUploading ? 'Subiendo imagen...' : 'OpenAI analizando recibo...'}
+                      {isUploading ? 'Uploading image...' : 'AI analyzing receipt...'}
                     </p>
                   </div>
                 )}
@@ -199,10 +270,10 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
               {!isUploading && !isProcessing && (
                 <div className="flex gap-3">
                   <Button variant="outline" className="flex-1" onClick={() => setPreview(null)}>
-                    Cancelar
+                    Cancel
                   </Button>
                   <Button className="flex-1 bg-primary" onClick={processReceipt}>
-                    Procesar con AI
+                    Process with AI
                   </Button>
                 </div>
               )}
@@ -212,55 +283,55 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <h3 className="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-4">
                   <Check className="h-4 w-4" />
-                  Verifica y edita la información
+                  Verify and edit details
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-[10px] uppercase text-emerald-600 font-bold">Lugar de Compra</Label>
+                    <Label className="text-[10px] uppercase text-emerald-600 font-bold font-manrope">Purchase Location</Label>
                     <Input
                       value={extractedData.place || ''}
                       onChange={(e) => handleUpdateField('place', e.target.value)}
-                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500 font-manrope"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase text-emerald-600 font-bold">Monto Total ($)</Label>
+                    <Label className="text-[10px] uppercase text-emerald-600 font-bold font-manrope">Total Amount ($)</Label>
                     <Input
                       type="number"
                       step="0.01"
                       value={extractedData.amount || ''}
                       onChange={(e) => handleUpdateField('amount', e.target.value)}
-                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500 font-bold text-[#306C3E]"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500 font-bold text-[#306C3E] font-manrope"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase text-emerald-600 font-bold">Fecha</Label>
+                    <Label className="text-[10px] uppercase text-emerald-600 font-bold font-manrope">Date</Label>
                     <Input
                       type="date"
                       value={extractedData.date || ''}
                       onChange={(e) => handleUpdateField('date', e.target.value)}
-                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500 font-manrope"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase text-emerald-600 font-bold">Categoría</Label>
+                    <Label className="text-[10px] uppercase text-emerald-600 font-bold font-manrope">Category</Label>
                     <Input
                       value={extractedData.category || ''}
                       onChange={(e) => handleUpdateField('category', e.target.value)}
-                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500 font-manrope"
                     />
                   </div>
 
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-[10px] uppercase text-emerald-600 font-bold">Descripción</Label>
+                    <Label className="text-[10px] uppercase text-emerald-600 font-bold font-manrope">Description</Label>
                     <Input
                       value={extractedData.description || ''}
                       onChange={(e) => handleUpdateField('description', e.target.value)}
-                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500"
+                      className="bg-card border-emerald-100 focus-visible:ring-emerald-500 font-manrope"
                     />
                   </div>
                 </div>
@@ -268,10 +339,10 @@ export default function ReceiptScanner({ proformaId, onClose, onSuccess }: Recei
 
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={() => setExtractedData(null)}>
-                  Escanear otro
+                  Scan another
                 </Button>
                 <Button className="flex-1 bg-[#306C3E] hover:bg-[#265832]" onClick={confirmSave} disabled={isUploading}>
-                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar y Guardar'}
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm & Save'}
                 </Button>
               </div>
             </div>
