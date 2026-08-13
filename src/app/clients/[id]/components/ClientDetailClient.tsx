@@ -635,7 +635,7 @@ export function ClientDetailClient({ client, proformas, payments, invoices, expe
                         </div>
                         <div>
                           <p className="text-sm font-bold">{payment.type === 'deposit' ? 'Deposit' : 'Payment'}</p>
-                          <p className="text-[10px] font-medium text-muted-foreground">{format(new Date(payment.payment_date), 'MMM d, yyyy')}</p>
+                          <p className="text-[10px] font-medium text-muted-foreground">{new Date(payment.payment_date).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'short', day: 'numeric' })}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
