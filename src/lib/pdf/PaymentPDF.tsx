@@ -187,7 +187,7 @@ export default function PaymentPDF({ payment, proforma, client, user }: PaymentP
     client?.name ||
     'Cliente';
 
-  const dateFormatted = new Date(payment.payment_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const dateFormatted = new Date(payment.payment_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric', year: 'numeric' });
   const paymentMethod = payment.payment_method?.toUpperCase() || 'N/A';
   const paymentType = payment.type === 'deposit' ? 'Deposit' : 'Payment';
 
