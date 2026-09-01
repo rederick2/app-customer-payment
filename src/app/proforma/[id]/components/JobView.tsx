@@ -2005,751 +2005,751 @@ export default function JobView({
           <TabsContent value="work" className="mt-0">
             {/* Inner sub-tabs for Progress */}
             <div className="bg-card border border-border/40 rounded-2xl p-4">
-            <Tabs value={activeProgressTab} onValueChange={setActiveProgressTab} className="w-full">
-              <TabsList className="bg-muted/20 p-1 w-full flex gap-1 rounded-xl mb-4 h-auto justify-start border border-border/30 overflow-x-auto hide-scrollbar">
-                <TabsTrigger value="photos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Photos</TabsTrigger>
-                <TabsTrigger value="tasks" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Tasks</TabsTrigger>
-                <TabsTrigger value="labor" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Labor</TabsTrigger>
-                <TabsTrigger value="visits" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Visits</TabsTrigger>
-                <TabsTrigger value="notes" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Notes</TabsTrigger>
-              </TabsList>
+              <Tabs value={activeProgressTab} onValueChange={setActiveProgressTab} className="w-full">
+                <TabsList className="bg-muted/20 p-1 w-full flex gap-1 rounded-xl mb-4 h-auto justify-start border border-border/30 overflow-x-auto hide-scrollbar">
+                  <TabsTrigger value="photos" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Photos</TabsTrigger>
+                  <TabsTrigger value="tasks" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Tasks</TabsTrigger>
+                  <TabsTrigger value="labor" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Labor</TabsTrigger>
+                  <TabsTrigger value="visits" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Visits</TabsTrigger>
+                  <TabsTrigger value="notes" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Notes</TabsTrigger>
+                </TabsList>
 
-              {/* Sub-tab: Photos */}
-              <TabsContent value="photos" className="mt-0">
-                <WorkProgressSection proformaId={proforma.id} proformaName={proforma.project_name} />
-              </TabsContent>
+                {/* Sub-tab: Photos */}
+                <TabsContent value="photos" className="mt-0">
+                  <WorkProgressSection proformaId={proforma.id} proformaName={proforma.project_name} />
+                </TabsContent>
 
-              {/* Sub-tab: Tasks */}
-              <TabsContent value="tasks" className="mt-0">
-            <div className="space-y-6">
-              <Card id="tour-job-progress" className="border-border/40 overflow-hidden rounded-xl shadow-none">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <div className="flex items-center gap-2">
-                    <ListTodo className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg font-bold">Tasks</CardTitle>
-                  </div>
-                  <Button id="tour-btn-new-task" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingTask(true)}>
-                    <Plus className="h-4 w-4" /> New Task
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {tasks.length > 0 ? (
-                    <>
-                      {/* VISTA DESKTOP: Tabla de Tareas */}
-                      <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                            <tr>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left w-10">Done</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Task Description</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Associate</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Due Date</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Assigned To</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/30">
-                            {tasks.map(task => (
-                              <tr key={task.id} className="hover:bg-muted/5 transition-colors group">
-                                <td className="px-6 py-4">
-                                  <button
-                                    onClick={() => handleToggleTaskStatus(task.id, task.status)}
-                                    className={cn(
-                                      "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                                      task.status === 'completed'
-                                        ? "bg-emerald-500 border-emerald-500 text-white"
-                                        : "border-muted-foreground/30 hover:border-emerald-500"
-                                    )}
-                                  >
-                                    {task.status === 'completed' && <CheckCircle className="h-4 w-4" />}
-                                  </button>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-2">
-                                    <h3 className={cn(
-                                      "font-bold",
-                                      task.status === 'completed' && "line-through text-muted-foreground"
-                                    )}>{task.title}</h3>
-                                    {task.status === 'completed' && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-6 w-6 rounded-full text-emerald-600 hover:bg-emerald-50"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleOpenMediaUpload(task);
-                                        }}
+                {/* Sub-tab: Tasks */}
+                <TabsContent value="tasks" className="mt-0">
+                  <div className="space-y-6">
+                    <Card id="tour-job-progress" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                      <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                        <div className="flex items-center gap-2">
+                          <ListTodo className="h-5 w-5 text-primary" />
+                          <CardTitle className="text-lg font-bold">Tasks</CardTitle>
+                        </div>
+                        <Button id="tour-btn-new-task" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingTask(true)}>
+                          <Plus className="h-4 w-4" /> New Task
+                        </Button>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        {tasks.length > 0 ? (
+                          <>
+                            {/* VISTA DESKTOP: Tabla de Tareas */}
+                            <div className="hidden md:block overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                                  <tr>
+                                    <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left w-10">Done</th>
+                                    <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Task Description</th>
+                                    <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Associate</th>
+                                    <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Due Date</th>
+                                    <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Assigned To</th>
+                                    <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Actions</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/30">
+                                  {tasks.map(task => (
+                                    <tr key={task.id} className="hover:bg-muted/5 transition-colors group">
+                                      <td className="px-6 py-4">
+                                        <button
+                                          onClick={() => handleToggleTaskStatus(task.id, task.status)}
+                                          className={cn(
+                                            "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                                            task.status === 'completed'
+                                              ? "bg-emerald-500 border-emerald-500 text-white"
+                                              : "border-muted-foreground/30 hover:border-emerald-500"
+                                          )}
+                                        >
+                                          {task.status === 'completed' && <CheckCircle className="h-4 w-4" />}
+                                        </button>
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                          <h3 className={cn(
+                                            "font-bold",
+                                            task.status === 'completed' && "line-through text-muted-foreground"
+                                          )}>{task.title}</h3>
+                                          {task.status === 'completed' && (
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-6 w-6 rounded-full text-emerald-600 hover:bg-emerald-50"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenMediaUpload(task);
+                                              }}
+                                            >
+                                              <Camera className="h-3.5 w-3.5" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                        {task.description && (
+                                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
+                                        )}
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        {task.proforma_item_id ? (
+                                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-200">
+                                            Item Associated
+                                          </Badge>
+                                        ) : (
+                                          <span className="text-muted-foreground/40">-</span>
+                                        )}
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        {task.due_date ? (
+                                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                            <CalendarDays className="h-3.5 w-3.5" />
+                                            <span>{format(new Date(task.due_date), 'MMM d, h:mm a')}</span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-muted-foreground/40">-</span>
+                                        )}
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        {task.team_members ? (
+                                          <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+                                            <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                            <span>{task.team_members.name}</span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-muted-foreground/40">-</span>
+                                        )}
+                                      </td>
+                                      <td className="px-6 py-4 text-right">
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                            <MoreVertical className="h-4 w-4" />
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="w-44">
+                                            <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
+                                              <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingTask(task)}>
+                                              <Pencil className="h-3.5 w-3.5" /> Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
+                                              <Trash2 className="h-3.5 w-3.5" /> Delete
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* VISTA MOBILE: Cards de Tareas */}
+                            <div className="md:hidden divide-y divide-border/20">
+                              {tasks.map(task => (
+                                <div key={task.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
+                                  <div className="flex justify-between items-start gap-4">
+                                    <div className="flex gap-4">
+                                      <button
+                                        onClick={() => handleToggleTaskStatus(task.id, task.status)}
+                                        className={cn(
+                                          "h-8 w-8 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all",
+                                          task.status === 'completed'
+                                            ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                                            : "border-muted-foreground/20 hover:border-emerald-500"
+                                        )}
                                       >
-                                        <Camera className="h-3.5 w-3.5" />
-                                      </Button>
+                                        {task.status === 'completed' && <CheckCircle className="h-5 w-5" />}
+                                      </button>
+                                      <div className="min-w-0">
+                                        <h3 className={cn(
+                                          "font-bold text-base leading-tight",
+                                          task.status === 'completed' && "line-through text-muted-foreground/60"
+                                        )}>{task.title}</h3>
+                                        {task.description && (
+                                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
+                                        <MoreVertical className="h-5 w-5" />
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleOpenMediaUpload(task)}>
+                                          <Camera className="h-4 w-4 text-emerald-600" /> Upload Media
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingTask(task)}>
+                                          <Pencil className="h-4 w-4" /> Edit Task
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
+                                          <Trash2 className="h-4 w-4" /> Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-3">
+                                    {task.due_date && (
+                                      <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-xl border border-border/40">
+                                        <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{format(new Date(task.due_date), 'MMM d')}</span>
+                                      </div>
+                                    )}
+                                    {task.team_members && (
+                                      <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
+                                        <UserIcon className="h-3.5 w-3.5 text-primary" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">{task.team_members.name}</span>
+                                      </div>
+                                    )}
+                                    {task.proforma_item_id && (
+                                      <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">
+                                        <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-none p-0 text-blue-700">Linked Item</Badge>
+                                      </div>
                                     )}
                                   </div>
-                                  {task.description && (
-                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{task.description}</p>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4">
-                                  {task.proforma_item_id ? (
-                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-200">
-                                      Item Associated
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-muted-foreground/40">-</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4">
-                                  {task.due_date ? (
-                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                      <CalendarDays className="h-3.5 w-3.5" />
-                                      <span>{format(new Date(task.due_date), 'MMM d, h:mm a')}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-muted-foreground/40">-</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4">
-                                  {task.team_members ? (
-                                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
-                                      <UserIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                      <span>{task.team_members.name}</span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-muted-foreground/40">-</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                      <MoreVertical className="h-4 w-4" />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-44">
-                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => handleOpenMediaUpload(task)}>
-                                        <Camera className="h-3.5 w-3.5 text-emerald-600" /> Upload Media
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingTask(task)}>
-                                        <Pencil className="h-3.5 w-3.5" /> Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
-                                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                            <ListTodo className="h-10 w-10 text-muted-foreground" />
+                            <p className="text-xs font-medium px-8 text-center">No tasks for this job yet. Add tasks to keep your team organized.</p>
+                            <Button size="sm" variant="ghost" className="text-primary font-bold mt-2" onClick={() => setIsAddingTask(true)}>Create First Task</Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
 
-                      {/* VISTA MOBILE: Cards de Tareas */}
-                      <div className="md:hidden divide-y divide-border/20">
-                        {tasks.map(task => (
-                          <div key={task.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="flex gap-4">
-                                <button
-                                  onClick={() => handleToggleTaskStatus(task.id, task.status)}
-                                  className={cn(
-                                    "h-8 w-8 rounded-2xl border-2 flex items-center justify-center shrink-0 transition-all",
-                                    task.status === 'completed'
-                                      ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                                      : "border-muted-foreground/20 hover:border-emerald-500"
-                                  )}
-                                >
-                                  {task.status === 'completed' && <CheckCircle className="h-5 w-5" />}
-                                </button>
-                                <div className="min-w-0">
-                                  <h3 className={cn(
-                                    "font-bold text-base leading-tight",
-                                    task.status === 'completed' && "line-through text-muted-foreground/60"
-                                  )}>{task.title}</h3>
-                                  {task.description && (
-                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
-                                  )}
+                {/* Sub-tab: Labor */}
+                <TabsContent value="labor" className="mt-0">
+                  <Card id="tour-job-labor" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                      <CardTitle className="text-lg font-bold flex items-center">
+                        Labor
+                        <FormHelp title="Labor" text="Track employee hours dedicated to this job to properly calculate labor costs against your margin." />
+                      </CardTitle>
+                      <Button id="tour-btn-new-labor" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
+                        <Plus className="h-4 w-4" /> New Time Entry
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {timeEntries.length > 0 ? (
+                        <>
+                          <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                                <tr>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
+                                  <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-border/30">
+                                {timeEntries.map(entry => (
+                                  <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
+                                    <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{entry.date}</td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex items-center gap-2">
+                                        <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><UserIcon className="h-3 w-3" /></div>
+                                        <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
+                                    <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
+                                    <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td className="px-6 py-4 text-center">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
+                                          <MoreVertical className="h-3.5 w-3.5" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-32">
+                                          <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
+                                          <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </td>
+                                  </tr>
+                                ))}
+                                <tr className="bg-muted/5 font-bold">
+                                  <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
+                                  <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                  <td />
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <div className="md:hidden divide-y divide-border/20">
+                            {timeEntries.map(entry => (
+                              <div key={entry.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100"><UserIcon className="h-5 w-5" /></div>
+                                    <div>
+                                      <p className="font-bold text-sm text-foreground">{entry.user_name || 'Staff Member'}</p>
+                                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-60">{format(new Date(entry.date), 'MMM d, yyyy')}</p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-lg font-black text-foreground leading-none">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Total Cost</p>
+                                  </div>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => setEditingLabor(entry)}><Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit</Button>
+                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-600 hover:bg-red-50" onClick={() => setLaborToDelete(entry)}><Trash2 className="h-4 w-4" /></Button>
+                                </div>
+                              </div>
+                            ))}
+                            <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Labor Cost</span>
+                              <span className="text-xl font-black text-emerald-600">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
+                          <Clock className="h-10 w-10 text-muted-foreground" />
+                          <p className="text-xs font-medium px-8 text-center">Time tracked to this job by you or your team will show here</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Sub-tab: Visits */}
+                <TabsContent value="visits" className="mt-0">
+                  <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                      <CardTitle className="text-lg font-bold flex items-center">
+                        Visits
+                        <FormHelp title="Visits" text="Schedule and track site visits or recurring service appointments." />
+                      </CardTitle>
+                      <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
+                        <Plus className="h-4 w-4" /> New Visit
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {visits.length > 0 ? (
+                        <div className="divide-y divide-border/30">
+                          {visits.map(visit => (
+                            <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
+                              <div className="flex items-center gap-4">
+                                <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600")}>
+                                  <Calendar className="h-5 w-5" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
+                                    {visit.status === 'overdue' && <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Overdue</Badge>}
+                                    {visit.status === 'completed' && <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Completed</Badge>}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-0.5">Assigned to: {visit.assigned_name || 'Unassigned'}</p>
                                 </div>
                               </div>
                               <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
-                                  <MoreVertical className="h-5 w-5" />
+                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" />}>
+                                  <MoreVertical className="h-4 w-4" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleOpenMediaUpload(task)}>
-                                    <Camera className="h-4 w-4 text-emerald-600" /> Upload Media
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingTask(task)}>
-                                    <Pencil className="h-4 w-4" /> Edit Task
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setTaskToDelete(task)}>
-                                    <Trash2 className="h-4 w-4" /> Delete
-                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}><CheckCircle2 className="h-4 w-4" /> Complete Visit</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'scheduled')}><Calendar className="h-4 w-4" /> Reschedule</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteVisit(visit.id)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-
-                            <div className="flex flex-wrap items-center gap-3">
-                              {task.due_date && (
-                                <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-xl border border-border/40">
-                                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{format(new Date(task.due_date), 'MMM d')}</span>
-                                </div>
-                              )}
-                              {task.team_members && (
-                                <div className="flex items-center gap-1.5 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10">
-                                  <UserIcon className="h-3.5 w-3.5 text-primary" />
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">{task.team_members.name}</span>
-                                </div>
-                              )}
-                              {task.proforma_item_id && (
-                                <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">
-                                  <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-none p-0 text-blue-700">Linked Item</Badge>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                      <ListTodo className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">No tasks for this job yet. Add tasks to keep your team organized.</p>
-                      <Button size="sm" variant="ghost" className="text-primary font-bold mt-2" onClick={() => setIsAddingTask(true)}>Create First Task</Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-              </TabsContent>
-
-              {/* Sub-tab: Labor */}
-              <TabsContent value="labor" className="mt-0">
-              <Card id="tour-job-labor" className="border-border/40 overflow-hidden rounded-xl shadow-none">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold flex items-center">
-                    Labor
-                    <FormHelp title="Labor" text="Track employee hours dedicated to this job to properly calculate labor costs against your margin." />
-                  </CardTitle>
-                  <Button id="tour-btn-new-labor" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingLabor(true)}>
-                    <Plus className="h-4 w-4" /> New Time Entry
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {timeEntries.length > 0 ? (
-                    <>
-                      <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                            <tr>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Employee</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-center">Duration</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Rate</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Total</th>
-                              <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/30">
-                            {timeEntries.map(entry => (
-                              <tr key={entry.id} className="hover:bg-muted/5 transition-colors group">
-                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{entry.date}</td>
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-2">
-                                    <div className="h-6 w-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><UserIcon className="h-3 w-3" /></div>
-                                    <span className="font-bold text-xs">{entry.user_name || 'Staff Member'}</span>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 text-center text-xs font-medium">{entry.duration}</td>
-                                <td className="px-6 py-4 text-right tabular-nums text-muted-foreground text-xs">${(Number(entry.hourly_rate) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}/hr</td>
-                                <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground text-xs">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td className="px-6 py-4 text-center">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100 transition-opacity" />}>
-                                      <MoreVertical className="h-3.5 w-3.5" />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-32">
-                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => setEditingLabor(entry)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => setLaborToDelete(entry)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </td>
-                              </tr>
-                            ))}
-                            <tr className="bg-muted/5 font-bold">
-                              <td colSpan={4} className="px-6 py-4 text-right text-[10px] uppercase tracking-widest text-muted-foreground">Total Labor Cost</td>
-                              <td className="px-6 py-4 text-right tabular-nums text-xs">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                              <td />
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="md:hidden divide-y divide-border/20">
-                        {timeEntries.map(entry => (
-                          <div key={entry.id} className="p-5 space-y-4 hover:bg-muted/5 transition-colors">
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100"><UserIcon className="h-5 w-5" /></div>
-                                <div>
-                                  <p className="font-bold text-sm text-foreground">{entry.user_name || 'Staff Member'}</p>
-                                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-60">{format(new Date(entry.date), 'MMM d, yyyy')}</p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-lg font-black text-foreground leading-none">${(Number(entry.total_cost) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1 opacity-60">Total Cost</p>
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest" onClick={() => setEditingLabor(entry)}><Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit</Button>
-                              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-600 hover:bg-red-50" onClick={() => setLaborToDelete(entry)}><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                          </div>
-                        ))}
-                        <div className="p-5 bg-emerald-50/30 border-y border-emerald-500/10 flex justify-between items-center">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Total Labor Cost</span>
-                          <span className="text-xl font-black text-emerald-600">${totalLaborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                          ))}
                         </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60 bg-card">
-                      <Clock className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">Time tracked to this job by you or your team will show here</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              </TabsContent>
-
-              {/* Sub-tab: Visits */}
-              <TabsContent value="visits" className="mt-0">
-              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold flex items-center">
-                    Visits
-                    <FormHelp title="Visits" text="Schedule and track site visits or recurring service appointments." />
-                  </CardTitle>
-                  <Button variant="outline" size="sm" className="h-8 gap-1 font-bold" onClick={() => setIsAddingVisit(true)}>
-                    <Plus className="h-4 w-4" /> New Visit
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {visits.length > 0 ? (
-                    <div className="divide-y divide-border/30">
-                      {visits.map(visit => (
-                        <div key={visit.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-muted/5 transition-colors">
-                          <div className="flex items-center gap-4">
-                            <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center", visit.status === 'overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600")}>
-                              <Calendar className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold">{format(new Date(visit.visit_date), 'MMM d, yyyy')}</span>
-                                {visit.status === 'overdue' && <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Overdue</Badge>}
-                                {visit.status === 'completed' && <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[10px] font-bold uppercase tracking-widest">Completed</Badge>}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-0.5">Assigned to: {visit.assigned_name || 'Unassigned'}</p>
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" />}>
-                              <MoreVertical className="h-4 w-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'completed')}><CheckCircle2 className="h-4 w-4" /> Complete Visit</DropdownMenuItem>
-                              <DropdownMenuItem className="text-xs gap-2" onClick={() => handleUpdateVisitStatus(visit.id, 'scheduled')}><Calendar className="h-4 w-4" /> Reschedule</DropdownMenuItem>
-                              <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteVisit(visit.id)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                      ) : (
+                        <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
+                          <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                          <p className="text-xs font-medium">No visits scheduled for this job yet</p>
+                          <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-3 opacity-60">
-                      <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium">No visits scheduled for this job yet</p>
-                      <Button size="sm" variant="ghost" className="text-primary font-bold" onClick={() => setIsAddingVisit(true)}>Schedule a Visit</Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              </TabsContent>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              {/* Sub-tab: Notes */}
-              <TabsContent value="notes" className="mt-0">
-                <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
-                  <CardHeader className="py-4 bg-muted/5 border-b border-border/40">
-                    <CardTitle className="text-lg font-bold">Internal Notes</CardTitle>
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Note details</p>
-                      <textarea
-                        className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none"
-                        placeholder="Click here to add a note..."
-                        rows={4}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+                {/* Sub-tab: Notes */}
+                <TabsContent value="notes" className="mt-0">
+                  <Card className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                    <CardHeader className="py-4 bg-muted/5 border-b border-border/40">
+                      <CardTitle className="text-lg font-bold">Internal Notes</CardTitle>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase">Internal notes will only be seen by your team</p>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="bg-muted/5 border border-border/40 rounded-xl p-4 min-h-[120px]">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Note details</p>
+                        <textarea
+                          className="w-full bg-transparent border-none focus:ring-0 text-sm resize-none"
+                          placeholder="Click here to add a note..."
+                          rows={4}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
           </TabsContent>
           <TabsContent value="finance" className="mt-0">
             {/* Inner sub-tabs for Financials */}
             <div className="bg-card border border-border/40 rounded-2xl p-4">
-            <Tabs value={activeFinanceTab} onValueChange={setActiveFinanceTab} className="w-full">
-              <TabsList className="bg-muted/20 p-1 w-full flex gap-1 rounded-xl mb-4 h-auto justify-start border border-border/30 overflow-x-auto hide-scrollbar">
-                <TabsTrigger value="payments" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Payments</TabsTrigger>
-                <TabsTrigger value="expenses" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Expenses</TabsTrigger>
-                <TabsTrigger value="invoices" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Invoices</TabsTrigger>
-              </TabsList>
+              <Tabs value={activeFinanceTab} onValueChange={setActiveFinanceTab} className="w-full">
+                <TabsList className="bg-muted/20 p-1 w-full flex gap-1 rounded-xl mb-4 h-auto justify-start border border-border/30 overflow-x-auto hide-scrollbar">
+                  <TabsTrigger value="payments" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Payments</TabsTrigger>
+                  <TabsTrigger value="expenses" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Expenses</TabsTrigger>
+                  <TabsTrigger value="invoices" className="data-[state=active]:bg-background data-[state=active]:shadow-sm py-2 px-3 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all">Invoices</TabsTrigger>
+                </TabsList>
 
-              {/* Sub-tab: Payments */}
-              <TabsContent value="payments" className="mt-0">
-              <Card id="tour-job-finance" className="border-border/40 overflow-hidden rounded-xl shadow-none">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold">Payments</CardTitle>
-                  <Button id="tour-btn-new-payment" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsRecordingPayment(true)}>
-                    <Plus className="h-4 w-4" /> Record Payment
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {payments.length > 0 ? (
-                    <>
-                      <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                            <tr>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
-                              <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/30">
+                {/* Sub-tab: Payments */}
+                <TabsContent value="payments" className="mt-0">
+                  <Card id="tour-job-finance" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                      <CardTitle className="text-lg font-bold">Payments</CardTitle>
+                      <Button id="tour-btn-new-payment" size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsRecordingPayment(true)}>
+                        <Plus className="h-4 w-4" /> Record Payment
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {payments.length > 0 ? (
+                        <>
+                          <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                                <tr>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Method</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                                  <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-border/30">
+                                {payments.map(payment => (
+                                  <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
+                                    <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{new Date(payment.payment_date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric', year: 'numeric' })}</td>
+                                    <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
+                                    <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td className="px-6 py-4 text-center">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                          <MoreVertical className="h-4 w-4" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-40">
+                                          <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}><Eye className="h-3.5 w-3.5" /> View Receipt</DropdownMenuItem>
+                                          <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}><Mail className="h-3.5 w-3.5" /> Send by Email</DropdownMenuItem>
+                                          <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
+                                          <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <div className="md:hidden divide-y divide-border/20">
                             {payments.map(payment => (
-                              <tr key={payment.id} className="hover:bg-muted/5 transition-colors group">
-                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">{format(new Date(payment.payment_date), 'dd/MM/yyyy')}</td>
-                                <td className="px-6 py-4 font-bold text-foreground">{payment.payment_method}</td>
-                                <td className="px-6 py-4 text-right tabular-nums font-bold text-emerald-600">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td className="px-6 py-4 text-center">
+                              <div key={payment.id} className="p-5 flex justify-between items-center hover:bg-muted/5 transition-colors">
+                                <div className="space-y-1">
+                                  <p className="font-bold text-base text-foreground leading-none">{payment.payment_method}</p>
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{format(new Date(payment.payment_date), 'MMM d, yyyy')}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <p className="text-lg font-black text-emerald-600 leading-none">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                   <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                      <MoreVertical className="h-4 w-4" />
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
+                                      <MoreVertical className="h-5 w-5" />
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-40">
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewPaymentPDF(payment)}><Eye className="h-3.5 w-3.5" /> View Receipt</DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'payment', data: payment })}><Mail className="h-3.5 w-3.5" /> Send by Email</DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setEditingPayment(payment)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
+                                    <DropdownMenuContent align="end" className="w-48">
+                                      <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleViewPaymentPDF(payment)}><Eye className="h-4 w-4" /> View Receipt</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingPayment(payment)}><Pencil className="h-4 w-4" /> Edit</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
-                                </td>
-                              </tr>
+                                </div>
+                              </div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="md:hidden divide-y divide-border/20">
-                        {payments.map(payment => (
-                          <div key={payment.id} className="p-5 flex justify-between items-center hover:bg-muted/5 transition-colors">
-                            <div className="space-y-1">
-                              <p className="font-bold text-base text-foreground leading-none">{payment.payment_method}</p>
-                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{format(new Date(payment.payment_date), 'MMM d, yyyy')}</p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <p className="text-lg font-black text-emerald-600 leading-none">${Number(payment.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-10 w-10 -mr-2 rounded-2xl" />}>
-                                  <MoreVertical className="h-5 w-5" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => handleViewPaymentPDF(payment)}><Eye className="h-4 w-4" /> View Receipt</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setEditingPayment(payment)}><Pencil className="h-4 w-4" /> Edit</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setPaymentToDelete(payment)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                      <DollarSign className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">No payment records found for this job</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              </TabsContent>
+                        </>
+                      ) : (
+                        <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                          <DollarSign className="h-10 w-10 text-muted-foreground" />
+                          <p className="text-xs font-medium px-8 text-center">No payment records found for this job</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              {/* Sub-tab: Expenses */}
-              <TabsContent value="expenses" className="mt-0">
-              <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col">
-                <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                  <CardTitle className="text-lg font-bold">Expenses</CardTitle>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5" onClick={() => setIsScanningExpense(true)}>
-                      <Camera className="h-4 w-4" /> Scanner AI
-                    </Button>
-                    <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingExpense(true)}>
-                      <Plus className="h-4 w-4" /> New Expense
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {expenses.length > 0 ? (
-                    <>
-                      <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
-                            <tr>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
-                              <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
-                              <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/30">
+                {/* Sub-tab: Expenses */}
+                <TabsContent value="expenses" className="mt-0">
+                  <Card className="border-border/40 overflow-hidden rounded-xl shadow-none flex flex-col">
+                    <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                      <CardTitle className="text-lg font-bold">Expenses</CardTitle>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="h-8 gap-1.5 font-bold border-primary/20 text-primary hover:bg-primary/5" onClick={() => setIsScanningExpense(true)}>
+                          <Camera className="h-4 w-4" /> Scanner AI
+                        </Button>
+                        <Button size="sm" className="h-8 gap-1 font-bold text-primary-foreground transition-all hover:-translate-y-0.5" onClick={() => setIsAddingExpense(true)}>
+                          <Plus className="h-4 w-4" /> New Expense
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {expenses.length > 0 ? (
+                        <>
+                          <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead className="bg-muted/10 text-muted-foreground border-b border-border/40">
+                                <tr>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Date</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Description</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-left">Category</th>
+                                  <th className="px-6 py-3 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                                  <th className="px-6 py-3 w-10 text-center font-bold text-[10px] uppercase tracking-widest">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-border/30">
+                                {expenses.map(expense => (
+                                  <tr key={expense.id} className="hover:bg-muted/5 transition-colors group">
+                                    <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(expense.expense_date), 'dd/MM/yyyy')}</td>
+                                    <td className="px-6 py-4 font-medium text-sm">{expense.description}</td>
+                                    <td className="px-6 py-4"><Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest">{expense.category || 'General'}</Badge></td>
+                                    <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground">${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                    <td className="px-6 py-4 text-center">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                          <MoreVertical className="h-4 w-4" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-40">
+                                          <DropdownMenuItem className="text-xs gap-2" onClick={() => setSelectedExpenseForEdit(expense)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
+                                          <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(expense.id)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <div className="md:hidden divide-y divide-border/20">
                             {expenses.map(expense => (
-                              <tr key={expense.id} className="hover:bg-muted/5 transition-colors group">
-                                <td className="px-6 py-4 text-muted-foreground whitespace-nowrap text-[11px]">{format(new Date(expense.expense_date), 'dd/MM/yyyy')}</td>
-                                <td className="px-6 py-4 font-medium text-sm">{expense.description}</td>
-                                <td className="px-6 py-4"><Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest">{expense.category || 'General'}</Badge></td>
-                                <td className="px-6 py-4 text-right tabular-nums font-bold text-foreground">${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                                <td className="px-6 py-4 text-center">
+                              <div key={expense.id} className="p-5 flex justify-between items-start hover:bg-muted/5 transition-colors">
+                                <div className="space-y-1">
+                                  <p className="font-bold text-sm text-foreground">{expense.description}</p>
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{format(new Date(expense.expense_date), 'MMM d, yyyy')}</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <p className="text-lg font-black text-foreground">${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                   <DropdownMenu>
-                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                    <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" />}>
                                       <MoreVertical className="h-4 w-4" />
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-40">
-                                      <DropdownMenuItem className="text-xs gap-2" onClick={() => setSelectedExpenseForEdit(expense)}><Pencil className="h-3.5 w-3.5" /> Edit</DropdownMenuItem>
-                                      <DropdownMenuItem className="text-xs gap-2 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(expense.id)}><Trash2 className="h-3.5 w-3.5" /> Delete</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedExpenseForEdit(expense)}><Pencil className="h-4 w-4" /> Edit</DropdownMenuItem>
+                                      <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(expense.id)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
-                                </td>
-                              </tr>
+                                </div>
+                              </div>
                             ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="md:hidden divide-y divide-border/20">
-                        {expenses.map(expense => (
-                          <div key={expense.id} className="p-5 flex justify-between items-start hover:bg-muted/5 transition-colors">
-                            <div className="space-y-1">
-                              <p className="font-bold text-sm text-foreground">{expense.description}</p>
-                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">{format(new Date(expense.expense_date), 'MMM d, yyyy')}</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <p className="text-lg font-black text-foreground">${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" />}>
-                                  <MoreVertical className="h-4 w-4" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setSelectedExpenseForEdit(expense)}><Pencil className="h-4 w-4" /> Edit</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => handleDeleteExpense(expense.id)}><Trash2 className="h-4 w-4" /> Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
                           </div>
-                        ))}
+                        </>
+                      ) : (
+                        <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
+                          <Receipt className="h-10 w-10 text-muted-foreground" />
+                          <p className="text-xs font-medium px-8 text-center">Log your expenses to track detailed job costs</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Sub-tab: Invoices */}
+                <TabsContent value="invoices" className="mt-0">
+                  <Card id="tour-job-invoices" className="border-border/40 overflow-hidden rounded-xl shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
+                      <CardTitle className="text-lg font-bold flex items-center">
+                        Invoices
+                        <FormHelp
+                          title="Invoices"
+                          text="Manage invoices generated for this job."
+                        />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="border-b border-border/40">
+                        <div className="flex gap-8 px-6 py-2 bg-muted/5">
+                          <button className="text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 py-1">Billing</button>
+                          <button className="text-sm font-medium text-muted-foreground py-1">Reminders</button>
+                        </div>
                       </div>
-                    </>
-                  ) : (
-                    <div className="py-12 text-center flex flex-col items-center gap-2 opacity-60">
-                      <Receipt className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-xs font-medium px-8 text-center">Log your expenses to track detailed job costs</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              </TabsContent>
 
-              {/* Sub-tab: Invoices */}
-              <TabsContent value="invoices" className="mt-0">
-              <Card id="tour-job-invoices" className="border-border/40 overflow-hidden rounded-xl shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between py-4 bg-muted/5 border-b border-border/40">
-                <CardTitle className="text-lg font-bold flex items-center">
-                  Invoices
-                  <FormHelp
-                    title="Invoices"
-                    text="Manage invoices generated for this job."
-                  />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="border-b border-border/40">
-                  <div className="flex gap-8 px-6 py-2 bg-muted/5">
-                    <button className="text-sm font-bold text-emerald-600 border-b-2 border-emerald-600 py-1">Billing</button>
-                    <button className="text-sm font-medium text-muted-foreground py-1">Reminders</button>
-                  </div>
-                </div>
-
-                <div className="p-6 space-y-6">
-                  <div className="flex items-center gap-3 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
-                    <input type="checkbox" className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500" />
-                    <label className="text-sm font-medium">Split into multiple invoices with a payment schedule</label>
-                  </div>
-
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40">
-                        <tr>
-                          <th className="px-4 py-3 text-left">Invoice</th>
-                          <th className="px-4 py-3 text-left">Due Date</th>
-                          <th className="px-4 py-3 text-left">Status</th>
-                          <th className="px-4 py-3 text-left">Subject</th>
-                          <th className="px-4 py-3 text-right">Balance</th>
-                          <th className="px-4 py-3 text-right">Total</th>
-                          <th className="px-4 py-3 text-center">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/30">
-                        {invoices.map(inv => (
-                          <tr key={inv.id} className="hover:bg-muted/5 transition-colors group">
-                            <td className="px-4 py-4 font-bold text-emerald-600">#{inv.invoice_number}</td>
-                            <td className="px-4 py-4 text-muted-foreground">{format(new Date(inv.due_date || inv.issue_date), 'd MMM. yyyy', { locale: es })}</td>
-                            <td className="px-4 py-4">
-                              <Badge variant="outline" className={cn(
-                                "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest",
-                                inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                                  inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
-                                    "bg-muted text-muted-foreground border-border"
-                              )}>
-                                <span className={cn("w-2 h-2 rounded-full",
-                                  inv.status === 'paid' ? "bg-emerald-500" :
-                                    inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")}
-                                />
-                                {inv.status.toUpperCase()}
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-4 text-muted-foreground text-xs">{proforma.project_name}</td>
-                            <td className="px-4 py-4 text-right tabular-nums font-bold">${inv.status === 'paid' ? '0.00' : Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td className="px-4 py-4 text-right tabular-nums font-bold text-lg">${Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                            <td className="px-4 py-4 text-center">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
-                                  <MoreVertical className="h-4 w-4" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-44">
-                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewInvoicePDF(inv)}>
-                                    <Eye className="h-3.5 w-3.5" /> View PDF
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
-                                    <Mail className="h-3.5 w-3.5" /> Send by Email
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="p-0">
-                                    <Link
-                                      href={`/invoices/${inv.id}/edit`}
-                                      className="flex w-full items-center gap-2 px-2 py-1.5 text-xs transition-colors hover:bg-muted"
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" /> Edit
-                                    </Link>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
-                                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* VISTA MOBILE: Cards de Facturas */}
-                  <div className="md:hidden space-y-4">
-                    {invoices.map(inv => (
-                      <div key={inv.id} className="p-5 rounded-2xl border border-border/40 bg-card hover:shadow-md transition-all space-y-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-1">
-                            <h3 className="font-bold text-lg text-emerald-600 leading-none">#{inv.invoice_number}</h3>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
-                              Due: {format(new Date(inv.due_date || inv.issue_date), 'MMM d, yyyy')}
-                            </p>
-                          </div>
-                          <Badge variant="outline" className={cn(
-                            "flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest",
-                            inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                              inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
-                                "bg-muted text-muted-foreground border-border"
-                          )}>
-                            <span className={cn("w-1.5 h-1.5 rounded-full",
-                              inv.status === 'paid' ? "bg-emerald-500" :
-                                inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")}
-                            />
-                            {inv.status}
-                          </Badge>
+                      <div className="p-6 space-y-6">
+                        <div className="flex items-center gap-3 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
+                          <input type="checkbox" className="h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500" />
+                          <label className="text-sm font-medium">Split into multiple invoices with a payment schedule</label>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-border/30">
-                          <div className="space-y-0.5">
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Balance</p>
-                            <p className="text-sm font-bold text-foreground">
-                              ${inv.status === 'paid' ? '0.00' : Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </p>
-                          </div>
-                          <div className="space-y-0.5 text-right ">
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Total</p>
-                            <p className="text-lg font-black text-foreground">
-                              ${Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </p>
-                          </div>
+                        <div className="hidden md:block overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/40">
+                              <tr>
+                                <th className="px-4 py-3 text-left">Invoice</th>
+                                <th className="px-4 py-3 text-left">Due Date</th>
+                                <th className="px-4 py-3 text-left">Status</th>
+                                <th className="px-4 py-3 text-left">Subject</th>
+                                <th className="px-4 py-3 text-right">Balance</th>
+                                <th className="px-4 py-3 text-right">Total</th>
+                                <th className="px-4 py-3 text-center">Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/30">
+                              {invoices.map(inv => (
+                                <tr key={inv.id} className="hover:bg-muted/5 transition-colors group">
+                                  <td className="px-4 py-4 font-bold text-emerald-600">#{inv.invoice_number}</td>
+                                  <td className="px-4 py-4 text-muted-foreground">{format(new Date(inv.due_date || inv.issue_date), 'd MMM. yyyy', { locale: es })}</td>
+                                  <td className="px-4 py-4">
+                                    <Badge variant="outline" className={cn(
+                                      "flex items-center gap-1.5 w-fit px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest",
+                                      inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                        inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                          "bg-muted text-muted-foreground border-border"
+                                    )}>
+                                      <span className={cn("w-2 h-2 rounded-full",
+                                        inv.status === 'paid' ? "bg-emerald-500" :
+                                          inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")}
+                                      />
+                                      {inv.status.toUpperCase()}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-4 py-4 text-muted-foreground text-xs">{proforma.project_name}</td>
+                                  <td className="px-4 py-4 text-right tabular-nums font-bold">${inv.status === 'paid' ? '0.00' : Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                  <td className="px-4 py-4 text-right tabular-nums font-bold text-lg">${Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                                  <td className="px-4 py-4 text-center">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-60 group-hover:opacity-100" />}>
+                                        <MoreVertical className="h-4 w-4" />
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-44">
+                                        <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => handleViewInvoicePDF(inv)}>
+                                          <Eye className="h-3.5 w-3.5" /> View PDF
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="text-xs cursor-pointer gap-2" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
+                                          <Mail className="h-3.5 w-3.5" /> Send by Email
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="p-0">
+                                          <Link
+                                            href={`/invoices/${inv.id}/edit`}
+                                            className="flex w-full items-center gap-2 px-2 py-1.5 text-xs transition-colors hover:bg-muted"
+                                          >
+                                            <Pencil className="h-3.5 w-3.5" /> Edit
+                                          </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="text-xs cursor-pointer gap-2 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
+                                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
 
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2"
-                            onClick={() => handleViewInvoicePDF(inv)}
-                          >
-                            <Eye className="h-4 w-4" /> View PDF
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border border-border/40" />}>
-                              <MoreVertical className="h-5 w-5" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                              <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
-                                <Mail className="h-4 w-4" /> Send by Email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="p-0">
-                                <Link
-                                  href={`/invoices/${inv.id}/edit`}
-                                  className="flex w-full items-center gap-2 px-3 py-3 text-xs"
+                        {/* VISTA MOBILE: Cards de Facturas */}
+                        <div className="md:hidden space-y-4">
+                          {invoices.map(inv => (
+                            <div key={inv.id} className="p-5 rounded-2xl border border-border/40 bg-card hover:shadow-md transition-all space-y-4">
+                              <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                  <h3 className="font-bold text-lg text-emerald-600 leading-none">#{inv.invoice_number}</h3>
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">
+                                    Due: {format(new Date(inv.due_date || inv.issue_date), 'MMM d, yyyy')}
+                                  </p>
+                                </div>
+                                <Badge variant="outline" className={cn(
+                                  "flex items-center gap-1.5 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest",
+                                  inv.status === 'paid' ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                    inv.status === 'sent' ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                      "bg-muted text-muted-foreground border-border"
+                                )}>
+                                  <span className={cn("w-1.5 h-1.5 rounded-full",
+                                    inv.status === 'paid' ? "bg-emerald-500" :
+                                      inv.status === 'sent' ? "bg-blue-500" : "bg-muted-foreground")}
+                                  />
+                                  {inv.status}
+                                </Badge>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-border/30">
+                                <div className="space-y-0.5">
+                                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Balance</p>
+                                  <p className="text-sm font-bold text-foreground">
+                                    ${inv.status === 'paid' ? '0.00' : Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                  </p>
+                                </div>
+                                <div className="space-y-0.5 text-right ">
+                                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Total</p>
+                                  <p className="text-lg font-black text-foreground">
+                                    ${Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest gap-2"
+                                  onClick={() => handleViewInvoicePDF(inv)}
                                 >
-                                  <Pencil className="h-4 w-4" /> Edit Invoice
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
-                                <Trash2 className="h-4 w-4" /> Delete Invoice
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                  <Eye className="h-4 w-4" /> View PDF
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl border border-border/40" />}>
+                                    <MoreVertical className="h-5 w-5" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-56">
+                                    <DropdownMenuItem className="text-xs gap-2 py-3" onClick={() => setBillingEmailModal({ type: 'invoice', data: inv })}>
+                                      <Mail className="h-4 w-4" /> Send by Email
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="p-0">
+                                      <Link
+                                        href={`/invoices/${inv.id}/edit`}
+                                        className="flex w-full items-center gap-2 px-3 py-3 text-xs"
+                                      >
+                                        <Pencil className="h-4 w-4" /> Edit Invoice
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-xs gap-2 py-3 text-red-600 focus:text-red-600" onClick={() => setInvoiceToDelete(inv)}>
+                                      <Trash2 className="h-4 w-4" /> Delete Invoice
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
 
-                  <Link
-                    id="tour-btn-new-invoice"
-                    href={`/clients/${proforma.client_id}/invoices/new?proformaId=${id}`}
-                    className={cn(buttonVariants({ variant: 'ghost' }), "text-primary font-bold px-0 h-auto hover:bg-transparent")}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Create Invoice
-                  </Link>
-                </div>
-              </CardContent>
-              </Card>
-              </TabsContent>
-             </Tabs>
+                        <Link
+                          id="tour-btn-new-invoice"
+                          href={`/clients/${proforma.client_id}/invoices/new?proformaId=${id}`}
+                          className={cn(buttonVariants({ variant: 'ghost' }), "text-primary font-bold px-0 h-auto hover:bg-transparent")}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Create Invoice
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
           </TabsContent>
         </Tabs>
