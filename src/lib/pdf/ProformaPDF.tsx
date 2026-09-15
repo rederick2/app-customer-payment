@@ -132,11 +132,19 @@ const getStyles = (baseSize: number) => StyleSheet.create({
     fontWeight: 700
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
     paddingVertical: 10,
     paddingHorizontal: 4,
+  },
+  tableRowTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  itemDetailsFull: {
+    width: '100%',
+    marginTop: 6,
   },
   colDesc: { width: '55%', paddingRight: 10 },
   colQty: { width: '7%', textAlign: 'center' },
@@ -156,7 +164,8 @@ const getStyles = (baseSize: number) => StyleSheet.create({
   itemDetails: {
     fontSize: baseSize * 0.9,
     color: '#666666',
-    lineHeight: 1.4
+    lineHeight: 1.4,
+    textAlign: 'left'
   },
   depositMessage: {
     fontSize: baseSize * 1.1,
@@ -332,17 +341,21 @@ export default function ProformaPDF({ proforma, items, client }: ProformaPDFProp
 
           {items && items.map((item, i) => (
             <View key={i} style={styles.tableRow} wrap={true}>
-              <View style={styles.colDesc}>
-                <Text style={styles.itemTitle}>{item.description}</Text>
-                {item.details && <PDFFormattedText text={item.details} textStyle={styles.itemDetails} />}
+              <View style={styles.tableRowTop}>
+                <Text style={[styles.itemTitle, styles.colDesc]}>{item.description}</Text>
+                <Text style={[styles.recipientDetail, styles.colQty]}>{item.quantity}</Text>
+                <Text style={[styles.recipientDetail, styles.colPrice]}>
+                  ${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </Text>
+                <Text style={[styles.recipientDetail, styles.colTotal, { fontWeight: 700 }]}>
+                  ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </Text>
               </View>
-              <Text style={[styles.recipientDetail, styles.colQty]}>{item.quantity}</Text>
-              <Text style={[styles.recipientDetail, styles.colPrice]}>
-                ${item.unit_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </Text>
-              <Text style={[styles.recipientDetail, styles.colTotal, { fontWeight: 700 }]}>
-                ${item.total_price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </Text>
+              {item.details && (
+                <View style={styles.itemDetailsFull}>
+                  <PDFFormattedText text={item.details} textStyle={styles.itemDetails} />
+                </View>
+              )}
             </View>
           ))}
         </View>
