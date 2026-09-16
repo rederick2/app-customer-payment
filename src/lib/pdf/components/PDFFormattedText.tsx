@@ -1,5 +1,17 @@
 import React from 'react';
-import { Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+
+// Desactiva el hyphenation global: evita cortes tipo "fin-ishes", "re-maining", "through-out"
+// Devuelve la palabra completa sin puntos de corte.
+if (typeof Font.registerHyphenationCallback === 'function') {
+  try {
+    Font.registerHyphenationCallback((word: string) => [word]);
+  } catch {
+    // ignore si ya fue registrado
+  }
+}
+
+const noHyphenation = (word: string) => [word];
 
 const styles = StyleSheet.create({
   text: {
@@ -58,8 +70,8 @@ export const PDFFormattedText = ({ text, style, textStyle }: PDFFormattedTextPro
           
           return (
             <View key={index} style={[styles.listItem, { paddingLeft: (indentLevel * 8) + 5 }]}>
-              <Text style={[styles.bullet, textStyle, isHeader && styles.bold]}>{marker}</Text>
-              <Text style={[styles.text, textStyle, styles.listItemContent, isHeader && styles.bold]}>{content}</Text>
+              <Text hyphenationCallback={noHyphenation} style={[styles.bullet, textStyle, isHeader && styles.bold]}>{marker}</Text>
+              <Text hyphenationCallback={noHyphenation} style={[styles.text, textStyle, styles.listItemContent, isHeader && styles.bold]}>{content}</Text>
             </View>
           );
         }
@@ -67,6 +79,7 @@ export const PDFFormattedText = ({ text, style, textStyle }: PDFFormattedTextPro
         return (
           <Text 
             key={index} 
+            hyphenationCallback={noHyphenation}
             style={[
               styles.text, 
               textStyle,
