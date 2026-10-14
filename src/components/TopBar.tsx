@@ -323,7 +323,7 @@ export function TopBar({ userProfile, unreadCount = 0, isTeamMember = false }: T
             <TooltipTrigger render={
               <Link
                 href="/settings"
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" children={undefined} />
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" />
             }>
               <Settings className="h-4.5 w-4.5" />
             </TooltipTrigger>
