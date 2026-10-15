@@ -11,7 +11,6 @@ interface AppShellProps {
   topbar: React.ReactNode;
   mobileNav: React.ReactNode;
   realtimeNotifier: React.ReactNode;
-  trialStartedAt?: string | null;
 }
 
 export function AppShell({
